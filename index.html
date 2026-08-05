@@ -11,11 +11,17 @@
       var raw = new URLSearchParams(location.search).get('u');
       var u = (raw && /^[a-z0-9_-]{1,32}$/.test(raw)) ? raw.toLowerCase() : null;
       window.PERSONA_ID = u || 'default';
+      var byRaw = (new URLSearchParams(location.search).get('by') || '').trim();
+      window.ACTING_BY = byRaw;  // acting user for note attribution ("added by"); default handled at use sites
+      // Carry both ?u=<persona> and ?by=<acting user> onto internal links.
       window.withPersona = function (href) {
-        if (!u || /[?&]u=/.test(href)) return href;
+        var add = [];
+        if (u && !/[?&]u=/.test(href)) add.push('u=' + u);
+        if (byRaw && !/[?&]by=/.test(href)) add.push('by=' + encodeURIComponent(byRaw));
+        if (!add.length) return href;
         var hash = '', hi = href.indexOf('#');
         if (hi !== -1) { hash = href.slice(hi); href = href.slice(0, hi); }
-        return href + (href.indexOf('?') === -1 ? '?' : '&') + 'u=' + u + hash;
+        return href + (href.indexOf('?') === -1 ? '?' : '&') + add.join('&') + hash;
       };
       if (u) {
         document.documentElement.classList.add('persona-cloak');
@@ -6581,7 +6587,7 @@
         const authorEl = document.getElementById('crm-last-note-author');
         const dateEl = document.getElementById('crm-last-note-date');
         if (textEl) { textEl.textContent = text; } else { note.appendChild(document.createTextNode(text)); }
-        if (authorEl) authorEl.textContent = 'Usha';
+        if (authorEl) authorEl.textContent = (window.ACTING_BY || 'Usha');
         if (dateEl) dateEl.textContent = noteDate;
       }
       input.value = '';
@@ -6594,9 +6600,9 @@
           // shows old notes there only (no notes history like the full record page).
           if (card.note) {
             if (!card.recentActivities) card.recentActivities = [];
-            card.recentActivities.unshift({ type: 'note', text: card.note, date: card.noteDate || 'Earlier' });
+            card.recentActivities.unshift({ type: 'note', text: card.note, date: card.noteDate || 'Earlier', author: card.noteAuthor || 'Usha' });
           }
-          card.note = text; card.noteDate = noteDate;
+          card.note = text; card.noteDate = noteDate; card.noteAuthor = (window.ACTING_BY || 'Usha');
           fillRealActivityAndFiles(card);
           persistRealData();
         }

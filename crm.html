@@ -11,11 +11,17 @@
       var raw = new URLSearchParams(location.search).get('u');
       var u = (raw && /^[a-z0-9_-]{1,32}$/.test(raw)) ? raw.toLowerCase() : null;
       window.PERSONA_ID = u || 'default';
+      var byRaw = (new URLSearchParams(location.search).get('by') || '').trim();
+      // Carry both ?u=<persona> and ?by=<acting user> onto internal links, same as
+      // the ?u= convention — e.g. ?u=joanna&by=John stays intact across pages.
       window.withPersona = function (href) {
-        if (!u || /[?&]u=/.test(href)) return href;
+        var add = [];
+        if (u && !/[?&]u=/.test(href)) add.push('u=' + u);
+        if (byRaw && !/[?&]by=/.test(href)) add.push('by=' + encodeURIComponent(byRaw));
+        if (!add.length) return href;
         var hash = '', hi = href.indexOf('#');
         if (hi !== -1) { hash = href.slice(hi); href = href.slice(0, hi); }
-        return href + (href.indexOf('?') === -1 ? '?' : '&') + 'u=' + u + hash;
+        return href + (href.indexOf('?') === -1 ? '?' : '&') + add.join('&') + hash;
       };
       if (u) {
         document.documentElement.classList.add('persona-cloak');

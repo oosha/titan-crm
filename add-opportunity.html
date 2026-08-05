@@ -338,6 +338,9 @@
       id: maxId + 1, company: company, contact: contact, initials: initials,
       deal: name, value: value, stage: stage, lastActivity: 'just now', activityType: 'Email sent',
       overdue: false,
+      // Record creator + note author: ?by=<name> overrides the defaults.
+      createdBy: (new URLSearchParams(location.search).get('by') || '').trim() || 'Usha Loutongbam',
+      noteAuthor: (new URLSearchParams(location.search).get('by') || '').trim() || 'Usha',
       location: document.getElementById('ao-location').value.trim(),
       website: document.getElementById('ao-website').value.trim(),
       companyLinkedin: document.getElementById('ao-company-linkedin').value.trim(),
