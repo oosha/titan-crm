@@ -224,30 +224,80 @@
     },
     "p1": {
       "id": "p1",
-      "name": "Orders",
+      "name": "Tee orders",
       "entity": "Order",
       "plural": "orders",
       "color": "#b5813f",
       "stages": [
         {
           "key": "received-0",
-          "label": "Received"
+          "label": "Received",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "processing-1",
-          "label": "Processing"
+          "label": "Processing",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "shipped-2",
-          "label": "Shipped"
+          "label": "Shipped",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "delivered-3",
-          "label": "Delivered"
+          "label": "Delivered",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "closed-4",
-          "label": "Closed"
+          "label": "Closed",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         }
       ],
       "cards": []
