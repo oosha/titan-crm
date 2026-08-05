@@ -210,7 +210,7 @@
           "location": "San Jose, US",
           "closeDate": "",
           "source": "",
-          "note": "AI capabilities are not clear to them yet and need a walkthrough",
+          "note": "We'll need to figure a new approach for this opportunity soon, they may opt for Acme instead!",
           "noteDate": "5 Aug",
           "contacts": [
             {
@@ -254,6 +254,12 @@
             }
           ],
           "recentActivities": [
+            {
+              "type": "note",
+              "text": "AI capabilities are not clear to them yet and need a walkthrough",
+              "date": "5 Aug",
+              "author": "Usha"
+            },
             {
               "type": "note",
               "text": "From Ryan: They are still figuring out priorities internally.",
@@ -307,7 +313,8 @@
           "contactEmail": "ryan.walker@meridianlabs.com",
           "contactPhone": "+1 (415) 555-0134",
           "contactDesignation": "VP, Product",
-          "contactLinkedin": "linkedin.com/in/ryanwalker"
+          "contactLinkedin": "linkedin.com/in/ryanwalker",
+          "noteAuthor": "John"
         },
         {
           "id": 7,
