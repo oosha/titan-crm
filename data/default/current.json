@@ -48,22 +48,6 @@
           "overdue": false
         },
         {
-          "id": 2,
-          "company": "Lumen Retail",
-          "contact": "Marcus Webb",
-          "initials": "MW",
-          "deal": "Lumen CD only",
-          "value": 5400,
-          "stage": "lead",
-          "lastActivity": "1d ago",
-          "activityType": "Email received",
-          "overdue": false,
-          "nextActivity": {
-            "type": "followup",
-            "date": "12 Feb"
-          }
-        },
-        {
           "id": 3,
           "company": "Northfield Group",
           "contact": "Grace Turner",
