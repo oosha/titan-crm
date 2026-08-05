@@ -1,6 +1,6 @@
 {
-  "currentPipelineId": "neo",
-  "pipelineSeq": 0,
+  "currentPipelineId": "p1",
+  "pipelineSeq": 1,
   "pipelines": {
     "neo": {
       "id": "neo",
@@ -221,6 +221,36 @@
       "hiddenFields": [],
       "customFieldDefs": [],
       "contactsEnabled": true
+    },
+    "p1": {
+      "id": "p1",
+      "name": "Orders",
+      "entity": "Order",
+      "plural": "orders",
+      "color": "#b5813f",
+      "stages": [
+        {
+          "key": "received-0",
+          "label": "Received"
+        },
+        {
+          "key": "processing-1",
+          "label": "Processing"
+        },
+        {
+          "key": "shipped-2",
+          "label": "Shipped"
+        },
+        {
+          "key": "delivered-3",
+          "label": "Delivered"
+        },
+        {
+          "key": "closed-4",
+          "label": "Closed"
+        }
+      ],
+      "cards": []
     }
   }
 }
