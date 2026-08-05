@@ -210,7 +210,7 @@
           "location": "San Jose, US",
           "closeDate": "",
           "source": "",
-          "note": "From Ryan: They are still figuring out priorities internally.",
+          "note": "AI capabilities are not clear to them yet and need a walkthrough",
           "noteDate": "5 Aug",
           "contacts": [
             {
@@ -254,6 +254,11 @@
             }
           ],
           "recentActivities": [
+            {
+              "type": "note",
+              "text": "From Ryan: They are still figuring out priorities internally.",
+              "date": "5 Aug"
+            },
             {
               "type": "email",
               "text": "Project roadmap for Dashboard v2",
