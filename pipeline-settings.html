@@ -12,7 +12,7 @@
     font-size: 13.5px; font-weight: 600; cursor: pointer;
   }
   .ps-btn-primary:hover { filter: brightness(1.05); }
-  .ps-wrap { max-width: 560px; margin: 0 auto; padding: 28px 24px 60px; }
+  .ps-wrap { max-width: 1040px; margin: 0 auto; padding: 28px 24px 60px; }
   .ps-card { background: #fff; border: 1px solid #e8eaed; border-radius: 12px; padding: 24px 26px; margin-bottom: 18px; }
   .np-label { font-size: 15px; font-weight: 400; color: #1a1a1a; margin: 0 2px 8px; }
   .np-name-input {
@@ -108,22 +108,24 @@
 </div><!-- /app-window -->
 
 <script>
-  const params = new URLSearchParams(location.search);
-  const pipelineKey = params.get('pipeline') || 'neo';
+  // URL is /crm/pipeline/<id>/setting — the id is a real path segment, not a query
+  // param, since this is real persisted data now, not throwaway prototype state.
+  const pathSegs = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
+  const pipelineKey = decodeURIComponent(pathSegs[2] || 'neo');
   // This page opens in place of crm.html (not a popup), so there's no window.opener to
   // read from or write back into. crm.html hands off the pipeline being edited via
   // sessionStorage right before navigating here; saveSettings() below writes the result
-  // back the same way and navigates to crm.html?pipeline=<id> to apply it.
+  // back the same way and navigates to /crm/pipeline/<id> to apply it.
   let editSource = null;
   try { editSource = JSON.parse(sessionStorage.getItem('titan-crm-edit-pipeline') || 'null'); } catch (e) {}
   const pipeline = (editSource && editSource.pipelineKey === pipelineKey) ? editSource.pipeline : null;
-  function goBack() { location.href = 'crm.html?pipeline=' + encodeURIComponent(pipelineKey); }
+  function goBack() { location.href = '/crm/pipeline/' + encodeURIComponent(pipelineKey) + location.search; }
   const PIPELINE_COLORS = ['#4f6d9e', '#3f8a7d', '#5e8a4e', '#b5813f', '#ab5f74', '#7a6ba3', '#2170f4'];
 
   if (!pipeline) {
     document.getElementById('ps-opener-note').innerHTML =
       'This pipeline’s data isn’t available (opened directly, not from Titan CRM). ' +
-      '<a href="crm.html">Open Titan CRM</a> and try again.';
+      '<a href="/crm">Open Titan CRM</a> and try again.';
   }
 
   let color = pipeline ? (pipeline.color || '#2170f4') : '#2170f4';

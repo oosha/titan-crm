@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Opportunity — Titan CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Persona loader: ?u=<id> only matters here to scope the /api/data fetch to that
+     persona's saved file — this page doesn't load personas/<id>.js itself (no mailbox/
+     account data is needed to view or edit a single record). -->
+<script>
+  (function () {
+    var raw = new URLSearchParams(location.search).get('u');
+    var u = (raw && /^[a-z0-9_-]{1,32}$/.test(raw)) ? raw.toLowerCase() : null;
+    window.PERSONA_ID = u || 'default';
+  })();
+</script>
+<link rel="stylesheet" href="titan-sidebar.css">
+<style>
+  .subpage-body { background: #f7f8fa; color: #222; }
+  .ov-btn-primary {
+    background: #2170f4; color: #fff; border: none; border-radius: 7px; padding: 9px 18px;
+    font-size: 13.5px; font-weight: 600; cursor: pointer;
+  }
+  .ov-btn-primary:hover { filter: brightness(1.05); }
+  .ov-btn-danger {
+    background: none; color: #dc2626; border: 1px solid #f3caca; border-radius: 7px; padding: 8px 14px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .ov-btn-danger:hover { background: #fef2f2; }
+  .ov-save-hint { font-size: 12px; color: #9a9fa7; margin-right: auto; padding-left: 14px; }
+  .ov-wrap { max-width: 760px; margin: 0 auto; padding: 28px 24px 60px; }
+  .ov-card {
+    background: #fff; border: 1px solid #e8eaed; border-radius: 12px; padding: 24px 26px; margin-bottom: 18px;
+  }
+  .ov-not-found { text-align: center; padding: 60px 20px; color: #666; font-size: 14px; }
+  .ov-not-found a { color: #2170f4; text-decoration: none; }
+
+  /* ── Editable variants of the mailclient CRM-panel look (see index.html's .crm-*
+     rules, copied below) — same visual language, but every value is a real input
+     instead of static text, since this page is meant to edit the record, not just
+     display it. ── */
+  .ov-title-input {
+    font-size: 20px; font-weight: 700; color: #1a1a1a; border: none; outline: none;
+    width: 100%; font-family: inherit; padding: 2px 0; background: transparent;
+  }
+  .ov-title-input::placeholder { color: #b3b7bd; }
+  .ov-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .ov-inline-input {
+    border: 1px solid transparent; border-radius: 6px; padding: 4px 7px; font-family: inherit;
+    outline: none; background: transparent; color: #1a1a1a;
+  }
+  .ov-inline-input:hover { border-color: #e2e4e8; }
+  .ov-inline-input:focus { border-color: #2170f4; background: #fff; box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+  .ov-company-input { font-size: 15px; font-weight: 600; width: 220px; }
+  .ov-value-row { display: flex; align-items: center; gap: 4px; }
+  .ov-currency-select { font-size: 12.5px; color: #888; width: 46px; }
+  .ov-value-input { font-size: 12.5px; font-weight: 500; color: #888; width: 90px; }
+  .ov-dot { color: #ccc; }
+
+  .ov-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; margin-top: 16px; }
+  .ov-field { display: flex; flex-direction: column; }
+  .ov-field-label { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #9a9fa7; margin-bottom: 5px; }
+  .ov-field-label .crm-social-icon { width: 15px; height: 15px; border-radius: 4px; }
+  .ov-field-label .crm-social-icon svg { width: 9px; height: 9px; }
+  .ov-field input, .ov-field select {
+    border: 1px solid #d9dce1; border-radius: 7px; padding: 8px 10px; font-size: 13px;
+    color: #222; outline: none; font-family: inherit; background: #fff;
+  }
+  .ov-field input:focus, .ov-field select:focus { border-color: #2170f4; box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+  .ov-field.ov-field-hidden { display: none; }
+
+  .ov-heading {
+    font-size: 12px; font-weight: 500; color: #888; text-transform: uppercase;
+    letter-spacing: 0.04em; margin-bottom: 12px;
+  }
+  .ov-contact { border: 1px solid #ececf0; border-radius: 9px; padding: 14px; margin-top: 12px; position: relative; }
+  .ov-contact:first-of-type { margin-top: 0; }
+  .ov-contact-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .ov-contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ov-contact-grid input {
+    border: 1px solid #d9dce1; border-radius: 7px; padding: 7px 9px; font-size: 13px;
+    color: #222; outline: none; font-family: inherit; background: #fff;
+  }
+  .ov-contact-grid input:focus { border-color: #2170f4; box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+  .ov-contact-remove {
+    position: absolute; top: 12px; right: 14px; cursor: pointer; color: #c2c6cd; font-size: 18px; line-height: 1;
+  }
+  .ov-contact-remove:hover { color: #dc2626; }
+  .ov-add-link { font-size: 12.5px; font-weight: 600; color: #2170f4; cursor: pointer; display: inline-block; margin-top: 12px; }
+  .ov-add-link:hover { text-decoration: underline; }
+
+  .ov-custom-field { border: 1px solid #ececf0; border-radius: 9px; padding: 14px; margin-top: 12px; }
+  .ov-custom-field:first-of-type { margin-top: 0; }
+
+  /* ── Copied from index.html's mailclient CRM panel (§ CRM panel styles) so this
+     page reads as the same "record" surface, just full-page instead of a 360px
+     side panel. ── */
+  .crm-opp-value { font-size: 12.5px; font-weight: 500; color: #888; }
+  .crm-company-icon-row { display: flex; align-items: center; gap: 10px; margin-top: 13px; flex-wrap: wrap; }
+  .crm-social-icon {
+    width: 20px; height: 20px; border-radius: 6px; color: #fff; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .crm-social-icon svg { width: 12px; height: 12px; }
+  .crm-social-icon.website { background: #2170f4; }
+  .crm-social-icon.linkedin { background: #0a66c2; }
+  .crm-social-icon.instagram { background: linear-gradient(135deg, #f58529, #dd2a7b 45%, #8134af 75%, #515bd4); }
+  .crm-social-icon.location { background: #e5484d; }
+
+  .crm-ps-wrap { position: relative; margin-top: 16px; max-width: 340px; }
+  .crm-pipeline-stage {
+    display: flex; align-items: center; gap: 5px; cursor: pointer;
+    padding: 8px 12px 8px 10px; border-radius: 7px; font-size: 13.5px; font-weight: 500;
+    background: #2170f4; color: #fff; width: 100%;
+  }
+  .crm-pipeline-stage:hover { filter: brightness(1.06); }
+  .crm-pipeline-stage .pl-icon { width: 14px; height: 14px; flex-shrink: 0; }
+  .crm-pipeline-stage #ov-ps-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .crm-pipeline-stage .caret { font-size: 16px; opacity: .95; margin-left: 5px; flex-shrink: 0; display: inline-block; transform: scaleX(1.4); }
+  .crm-stage-menu {
+    position: absolute; top: 100%; left: 0; z-index: 40; display: none;
+    background: #fff; border: 1px solid #e6e6e6; border-top: none;
+    border-radius: 0 0 7px 7px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.14); padding: 6px 0; width: 100%; box-sizing: border-box;
+  }
+  .crm-stage-menu.open { display: block; }
+  .crm-stage-item { display: flex; align-items: center; gap: 9px; padding: 7px 14px; font-size: 13px; color: #2b2f36; cursor: pointer; }
+  .crm-stage-item:hover { background: #f4f7fb; }
+  .crm-stage-item .dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
+  .crm-stage-item.active { font-weight: 600; }
+  .crm-stage-item.active .dot { background: #2170f4; }
+
+  .crm-note {
+    background: rgba(33,112,244,0.05); border-radius: 6px; padding: 12px 14px; font-size: 12.5px; color: #444; margin-bottom: 8px;
+  }
+  .crm-note .meta { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #999; margin-bottom: 10px; }
+  .crm-note .meta .note-ic { width: 12px; height: 12px; color: #b0b0b0; flex-shrink: 0; display: inline-flex; }
+  .crm-note #ov-last-note-text { display: block; font-size: 13px; color: #333; line-height: 1.6; }
+  .crm-note-add textarea {
+    width: 100%; min-height: 60px; resize: vertical; border: 1px solid #ddd; border-radius: 6px;
+    padding: 8px 10px; font-size: 13px; font-family: inherit; outline: none; color: #333;
+  }
+  .crm-note-add textarea:focus { border-color: #2170f4; }
+  .crm-note-add button {
+    margin-top: 8px; background: #2170f4; color: #fff; border: none; border-radius: 6px;
+    padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  }
+  .crm-note-add button:hover { background: #1257c9; }
+
+  .crm-activity-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
+  .crm-activity-row:last-child { border-bottom: none; }
+  .crm-activity-text { flex: 1; font-size: 13px; color: #333; }
+  .crm-activity-date { font-size: 11.5px; color: #999; }
+  .crm-activity-date.overdue { color: #dc2626; font-weight: 600; }
+  .crm-act-ic {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; background: #f2f4f6; color: #667085;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .crm-act-ic svg { width: 14px; height: 14px; }
+  .crm-empty-state { font-size: 13px; color: #9a9fa7; padding: 4px 0; }
+
+  .crm-file-row {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    background: #f6f7f8; border-radius: 8px;
+  }
+</style>
+</head>
+<body data-subpage="opportunity-view">
+
+<div class="app-window">
+  <div class="sidebar">
+
+    <!-- Header with logo -->
+    <div class="sidebar-header">
+      <div class="tab-switch">
+        <img src="assets/2f8b4195-6886-4685-9c9c-cf0d3552b789.svg" alt="mail">
+        <div class="tab-switch-arrow">
+          <img src="assets/1c88a1be-2a78-4065-86f7-8eb060dbb526.svg" alt="">
+        </div>
+      </div>
+      <div class="titan-logo">
+        <img src="assets/fa36f613-977c-444a-bef5-e1b5f5f1b340.svg" alt="Titan">
+      </div>
+    </div>
+
+    <div class="nav-scroll">
+      <div class="sidebar-line" style="margin-top:2px;"></div>
+      <div class="account-header" id="account-header" onclick="toggleAccountMenu(event)">
+        <div class="account-avatar">
+          <img class="bg" src="assets/d2c6a617-0407-4985-8c8b-740201e73dfe.svg" alt="">
+          <span id="account-active-initial">E</span>
+        </div>
+        <span class="account-email-text" id="account-active-email">ella.henderson@avontechlabs.com</span>
+        <div class="account-chevron">
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#bdbdbd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="account-menu" id="account-menu">
+          <div class="account-menu-label">Titan accounts</div>
+          <div class="account-menu-item active">
+            <span class="account-menu-avatar" style="background:#3f6ea5;">E</span>
+            <div class="account-menu-text">
+              <div class="account-menu-email">ella.henderson@avontechlabs.com</div>
+              <div class="account-menu-sub">Avontech Labs</div>
+            </div>
+            <svg class="account-menu-check" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-item" onclick="openNewPipeline()">
+        <div class="nav-item-icon" style="color:#2170f4; font-weight:700; font-size:16px;">+</div>
+        <span class="nav-item-label" style="color:#2170f4; font-weight:600;">New pipeline</span>
+      </div>
+
+      <div class="sidebar-line" id="pipeline-nav-line"></div>
+      <!-- Pipeline rows are rebuilt from the fetched data at load time (rebuildPipelineNav below), same as crm.html. -->
+    </div>
+
+    <div style="position:relative; flex-shrink:0;">
+      <div style="height:1px; position:relative; overflow:visible;">
+        <img src="assets/0d00b891-46d6-4063-acc9-0db4c8c41036.svg" alt=""
+          style="position:absolute; inset:-1px 0; width:100%; height:2px; object-fit:fill;">
+      </div>
+      <div class="sidebar-footer">
+        <div class="footer-btn">
+          <div class="footer-btn-icon"><img src="assets/34686e57-21d5-4bf6-82c4-1c6e474d25d3.svg" alt=""></div>
+          <span>Bug</span>
+        </div>
+        <div class="footer-divider"></div>
+        <div class="footer-btn">
+          <div class="footer-btn-icon"><img src="assets/03a449fb-b16b-4b26-8eec-0fa033eff13e.svg" alt=""></div>
+          <span>Feature</span>
+        </div>
+        <div class="footer-divider"></div>
+        <div class="footer-btn" onclick="toggleSettingsModal()">
+          <div class="footer-btn-icon settings-icon"><img src="assets/6ea52e57-1d75-47b1-97cd-e416a5d2372d.svg" alt=""></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pipeline-nav-menu" id="pipeline-nav-menu">
+    <div class="pipeline-nav-menu-item" data-action="pipeline-setting" onclick="pipelineNavMenuAction('pipeline-setting')">Pipeline setting</div>
+    <div class="pipeline-nav-menu-item" data-action="entity-setting" onclick="pipelineNavMenuAction('entity-setting')">Opportunity setting</div>
+    <div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction('add-filter-view')">Add filter view</div>
+    <div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction('delete-pipeline')" style="color:#dc2626;">Delete pipeline</div>
+  </div>
+
+  <div class="main-area">
+    <div class="subpage-top">
+      <span class="subpage-back" onclick="goBack()">
+        <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </span>
+      <span class="subpage-title" id="ov-top-title">Opportunity</span>
+      <span class="ov-save-hint" id="ov-save-hint"></span>
+      <button class="ov-btn-danger" id="ov-delete-btn" onclick="deleteRecord()">Delete</button>
+    </div>
+
+    <div class="subpage-body">
+      <div class="ov-wrap" id="ov-wrap" style="display:none;">
+
+        <div class="ov-card">
+          <input class="ov-title-input" id="ov-name" placeholder="Opportunity name" oninput="onFieldChange()">
+          <div class="ov-meta-row">
+            <input class="ov-inline-input ov-company-input" id="ov-company" placeholder="Company" oninput="onFieldChange()">
+            <span class="ov-dot">&middot;</span>
+            <div class="ov-value-row">
+              <select class="ov-inline-input ov-currency-select" id="ov-currency" onchange="onFieldChange()">
+                <option value="$">$</option><option value="€">€</option><option value="£">£</option><option value="AU$">AU$</option>
+              </select>
+              <input class="ov-inline-input ov-value-input" id="ov-value" type="text" inputmode="numeric" placeholder="0" oninput="onFieldChange()">
+            </div>
+          </div>
+
+          <div class="ov-field-grid">
+            <div class="ov-field" data-field="location">
+              <div class="ov-field-label"><span class="crm-social-icon location"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5A4.7 4.7 0 0 0 3.3 6.2C3.3 9.7 8 14.5 8 14.5s4.7-4.8 4.7-8.3A4.7 4.7 0 0 0 8 1.5Zm0 6.3a1.7 1.7 0 1 1 0-3.4 1.7 1.7 0 0 1 0 3.4Z"/></svg></span>Location</div>
+              <input id="ov-location" placeholder="San Jose, US" oninput="onFieldChange()">
+            </div>
+            <div class="ov-field" data-field="website">
+              <div class="ov-field-label"><span class="crm-social-icon website"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M2 8h12M8 2c1.7 1.7 2.6 3.8 2.6 6s-.9 4.3-2.6 6c-1.7-1.7-2.6-3.8-2.6-6s.9-4.3 2.6-6Z" stroke="currentColor" stroke-width="1.2"/></svg></span>Website</div>
+              <input id="ov-website" placeholder="acme.com" oninput="onFieldChange()">
+            </div>
+            <div class="ov-field" data-field="company-linkedin">
+              <div class="ov-field-label"><span class="crm-social-icon linkedin"><svg viewBox="0 0 16 16" fill="none"><rect x="2.3" y="6.3" width="2.4" height="7" fill="currentColor"/><circle cx="3.5" cy="3.3" r="1.4" fill="currentColor"/><path d="M7 6.3h2.3v1.1c.5-.7 1.3-1.3 2.4-1.3 2 0 2.6 1.2 2.6 3.1v4.1h-2.4V9.7c0-.9-.3-1.5-1.1-1.5-.8 0-1.4.6-1.4 1.6v3.5H7V6.3Z" fill="currentColor"/></svg></span>Company LinkedIn</div>
+              <input id="ov-company-linkedin" placeholder="linkedin.com/company/acme" oninput="onFieldChange()">
+            </div>
+            <div class="ov-field" data-field="instagram">
+              <div class="ov-field-label"><span class="crm-social-icon instagram"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="3.2" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.3"/><circle cx="11.3" cy="4.7" r="0.8" fill="currentColor"/></svg></span>Instagram</div>
+              <input id="ov-instagram" placeholder="instagram.com/acme" oninput="onFieldChange()">
+            </div>
+            <div class="ov-field" data-field="close-date">
+              <div class="ov-field-label" id="ov-close-label">Expected close date</div>
+              <input id="ov-close-date" type="date" oninput="onFieldChange()">
+            </div>
+            <div class="ov-field" data-field="source">
+              <div class="ov-field-label">Source</div>
+              <input id="ov-source" placeholder="e.g. Referral, Website" oninput="onFieldChange()">
+            </div>
+          </div>
+
+          <div class="crm-ps-wrap">
+            <div class="crm-pipeline-stage" id="ov-pipeline-stage" onclick="toggleStageMenu(event)">
+              <svg class="pl-icon" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="currentColor"/></svg>
+              <span id="ov-ps-text">Stage</span>
+              <span class="caret">&#9662;</span>
+            </div>
+            <div class="crm-stage-menu" id="ov-stage-menu"></div>
+          </div>
+        </div>
+
+        <div class="ov-card">
+          <div class="ov-heading">Notes</div>
+          <div class="crm-note" id="ov-last-note" style="display:none;">
+            <div class="meta"><span class="note-ic"><svg viewBox="0 0 16 16" fill="none"><path d="M3 2.5h10v11H3v-11Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5.3 5.8h5.4M5.3 8h5.4M5.3 10.2h3.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></span>Last note on <span id="ov-last-note-date"></span></div>
+            <span id="ov-last-note-text"></span>
+          </div>
+          <div class="crm-note-add">
+            <textarea id="ov-note-input" placeholder="Add a note..." oninput="toggleAddNoteBtn()"></textarea>
+            <button id="ov-add-note-btn" onclick="addNote()" style="display:none;">Add note</button>
+          </div>
+        </div>
+
+        <div class="ov-card">
+          <div class="ov-heading">Contacts</div>
+          <div id="ov-contacts"></div>
+          <span class="ov-add-link" onclick="addContact()">+ Add contact</span>
+        </div>
+
+        <div class="ov-card">
+          <div class="ov-heading">Upcoming activity</div>
+          <div id="ov-upcoming-activity"></div>
+        </div>
+
+        <div class="ov-card">
+          <div class="ov-heading">Recent activity</div>
+          <div id="ov-recent-activity"></div>
+        </div>
+
+        <div class="ov-card">
+          <div class="ov-heading">Files</div>
+          <div id="ov-files"></div>
+        </div>
+
+        <div class="ov-card" id="ov-custom-fields-card" style="display:none;">
+          <div class="ov-heading">Custom fields</div>
+          <div id="ov-custom-fields"></div>
+        </div>
+      </div>
+
+      <div class="ov-not-found" id="ov-not-found" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script src="titan-sidebar.js"></script>
+<script>
+  // ── This page is reached from OUTSIDE Titan CRM (a mail client CRM-panel link),
+  // not via in-app navigation from crm.html — so unlike the other sub-pages
+  // (add-opportunity/pipeline-settings/opportunity-settings, which rely entirely on
+  // crm.html stashing state into sessionStorage before navigating away), this one
+  // fetches its own data straight from /api/data, the same way crm.html itself
+  // bootstraps. That's what makes it work as a real deep link from anywhere. ──
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function withPersona(href) {
+    if (window.PERSONA_ID === 'default') return href;
+    return href + (href.indexOf('?') === -1 ? '?' : '&') + 'u=' + window.PERSONA_ID;
+  }
+
+  const qp = new URLSearchParams(location.search);
+  const requestedPipelineId = qp.get('pipeline') || '';
+  const recordId = qp.get('record') || '';
+
+  const ENTITY_LABELS = {
+    Opportunity: { name: 'Opportunity name', stage: 'Opportunity stage', close: 'Expected close date' },
+    Project:     { name: 'Project name',     stage: 'Project stage',     close: 'Expected launch date' },
+    Order:       { name: 'Order name',       stage: 'Order stage',       close: 'Expected completion date' },
+    Candidate:   { name: 'Candidate name',   stage: 'Candidate stage',   close: 'Expected close date' },
+    Record:      { name: 'Record name',      stage: 'Record stage',      close: 'Expected end date' },
+  };
+  function entityLabels(entity) { return ENTITY_LABELS[entity] || ENTITY_LABELS.Record; }
+
+  let DATA = null;        // raw { currentPipelineId, pipelineSeq, pipelines } from the API
+  let pipelines = null;   // shorthand for DATA.pipelines
+  let pipelineKey = null;
+  let pipeline = null;
+  let card = null;
+  let contacts = [];
+  let customFieldValues = {};
+
+  function goBack() {
+    location.href = withPersona('/crm/pipeline/' + encodeURIComponent(pipelineKey || requestedPipelineId || 'neo'));
+  }
+
+  // ── Sidebar pipeline list — same markup/behavior crm.html builds at load time. ──
+  function rebuildPipelineNav(list, activeId) {
+    const line = document.getElementById('pipeline-nav-line');
+    if (!line) return;
+    let n = line.nextElementSibling;
+    while (n) { const next = n.nextElementSibling; n.remove(); n = next; }
+    let after = line;
+    list.forEach(function (pl) {
+      const item = document.createElement('div');
+      item.className = 'nav-item' + (pl.id === activeId ? ' active' : '');
+      item.dataset.pipelineId = pl.id;
+      item.onclick = function () { location.href = withPersona('/crm/pipeline/' + encodeURIComponent(pl.id)); };
+      item.innerHTML =
+        '<div class="nav-item-icon"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="' + (pl.color || '#2170f4') + '"/></svg></div>' +
+        '<span class="nav-item-label' + (pl.id === activeId ? ' active' : '') + '"></span>' +
+        '<span class="nav-item-menu-btn" onclick="event.stopPropagation(); togglePipelineNavMenu(event, \'' + pl.id + '\')" title="Pipeline actions">' +
+          '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3.5" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="12.5" r="1.3" fill="currentColor"/></svg>' +
+        '</span>';
+      item.querySelector('.nav-item-label').textContent = pl.name;
+      after.after(item);
+      after = item;
+    });
+  }
+
+  async function fetchPipelineData(personaId) {
+    const res = await fetch('/api/data?persona=' + encodeURIComponent(personaId), { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to load data (' + res.status + ')');
+    return res.json();
+  }
+
+  function notFound(message) {
+    document.getElementById('ov-wrap').style.display = 'none';
+    document.getElementById('ov-delete-btn').style.display = 'none';
+    const nf = document.getElementById('ov-not-found');
+    nf.style.display = '';
+    nf.innerHTML = esc(message) + ' <a href="' + withPersona('/crm') + '">Open Titan CRM</a>';
+  }
+
+  async function init() {
+    let data;
+    try { data = await fetchPipelineData(window.PERSONA_ID); }
+    catch (e) { notFound('Couldn’t reach the CRM data API.'); return; }
+
+    DATA = data;
+    pipelines = data.pipelines || {};
+    rebuildPipelineNav(Object.keys(pipelines).map(function (id) { return pipelines[id]; }), requestedPipelineId);
+
+    if (requestedPipelineId && pipelines[requestedPipelineId]) {
+      pipelineKey = requestedPipelineId;
+    } else {
+      // Fall back to searching every pipeline for this record id (mirrors crm.html's
+      // own openFromRoute() deep-link fallback).
+      pipelineKey = Object.keys(pipelines).find(function (k) {
+        return pipelines[k].cards.some(function (c) { return String(c.id) === String(recordId); });
+      });
+    }
+    pipeline = pipelineKey ? pipelines[pipelineKey] : null;
+    card = pipeline ? pipeline.cards.find(function (c) { return String(c.id) === String(recordId); }) : null;
+
+    if (!pipeline || !card) { notFound('This record couldn’t be found.'); return; }
+
+    rebuildPipelineNav(Object.keys(pipelines).map(function (id) { return pipelines[id]; }), pipelineKey);
+    renderRecord();
+    document.getElementById('ov-wrap').style.display = '';
+  }
+
+  function renderRecord() {
+    const entity = pipeline.entity || 'Opportunity';
+    const labels = entityLabels(entity);
+    document.title = (card.deal || entity) + ' — Titan CRM';
+    document.getElementById('ov-top-title').textContent = entity;
+    document.getElementById('ov-name').placeholder = labels.name;
+    document.getElementById('ov-close-label').textContent = labels.close;
+
+    document.getElementById('ov-name').value = card.deal || '';
+    document.getElementById('ov-company').value = card.company || '';
+    document.getElementById('ov-currency').value = card.currency || '$';
+    document.getElementById('ov-value').value = card.value || '';
+    document.getElementById('ov-location').value = card.location || '';
+    document.getElementById('ov-website').value = card.website || '';
+    document.getElementById('ov-company-linkedin').value = card.companyLinkedin || '';
+    document.getElementById('ov-instagram').value = card.instagram || '';
+    document.getElementById('ov-close-date').value = card.closeDate || '';
+    document.getElementById('ov-source').value = card.source || card.leadSource || '';
+
+    const hidden = pipeline.hiddenFields || [];
+    document.querySelectorAll('.ov-field[data-field]').forEach(function (el) {
+      el.classList.toggle('ov-field-hidden', hidden.indexOf(el.dataset.field) !== -1);
+    });
+
+    renderStage();
+
+    if (card.note) {
+      document.getElementById('ov-last-note').style.display = '';
+      document.getElementById('ov-last-note-text').textContent = card.note;
+      document.getElementById('ov-last-note-date').textContent = card.noteDate || '';
+    } else {
+      document.getElementById('ov-last-note').style.display = 'none';
+    }
+
+    contacts = (card.contacts && card.contacts.length)
+      ? card.contacts.map(function (c) { return Object.assign({}, c); })
+      : (card.contact ? [{
+          name: card.contact, email: card.contactEmail || '', designation: card.contactDesignation || '',
+          phone: card.contactPhone || '', department: card.contactDepartment || '', location: card.contactLocation || '',
+          linkedin: card.contactLinkedin || '',
+        }] : []);
+    renderContacts();
+
+    renderActivityAndFiles();
+
+    customFieldValues = Object.assign({}, card.customFieldValues || {});
+    renderCustomFields();
+  }
+
+  function renderStage() {
+    const color = pipeline.color || '#2170f4';
+    const stages = pipeline.stages || [];
+    const stageLabel = (stages.find(function (s) { return s.key === card.stage; }) || {}).label || card.stage || '';
+    const el = document.getElementById('ov-pipeline-stage');
+    el.style.background = color;
+    document.getElementById('ov-ps-text').textContent = pipeline.name + ': ' + stageLabel;
+
+    const menu = document.getElementById('ov-stage-menu');
+    menu.innerHTML = stages.map(function (s) {
+      return '<div class="crm-stage-item' + (s.key === card.stage ? ' active' : '') +
+        '" onclick="selectStage(\'' + s.key + '\')">' +
+        '<span class="dot" style="background:' + (s.key === card.stage ? color : '#cbd5e1') + ';"></span>' + esc(s.label) + '</div>';
+    }).join('');
+  }
+  function toggleStageMenu(evt) {
+    if (evt) evt.stopPropagation();
+    const m = document.getElementById('ov-stage-menu');
+    if (m.classList.toggle('open')) setTimeout(function () { document.addEventListener('click', outsideStageMenu); }, 0);
+    else document.removeEventListener('click', outsideStageMenu);
+  }
+  function outsideStageMenu(e) {
+    const wrap = document.querySelector('.crm-ps-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('ov-stage-menu').classList.remove('open');
+      document.removeEventListener('click', outsideStageMenu);
+    }
+  }
+  function selectStage(key) {
+    card.stage = key;
+    renderStage();
+    document.getElementById('ov-stage-menu').classList.remove('open');
+    document.removeEventListener('click', outsideStageMenu);
+    schedulePersist();
+  }
+
+  function toggleAddNoteBtn() {
+    const input = document.getElementById('ov-note-input');
+    const btn = document.getElementById('ov-add-note-btn');
+    btn.style.display = input.value.trim() ? '' : 'none';
+  }
+  function formatNoteDate(d) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return d.getDate() + ' ' + months[d.getMonth()];
+  }
+  function addNote() {
+    const input = document.getElementById('ov-note-input');
+    const text = input.value.trim();
+    if (!text) return;
+    card.note = text;
+    card.noteDate = formatNoteDate(new Date());
+    document.getElementById('ov-last-note').style.display = '';
+    document.getElementById('ov-last-note-text').textContent = text;
+    document.getElementById('ov-last-note-date').textContent = card.noteDate;
+    input.value = '';
+    toggleAddNoteBtn();
+    schedulePersist();
+  }
+
+  function setContactField(i, field, val) { if (contacts[i]) { contacts[i][field] = val; onFieldChange(); } }
+  function updateContactAvatar(i, input) {
+    const av = input.closest('.ov-contact').querySelector('.ov-contact-avatar');
+    if (av) av.textContent = (input.value || '?').charAt(0).toUpperCase();
+  }
+  function renderContacts() {
+    const wrap = document.getElementById('ov-contacts');
+    wrap.innerHTML = '';
+    contacts.forEach(function (c, i) {
+      const row = document.createElement('div');
+      row.className = 'ov-contact';
+      row.innerHTML =
+        '<div class="ov-contact-top">' +
+          '<div class="crm-contact-avatar ov-contact-avatar" style="width:28px;height:28px;border-radius:50%;background:#8a9099;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;">' + ((c.name || '?').charAt(0).toUpperCase()) + '</div>' +
+          '<input placeholder="Name" value="' + esc(c.name) + '" style="flex:1; border:1px solid #d9dce1; border-radius:7px; padding:7px 9px; font-size:13px; font-weight:600;" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);">' +
+        '</div>' +
+        '<div class="ov-contact-grid">' +
+          '<input placeholder="Email" value="' + esc(c.email) + '" oninput="setContactField(' + i + ',\'email\',this.value)">' +
+          '<input placeholder="Designation" value="' + esc(c.designation) + '" oninput="setContactField(' + i + ',\'designation\',this.value)">' +
+          '<input placeholder="Phone" value="' + esc(c.phone) + '" oninput="setContactField(' + i + ',\'phone\',this.value)">' +
+          '<input placeholder="Department" value="' + esc(c.department) + '" oninput="setContactField(' + i + ',\'department\',this.value)">' +
+          '<input placeholder="Location" value="' + esc(c.location) + '" oninput="setContactField(' + i + ',\'location\',this.value)">' +
+          '<input placeholder="LinkedIn" value="' + esc(c.linkedin) + '" oninput="setContactField(' + i + ',\'linkedin\',this.value)">' +
+        '</div>' +
+        (contacts.length > 1 ? '<span class="ov-contact-remove" onclick="removeContact(' + i + ')" title="Remove">&times;</span>' : '');
+      wrap.appendChild(row);
+    });
+  }
+  function addContact() {
+    contacts.push({ name: '', email: '', designation: '', phone: '', department: '', location: '', linkedin: '' });
+    renderContacts();
+  }
+  function removeContact(i) { contacts.splice(i, 1); renderContacts(); onFieldChange(); }
+
+  function renderActivityAndFiles() {
+    const up = document.getElementById('ov-upcoming-activity');
+    const rows = [];
+    if (card.nextActivity) rows.push(formatNextActivity(card.nextActivity));
+    if (card.overdue) rows.push('Follow-up overdue');
+    up.innerHTML = rows.length
+      ? rows.map(function (t) { return '<div class="crm-activity-row"><span class="crm-act-ic"><svg viewBox="0 0 16 16" fill="none"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 6.5h11M5.5 2.3v2.2M10.5 2.3v2.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span><div class="crm-activity-text">' + esc(t) + '</div></div>'; }).join('')
+      : '<div class="crm-empty-state">No upcoming activity.</div>';
+
+    const recent = document.getElementById('ov-recent-activity');
+    recent.innerHTML = (card.activityType || card.lastActivity)
+      ? '<div class="crm-activity-row"><span class="crm-act-ic"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3.5" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.6 4.6L8 8.4l5.4-3.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span><div class="crm-activity-text">' + esc(card.activityType || 'Activity') + '</div><div class="crm-activity-date">' + esc(card.lastActivity || '') + '</div></div>'
+      : '<div class="crm-empty-state">No recent activity.</div>';
+
+    document.getElementById('ov-files').innerHTML = '<div class="crm-empty-state">No files yet.</div>';
+  }
+  function formatNextActivity(next) {
+    if (next.label) return next.label + (next.date ? ' · ' + next.date : '');
+    if (next.type === 'followup') return 'Follow-up scheduled for ' + next.date;
+    if (next.type === 'meeting') return 'Meeting scheduled for ' + next.date;
+    if (next.type === 'task') return 'Task "' + next.name + '" due on ' + next.date;
+    return '';
+  }
+
+  function setCustomFieldValue(key, val) { customFieldValues[key] = val; onFieldChange(); }
+  function customFieldValueHTML(f) {
+    const val = esc(customFieldValues[f.key]);
+    if (f.type === 'date') return '<input type="date" value="' + val + '" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">';
+    if (f.type === 'number') return '<input type="text" inputmode="numeric" placeholder="0" value="' + val + '" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">';
+    if (f.type === 'amount') {
+      const cur = esc(customFieldValues[f.key + '-currency'] || '$');
+      return '<div style="display:flex; gap:8px;">' +
+        '<select style="width:76px; flex-shrink:0; border:1px solid #d9dce1; border-radius:7px; padding:8px 6px;" onchange="setCustomFieldValue(\'' + f.key + '-currency\',this.value)">' +
+          ['$', '€', '£', 'AU$'].map(function (c) { return '<option value="' + c + '"' + (cur === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') +
+        '</select>' +
+        '<input type="text" inputmode="numeric" placeholder="0" value="' + val + '" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">' +
+      '</div>';
+    }
+    return '<input type="text" placeholder="Value" value="' + val + '" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">';
+  }
+  function renderCustomFields() {
+    const defs = pipeline.customFieldDefs || [];
+    const wrap = document.getElementById('ov-custom-fields');
+    const cardEl = document.getElementById('ov-custom-fields-card');
+    cardEl.style.display = defs.length ? '' : 'none';
+    wrap.innerHTML = '';
+    defs.forEach(function (f) {
+      const row = document.createElement('div');
+      row.className = 'ov-custom-field';
+      row.innerHTML = '<div class="ov-field-label" style="margin-bottom:8px;">' + esc(f.name) + '</div>' + customFieldValueHTML(f);
+      wrap.appendChild(row);
+    });
+  }
+
+  function deleteRecord() {
+    if (!confirm('Delete "' + (card.deal || 'this record') + '"? This can\'t be undone.')) return;
+    const i = pipeline.cards.findIndex(function (c) { return String(c.id) === String(card.id); });
+    if (i !== -1) pipeline.cards.splice(i, 1);
+    persistNow().then(goBack);
+  }
+
+  let persistTimer = null;
+  function schedulePersist() {
+    document.getElementById('ov-save-hint').textContent = 'Saving…';
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(persistNow, 600);
+  }
+  async function persistNow() {
+    card.deal = document.getElementById('ov-name').value.trim() || card.deal;
+    card.company = document.getElementById('ov-company').value.trim();
+    card.currency = document.getElementById('ov-currency').value;
+    card.value = Number(document.getElementById('ov-value').value.replace(/[^0-9.]/g, '')) || 0;
+    card.location = document.getElementById('ov-location').value.trim();
+    card.website = document.getElementById('ov-website').value.trim();
+    card.companyLinkedin = document.getElementById('ov-company-linkedin').value.trim();
+    card.instagram = document.getElementById('ov-instagram').value.trim();
+    card.closeDate = document.getElementById('ov-close-date').value;
+    card.source = document.getElementById('ov-source').value.trim();
+    const cleanContacts = contacts.filter(function (c) { return (c.name || '').trim(); });
+    card.contacts = cleanContacts;
+    if (cleanContacts[0]) {
+      card.contact = cleanContacts[0].name;
+      card.contactEmail = cleanContacts[0].email;
+      card.contactPhone = cleanContacts[0].phone;
+      card.contactDesignation = cleanContacts[0].designation;
+      card.contactDepartment = cleanContacts[0].department;
+      card.contactLocation = cleanContacts[0].location;
+      card.contactLinkedin = cleanContacts[0].linkedin;
+    }
+    card.customFieldValues = Object.assign({}, customFieldValues);
+
+    try {
+      await fetch('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPipelineId: pipelineKey, pipelineSeq: DATA.pipelineSeq, pipelines: pipelines }),
+      });
+      document.getElementById('ov-save-hint').textContent = 'Saved';
+      setTimeout(function () {
+        const hint = document.getElementById('ov-save-hint');
+        if (hint.textContent === 'Saved') hint.textContent = '';
+      }, 1500);
+    } catch (e) {
+      console.error('titan-crm: failed to save — API unreachable.', e);
+      document.getElementById('ov-save-hint').textContent = 'Couldn’t save — API unreachable';
+    }
+  }
+  function onFieldChange() { schedulePersist(); }
+
+  init();
+</script>
+</body>
+</html>

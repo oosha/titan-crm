@@ -4045,7 +4045,7 @@
               <span class="crm-ai-icon-btn" onclick="toggleAiSummary(this)" title="AI summary">
                 <svg width="13" height="13" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
               </span>
-              <a class="crm-record-ext" title="Open in Titan CRM" onclick="location.href='crm.html?record=6'">
+              <a class="crm-record-ext" title="Open in Titan CRM" onclick="location.href='/crm/pipeline/neo/record/6'">
                 <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 3H3.2C2.54 3 2 3.54 2 4.2v6.6C2 11.46 2.54 12 3.2 12h6.6c.66 0 1.2-.54 1.2-1.2V8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M8.5 2H12v3.5M12 2L6.8 7.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </a>
             </span>
@@ -4505,7 +4505,7 @@
             <span class="app-label">Site</span>
           </div>
           <!-- CRM -->
-          <div class="app-switcher-item" onclick="location.href='crm.html'">
+          <div class="app-switcher-item" onclick="location.href='/crm'">
             <div class="app-icon">
               <img src="app_switcher_assets/grid_icons/crm.svg" alt="CRM" class="app-icon-img">
             </div>
@@ -4598,7 +4598,7 @@
       <span class="pl-dd-name">New pipeline</span>
       <span class="pl-dd-ext" title="Opens in Titan CRM"><svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 3H3.2C2.54 3 2 3.54 2 4.2v6.6C2 11.46 2.54 12 3.2 12h6.6c.66 0 1.2-.54 1.2-1.2V8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M8.5 2H12v3.5M12 2L6.8 7.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </div>
-    <div class="pl-dd-action" onclick="location.href='crm.html';">
+    <div class="pl-dd-action" onclick="location.href='/crm';">
       <span class="pl-dd-ic"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 5a2 2 0 100 4 2 2 0 000-4z" stroke="currentColor" stroke-width="1.2"/><path d="M11.4 8.2l1 .6-1 1.7-1.1-.4a3.7 3.7 0 01-.8.5l-.2 1.2H6.7l-.2-1.2a3.7 3.7 0 01-.8-.5l-1.1.4-1-1.7 1-.6a3.6 3.6 0 010-1l-1-.6 1-1.7 1.1.4c.25-.2.52-.36.8-.5l.2-1.2h2.6l.2 1.2c.28.14.55.3.8.5l1.1-.4 1 1.7-1 .6a3.6 3.6 0 010 1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg></span>
       <span class="pl-dd-name">Manage pipelines</span>
       <span class="pl-dd-ext" title="Opens in Titan CRM"><svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 3H3.2C2.54 3 2 3.54 2 4.2v6.6C2 11.46 2.54 12 3.2 12h6.6c.66 0 1.2-.54 1.2-1.2V8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M8.5 2H12v3.5M12 2L6.8 7.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -6175,7 +6175,7 @@
       if (window.PERSONA_ID === 'default' || typeof withPersona !== 'function') return;
       document.querySelectorAll('a[href]').forEach(function (a) {
         var h = a.getAttribute('href');
-        if (/^(crm|index)\.html/.test(h)) a.setAttribute('href', withPersona(h));
+        if (/^(crm|index)\.html/.test(h) || /^\/(crm|mail)(\/|$|\?)/.test(h)) a.setAttribute('href', withPersona(h));
       });
       document.querySelectorAll('[onclick]').forEach(function (el) {
         var oc = el.getAttribute('onclick');

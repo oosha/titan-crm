@@ -28,7 +28,7 @@
     var note = document.getElementById('ao-opener-note') || document.getElementById('ps-opener-note');
     if (note) {
       note.innerHTML = 'This page wasn’t opened from Titan CRM, so its sidebar isn’t available. ' +
-        '<a href="crm.html">Open Titan CRM</a> and try again.';
+        '<a href="/crm">Open Titan CRM</a> and try again.';
     }
   };
 
@@ -69,12 +69,14 @@
     }
   };
 
-  // ── Switching pipeline from a sub-page: stay in the same kind of sub-page,
-  // just re-target it at the newly-picked pipeline. ──
+  // ── Switching pipeline from a sub-page: stay in the same kind of sub-page
+  // (/crm/pipeline/<id>/setting, /record-setting, ...), just re-target the id
+  // segment at the newly-picked pipeline. ──
   window.switchPipeline = function (id) {
-    var params = new URLSearchParams(location.search);
-    params.set('pipeline', id);
-    location.href = location.pathname + '?' + params.toString();
+    var segs = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
+    if (segs[0] === 'crm' && segs[1] === 'pipeline') segs[2] = encodeURIComponent(id);
+    else segs = ['crm', 'pipeline', encodeURIComponent(id)];
+    location.href = '/' + segs.join('/') + location.search;
   };
 
   // ── Pipeline row's three-dot menu: reuse the cloned #pipeline-nav-menu,
@@ -106,8 +108,8 @@
     var menu = document.getElementById('pipeline-nav-menu');
     var pipelineKey = menu.dataset.pipelineKey;
     window.closePipelineNavMenu();
-    if (kind === 'pipeline-setting') { location.href = 'pipeline-settings.html?pipeline=' + pipelineKey; return; }
-    if (kind === 'entity-setting') { location.href = 'opportunity-settings.html?pipeline=' + pipelineKey; return; }
+    if (kind === 'pipeline-setting') { location.href = '/crm/pipeline/' + encodeURIComponent(pipelineKey) + '/setting' + location.search; return; }
+    if (kind === 'entity-setting') { location.href = '/crm/pipeline/' + encodeURIComponent(pipelineKey) + '/record-setting' + location.search; return; }
     alert('Prototype only: "Add filter view" is not wired up yet.');
   };
 

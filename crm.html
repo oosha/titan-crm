@@ -3506,7 +3506,7 @@
       <div class="app-switcher-section">
         <div class="app-switcher-row">
           <!-- Mail -->
-          <div class="app-switcher-item" onclick="location.href='index.html'">
+          <div class="app-switcher-item" onclick="location.href='/mail'">
             <div class="app-icon">
               <img src="app_switcher_assets/grid_icons/mail.svg" alt="Mail" class="app-icon-img">
             </div>
@@ -5125,6 +5125,21 @@
     let currentPipelineId = 'neo';
     let pipelineSeq = 0;
 
+    // Keeps the address bar as a real, bookmarkable/shareable URL for whatever's on
+    // screen (/crm/pipeline/<id>[/record/<id>]) instead of query-string state —
+    // matters now that this data actually persists. Preserves ?u=<persona> since
+    // that's a separate concern (which tenant's data to load), not a resource id.
+    function updateCrmUrl(pipelineId, recordId) {
+      let path = '/crm';
+      if (pipelineId) {
+        path += '/pipeline/' + encodeURIComponent(pipelineId);
+        if (recordId) path += '/record/' + encodeURIComponent(recordId);
+      }
+      const qs = location.search;
+      const url = path + qs;
+      if (location.pathname + location.search !== url) history.replaceState(null, '', url);
+    }
+
     function switchPipeline(id) {
       const p = PIPELINES[id];
       if (!p) return;
@@ -5155,6 +5170,7 @@
 
       closeCardActionMenu();
       renderBoard();
+      updateCrmUrl(id, null);
     }
 
     // ── Pipeline sidebar row: three-dot action menu ──
@@ -5191,6 +5207,12 @@
       }));
     }
 
+    // Builds a real /crm/pipeline/<id>/... path (preserving ?u=<persona> if present)
+    // instead of query-string state for the pipeline/record id — see updateCrmUrl().
+    function crmPath(pipelineId, suffix) {
+      return '/crm/pipeline/' + encodeURIComponent(pipelineId) + (suffix || '') + location.search;
+    }
+
     function pipelineNavMenuAction(kind) {
       const menu = document.getElementById('pipeline-nav-menu');
       const pipelineKey = menu.dataset.pipelineKey;
@@ -5199,12 +5221,11 @@
       if (!pl) return;
       // The pipeline to edit is handed off via sessionStorage since navigating away
       // drops this page's JS state; the settings page writes its changes back the same
-      // way before navigating back to crm.html?pipeline=<id>.
+      // way before navigating back to /crm/pipeline/<id>.
       if (kind === 'pipeline-setting' || kind === 'entity-setting') {
         sessionStorage.setItem('titan-crm-edit-pipeline', JSON.stringify({ pipelineKey: pipelineKey, pipeline: pl }));
         stashSidebarForHandoff();
-        const dest = kind === 'pipeline-setting' ? 'pipeline-settings.html' : 'opportunity-settings.html';
-        location.href = dest + '?pipeline=' + encodeURIComponent(pipelineKey);
+        location.href = crmPath(pipelineKey, kind === 'pipeline-setting' ? '/setting' : '/record-setting');
         return;
       }
       if (kind === 'delete-pipeline') { deletePipeline(pipelineKey); return; }
@@ -5232,7 +5253,7 @@
         pipelineKey: currentPipelineId, pipelines: PIPELINES, currencySymbol: CURRENCY_SYMBOL,
       }));
       stashSidebarForHandoff();
-      location.href = 'add-opportunity.html?pipeline=' + encodeURIComponent(currentPipelineId);
+      location.href = crmPath(currentPipelineId, '/record/new');
     }
 
     let CURRENCY_SYMBOL = '$';
@@ -5492,6 +5513,7 @@
       const card = oppCardById(cardId);
       if (!card) return;
       oppEditingId = card.id;
+      updateCrmUrl(currentPipelineId, card.id);
       oppContacts = (card.contacts && card.contacts.length)
         ? card.contacts.map(function (c) { return Object.assign({}, c); })
         : [{
@@ -5544,7 +5566,11 @@
         if (wrapper) wrapper.style.display = hiddenFields.indexOf(key) !== -1 ? 'none' : '';
       });
     }
-    function closeOpportunity() { document.getElementById('opp-detail').classList.remove('open'); oppEditingId = null; }
+    function closeOpportunity() {
+      document.getElementById('opp-detail').classList.remove('open');
+      oppEditingId = null;
+      updateCrmUrl(currentPipelineId, null);
+    }
     function oppSetContact(i, field, val) { if (oppContacts[i]) oppContacts[i][field] = val; }
     function oppUpdateAvatar(i, input) {
       const av = input.closest('.opp-contact').querySelector('.opp-contact-avatar');
@@ -5835,18 +5861,19 @@
       schedulePersist();
     }
 
-    // ── Deep link: ?pipeline=<id> selects that pipeline, ?record=<id> opens that
-    // record's detail view directly — used when returning from Pipeline/Opportunity
-    // setting, or from the mailclient CRM panel's "open in Titan CRM" icon. Called from
-    // the end of applyPersona(), once PIPELINES actually holds real data. ──
-    function openFromQuery() {
-      const params = new URLSearchParams(location.search);
-      const pipelineParam = params.get('pipeline');
+    // ── Deep link: /crm/pipeline/<id> selects that pipeline, .../record/<id> opens
+    // that record's detail view directly — used when returning from Pipeline/
+    // Opportunity setting, or from the mailclient CRM panel's "open in Titan CRM"
+    // icon. Called from the end of applyPersona(), once PIPELINES actually holds
+    // real data. ──
+    function openFromRoute() {
+      const segs = INITIAL_PATH_SEGS;
+      const pipelineParam = (segs[0] === 'crm' && segs[1] === 'pipeline') ? decodeURIComponent(segs[2] || '') : null;
       if (pipelineParam && PIPELINES[pipelineParam] &&
           (pipelineParam !== currentPipelineId || pipelineParam === justCommittedPipelineId)) {
         switchPipeline(pipelineParam);
       }
-      const recordId = params.get('record');
+      const recordId = (segs[3] === 'record') ? decodeURIComponent(segs[4] || '') : null;
       if (!recordId) return;
       const pid = Object.keys(PIPELINES).find(function (k) {
         return PIPELINES[k].cards.some(function (c) { return String(c.id) === String(recordId); });
@@ -5861,7 +5888,7 @@
       if (window.PERSONA_ID === 'default' || typeof withPersona !== 'function') return;
       document.querySelectorAll('a[href]').forEach(function (a) {
         var h = a.getAttribute('href');
-        if (/^(crm|index)\.html/.test(h)) a.setAttribute('href', withPersona(h));
+        if (/^(crm|index)\.html/.test(h) || /^\/(crm|mail)(\/|$|\?)/.test(h)) a.setAttribute('href', withPersona(h));
       });
       document.querySelectorAll('[onclick]').forEach(function (el) {
         var oc = el.getAttribute('onclick');
@@ -5904,6 +5931,12 @@
     // runtime of its own).
     const API_BASE = new URLSearchParams(location.search).get('apiBase') || '';
     function apiUrl(path) { return API_BASE + path; }
+
+    // Captured before anything (switchPipeline's updateCrmUrl) rewrites the address
+    // bar via history.replaceState — openFromRoute() below needs the URL as the user
+    // actually requested it (e.g. .../record/6), not whatever it's been overwritten to
+    // by the time PIPELINES finishes loading.
+    const INITIAL_PATH_SEGS = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
 
     async function fetchPipelineData(personaId) {
       const res = await fetch(apiUrl('/api/data?persona=' + encodeURIComponent(personaId)), { cache: 'no-store' });
@@ -5997,7 +6030,7 @@
         applyPendingPipelineSettingsCommit();
         rebuildPipelineNav(Object.keys(PIPELINES).map(function (id) { return PIPELINES[id]; }));
         switchPipeline(currentPipelineId);
-        openFromQuery();
+        openFromRoute();
 
         // Only "default" has sample data to revert to — other personas are a
         // single file with no seed, so hide the option rather than show one
