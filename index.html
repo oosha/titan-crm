@@ -6589,7 +6589,17 @@
       // Real record open (not just the local demo state) — write the note back.
       if (panelRecord && panelRecord.recordId != null && REAL_PIPELINES) {
         const card = cardFor({ pipeline: panelRecord.key, recordId: panelRecord.recordId });
-        if (card) { card.note = text; card.noteDate = noteDate; persistRealData(); }
+        if (card) {
+          // Keep the previous note by moving it into Recent Activity — the mail panel
+          // shows old notes there only (no notes history like the full record page).
+          if (card.note) {
+            if (!card.recentActivities) card.recentActivities = [];
+            card.recentActivities.unshift({ type: 'note', text: card.note, date: card.noteDate || 'Earlier' });
+          }
+          card.note = text; card.noteDate = noteDate;
+          fillRealActivityAndFiles(card);
+          persistRealData();
+        }
       }
     }
 
