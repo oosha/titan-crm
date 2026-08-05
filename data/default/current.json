@@ -4,34 +4,94 @@
   "pipelines": {
     "neo": {
       "id": "neo",
-      "name": "Neo partnerships",
+      "name": "Neo partnership",
       "entity": "Opportunity",
       "plural": "opportunities",
       "color": "#7a6ba3",
       "stages": [
         {
           "key": "lead",
-          "label": "Lead"
+          "label": "Lead",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "qualified",
-          "label": "Qualified"
+          "label": "Qualified",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "demo",
-          "label": "Demo Scheduled"
+          "label": "Demo Scheduled",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "proposal",
-          "label": "Proposal Sent"
+          "label": "Proposal Sent",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "negotiation",
-          "label": "Negotiation"
+          "label": "Negotiation",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "closed",
-          "label": "Closed"
+          "label": "Closed",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         }
       ],
       "cards": [
