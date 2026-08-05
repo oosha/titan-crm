@@ -41,37 +41,11 @@
           "contact": "Olivia Bennett",
           "initials": "OB",
           "deal": "BrightPath Pro plan",
-          "value": 3200,
+          "value": 3000,
           "stage": "lead",
           "lastActivity": "2d ago",
           "activityType": "Email sent",
-          "overdue": false,
-          "location": "",
-          "currency": "$",
-          "closeDate": "",
-          "source": "",
-          "website": "",
-          "companyLinkedin": "",
-          "instagram": "",
-          "note": "",
-          "contacts": [
-            {
-              "name": "Olivia Bennett",
-              "email": "",
-              "designation": "",
-              "phone": "",
-              "department": "",
-              "location": "",
-              "linkedin": ""
-            }
-          ],
-          "contactEmail": "",
-          "contactPhone": "",
-          "contactDesignation": "",
-          "contactDepartment": "",
-          "contactLocation": "",
-          "contactLinkedin": "",
-          "customFieldValues": {}
+          "overdue": false
         },
         {
           "id": 2,
@@ -185,13 +159,7 @@
         }
       ],
       "hiddenFields": [],
-      "customFieldDefs": [
-        {
-          "key": "cf1",
-          "name": "Demo date",
-          "type": "date"
-        }
-      ],
+      "customFieldDefs": [],
       "contactsEnabled": true
     }
   }

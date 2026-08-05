@@ -296,6 +296,8 @@
     add.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Add stage';
     add.addEventListener('click', addStage);
     wrap.appendChild(add);
+
+    renderStageDetails();
   }
 
   function editStage(i) {
@@ -327,7 +329,7 @@
     if (chev) { const i = Number(chev.dataset.idx); if (stages[i]) stages[i].label = input.value.trim(); }
   }
   function addStage() {
-    stageSeq++; stages.push({ key: 's' + stageSeq, label: 'New stage' });
+    stageSeq++; stages.push(ensureStageDetailFields({ key: 's' + stageSeq, label: 'New stage' }));
     renderStages();
     editStage(stages.length - 1);
   }
@@ -335,6 +337,158 @@
     if (stages.length <= 2) return;
     stages.splice(i, 1);
     renderStages();
+  }
+
+  function toggleStageDetail(i) {
+    openStageDetailIdx = (openStageDetailIdx === i) ? null : i;
+    renderStageDetails();
+  }
+
+  function stageDetailSummary(stage) {
+    const bits = [];
+    bits.push(stage.advanceMode === 'auto' ? 'Auto-advance' : 'Manual advance');
+    if (stage.tasks.length) bits.push(stage.tasks.length + ' task' + (stage.tasks.length === 1 ? '' : 's'));
+    if (stage.reminderEnabled) bits.push('Reminder after ' + stage.reminderDays + 'd');
+    return bits.join(' · ');
+  }
+
+  function renderStageDetails() {
+    const wrap = document.getElementById('ps-stage-details');
+    wrap.innerHTML = '';
+    stages.forEach(function (stage, i) {
+      ensureStageDetailFields(stage);
+      const row = document.createElement('div');
+      row.className = 'ps-stage-detail' + (openStageDetailIdx === i ? ' open' : '');
+
+      const header = document.createElement('div');
+      header.className = 'ps-stage-detail-header';
+      header.innerHTML =
+        '<span class="ps-stage-detail-dot" style="background:' + color + ';"></span>' +
+        '<span class="ps-stage-detail-name"></span>' +
+        '<span class="ps-stage-detail-summary"></span>' +
+        '<span class="ps-stage-detail-chevron">▾</span>';
+      header.querySelector('.ps-stage-detail-name').textContent = stage.label || '—';
+      header.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(stage);
+      header.addEventListener('click', function () { toggleStageDetail(i); });
+      row.appendChild(header);
+
+      const body = document.createElement('div');
+      body.className = 'ps-stage-detail-body';
+
+      // Description
+      const descField = document.createElement('div');
+      descField.className = 'ps-stage-field';
+      descField.innerHTML =
+        '<div class="ps-stage-field-label">Description</div>' +
+        '<textarea class="ps-stage-textarea" placeholder="What does this stage mean? When should a record be here?"></textarea>';
+      const descInput = descField.querySelector('textarea');
+      descInput.value = stage.description;
+      descInput.addEventListener('input', function () { stage.description = descInput.value; });
+      body.appendChild(descField);
+
+      // Tasks
+      const tasksField = document.createElement('div');
+      tasksField.className = 'ps-stage-field';
+      tasksField.innerHTML = '<div class="ps-stage-field-label">Tasks</div><div class="ps-task-list"></div>';
+      const taskList = tasksField.querySelector('.ps-task-list');
+      stage.tasks.forEach(function (task, ti) {
+        const taskRow = document.createElement('div');
+        taskRow.className = 'ps-task-row';
+        taskRow.innerHTML =
+          '<input class="ps-stage-input" type="text" value="' + task.replace(/"/g, '&quot;') + '">' +
+          '<span class="ps-task-remove" title="Remove">&times;</span>';
+        taskRow.querySelector('input').addEventListener('input', function (e) { stage.tasks[ti] = e.target.value; });
+        taskRow.querySelector('.ps-task-remove').addEventListener('click', function () {
+          stage.tasks.splice(ti, 1);
+          renderStageDetails();
+        });
+        taskList.appendChild(taskRow);
+      });
+      const addTaskRow = document.createElement('div');
+      addTaskRow.className = 'ps-task-add-row';
+      addTaskRow.innerHTML =
+        '<input class="ps-stage-input" type="text" placeholder="e.g. Send intro email">' +
+        '<button class="ps-task-add-btn" type="button">+ Add task</button>';
+      const addTaskInput = addTaskRow.querySelector('input');
+      const commitAddTask = function () {
+        const v = addTaskInput.value.trim();
+        if (!v) return;
+        stage.tasks.push(v);
+        renderStageDetails();
+      };
+      addTaskRow.querySelector('.ps-task-add-btn').addEventListener('click', commitAddTask);
+      addTaskInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); commitAddTask(); } });
+      tasksField.appendChild(addTaskRow);
+      body.appendChild(tasksField);
+
+      // Email sequence
+      const emailField = document.createElement('div');
+      emailField.className = 'ps-stage-field';
+      emailField.innerHTML =
+        '<div class="ps-stage-field-label">Email sequence</div>' +
+        '<select class="ps-stage-select">' +
+        EMAIL_SEQUENCE_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') +
+        '</select>';
+      const emailSelect = emailField.querySelector('select');
+      emailSelect.value = stage.emailSequence;
+      emailSelect.addEventListener('change', function () { stage.emailSequence = emailSelect.value; });
+      body.appendChild(emailField);
+
+      // Move to next stage when
+      const advanceField = document.createElement('div');
+      advanceField.className = 'ps-stage-field';
+      const manualId = 'ps-advance-manual-' + i, autoId = 'ps-advance-auto-' + i;
+      advanceField.innerHTML =
+        '<div class="ps-stage-field-label">Move to next stage when</div>' +
+        '<label class="ps-radio-row"><input type="radio" name="ps-advance-' + i + '" id="' + manualId + '" value="manual">Manually</label>' +
+        '<label class="ps-radio-row"><input type="radio" name="ps-advance-' + i + '" id="' + autoId + '" value="auto">Automatically when…</label>' +
+        '<select class="ps-stage-select ps-advance-condition">' +
+        ADVANCE_CONDITION_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') +
+        '</select>';
+      const manualRadio = advanceField.querySelector('#' + manualId);
+      const autoRadio = advanceField.querySelector('#' + autoId);
+      const conditionSelect = advanceField.querySelector('.ps-advance-condition');
+      manualRadio.checked = stage.advanceMode !== 'auto';
+      autoRadio.checked = stage.advanceMode === 'auto';
+      conditionSelect.value = stage.advanceCondition;
+      conditionSelect.style.display = stage.advanceMode === 'auto' ? '' : 'none';
+      function updateAdvanceMode() {
+        stage.advanceMode = autoRadio.checked ? 'auto' : 'manual';
+        conditionSelect.style.display = stage.advanceMode === 'auto' ? '' : 'none';
+        header.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(stage);
+      }
+      manualRadio.addEventListener('change', updateAdvanceMode);
+      autoRadio.addEventListener('change', updateAdvanceMode);
+      conditionSelect.addEventListener('change', function () { stage.advanceCondition = conditionSelect.value; });
+      body.appendChild(advanceField);
+
+      // Follow-up reminder
+      const reminderField = document.createElement('div');
+      reminderField.className = 'ps-stage-field';
+      reminderField.innerHTML =
+        '<div class="ps-stage-field-label">Follow-up reminder</div>' +
+        '<label class="ps-reminder-row">' +
+          '<input type="checkbox" class="ps-reminder-toggle"> Remind me after' +
+          '<input type="number" class="ps-stage-input ps-reminder-days" min="1" max="365"> days of inactivity' +
+        '</label>';
+      const reminderToggle = reminderField.querySelector('.ps-reminder-toggle');
+      const reminderDays = reminderField.querySelector('.ps-reminder-days');
+      reminderToggle.checked = !!stage.reminderEnabled;
+      reminderDays.value = stage.reminderDays;
+      reminderDays.disabled = !stage.reminderEnabled;
+      reminderToggle.addEventListener('change', function () {
+        stage.reminderEnabled = reminderToggle.checked;
+        reminderDays.disabled = !stage.reminderEnabled;
+        header.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(stage);
+      });
+      reminderDays.addEventListener('input', function () {
+        stage.reminderDays = Number(reminderDays.value) || 1;
+      });
+      body.appendChild(reminderField);
+
+      row.appendChild(body);
+      wrap.appendChild(row);
+    });
   }
   renderStages();
 
