@@ -176,14 +176,33 @@
           "activityType": "Email sent",
           "overdue": false,
           "recentActivities": [
-            { "type": "task", "text": "Follow-up overdue", "date": "Just now" }
+            {
+              "type": "task",
+              "text": "Follow-up overdue",
+              "date": "Just now"
+            }
           ],
           "files": [
-            { "name": "proposal.pdf", "size": "102 KB", "direction": "sent" },
-            { "name": "requirements.docx", "size": "48 KB", "direction": "received" },
-            { "name": "archive.zip", "size": "3.4 MB" }
+            {
+              "name": "proposal.pdf",
+              "size": "102 KB",
+              "direction": "sent"
+            },
+            {
+              "name": "requirements.docx",
+              "size": "48 KB",
+              "direction": "received"
+            },
+            {
+              "name": "archive.zip",
+              "size": "3.4 MB"
+            }
           ],
-          "customFieldValues": { "cf1": "High" }
+          "customFieldValues": {
+            "cf1": "High"
+          },
+          "note": "The meeting went well and they are reviewing the proposal with the team.",
+          "noteDate": "5 Aug"
         },
         {
           "id": 7,
@@ -241,7 +260,11 @@
       ],
       "hiddenFields": [],
       "customFieldDefs": [
-        { "key": "cf1", "name": "Renewal Risk", "type": "text" }
+        {
+          "key": "cf1",
+          "name": "Renewal Risk",
+          "type": "text"
+        }
       ],
       "contactsEnabled": true
     },
