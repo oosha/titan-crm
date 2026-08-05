@@ -346,18 +346,6 @@
           "lastActivity": "1d ago",
           "activityType": "Email sent",
           "overdue": false
-        },
-        {
-          "id": 10,
-          "deal": "home food",
-          "company": "Northwind",
-          "contact": "Emma Clarke",
-          "contactEmail": "emma.clarke@northwind.co",
-          "value": 0,
-          "stage": "lead",
-          "lastActivity": "just now",
-          "activityType": "Email sent",
-          "overdue": false
         }
       ],
       "hiddenFields": [],
