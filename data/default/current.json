@@ -185,7 +185,13 @@
         }
       ],
       "hiddenFields": [],
-      "customFieldDefs": [],
+      "customFieldDefs": [
+        {
+          "key": "cf1",
+          "name": "Demo date",
+          "type": "date"
+        }
+      ],
       "contactsEnabled": true
     }
   }
