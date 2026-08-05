@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Pipeline setting — Titan CRM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="titan-sidebar.css">
+<link rel="stylesheet" href="/titan-sidebar.css">
 <style>
   .subpage-body { background: #f7f8fa; color: #222; }
   .ps-btn-primary {
@@ -67,10 +67,50 @@
     color: #2170f4; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
   }
   .np-chev-add:hover { border-color: #2170f4; background: #f5f9ff; }
+
+  /* Per-stage details accordion */
+  .ps-stage-detail { border: 1px solid #e8eaed; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+  .ps-stage-detail:last-child { margin-bottom: 0; }
+  .ps-stage-detail-header {
+    display: flex; align-items: center; gap: 10px; padding: 13px 16px; cursor: pointer; user-select: none;
+  }
+  .ps-stage-detail-header:hover { background: #f7f8fa; }
+  .ps-stage-detail-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .ps-stage-detail-name { font-size: 13.5px; font-weight: 600; color: #1a1a1a; flex: 1; }
+  .ps-stage-detail-summary { font-size: 12px; color: #9a9fa7; }
+  .ps-stage-detail-chevron { color: #9a9fa7; font-size: 11px; transition: transform 0.15s ease; flex-shrink: 0; }
+  .ps-stage-detail.open .ps-stage-detail-chevron { transform: rotate(180deg); }
+  .ps-stage-detail-body { display: none; padding: 4px 16px 20px; border-top: 1px solid #eee; }
+  .ps-stage-detail.open .ps-stage-detail-body { display: block; }
+  .ps-stage-field { margin-top: 16px; }
+  .ps-stage-field-label { font-size: 12.5px; font-weight: 600; color: #444; margin-bottom: 6px; }
+  .ps-stage-textarea, .ps-stage-select, .ps-stage-input {
+    padding: 9px 11px; border: 1px solid #d9dce1; border-radius: 7px; font-size: 13px;
+    font-family: inherit; outline: none; color: #222; background: #fff;
+  }
+  .ps-stage-textarea:focus, .ps-stage-select:focus, .ps-stage-input:focus { border-color: #2170f4; }
+  .ps-stage-textarea { width: 100%; min-height: 56px; resize: vertical; }
+  .ps-task-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .ps-task-row .ps-stage-input { flex: 1; }
+  .ps-task-remove { cursor: pointer; color: #b0b5bb; font-size: 15px; line-height: 1; flex-shrink: 0; }
+  .ps-task-remove:hover { color: #dc2626; }
+  .ps-task-add-row { display: flex; gap: 8px; }
+  .ps-task-add-row .ps-stage-input { flex: 1; }
+  .ps-task-add-btn {
+    background: #f2f3f5; border: none; border-radius: 7px; padding: 0 14px; font-size: 12.5px;
+    font-weight: 600; color: #2170f4; cursor: pointer; flex-shrink: 0;
+  }
+  .ps-task-add-btn:hover { background: #e8f0fe; }
+  .ps-radio-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; color: #222; }
+  .ps-radio-row input { margin: 0; accent-color: #2170f4; }
+  .ps-advance-condition { margin-left: 22px; margin-top: -2px; }
+  .ps-reminder-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #222; flex-wrap: wrap; }
+  .ps-reminder-row input[type="checkbox"] { margin: 0; accent-color: #2170f4; }
+  .ps-reminder-row .ps-stage-input { width: 54px; text-align: center; padding: 7px 8px; }
 </style>
 </head>
 <body data-subpage="pipeline-settings">
-<script src="titan-sidebar.js"></script>
+<script src="/titan-sidebar.js"></script>
 
 <div class="app-window">
   <div id="sidebar-mount"></div>
@@ -101,6 +141,12 @@
           <div class="np-chev-chain" id="ps-stages"></div>
         </div>
 
+        <div class="ps-card">
+          <div class="np-label">Stage details</div>
+          <div class="np-help">Set up what happens at each stage — tasks, email sequences, and how records move to the next one.</div>
+          <div id="ps-stage-details"></div>
+        </div>
+
         <div class="ps-note" id="ps-opener-note"></div>
       </div>
     </div><!-- /subpage-body -->
@@ -128,9 +174,38 @@
       '<a href="/crm">Open Titan CRM</a> and try again.';
   }
 
+  const EMAIL_SEQUENCE_OPTIONS = [
+    { value: '', label: 'None' },
+    { value: 'welcome', label: 'Welcome sequence' },
+    { value: 'nurture', label: 'Nurture sequence' },
+    { value: 're-engagement', label: 'Re-engagement sequence' },
+    { value: 'custom', label: 'Custom…' },
+  ];
+  const ADVANCE_CONDITION_OPTIONS = [
+    { value: 'all-tasks-done', label: 'All tasks above are completed' },
+    { value: 'days-in-stage', label: 'A set number of days after entering this stage' },
+    { value: 'field-updated', label: 'A custom field is updated' },
+    { value: 'contact-replies', label: 'The contact replies to an email' },
+  ];
+  // Older saved pipelines won't have these yet — fill in sensible defaults rather
+  // than erroring, so this feature can roll out without a data migration.
+  function stageDefaults() {
+    return {
+      description: '', tasks: [], emailSequence: '',
+      advanceMode: 'manual', advanceCondition: ADVANCE_CONDITION_OPTIONS[0].value,
+      reminderEnabled: false, reminderDays: 3,
+    };
+  }
+  function ensureStageDetailFields(s) {
+    const d = stageDefaults();
+    Object.keys(d).forEach(function (k) { if (s[k] === undefined) s[k] = d[k]; });
+    return s;
+  }
+
   let color = pipeline ? (pipeline.color || '#2170f4') : '#2170f4';
-  let stages = pipeline ? pipeline.stages.map(function (s) { return Object.assign({}, s); }) : [];
+  let stages = pipeline ? pipeline.stages.map(function (s) { return ensureStageDetailFields(Object.assign({}, s)); }) : [];
   let stageSeq = stages.length;
+  let openStageDetailIdx = null;
 
   const psTitleText = (pipeline ? pipeline.name : 'Pipeline') + ' setting';
   document.getElementById('ps-title').textContent = psTitleText;

@@ -14,7 +14,7 @@
     window.PERSONA_ID = u || 'default';
   })();
 </script>
-<link rel="stylesheet" href="titan-sidebar.css">
+<link rel="stylesheet" href="/titan-sidebar.css">
 <style>
   .subpage-body { background: #f7f8fa; color: #222; }
   .ov-btn-primary {
@@ -173,13 +173,13 @@
     <!-- Header with logo -->
     <div class="sidebar-header">
       <div class="tab-switch">
-        <img src="assets/2f8b4195-6886-4685-9c9c-cf0d3552b789.svg" alt="mail">
+        <img src="/assets/2f8b4195-6886-4685-9c9c-cf0d3552b789.svg" alt="mail">
         <div class="tab-switch-arrow">
-          <img src="assets/1c88a1be-2a78-4065-86f7-8eb060dbb526.svg" alt="">
+          <img src="/assets/1c88a1be-2a78-4065-86f7-8eb060dbb526.svg" alt="">
         </div>
       </div>
       <div class="titan-logo">
-        <img src="assets/fa36f613-977c-444a-bef5-e1b5f5f1b340.svg" alt="Titan">
+        <img src="/assets/fa36f613-977c-444a-bef5-e1b5f5f1b340.svg" alt="Titan">
       </div>
     </div>
 
@@ -187,7 +187,7 @@
       <div class="sidebar-line" style="margin-top:2px;"></div>
       <div class="account-header" id="account-header" onclick="toggleAccountMenu(event)">
         <div class="account-avatar">
-          <img class="bg" src="assets/d2c6a617-0407-4985-8c8b-740201e73dfe.svg" alt="">
+          <img class="bg" src="/assets/d2c6a617-0407-4985-8c8b-740201e73dfe.svg" alt="">
           <span id="account-active-initial">E</span>
         </div>
         <span class="account-email-text" id="account-active-email">ella.henderson@avontechlabs.com</span>
@@ -218,22 +218,22 @@
 
     <div style="position:relative; flex-shrink:0;">
       <div style="height:1px; position:relative; overflow:visible;">
-        <img src="assets/0d00b891-46d6-4063-acc9-0db4c8c41036.svg" alt=""
+        <img src="/assets/0d00b891-46d6-4063-acc9-0db4c8c41036.svg" alt=""
           style="position:absolute; inset:-1px 0; width:100%; height:2px; object-fit:fill;">
       </div>
       <div class="sidebar-footer">
         <div class="footer-btn">
-          <div class="footer-btn-icon"><img src="assets/34686e57-21d5-4bf6-82c4-1c6e474d25d3.svg" alt=""></div>
+          <div class="footer-btn-icon"><img src="/assets/34686e57-21d5-4bf6-82c4-1c6e474d25d3.svg" alt=""></div>
           <span>Bug</span>
         </div>
         <div class="footer-divider"></div>
         <div class="footer-btn">
-          <div class="footer-btn-icon"><img src="assets/03a449fb-b16b-4b26-8eec-0fa033eff13e.svg" alt=""></div>
+          <div class="footer-btn-icon"><img src="/assets/03a449fb-b16b-4b26-8eec-0fa033eff13e.svg" alt=""></div>
           <span>Feature</span>
         </div>
         <div class="footer-divider"></div>
         <div class="footer-btn" onclick="toggleSettingsModal()">
-          <div class="footer-btn-icon settings-icon"><img src="assets/6ea52e57-1d75-47b1-97cd-e416a5d2372d.svg" alt=""></div>
+          <div class="footer-btn-icon settings-icon"><img src="/assets/6ea52e57-1d75-47b1-97cd-e416a5d2372d.svg" alt=""></div>
         </div>
       </div>
     </div>
@@ -354,7 +354,7 @@
   </div>
 </div>
 
-<script src="titan-sidebar.js"></script>
+<script src="/titan-sidebar.js"></script>
 <script>
   // ── This page is reached from OUTSIDE Titan CRM (a mail client CRM-panel link),
   // not via in-app navigation from crm.html — so unlike the other sub-pages
@@ -364,14 +364,15 @@
   // bootstraps. That's what makes it work as a real deep link from anywhere. ──
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function withPersona(href) {
-    if (window.PERSONA_ID === 'default') return href;
-    return href + (href.indexOf('?') === -1 ? '?' : '&') + 'u=' + window.PERSONA_ID;
-  }
+  // Preserves the full query string (?u=<persona>, ?apiBase=... for local testing,
+  // etc.) on any link built from this page — same convention as crm.html's crmPath().
+  function crmPath(suffix) { return (suffix || '/crm') + location.search; }
 
-  const qp = new URLSearchParams(location.search);
-  const requestedPipelineId = qp.get('pipeline') || '';
-  const recordId = qp.get('record') || '';
+  // URL is /crm/pipeline/<id>/record/<recordId>/view — real path segments, matching
+  // crm.html's own /crm/pipeline/<id>/record/<id> convention, not query params.
+  const pathSegs = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
+  const requestedPipelineId = (pathSegs[0] === 'crm' && pathSegs[1] === 'pipeline') ? decodeURIComponent(pathSegs[2] || '') : '';
+  const recordId = (pathSegs[3] === 'record') ? decodeURIComponent(pathSegs[4] || '') : '';
 
   const ENTITY_LABELS = {
     Opportunity: { name: 'Opportunity name', stage: 'Opportunity stage', close: 'Expected close date' },
@@ -391,7 +392,7 @@
   let customFieldValues = {};
 
   function goBack() {
-    location.href = withPersona('/crm/pipeline/' + encodeURIComponent(pipelineKey || requestedPipelineId || 'neo'));
+    location.href = crmPath('/crm/pipeline/' + encodeURIComponent(pipelineKey || requestedPipelineId || 'neo'));
   }
 
   // ── Sidebar pipeline list — same markup/behavior crm.html builds at load time. ──
@@ -405,7 +406,7 @@
       const item = document.createElement('div');
       item.className = 'nav-item' + (pl.id === activeId ? ' active' : '');
       item.dataset.pipelineId = pl.id;
-      item.onclick = function () { location.href = withPersona('/crm/pipeline/' + encodeURIComponent(pl.id)); };
+      item.onclick = function () { location.href = crmPath('/crm/pipeline/' + encodeURIComponent(pl.id)); };
       item.innerHTML =
         '<div class="nav-item-icon"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="' + (pl.color || '#2170f4') + '"/></svg></div>' +
         '<span class="nav-item-label' + (pl.id === activeId ? ' active' : '') + '"></span>' +
@@ -429,7 +430,7 @@
     document.getElementById('ov-delete-btn').style.display = 'none';
     const nf = document.getElementById('ov-not-found');
     nf.style.display = '';
-    nf.innerHTML = esc(message) + ' <a href="' + withPersona('/crm') + '">Open Titan CRM</a>';
+    nf.innerHTML = esc(message) + ' <a href="' + crmPath('/crm') + '">Open Titan CRM</a>';
   }
 
   async function init() {
