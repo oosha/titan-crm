@@ -276,7 +276,7 @@
     <!-- Header with logo -->
     <div class="sidebar-header">
       <div class="tab-switch">
-        <img src="/assets/2f8b4195-6886-4685-9c9c-cf0d3552b789.svg" alt="mail">
+        <img src="/app_switcher_assets/grid_icons/crm.svg" alt="CRM">
         <div class="tab-switch-arrow">
           <img src="/assets/1c88a1be-2a78-4065-86f7-8eb060dbb526.svg" alt="">
         </div>
@@ -502,7 +502,7 @@
     <div class="ov-appsw-item"><img src="/app_switcher_assets/grid_icons/backup.svg" alt=""><span>Backup</span></div>
     <div class="ov-appsw-item"><img src="/app_switcher_assets/grid_icons/tasks.svg" alt=""><span>Tasks</span></div>
     <div class="ov-appsw-item"><img src="/app_switcher_assets/grid_icons/site.svg" alt=""><span>Site</span></div>
-    <div class="ov-appsw-item" onclick="location.href='/crm' + location.search"><img src="/app_switcher_assets/grid_icons/crm.svg" alt=""><span>CRM</span></div>
+    <div class="ov-appsw-item" style="background:#eaf1ff;" onclick="location.href='/crm' + location.search"><img src="/app_switcher_assets/grid_icons/crm.svg" alt=""><span style="color:#2170f4; font-weight:700;">CRM</span></div>
   </div>
 </div>
 <script src="/titan-sidebar.js"></script>
@@ -656,6 +656,13 @@
     } else {
       document.getElementById('ov-last-note').style.display = 'none';
     }
+    // Back-compat: older records kept past notes only as recentActivities entries.
+    // Seed the notes-section history from them once (it persists thereafter).
+    if (!card.noteHistory) {
+      card.noteHistory = (card.recentActivities || [])
+        .filter(function (a) { return a.type === 'note' && (a.snippet || a.text) !== card.note; })
+        .map(function (a) { return { text: a.snippet || a.text, author: a.author || 'Usha', date: a.date }; });
+    }
     renderNotes();
     document.getElementById('ov-created-by').textContent = 'Created by ' + (card.createdBy || 'Usha Loutongbam');
 
@@ -744,14 +751,17 @@
     const input = document.getElementById('ov-note-input');
     const text = input.value.trim();
     if (!text) return;
-    // The Notes section shows only the latest note. Keep the previous one instead of
-    // dropping it: move it into Recent Activity as a note entry.
+    const now = formatNoteDate(new Date());
+    // Previous note drops into the notes-section history (it shows the note text).
     if (card.note) {
-      if (!card.recentActivities) card.recentActivities = [];
-      card.recentActivities.unshift({ type: 'note', text: card.note, date: card.noteDate || 'Earlier', author: card.noteAuthor || 'Usha' });
+      if (!card.noteHistory) card.noteHistory = [];
+      card.noteHistory.unshift({ text: card.note, author: card.noteAuthor || 'Usha', date: card.noteDate || 'Earlier' });
     }
+    // Log this note to Recent Activity as "Note added by <author>".
+    if (!card.recentActivities) card.recentActivities = [];
+    card.recentActivities.unshift({ type: 'note', text: text, author: NOTE_AUTHOR, date: now });
     card.note = text;
-    card.noteDate = formatNoteDate(new Date());
+    card.noteDate = now;
     card.noteAuthor = NOTE_AUTHOR;
     document.getElementById('ov-last-note').style.display = '';
     document.getElementById('ov-last-note-text').textContent = text;
@@ -768,11 +778,11 @@
   function renderNotes() {
     const wrap = document.getElementById('ov-note-history');
     if (!wrap) return;
-    const olds = (card.recentActivities || []).filter(function (a) { return a.type === 'note'; });
-    wrap.innerHTML = olds.map(function (a) {
+    const olds = card.noteHistory || [];
+    wrap.innerHTML = olds.map(function (n) {
       return '<div class="ov-note-old">' +
-        '<div class="meta"><span class="note-ic">' + actIconSvgOnly('note') + '</span>Note added by ' + esc(a.author || 'Usha') + ' on ' + esc(a.date || '') + '</div>' +
-        '<span class="txt">' + esc(a.text) + '</span>' +
+        '<div class="meta"><span class="note-ic">' + actIconSvgOnly('note') + '</span>Note added by ' + esc(n.author || 'Usha') + ' on ' + esc(n.date || '') + '</div>' +
+        '<span class="txt">' + esc(n.text) + '</span>' +
       '</div>';
     }).join('');
   }
@@ -889,11 +899,14 @@
           // A task whose snippet is really a reference to another activity (e.g. "Send
           // updated proposal deck" pointing back at the email that requested it) renders
           // as an icon + linked-looking label instead of plain snippet text.
+          // A note reads as "Note added by <author>" with the note text as its snippet.
+          const isNote = a.type === 'note';
+          const title = isNote ? 'Note added by ' + esc(a.author || 'Usha') : esc(a.text);
           const snippetHTML = a.snippetLink
             ? '<div class="crm-activity-snippet crm-snippet-link">' + actIconSvgOnly('email') + '<span>' + esc(a.snippetLink) + '</span></div>'
-            : (a.snippet ? '<div class="crm-activity-snippet">' + esc(a.snippet) + '</div>' : '');
+            : ((a.snippet || (isNote && a.text)) ? '<div class="crm-activity-snippet">' + esc(a.snippet || a.text) + '</div>' : '');
           return '<div class="crm-activity-row">' + actIcon(a.type) +
-            '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + esc(a.text) + '</div>' + snippetHTML + '</div>' +
+            '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + title + '</div>' + snippetHTML + '</div>' +
             (a.date ? '<div class="crm-activity-date">' + esc(a.date) + '</div>' : '') +
             '</div>';
         }).join('')

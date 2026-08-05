@@ -2824,7 +2824,7 @@
     .crm-task-due { margin-left: auto; font-size: 11.5px; color: #999; }
     .crm-task-due.overdue { color: #dc2626; font-weight: 600; }
     .crm-add-task { font-size: 12.5px; color: #2170f4; font-weight: 600; cursor: pointer; margin-top: 6px; }
-    .crm-section-notes { padding-top: 4px; }
+    .crm-section-notes { padding-top: 16px; }
     .crm-note {
       background: rgba(33,112,244,0.05); border-radius: 6px; padding: 12px 14px; font-size: 12.5px; color: #444; margin-bottom: 8px;
     }
@@ -6232,11 +6232,14 @@
         // A task whose snippet is really a reference to another activity (e.g. "Send
         // updated proposal deck" pointing back at the email that requested it) renders
         // as an icon + linked-looking label instead of plain snippet text.
+        // A note reads as "Note added by <author>" with the note text as its snippet.
+        const isNote = a.type === 'note';
+        const title = isNote ? 'Note added by ' + esc(a.author || 'Usha') : esc(a.text);
         const snippetHTML = a.snippetLink
           ? '<div class="crm-activity-snippet crm-snippet-link">' + actIconSvgOnly('email') + '<span>' + esc(a.snippetLink) + '</span></div>'
-          : (a.snippet ? '<div class="crm-activity-snippet">' + esc(a.snippet) + '</div>' : '');
+          : ((a.snippet || (isNote && a.text)) ? '<div class="crm-activity-snippet">' + esc(a.snippet || a.text) + '</div>' : '');
         return '<div class="crm-activity-row"><span class="crm-act-ic ' + esc(a.type || 'email') + '"><svg viewBox="0 0 16 16" fill="none">' + (ACT_ICON_SVG[a.type] || ACT_ICON_SVG.email) + '</svg></span>' +
-          '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + esc(a.text) + '</div>' + snippetHTML + '</div>' +
+          '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + title + '</div>' + snippetHTML + '</div>' +
           (a.date ? '<div class="crm-activity-date">' + esc(a.date) + '</div>' : '') + '</div>';
       }).join('') : '<div class="crm-empty-state">No recent activity.</div>';
 
@@ -6596,13 +6599,12 @@
       if (panelRecord && panelRecord.recordId != null && REAL_PIPELINES) {
         const card = cardFor({ pipeline: panelRecord.key, recordId: panelRecord.recordId });
         if (card) {
-          // Keep the previous note by moving it into Recent Activity — the mail panel
-          // shows old notes there only (no notes history like the full record page).
-          if (card.note) {
-            if (!card.recentActivities) card.recentActivities = [];
-            card.recentActivities.unshift({ type: 'note', text: card.note, date: card.noteDate || 'Earlier', author: card.noteAuthor || 'Usha' });
-          }
-          card.note = text; card.noteDate = noteDate; card.noteAuthor = (window.ACTING_BY || 'Usha');
+          // Log this note to Recent Activity as "Note added by <author>" (the panel has
+          // no notes history like the full record page — just the latest note above).
+          const author = (window.ACTING_BY || 'Usha');
+          if (!card.recentActivities) card.recentActivities = [];
+          card.recentActivities.unshift({ type: 'note', text: text, author: author, date: noteDate });
+          card.note = text; card.noteDate = noteDate; card.noteAuthor = author;
           fillRealActivityAndFiles(card);
           persistRealData();
         }
