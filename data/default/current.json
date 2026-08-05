@@ -1,5 +1,5 @@
 {
-  "currentPipelineId": "p1",
+  "currentPipelineId": "neo",
   "pipelineSeq": 1,
   "pipelines": {
     "neo": {
@@ -105,7 +105,35 @@
           "stage": "lead",
           "lastActivity": "2d ago",
           "activityType": "Email sent",
-          "overdue": false
+          "overdue": false,
+          "upcomingActivities": [],
+          "note": "Bright team wants to review internally first and come back",
+          "noteDate": "5 Aug",
+          "currency": "$",
+          "location": "",
+          "website": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "contacts": [
+            {
+              "name": "Olivia Bennett",
+              "email": "",
+              "designation": "",
+              "phone": "",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactEmail": "",
+          "contactPhone": "",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
         },
         {
           "id": 2,
