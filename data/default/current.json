@@ -185,27 +185,94 @@
           "note": "Got a call back from Ryan that they may need another week or so.",
           "noteDate": "5 Aug",
           "contacts": [
-            { "name": "Ryan Walker", "designation": "VP, Product", "email": "ryan.walker@meridianlabs.com", "phone": "+1 (415) 555-0134", "linkedin": "linkedin.com/in/ryanwalker" },
-            { "name": "Jason Miller", "email": "jason.miller@meridianlabs.com", "linkedin": "linkedin.com/in/jasonmiller" },
-            { "name": "Owen Price", "email": "owen.price@meridianlabs.com", "linkedin": "linkedin.com/in/owenprice" }
+            {
+              "name": "Ryan Walker",
+              "designation": "VP, Product",
+              "email": "ryan.walker@meridianlabs.com",
+              "phone": "+1 (415) 555-0134",
+              "linkedin": "linkedin.com/in/ryanwalker"
+            },
+            {
+              "name": "Jason Miller",
+              "email": "jason.miller@meridianlabs.com",
+              "linkedin": "linkedin.com/in/jasonmiller"
+            },
+            {
+              "name": "Owen Price",
+              "email": "owen.price@meridianlabs.com",
+              "linkedin": "linkedin.com/in/owenprice"
+            }
           ],
           "upcomingActivities": [
-            { "type": "email", "text": "Follow-up on proposal", "date": "Thu" },
-            { "type": "meeting", "text": "Proposal follow-up questions", "date": "Jul 30, 3:00 PM" },
-            { "type": "task", "text": "Send updated proposal deck", "overdue": true },
-            { "type": "task", "text": "Schedule follow-up call", "date": "Mon, 5pm" }
+            {
+              "type": "email",
+              "text": "Follow-up on proposal",
+              "date": "Thu"
+            },
+            {
+              "type": "meeting",
+              "text": "Proposal follow-up questions",
+              "date": "Jul 30, 3:00 PM"
+            },
+            {
+              "type": "task",
+              "text": "Send updated proposal deck",
+              "overdue": true
+            },
+            {
+              "type": "task",
+              "text": "Schedule follow-up call",
+              "date": "Mon, 5pm"
+            }
           ],
           "recentActivities": [
-            { "type": "email", "text": "Project roadmap for Dashboard v2", "snippet": "Ryan confirmed the Jun 12 timeline and asked about multi-theme support.", "date": "Jun 12" },
-            { "type": "meeting", "text": "Design review call with Ryan Walker", "snippet": "Walk through the v2 mockups and align on theming approach.", "date": "Jun 10" },
-            { "type": "note", "text": "Note added by Usha", "snippet": "Wants multi-theme support prioritized before signing off on the proposal.", "date": "Jun 10" },
-            { "type": "phone", "text": "Intro call with Ryan", "snippet": "First call - walked through Titan's plans and pricing tiers.", "date": "Jun 8" },
-            { "type": "task", "text": "Send updated proposal deck", "snippetLink": "Project roadmap for Dashboard v2", "date": "Jun 7" }
+            {
+              "type": "email",
+              "text": "Project roadmap for Dashboard v2",
+              "snippet": "Ryan confirmed the Jun 12 timeline and asked about multi-theme support.",
+              "date": "Jun 12"
+            },
+            {
+              "type": "meeting",
+              "text": "Design review call with Ryan Walker",
+              "snippet": "Walk through the v2 mockups and align on theming approach.",
+              "date": "Jun 10"
+            },
+            {
+              "type": "note",
+              "text": "Note added by Usha",
+              "snippet": "Wants multi-theme support prioritized before signing off on the proposal.",
+              "date": "Jun 10"
+            },
+            {
+              "type": "phone",
+              "text": "Intro call with Ryan",
+              "snippet": "First call - walked through Titan's plans and pricing tiers.",
+              "date": "Jun 8"
+            },
+            {
+              "type": "task",
+              "text": "Send updated proposal deck",
+              "snippetLink": "Project roadmap for Dashboard v2",
+              "date": "Jun 7"
+            }
           ],
           "files": [
-            { "name": "dashboard_v2_proposal.pdf", "size": "102 KB", "direction": "sent" },
-            { "name": "theming_requirements.docx", "size": "48 KB", "direction": "received" },
-            { "name": "mockups_v2_final.zip", "size": "3.4 MB", "direction": "sent" }
+            {
+              "name": "dashboard_v2_proposal.pdf",
+              "size": "102 KB",
+              "direction": "sent"
+            },
+            {
+              "name": "theming_requirements.docx",
+              "size": "48 KB",
+              "direction": "received"
+            },
+            {
+              "name": "mockups_v2_final.zip",
+              "size": "3.4 MB",
+              "direction": "sent"
+            }
           ],
           "customFieldValues": {
             "cf1": "High"
@@ -391,6 +458,18 @@
             }
           ],
           "customFieldValues": {}
+        },
+        {
+          "id": 102,
+          "deal": "Emma's coffee",
+          "company": "Northwind",
+          "contact": "Emma Clarke",
+          "contactEmail": "emma.clarke@northwind.co",
+          "value": 0,
+          "stage": "received-0",
+          "lastActivity": "just now",
+          "activityType": "Email received",
+          "overdue": false
         }
       ],
       "hiddenFields": [],
