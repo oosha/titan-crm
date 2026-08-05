@@ -174,16 +174,7 @@
           "stage": "proposal",
           "lastActivity": "8d ago",
           "activityType": "Email sent",
-          "overdue": false,
-          "recentActivities": [
-            { "type": "task", "text": "Follow-up overdue", "date": "Just now" }
-          ],
-          "files": [
-            { "name": "proposal.pdf", "size": "102 KB", "direction": "sent" },
-            { "name": "requirements.docx", "size": "48 KB", "direction": "received" },
-            { "name": "archive.zip", "size": "3.4 MB" }
-          ],
-          "customFieldValues": { "cf1": "High" }
+          "overdue": true
         },
         {
           "id": 7,
@@ -225,12 +216,22 @@
           "lastActivity": "1d ago",
           "activityType": "Email sent",
           "overdue": false
+        },
+        {
+          "id": 10,
+          "deal": "home food",
+          "company": "Northwind",
+          "contact": "Emma Clarke",
+          "contactEmail": "emma.clarke@northwind.co",
+          "value": 0,
+          "stage": "lead",
+          "lastActivity": "just now",
+          "activityType": "Email sent",
+          "overdue": false
         }
       ],
       "hiddenFields": [],
-      "customFieldDefs": [
-        { "key": "cf1", "name": "Renewal Risk", "type": "text" }
-      ],
+      "customFieldDefs": [],
       "contactsEnabled": true
     },
     "p1": {
