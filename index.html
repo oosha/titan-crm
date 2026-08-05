@@ -6193,18 +6193,53 @@
       const recentItems = (card.recentActivities && card.recentActivities.length) ? card.recentActivities
         : ((card.activityType || card.lastActivity) ? [{ type: 'email', text: card.activityType || 'Activity', date: card.lastActivity || '' }] : []);
       if (recent) recent.innerHTML = recentItems.length ? recentItems.map(function (a) {
+        // A task whose snippet is really a reference to another activity (e.g. "Send
+        // updated proposal deck" pointing back at the email that requested it) renders
+        // as an icon + linked-looking label instead of plain snippet text.
+        const snippetHTML = a.snippetLink
+          ? '<div class="crm-activity-snippet crm-snippet-link">' + actIconSvgOnly('email') + '<span>' + esc(a.snippetLink) + '</span></div>'
+          : (a.snippet ? '<div class="crm-activity-snippet">' + esc(a.snippet) + '</div>' : '');
         return '<div class="crm-activity-row"><span class="crm-act-ic ' + esc(a.type || 'email') + '"><svg viewBox="0 0 16 16" fill="none">' + (ACT_ICON_SVG[a.type] || ACT_ICON_SVG.email) + '</svg></span>' +
-          '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + esc(a.text) + '</div>' +
-          (a.snippet ? '<div class="crm-activity-snippet">' + esc(a.snippet) + '</div>' : '') + '</div>' +
+          '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + esc(a.text) + '</div>' + snippetHTML + '</div>' +
           (a.date ? '<div class="crm-activity-date">' + esc(a.date) + '</div>' : '') + '</div>';
       }).join('') : '<div class="crm-empty-state">No recent activity.</div>';
 
       const filesBody = crmSectionBody('Files');
       const files = card.files || [];
-      if (filesBody) filesBody.innerHTML = files.length ? files.map(function (f) {
-        return '<div class="crm-file-row"><span class="crm-file-name">' + esc(f.name) + '</span>' +
-          (f.size ? '<span style="font-size:11px; color:#999; flex-shrink:0;">' + esc(f.size) + '</span>' : '') + '</div>';
-      }).join('') : '<div class="crm-empty-state">No files yet.</div>';
+      if (filesBody) filesBody.innerHTML = files.length ? files.map(renderFileRow).join('') : '<div class="crm-empty-state">No files yet.</div>';
+    }
+    function actIconSvgOnly(type) { return '<svg width="12" height="12" viewBox="0 0 16 16" fill="none">' + (ACT_ICON_SVG[type] || ACT_ICON_SVG.email) + '</svg>'; }
+
+    // Matches the mailclient CRM panel's original static file rows (type icon by
+    // extension, sent/received direction, size, Download/Add-to-Drive actions on
+    // hover) — same treatment opportunity-view.html's file rows use.
+    const FILE_DOWNLOAD_SVG = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2v8.5M8 10.5L4.8 7.3M8 10.5l3.2-3.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+    const FILE_DRIVE_SVG = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="8.5" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 6.2h12" stroke="currentColor" stroke-width="1.2"/><path d="M6 9h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+    const FILE_SENT_SVG = '<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 12L12 4M12 4H6M12 4V10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const FILE_RECEIVED_SVG = '<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 12H10M4 12V6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    function fileIconClass(name) {
+      const ext = String(name || '').split('.').pop().toLowerCase();
+      if (ext === 'pdf') return 'pdf';
+      if (['zip', 'rar', '7z'].indexOf(ext) !== -1) return 'zip';
+      return 'doc';
+    }
+    function fileTypeStroke(cls) { return cls === 'pdf' ? '#e5484d' : cls === 'zip' ? '#9aa1a9' : '#2170f4'; }
+    function renderFileRow(f) {
+      const cls = fileIconClass(f.name);
+      return '<div class="crm-file-row">' +
+        '<span class="crm-file-icon ' + cls + '"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-7-6Z" fill="currentColor"/><path d="M13 2v6h6" fill="none" stroke="' + fileTypeStroke(cls) + '" stroke-width="1.8" stroke-linejoin="round"/></svg></span>' +
+        '<span class="crm-file-name">' + esc(f.name) + '</span>' +
+        '<div class="crm-file-right">' +
+          '<span class="crm-file-meta">' +
+            (f.direction ? '<span class="crm-file-direction ' + esc(f.direction) + '" title="' + (f.direction === 'sent' ? 'Sent' : 'Received') + '">' + (f.direction === 'sent' ? FILE_SENT_SVG : FILE_RECEIVED_SVG) + '</span>' : '') +
+            esc(f.size || '') +
+          '</span>' +
+          '<div class="crm-file-actions">' +
+            '<span class="crm-file-action-btn" title="Download">' + FILE_DOWNLOAD_SVG + '</span>' +
+            '<span class="crm-file-action-btn" title="Add to Drive">' + FILE_DRIVE_SVG + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
     }
 
     // Drives the (rich) CRM panel from a real pipeline record — company/value/note/

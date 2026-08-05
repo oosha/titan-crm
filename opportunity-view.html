@@ -52,9 +52,10 @@
   .ov-inline-input:hover { border-color: #e2e4e8; }
   .ov-inline-input:focus { border-color: #2170f4; background: #fff; box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
   .ov-company-input { font-size: 15px; font-weight: 600; width: 220px; }
-  .ov-value-row { display: flex; align-items: center; gap: 4px; }
-  .ov-currency-select { font-size: 12.5px; color: #888; width: 46px; }
-  .ov-value-input { font-size: 12.5px; font-weight: 500; color: #888; width: 90px; }
+  .ov-value-label { font-size: 12.5px; color: #888; margin-right: 5px; }
+  .ov-value-row { display: flex; align-items: center; gap: 0; }
+  .ov-currency-select { font-size: 12.5px; color: #888; width: 56px; padding-right: 2px; }
+  .ov-value-input { font-size: 12.5px; font-weight: 500; color: #888; width: 90px; padding-left: 2px; }
   .ov-dot { color: #ccc; }
 
   .ov-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; margin-top: 16px; }
@@ -159,6 +160,8 @@
   .crm-act-ic svg { width: 14px; height: 14px; }
   .crm-empty-state { font-size: 13px; color: #9a9fa7; padding: 4px 0; }
   .crm-activity-snippet { font-size: 13px; line-height: 1.5; color: #999; margin-top: 4px; }
+  .crm-snippet-link { display: flex; align-items: center; gap: 5px; }
+  .crm-snippet-link svg { flex-shrink: 0; color: #9a9fa7; }
 
   .crm-file-row {
     display: flex; align-items: center; gap: 8px; padding: 8px 10px; margin-bottom: 6px;
@@ -337,6 +340,7 @@
           <div class="ov-meta-row">
             <input class="ov-inline-input ov-company-input" id="ov-company" data-field="company" placeholder="Company" oninput="onFieldChange()">
             <span class="ov-dot">&middot;</span>
+            <span class="ov-value-label">Total value:</span>
             <div class="ov-value-row">
               <select class="ov-inline-input ov-currency-select" id="ov-currency" onchange="onFieldChange()">
                 <option value="$">$</option><option value="€">€</option><option value="£">£</option><option value="AU$">AU$</option>
@@ -746,6 +750,7 @@
     note: '<path d="M3 2.5h10v11H3v-11Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5.3 5.8h5.4M5.3 8h5.4M5.3 10.2h3.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>',
   };
   function actIcon(type) { return '<span class="crm-act-ic"><svg viewBox="0 0 16 16" fill="none">' + (ACT_ICONS[type] || ACT_ICONS.task) + '</svg></span>'; }
+  function actIconSvgOnly(type) { return '<svg width="12" height="12" viewBox="0 0 16 16" fill="none">' + (ACT_ICONS[type] || ACT_ICONS.email) + '</svg>'; }
 
   function formatNextActivity(next) {
     if (next.label) return next.label + (next.date ? ' · ' + next.date : '');
@@ -797,9 +802,14 @@
       : ((card.activityType || card.lastActivity) ? [{ type: 'email', text: card.activityType || 'Activity', date: card.lastActivity || '' }] : []);
     recent.innerHTML = recentItems.length
       ? recentItems.map(function (a) {
+          // A task whose snippet is really a reference to another activity (e.g. "Send
+          // updated proposal deck" pointing back at the email that requested it) renders
+          // as an icon + linked-looking label instead of plain snippet text.
+          const snippetHTML = a.snippetLink
+            ? '<div class="crm-activity-snippet crm-snippet-link">' + actIconSvgOnly('email') + '<span>' + esc(a.snippetLink) + '</span></div>'
+            : (a.snippet ? '<div class="crm-activity-snippet">' + esc(a.snippet) + '</div>' : '');
           return '<div class="crm-activity-row">' + actIcon(a.type) +
-            '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + esc(a.text) + '</div>' +
-            (a.snippet ? '<div class="crm-activity-snippet">' + esc(a.snippet) + '</div>' : '') + '</div>' +
+            '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + esc(a.text) + '</div>' + snippetHTML + '</div>' +
             (a.date ? '<div class="crm-activity-date">' + esc(a.date) + '</div>' : '') +
             '</div>';
         }).join('')
