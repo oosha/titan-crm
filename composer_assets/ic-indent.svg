@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="xMidYMid meet" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group">
+<rect id="Rectangle 5" width="14" height="2" rx="1" fill="var(--fill-0, #888888)"/>
+<rect id="Rectangle 5_2" x="6" y="4" width="8" height="2" rx="1" fill="var(--fill-0, #888888)"/>
+<rect id="Rectangle 5_3" x="6" y="8" width="8" height="2" rx="1" fill="var(--fill-0, #888888)"/>
+<rect id="Rectangle 5_4" y="12" width="14" height="2" rx="1" fill="var(--fill-0, #888888)"/>
+<path id="Triangle" fill-rule="evenodd" clip-rule="evenodd" d="M3.82967 7.81923C4.39838 7.42113 4.39839 6.57887 3.82967 6.18077L1.57346 4.60142C0.910687 4.13748 0 4.61163 0 5.42066V8.57934C0 9.38837 0.910685 9.86252 1.57346 9.39858L3.82967 7.81923Z" fill="var(--fill-0, #888888)"/>
+</g>
+</svg>

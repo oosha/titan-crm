@@ -1,0 +1,59 @@
+{
+  "currentPipelineId": "inquiries",
+  "pipelineSeq": 0,
+  "pipelines": {
+    "inquiries": {
+      "id": "inquiries",
+      "name": "Inquiries",
+      "entity": "Opportunity",
+      "plural": "opportunities",
+      "color": "#4f6d9e",
+      "stages": [
+        { "key": "s0", "label": "New Inquiry" },
+        { "key": "s1", "label": "Replied" },
+        { "key": "s2", "label": "Nurturing" },
+        { "key": "s3", "label": "Quoted" },
+        { "key": "s4", "label": "Booked" },
+        { "key": "s5", "label": "Lost" }
+      ],
+      "cards": [
+        { "id": "inquiries-i1", "deal": "Mia Thompson — Nov wedding", "company": "Mia Thompson", "contact": "Mia Thompson", "value": 0, "stage": "s0", "leadSource": "Website", "weddingDate": "2026-11-14", "lastActivity": "3h ago", "activityType": "Email received", "overdue": false, "nextActivity": { "type": "followup", "label": "Reply to inquiry", "date": "Today" } },
+        { "id": "inquiries-i2", "deal": "Priya Nair — resin keepsake", "company": "Priya Nair", "contact": "Priya Nair", "value": 0, "stage": "s1", "leadSource": "Instagram", "weddingDate": "2026-09-05", "lastActivity": "2d ago", "activityType": "Email sent", "overdue": false },
+        { "id": "inquiries-i3", "deal": "Lily McGregor — shadow box", "company": "Lily McGregor", "contact": "Lily McGregor", "value": 0, "stage": "s2", "leadSource": "Instagram", "weddingDate": "2026-03-14", "exchanges": 3, "nextStep": "Waiting on her to confirm flower types", "lastActivity": "1d ago", "activityType": "Email received", "overdue": false, "threadRef": "thread-lily" },
+        { "id": "inquiries-i4", "deal": "Chloe Watson — 2027 wedding", "company": "Chloe Watson", "contact": "Chloe Watson", "value": 450, "deposit": 150, "stage": "s3", "leadSource": "Referral", "weddingDate": "2027-05-22", "note": "Long-horizon booking — keep neutral, not stalling", "quotedDaysAgo": 4, "lastActivity": "4d ago", "activityType": "Email sent", "overdue": false },
+        { "id": "inquiries-i5", "deal": "Sarah Chen — pressed frame", "company": "Sarah Chen", "contact": "Sarah Chen", "value": 420, "deposit": 150, "stage": "s4", "leadSource": "Website", "weddingDate": "2026-06-07", "note": "Deposit paid — auto-moves to Preservation Projects", "won": true, "lastActivity": "1d ago", "activityType": "Email received", "overdue": false, "threadRef": "thread-sarah-booking" },
+        { "id": "inquiries-i6", "deal": "Hannah Lee — price too high", "company": "Hannah Lee", "contact": "Hannah Lee", "value": 0, "stage": "s5", "leadSource": "Website", "lostReason": "Price after quote", "lastActivity": "3w ago", "activityType": "Email sent", "overdue": false }
+      ],
+      "hiddenFields": [],
+      "customFieldDefs": [],
+      "contactsEnabled": true
+    },
+    "projects": {
+      "id": "projects",
+      "name": "Preservation Projects",
+      "entity": "Project",
+      "plural": "projects",
+      "color": "#3f8a7d",
+      "stages": [
+        { "key": "s0", "label": "Drop-off Scheduled" },
+        { "key": "s1", "label": "Drying" },
+        { "key": "s2", "label": "Design Proposals" },
+        { "key": "s3", "label": "Design Confirmed" },
+        { "key": "s4", "label": "With Framer" },
+        { "key": "s5", "label": "Ready for Pickup" },
+        { "key": "s6", "label": "Completed" }
+      ],
+      "cards": [
+        { "id": "projects-p1", "deal": "Sarah Chen — pressed frame", "company": "Sarah Chen", "contact": "Sarah Chen", "value": 420, "balance": 0, "stage": "s5", "weddingDate": "2026-06-07", "dropOffDate": "2026-06-14", "driedOn": "2026-07-12", "invoicePaid": true, "nextActivity": { "type": "meeting", "label": "Pickup", "date": "Sat 11am" }, "lastActivity": "1d ago", "activityType": "Email received", "overdue": false, "threadRef": "thread-sarah-pickup" },
+        { "id": "projects-p2", "deal": "Emma Sinclair — dome", "company": "Emma Sinclair", "contact": "Emma Sinclair", "value": 380, "balance": 230, "stage": "s1", "weddingDate": "2026-05-30", "dropOffDate": "2026-07-15", "dryingDoneEst": "2026-08-12", "daysRemaining": 14, "nextActivity": { "type": "task", "label": "Send day-14 drying update", "date": "in 2d" }, "lastActivity": "1w ago", "activityType": "Email sent", "overdue": false },
+        { "id": "projects-p3", "deal": "Olivia Brooks — shadow box", "company": "Olivia Brooks", "contact": "Olivia Brooks", "value": 540, "balance": 390, "stage": "s4", "framer": "Framing Room Co", "framerDue": "2026-07-31", "overdue": true, "nextActivity": { "type": "task", "label": "Chase framer — piece overdue", "date": "Overdue" }, "lastActivity": "2d ago", "activityType": "Phone call" },
+        { "id": "projects-p4", "deal": "Grace Miller — resin block", "company": "Grace Miller", "contact": "Grace Miller", "value": 300, "balance": 300, "stage": "s5", "invoiceSent": true, "invoicePaid": false, "nextActivity": { "type": "meeting", "label": "Pickup", "date": "Sat 11am" }, "lastActivity": "5d ago", "activityType": "Email sent", "overdue": false },
+        { "id": "projects-p5", "deal": "Amelia Reid — frame", "company": "Amelia Reid", "contact": "Amelia Reid", "value": 460, "balance": 0, "stage": "s6", "won": true, "instagramTagged": true, "reviewLeft": false, "lastActivity": "2w ago", "activityType": "Email sent", "overdue": false },
+        { "id": "projects-p6", "deal": "Chloe Watson — 2027 (future)", "company": "Chloe Watson", "contact": "Chloe Watson", "value": 450, "balance": 300, "stage": "s0", "weddingDate": "2027-05-22", "future": true, "note": "Reminder fires 6 weeks before wedding to schedule drop-off", "lastActivity": "4d ago", "activityType": "Email sent", "overdue": false }
+      ],
+      "hiddenFields": [],
+      "customFieldDefs": [],
+      "contactsEnabled": true
+    }
+  }
+}

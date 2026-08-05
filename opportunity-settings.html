@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Opportunity setting — Titan CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="titan-sidebar.css">
+<style>
+  .subpage-body { background: #f7f8fa; color: #222; }
+  .os-btn-primary {
+    background: #2170f4; color: #fff; border: none; border-radius: 7px; padding: 9px 18px;
+    font-size: 13.5px; font-weight: 600; cursor: pointer;
+  }
+  .os-btn-primary:hover { filter: brightness(1.05); }
+  .os-wrap { max-width: 680px; margin: 0 auto; padding: 28px 24px 60px; }
+  .os-card { background: #fff; border: 1px solid #e8eaed; border-radius: 12px; padding: 22px 26px; margin-bottom: 20px; }
+  .os-card-title { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 16px; }
+  .os-chip-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .os-chip {
+    display: inline-flex; align-items: center; gap: 7px; background: #f2f3f5; border-radius: 999px;
+    padding: 7px 14px; font-size: 13px; color: #222; cursor: pointer; user-select: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06); transition: opacity 0.1s ease;
+  }
+  .os-chip.locked { cursor: default; }
+  .os-chip.off { background: #eceef1; }
+  .os-chip.off .os-chip-name { color: #6b7178; }
+  /* Fields that only apply when "Add contacts" is on — dimmed while it's off, distinct
+     from .off (which is this field's own persisted on/off state). */
+  .os-chip.dimmed { opacity: 0.45; pointer-events: none; }
+  .os-chip-icon { flex-shrink: 0; display: inline-flex; align-items: center; }
+  .os-chip-remove {
+    color: #b0b5bb; font-size: 15px; line-height: 1; margin-left: 2px; flex-shrink: 0;
+  }
+  .os-chip-remove:hover { color: #dc2626; }
+  .os-chip-add {
+    display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1.5px dashed #c5cbd4;
+    border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; color: #2170f4; cursor: pointer;
+  }
+  .os-chip-add:hover { border-color: #2170f4; background: #f5f9ff; }
+  .os-new-field {
+    display: none; align-items: center; gap: 10px; background: #fff; border: 1px solid #d9dce1;
+    border-radius: 8px; padding: 20px 22px; margin-top: 10px;
+  }
+  .os-new-field.open { display: flex; }
+  .os-new-field input, .os-new-field select {
+    padding: 7px 9px; border: 1px solid #d9dce1; border-radius: 6px; font-size: 13px;
+    font-family: inherit; outline: none; color: #222;
+  }
+  .os-new-field input:focus, .os-new-field select:focus { border-color: #2170f4; }
+  .os-new-field input { flex: 1; }
+  .os-new-field select { width: 120px; flex-shrink: 0; }
+  .os-new-field-add {
+    background: #2170f4; color: #fff; border: none; border-radius: 6px; padding: 7px 12px;
+    font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+  }
+  .os-new-field-close {
+    display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px;
+    color: #9a9fa7; cursor: pointer; flex-shrink: 0; border-radius: 6px;
+  }
+  .os-new-field-close:hover { color: #555; background: #f2f3f5; }
+</style>
+</head>
+<body data-subpage="opportunity-settings">
+<script src="titan-sidebar.js"></script>
+
+<div class="app-window">
+  <div id="sidebar-mount"></div>
+  <div class="main-area">
+
+    <div class="subpage-top">
+      <span class="subpage-back" onclick="goBack()">
+        <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </span>
+      <span class="subpage-title" id="os-title">Opportunity setting</span>
+      <button class="os-btn-primary" onclick="saveSettings()">Save changes</button>
+    </div>
+
+    <div class="subpage-body">
+      <div class="os-wrap">
+        <div class="os-card">
+          <div class="os-card-title">Opportunity details</div>
+          <div class="os-chip-row" data-group="opportunity"></div>
+        </div>
+
+        <div class="os-card">
+          <div class="os-card-title">Company details</div>
+          <div class="os-chip-row" data-group="company"></div>
+        </div>
+
+        <div class="os-card">
+          <div class="os-card-title">Contact details</div>
+          <div class="os-chip-row" style="margin-bottom:12px;" id="os-contact-first-row">
+            <span class="os-chip" id="os-contacts-master" onclick="toggleContactsEnabled()"></span>
+          </div>
+          <div class="os-chip-row" data-group="contact" id="os-contact-fields"></div>
+        </div>
+
+        <div class="os-card">
+          <div class="os-card-title">Custom fields</div>
+          <div class="os-chip-row" id="os-custom-fields"></div>
+          <div style="margin-top:10px;">
+            <span class="os-chip-add" id="os-add-field-btn" onclick="openNewFieldForm()">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              Add custom field
+            </span>
+          </div>
+          <div class="os-new-field" id="os-new-field-form">
+            <input type="text" id="os-new-field-name" placeholder="Field name">
+            <select id="os-new-field-type">
+              <option value="text">Text</option>
+              <option value="number">Number</option>
+              <option value="date">Date</option>
+              <option value="amount">Amount ($)</option>
+            </select>
+            <span class="os-new-field-add" onclick="confirmNewField()">Add</span>
+            <span class="os-new-field-close" onclick="closeNewFieldForm()" title="Close">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /subpage-body -->
+  </div><!-- /main-area -->
+</div><!-- /app-window -->
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const pipelineKey = params.get('pipeline') || 'neo';
+  // This page opens in place of crm.html (not a popup), so there's no window.opener to
+  // read from or write back into. crm.html hands off the pipeline being edited via
+  // sessionStorage right before navigating here; saveSettings() below writes the result
+  // back the same way and navigates to crm.html?pipeline=<id> to apply it.
+  let editSource = null;
+  try { editSource = JSON.parse(sessionStorage.getItem('titan-crm-edit-pipeline') || 'null'); } catch (e) {}
+  const pipeline = (editSource && editSource.pipelineKey === pipelineKey) ? editSource.pipeline : null;
+  function goBack() { location.href = 'crm.html?pipeline=' + encodeURIComponent(pipelineKey); }
+  const TYPE_LABEL = { text: 'Text', number: 'Number', date: 'Date', amount: 'Amount ($)' };
+  const ICON_TICK = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ICON_X = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="#9aa1a9" stroke-width="2" stroke-linecap="round"/></svg>';
+
+  // Same fields as the Add-opportunity form, in the same order. `key` matches
+  // that page's input id suffix (ao-<key>), so turning one off hides it there.
+  const STANDARD_FIELDS = [
+    { key: 'name', label: 'Opportunity name', required: true, group: 'opportunity' },
+    { key: 'value', label: 'Total value', required: true, group: 'opportunity' },
+    { key: 'stage', label: 'Pipeline stage', required: true, group: 'opportunity' },
+    { key: 'close-date', label: 'Expected close date', group: 'opportunity' },
+    { key: 'source', label: 'Source', group: 'opportunity' },
+    { key: 'note', label: 'Note', group: 'opportunity' },
+    { key: 'company', label: 'Company', group: 'company' },
+    { key: 'location', label: 'Location', group: 'company' },
+    { key: 'website', label: 'Company website', group: 'company' },
+    { key: 'company-linkedin', label: 'Company LinkedIn', group: 'company' },
+    { key: 'instagram', label: 'Company Instagram', group: 'company' },
+    { key: 'contact', label: 'Contact person', required: true, group: 'contact' },
+    { key: 'contact-name', label: 'Contact name', group: 'contact', dependsOnContacts: true },
+    { key: 'contact-email', label: 'Email', group: 'contact' },
+    { key: 'contact-phone', label: 'Phone', group: 'contact' },
+    { key: 'contact-designation', label: 'Designation', group: 'contact' },
+    { key: 'contact-department', label: 'Department', group: 'contact' },
+    { key: 'contact-location', label: 'Location', group: 'contact' },
+    { key: 'contact-linkedin', label: 'LinkedIn', group: 'contact' },
+  ];
+
+  const entity = (pipeline && pipeline.entity) || 'Opportunity';
+  const osTitleText = entity + ' setting' + (pipeline ? ' - ' + pipeline.name : '');
+  document.getElementById('os-title').textContent = osTitleText;
+  document.title = osTitleText + ' — Titan CRM';
+
+  const hidden = {};
+  (pipeline && pipeline.hiddenFields ? pipeline.hiddenFields : []).forEach(function (k) { hidden[k] = true; });
+  let customFieldDefs = pipeline && pipeline.customFieldDefs ? pipeline.customFieldDefs.map(function (f) { return Object.assign({}, f); }) : [];
+  let customFieldSeq = customFieldDefs.length;
+  let contactsEnabled = pipeline ? (pipeline.contactsEnabled !== false) : true;
+
+  function renderStandardFields() {
+    document.querySelectorAll('.os-chip-row[data-group]').forEach(function (wrap) { wrap.innerHTML = ''; });
+    // Non-editable (required) fields always read first within their group, in front
+    // of the fields that can be turned off.
+    var ordered = STANDARD_FIELDS.slice().sort(function (a, b) {
+      return (b.required ? 1 : 0) - (a.required ? 1 : 0);
+    });
+    ordered.forEach(function (f) {
+      // "Contact person" is the field that identifies the contact, so it sits in the
+      // same row as the "Add contacts" master toggle rather than with the rest of the
+      // (optional) per-contact detail fields below.
+      const wrap = f.key === 'contact'
+        ? document.getElementById('os-contact-first-row')
+        : document.querySelector('.os-chip-row[data-group="' + f.group + '"]');
+      if (!wrap) return;
+      // os-contact-first-row also holds the "Add contacts" master toggle, so it isn't
+      // wiped by the innerHTML-clear above (that would delete the toggle too) — guard
+      // against duplicating this chip if renderStandardFields ever runs more than once.
+      if (f.key === 'contact') {
+        const existing = wrap.querySelector('[data-key="contact"]');
+        if (existing) existing.remove();
+      }
+      const chip = document.createElement('span');
+      const off = !f.required && hidden[f.key];
+      chip.className = 'os-chip' + (f.required ? ' locked' : '') + (off ? ' off' : '');
+      chip.dataset.key = f.key;
+      if (f.dependsOnContacts) chip.dataset.dependsOnContacts = '1';
+      chip.innerHTML = '<span class="os-chip-icon">' + (off ? ICON_X : ICON_TICK) + '</span><span class="os-chip-name">' + f.label + '</span>';
+      if (!f.required) chip.addEventListener('click', function () {
+        chip.classList.toggle('off');
+        chip.querySelector('.os-chip-icon').innerHTML = chip.classList.contains('off') ? ICON_X : ICON_TICK;
+      });
+      wrap.appendChild(chip);
+    });
+    renderContactsMaster();
+    applyContactsDependentFields();
+  }
+  renderStandardFields();
+
+  // "Add contacts" only controls whether more than one contact can be added to a
+  // record — it does NOT gate the contact-person's own info fields (email, phone,
+  // designation, etc. below), which apply to the primary contact regardless and stay
+  // independently toggleable. Fields that only make sense for additional contacts
+  // (currently just "Contact name") are dimmed while it's off instead.
+  function renderContactsMaster() {
+    const chip = document.getElementById('os-contacts-master');
+    if (!chip) return;
+    chip.className = 'os-chip' + (contactsEnabled ? '' : ' off');
+    chip.innerHTML = '<span class="os-chip-icon">' + (contactsEnabled ? ICON_TICK : ICON_X) + '</span><span class="os-chip-name">Add contacts</span>';
+  }
+  function applyContactsDependentFields() {
+    document.querySelectorAll('.os-chip[data-depends-on-contacts]').forEach(function (chip) {
+      chip.classList.toggle('dimmed', !contactsEnabled);
+    });
+  }
+  function toggleContactsEnabled() {
+    contactsEnabled = !contactsEnabled;
+    renderContactsMaster();
+    applyContactsDependentFields();
+  }
+
+  function renderCustomFields() {
+    const wrap = document.getElementById('os-custom-fields');
+    wrap.innerHTML = '';
+    customFieldDefs.forEach(function (f, i) {
+      const chip = document.createElement('span');
+      chip.className = 'os-chip';
+      chip.innerHTML =
+        '<span class="os-chip-icon">' + ICON_TICK + '</span>' +
+        '<span class="os-chip-name">' + f.name + '</span>' +
+        '<span class="os-chip-remove" title="Remove">&times;</span>';
+      chip.querySelector('.os-chip-remove').addEventListener('click', function (e) {
+        e.stopPropagation(); customFieldDefs.splice(i, 1); renderCustomFields();
+      });
+      wrap.appendChild(chip);
+    });
+  }
+  renderCustomFields();
+
+  function openNewFieldForm() {
+    document.getElementById('os-new-field-form').classList.add('open');
+    document.getElementById('os-add-field-btn').style.display = 'none';
+    document.getElementById('os-new-field-name').value = '';
+    document.getElementById('os-new-field-name').focus();
+  }
+  function closeNewFieldForm() {
+    document.getElementById('os-new-field-form').classList.remove('open');
+    document.getElementById('os-add-field-btn').style.display = '';
+  }
+  function confirmNewField() {
+    const name = document.getElementById('os-new-field-name').value.trim();
+    const type = document.getElementById('os-new-field-type').value;
+    if (!name) { alert('Prototype only: field name is required.'); return; }
+    customFieldSeq++;
+    customFieldDefs.push({ key: 'cf' + customFieldSeq, name: name, type: type });
+    renderCustomFields();
+    closeNewFieldForm();
+  }
+
+  function saveSettings() {
+    // Each field's own chip decides whether it's hidden — "Add contacts" does not hide
+    // any of them, including the contact-person's own info fields. The one exception is
+    // "Contact name": it only applies to additional contacts, so it's treated as hidden
+    // whenever "Add contacts" is off, regardless of its own chip state.
+    const hiddenFields = [];
+    document.querySelectorAll('.os-chip-row .os-chip[data-key]').forEach(function (chip) {
+      if (chip.classList.contains('off')) hiddenFields.push(chip.dataset.key);
+    });
+    if (!contactsEnabled && hiddenFields.indexOf('contact-name') === -1) hiddenFields.push('contact-name');
+
+    sessionStorage.setItem('titan-crm-commit-pipeline', JSON.stringify({
+      pipelineKey: pipelineKey,
+      patch: { hiddenFields: hiddenFields, customFieldDefs: customFieldDefs, contactsEnabled: contactsEnabled },
+    }));
+    goBack();
+  }
+</script>
+</body>
+</html>

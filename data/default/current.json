@@ -1,0 +1,166 @@
+{
+  "currentPipelineId": "neo",
+  "pipelineSeq": 0,
+  "pipelines": {
+    "neo": {
+      "id": "neo",
+      "name": "Neo partnerships",
+      "entity": "Opportunity",
+      "plural": "opportunities",
+      "color": "#7a6ba3",
+      "stages": [
+        {
+          "key": "lead",
+          "label": "Lead"
+        },
+        {
+          "key": "qualified",
+          "label": "Qualified"
+        },
+        {
+          "key": "demo",
+          "label": "Demo Scheduled"
+        },
+        {
+          "key": "proposal",
+          "label": "Proposal Sent"
+        },
+        {
+          "key": "negotiation",
+          "label": "Negotiation"
+        },
+        {
+          "key": "closed",
+          "label": "Closed"
+        }
+      ],
+      "cards": [
+        {
+          "id": 1,
+          "company": "BrightPath Co",
+          "contact": "Olivia Bennett",
+          "initials": "OB",
+          "deal": "BrightPath Pro plan",
+          "value": 3000,
+          "stage": "lead",
+          "lastActivity": "2d ago",
+          "activityType": "Email sent",
+          "overdue": false
+        },
+        {
+          "id": 2,
+          "company": "Lumen Retail",
+          "contact": "Marcus Webb",
+          "initials": "MW",
+          "deal": "Lumen CD only",
+          "value": 5400,
+          "stage": "lead",
+          "lastActivity": "1d ago",
+          "activityType": "Email received",
+          "overdue": false,
+          "nextActivity": {
+            "type": "followup",
+            "date": "12 Feb"
+          }
+        },
+        {
+          "id": 3,
+          "company": "Northfield Group",
+          "contact": "Grace Turner",
+          "initials": "GT",
+          "deal": "Northfield Site freemium",
+          "value": 7200,
+          "stage": "qualified",
+          "lastActivity": "3d ago",
+          "activityType": "Phone call",
+          "overdue": false
+        },
+        {
+          "id": 4,
+          "company": "Coastal Supply",
+          "contact": "Ethan Price",
+          "initials": "EP",
+          "deal": "Coastal migration from Google",
+          "value": 2950,
+          "stage": "qualified",
+          "lastActivity": "6d ago",
+          "activityType": "Email received",
+          "overdue": true
+        },
+        {
+          "id": 5,
+          "company": "Union Analytics",
+          "contact": "Sophie Hart",
+          "initials": "SH",
+          "deal": "Union Enterprise plan",
+          "value": 12000,
+          "stage": "demo",
+          "lastActivity": "4h ago",
+          "activityType": "Meeting",
+          "overdue": false,
+          "nextActivity": {
+            "type": "task",
+            "name": "Send proposal",
+            "date": "5 Mar"
+          }
+        },
+        {
+          "id": 6,
+          "company": "Meridian Labs",
+          "contact": "Ryan Walker",
+          "initials": "RW",
+          "deal": "Meridian AI site",
+          "value": 18000,
+          "stage": "proposal",
+          "lastActivity": "8d ago",
+          "activityType": "Email sent",
+          "overdue": true
+        },
+        {
+          "id": 7,
+          "company": "Fairview Logistics",
+          "contact": "Noah Bennett",
+          "initials": "NB",
+          "deal": "Fairview seat expansion",
+          "value": 6500,
+          "stage": "proposal",
+          "lastActivity": "2d ago",
+          "activityType": "Phone call",
+          "overdue": false,
+          "nextActivity": {
+            "type": "meeting",
+            "date": "2 Mar"
+          }
+        },
+        {
+          "id": 8,
+          "company": "Delta Freight",
+          "contact": "Chloe Sanders",
+          "initials": "CS",
+          "deal": "Delta annual renewal",
+          "value": 22000,
+          "stage": "negotiation",
+          "lastActivity": "5d ago",
+          "activityType": "Meeting",
+          "overdue": false
+        },
+        {
+          "id": 9,
+          "company": "Vantage Group",
+          "contact": "Liam Carter",
+          "initials": "LC",
+          "deal": "Vantage Business plan",
+          "value": 9800,
+          "stage": "closed",
+          "won": true,
+          "lastActivity": "1d ago",
+          "activityType": "Email sent",
+          "overdue": false
+        }
+      ],
+      "hiddenFields": [],
+      "customFieldDefs": [],
+      "contactsEnabled": true
+    }
+  }
+}

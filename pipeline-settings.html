@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pipeline setting — Titan CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="titan-sidebar.css">
+<style>
+  .subpage-body { background: #f7f8fa; color: #222; }
+  .ps-btn-primary {
+    background: #2170f4; color: #fff; border: none; border-radius: 7px; padding: 9px 18px;
+    font-size: 13.5px; font-weight: 600; cursor: pointer;
+  }
+  .ps-btn-primary:hover { filter: brightness(1.05); }
+  .ps-wrap { max-width: 560px; margin: 0 auto; padding: 28px 24px 60px; }
+  .ps-card { background: #fff; border: 1px solid #e8eaed; border-radius: 12px; padding: 24px 26px; margin-bottom: 18px; }
+  .np-label { font-size: 15px; font-weight: 400; color: #1a1a1a; margin: 0 2px 8px; }
+  .np-name-input {
+    width: 100%; padding: 10px 12px; border: 1px solid #d9dce1; border-radius: 7px;
+    font-size: 14px; color: #222; outline: none; font-family: inherit; background: #fff;
+  }
+  .np-name-input::placeholder { color: #b3b7bd; }
+  .np-name-input:focus { border-color: #2170f4; box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+  .ps-color-row { display: flex; gap: 12px; margin-top: 6px; }
+  .ps-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; flex-shrink: 0; }
+  .ps-swatch.selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px currentColor; }
+  .ps-add-link { font-size: 12.5px; font-weight: 600; color: #2170f4; cursor: pointer; }
+  .ps-add-link:hover { text-decoration: underline; }
+  .ps-note { font-size: 12px; color: #9a9fa7; padding: 10px 22px; text-align: center; }
+  .ps-note a { color: #2170f4; text-decoration: none; }
+  .np-help { font-size: 11.5px; color: #9a9fa7; margin: 0 2px 10px; }
+
+  /* Stages as interlocking chevrons — same visual language as the board. */
+  .np-chev-chain {
+    display: flex; align-items: stretch; gap: 6px; margin-top: 6px;
+    overflow-x: auto; padding: 6px 0 30px;
+  }
+  .np-chev {
+    position: relative; flex: 1 1 0; min-width: 84px; height: 60px;
+    display: flex; align-items: center; justify-content: center;
+    clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%, 8% 50%);
+    cursor: default; user-select: none;
+  }
+  .np-chev:first-child { clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%); }
+  .np-chev.dragging { opacity: 0.4; }
+  .np-chev.drop-target { filter: brightness(0.93); }
+  .np-chev-name {
+    font-size: 12.5px; font-weight: 700; text-align: center;
+    padding: 0 15px 0 19px; max-width: 100%; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; cursor: text;
+  }
+  .np-chev-input {
+    width: 74%; border: none; outline: none; background: rgba(255,255,255,0.9);
+    border-radius: 4px; text-align: center; font-size: 12.5px; font-weight: 700;
+    color: #0d2b52; font-family: inherit; padding: 4px 2px;
+  }
+  .np-chev-remove {
+    position: absolute; top: 4px; right: 15px; width: 16px; height: 16px; border-radius: 50%;
+    display: none; align-items: center; justify-content: center; color: #0d2b52;
+    background: rgba(255,255,255,0.55); cursor: pointer; line-height: 1;
+  }
+  .np-chev:hover .np-chev-remove { display: flex; }
+  .np-chev-remove:hover { background: #fff; color: #dc2626; }
+  .np-chev-add {
+    flex-shrink: 0; min-width: 92px; height: 60px; display: flex; align-items: center;
+    justify-content: center; gap: 5px; border: 1.5px dashed #c5cbd4; border-radius: 7px;
+    color: #2170f4; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .np-chev-add:hover { border-color: #2170f4; background: #f5f9ff; }
+</style>
+</head>
+<body data-subpage="pipeline-settings">
+<script src="titan-sidebar.js"></script>
+
+<div class="app-window">
+  <div id="sidebar-mount"></div>
+  <div class="main-area">
+
+    <div class="subpage-top">
+      <span class="subpage-back" onclick="goBack()">
+        <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </span>
+      <span class="subpage-title" id="ps-title">Pipeline setting</span>
+      <button class="ps-btn-primary" onclick="saveSettings()">Save changes</button>
+    </div>
+
+    <div class="subpage-body">
+      <div class="ps-wrap">
+        <div class="ps-card">
+          <div class="np-label">Pipeline name</div>
+          <input class="np-name-input" id="ps-name" style="margin-bottom:22px;">
+
+          <div class="np-label">Colour</div>
+          <div class="ps-color-row" id="ps-colors"></div>
+        </div>
+
+        <div class="ps-card">
+          <div class="np-label">Stages</div>
+          <div class="np-help">Click a stage to rename it. Drag to reorder. These are the columns on your board.</div>
+          <div class="np-chev-chain" id="ps-stages"></div>
+        </div>
+
+        <div class="ps-note" id="ps-opener-note"></div>
+      </div>
+    </div><!-- /subpage-body -->
+  </div><!-- /main-area -->
+</div><!-- /app-window -->
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const pipelineKey = params.get('pipeline') || 'neo';
+  // This page opens in place of crm.html (not a popup), so there's no window.opener to
+  // read from or write back into. crm.html hands off the pipeline being edited via
+  // sessionStorage right before navigating here; saveSettings() below writes the result
+  // back the same way and navigates to crm.html?pipeline=<id> to apply it.
+  let editSource = null;
+  try { editSource = JSON.parse(sessionStorage.getItem('titan-crm-edit-pipeline') || 'null'); } catch (e) {}
+  const pipeline = (editSource && editSource.pipelineKey === pipelineKey) ? editSource.pipeline : null;
+  function goBack() { location.href = 'crm.html?pipeline=' + encodeURIComponent(pipelineKey); }
+  const PIPELINE_COLORS = ['#4f6d9e', '#3f8a7d', '#5e8a4e', '#b5813f', '#ab5f74', '#7a6ba3', '#2170f4'];
+
+  if (!pipeline) {
+    document.getElementById('ps-opener-note').innerHTML =
+      'This pipeline’s data isn’t available (opened directly, not from Titan CRM). ' +
+      '<a href="crm.html">Open Titan CRM</a> and try again.';
+  }
+
+  let color = pipeline ? (pipeline.color || '#2170f4') : '#2170f4';
+  let stages = pipeline ? pipeline.stages.map(function (s) { return Object.assign({}, s); }) : [];
+  let stageSeq = stages.length;
+
+  const psTitleText = (pipeline ? pipeline.name : 'Pipeline') + ' setting';
+  document.getElementById('ps-title').textContent = psTitleText;
+  document.title = psTitleText + ' — Titan CRM';
+  document.getElementById('ps-name').value = pipeline ? pipeline.name : '';
+
+  function renderColors() {
+    const wrap = document.getElementById('ps-colors');
+    wrap.innerHTML = '';
+    PIPELINE_COLORS.forEach(function (c) {
+      const sw = document.createElement('div');
+      sw.className = 'ps-swatch' + (c === color ? ' selected' : '');
+      sw.style.background = c; sw.style.color = c;
+      sw.title = c;
+      sw.onclick = function () { color = c; renderColors(); };
+      wrap.appendChild(sw);
+    });
+  }
+  renderColors();
+
+  function hexToRgb(hex) {
+    hex = (hex || '#2170f4').replace('#', '');
+    if (hex.length === 3) hex = hex.split('').map(function (c) { return c + c; }).join('');
+    const n = parseInt(hex, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function shadeFor(hex, idx, total) {
+    const rgb = hexToRgb(hex);
+    const min = 0.06, max = 0.36;
+    const t = total <= 1 ? 0 : idx / (total - 1);
+    return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + (min + (max - min) * t).toFixed(3) + ')';
+  }
+  function darken(hex, f) {
+    const rgb = hexToRgb(hex).map(function (c) { return Math.round(c * f); });
+    return 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
+  }
+
+  let stageDragIndex = null;
+  function renderStages() {
+    const wrap = document.getElementById('ps-stages');
+    wrap.innerHTML = '';
+    const n = stages.length;
+    stages.forEach(function (stage, i) {
+      const chev = document.createElement('div');
+      chev.className = 'np-chev';
+      chev.draggable = true;
+      chev.dataset.idx = i;
+      chev.style.background = shadeFor(color, i, n);
+      chev.innerHTML =
+        '<span class="np-chev-name" title="Click to rename" style="color:' + darken(color, 0.5) + ';"></span>' +
+        (n > 2
+          ? '<span class="np-chev-remove" title="Remove stage">' +
+              '<svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1 1l7 7M8 1L1 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' +
+            '</span>'
+          : '');
+      chev.querySelector('.np-chev-name').textContent = stage.label || '—';
+      chev.querySelector('.np-chev-name').addEventListener('click', function () { editStage(i); });
+      const rm = chev.querySelector('.np-chev-remove');
+      if (rm) rm.addEventListener('click', function (e) { e.stopPropagation(); removeStage(i); });
+
+      chev.addEventListener('dragstart', function (e) {
+        stageDragIndex = i; chev.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move';
+      });
+      chev.addEventListener('dragend', function () {
+        stageDragIndex = null; chev.classList.remove('dragging');
+        wrap.querySelectorAll('.np-chev').forEach(function (c) { c.classList.remove('drop-target'); });
+      });
+      chev.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        if (stageDragIndex === null || stageDragIndex === i) return;
+        chev.classList.add('drop-target');
+      });
+      chev.addEventListener('dragleave', function () { chev.classList.remove('drop-target'); });
+      chev.addEventListener('drop', function (e) {
+        e.preventDefault();
+        if (stageDragIndex === null || stageDragIndex === i) return;
+        const moved = stages.splice(stageDragIndex, 1)[0];
+        stages.splice(i, 0, moved);
+        stageDragIndex = null;
+        renderStages();
+      });
+      wrap.appendChild(chev);
+    });
+
+    const add = document.createElement('div');
+    add.className = 'np-chev-add';
+    add.title = 'Add a stage';
+    add.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Add stage';
+    add.addEventListener('click', addStage);
+    wrap.appendChild(add);
+  }
+
+  function editStage(i) {
+    const wrap = document.getElementById('ps-stages');
+    const chev = wrap.querySelector('.np-chev[data-idx="' + i + '"]');
+    if (!chev) return;
+    const nameEl = chev.querySelector('.np-chev-name');
+    if (!nameEl) return;
+    chev.draggable = false;
+    const input = document.createElement('input');
+    input.className = 'np-chev-input';
+    input.value = stages[i].label;
+    input.spellcheck = false;
+    nameEl.replaceWith(input);
+    input.focus();
+    input.select();
+    input.addEventListener('input', function () { stages[i].label = input.value; });
+    const commit = function () { stages[i].label = input.value.trim(); renderStages(); };
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      else if (e.key === 'Escape') { input.value = stages[i].label; input.blur(); }
+    });
+  }
+  function flushOpenEdit() {
+    const input = document.querySelector('#ps-stages .np-chev-input');
+    if (!input) return;
+    const chev = input.closest('.np-chev');
+    if (chev) { const i = Number(chev.dataset.idx); if (stages[i]) stages[i].label = input.value.trim(); }
+  }
+  function addStage() {
+    stageSeq++; stages.push({ key: 's' + stageSeq, label: 'New stage' });
+    renderStages();
+    editStage(stages.length - 1);
+  }
+  function removeStage(i) {
+    if (stages.length <= 2) return;
+    stages.splice(i, 1);
+    renderStages();
+  }
+  renderStages();
+
+  function saveSettings() {
+    flushOpenEdit();
+    const name = document.getElementById('ps-name').value.trim();
+    if (!name) { alert('Prototype only: pipeline name is required.'); return; }
+    const cleanStages = stages.filter(function (s) { return (s.label || '').trim(); });
+    if (!cleanStages.length) { alert('Prototype only: at least one stage is required.'); return; }
+
+    sessionStorage.setItem('titan-crm-commit-pipeline', JSON.stringify({
+      pipelineKey: pipelineKey,
+      patch: { name: name, color: color, stages: cleanStages },
+    }));
+    goBack();
+  }
+</script>
+</body>
+</html>

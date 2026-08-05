@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Add opportunity — Titan CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="titan-sidebar.css">
+<style>
+  .subpage-body { background: #f7f8fa; color: #222; }
+  .ao-btn-primary {
+    background: #2170f4; color: #fff; border: none; border-radius: 7px; padding: 9px 18px;
+    font-size: 13.5px; font-weight: 600; cursor: pointer;
+  }
+  .ao-btn-primary:hover { filter: brightness(1.05); }
+  .ao-wrap { max-width: 760px; margin: 0 auto; padding: 28px 24px 60px; }
+  .ao-card {
+    background: #fff; border: 1px solid #e8eaed; border-radius: 12px; padding: 24px 26px; margin-bottom: 18px;
+  }
+  .np-label { font-size: 15px; font-weight: 400; color: #1a1a1a; margin: 0 2px 8px; }
+  .np-name-input {
+    width: 100%; padding: 10px 12px; border: 1px solid #d9dce1; border-radius: 7px;
+    font-size: 14px; color: #222; outline: none; font-family: inherit; background: #fff;
+  }
+  .np-name-input::placeholder { color: #b3b7bd; }
+  .np-name-input:focus { border-color: #2170f4; box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+  .ao-row { display: grid; grid-template-columns: 0.82fr 1fr; column-gap: 34px; align-items: start; margin-bottom: 22px; }
+  .ao-row:last-child { margin-bottom: 0; }
+  .ao-heading {
+    font-size: 15px; font-weight: 700; color: #1a1a1a; margin: 28px 2px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .ao-heading:first-child { margin-top: 0; }
+  .ao-add-link { font-size: 12.5px; font-weight: 600; color: #2170f4; cursor: pointer; }
+  .ao-add-link:hover { text-decoration: underline; }
+  .ao-custom-field { border: 1px solid #ececf0; border-radius: 9px; padding: 14px; margin-top: 12px; position: relative; }
+  .ao-custom-field-top { display: flex; gap: 12px; margin-bottom: 10px; }
+  .ao-custom-field-top input.np-name-input { flex: 1; }
+  .ao-custom-field-top select.np-name-input { width: 140px; flex-shrink: 0; }
+  .ao-custom-field-remove { position: absolute; top: 12px; right: 14px; cursor: pointer; color: #c2c6cd; font-size: 18px; line-height: 1; }
+  .ao-custom-field-remove:hover { color: #dc2626; }
+  .ao-value-row { display: flex; gap: 8px; }
+  .ao-value-row select { width: 76px; flex-shrink: 0; }
+  .ao-note {
+    font-size: 12px; color: #9a9fa7; padding: 10px 22px; text-align: center;
+  }
+  .ao-note a { color: #2170f4; text-decoration: none; }
+</style>
+</head>
+<body data-subpage="add-opportunity">
+<script src="titan-sidebar.js"></script>
+
+<div class="app-window">
+  <div id="sidebar-mount"></div>
+  <div class="main-area">
+
+    <div class="subpage-top">
+      <span class="subpage-back" onclick="goBack()">
+        <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </span>
+      <span class="subpage-title" id="ao-top-title">Add a new opportunity</span>
+      <button class="ao-btn-primary" onclick="submitOpportunity()">Add <span id="ao-btn-entity">opportunity</span></button>
+    </div>
+
+    <div class="subpage-body">
+  <div class="ao-wrap">
+    <div class="ao-card">
+      <div class="ao-heading">Opportunity details</div>
+      <div class="np-label" id="ao-name-label">Opportunity name</div>
+      <input class="np-name-input" id="ao-name" placeholder="e.g. Acme Pro plan" style="margin-bottom:22px;">
+
+      <div class="ao-row">
+        <div>
+          <div class="np-label">Total value</div>
+          <div class="ao-value-row">
+            <select class="np-name-input" id="ao-currency">
+              <option value="$">$</option><option value="€">€</option><option value="£">£</option><option value="AU$">AU$</option>
+            </select>
+            <input class="np-name-input" id="ao-value" type="text" inputmode="numeric" placeholder="0">
+          </div>
+        </div>
+        <div>
+          <div class="np-label" id="ao-stage-label">Pipeline stage</div>
+          <select class="np-name-input" id="ao-stage"></select>
+        </div>
+      </div>
+
+      <div class="ao-row">
+        <div>
+          <div class="np-label" id="ao-close-date-label">Expected close date</div>
+          <input class="np-name-input" id="ao-close-date" type="date">
+        </div>
+        <div>
+          <div class="np-label">Source</div>
+          <input class="np-name-input" id="ao-source" placeholder="e.g. Referral, Website">
+        </div>
+      </div>
+
+      <div class="np-label">Note</div>
+      <input class="np-name-input" id="ao-note" placeholder="e.g. Met at conference" style="margin-bottom:0;">
+    </div>
+
+    <div class="ao-card">
+      <div class="ao-heading">Company details</div>
+      <div class="ao-row">
+        <div>
+          <div class="np-label">Company</div>
+          <input class="np-name-input" id="ao-company" placeholder="e.g. Acme Inc.">
+        </div>
+        <div>
+          <div class="np-label">Location</div>
+          <input class="np-name-input" id="ao-location" placeholder="e.g. San Jose, US">
+        </div>
+      </div>
+
+      <div class="ao-row">
+        <div>
+          <div class="np-label">Company website</div>
+          <input class="np-name-input" id="ao-website" placeholder="acme.com">
+        </div>
+        <div>
+          <div class="np-label">Company LinkedIn</div>
+          <input class="np-name-input" id="ao-company-linkedin" placeholder="linkedin.com/company/acme">
+        </div>
+      </div>
+
+      <div class="np-label">Company Instagram</div>
+      <input class="np-name-input" id="ao-instagram" placeholder="instagram.com/acme" style="margin-bottom:0;">
+    </div>
+
+    <div class="ao-card">
+      <div class="ao-heading">Contact details</div>
+      <div class="np-label">Contact person</div>
+      <input class="np-name-input" id="ao-contact" list="ao-contact-list" placeholder="Type a new name or pick existing" oninput="syncContactLabel()" style="margin-bottom:22px;">
+      <datalist id="ao-contact-list"></datalist>
+
+      <div class="np-label" id="ao-contact-info-heading" style="font-weight:700; margin-bottom:16px;">Contact's details</div>
+      <div class="ao-row">
+        <div>
+          <div class="np-label">Email</div>
+          <input class="np-name-input" id="ao-contact-email" placeholder="name@company.com">
+        </div>
+        <div>
+          <div class="np-label">Phone</div>
+          <input class="np-name-input" id="ao-contact-phone" placeholder="+1 555 000 0000">
+        </div>
+      </div>
+      <div class="ao-row">
+        <div>
+          <div class="np-label">Designation</div>
+          <input class="np-name-input" id="ao-contact-designation" placeholder="e.g. VP Sales">
+        </div>
+        <div>
+          <div class="np-label">Department</div>
+          <input class="np-name-input" id="ao-contact-department" placeholder="e.g. Revenue">
+        </div>
+      </div>
+      <div class="ao-row" style="margin-bottom:0;">
+        <div>
+          <div class="np-label">Location</div>
+          <input class="np-name-input" id="ao-contact-location" placeholder="e.g. San Jose, US">
+        </div>
+        <div>
+          <div class="np-label">LinkedIn</div>
+          <input class="np-name-input" id="ao-contact-linkedin" placeholder="linkedin.com/in/...">
+        </div>
+      </div>
+    </div>
+
+    <div class="ao-card" id="ao-custom-fields-card" style="display:none;">
+      <div class="ao-heading">Custom fields</div>
+      <div id="ao-custom-fields"></div>
+    </div>
+
+    <div class="ao-note" id="ao-opener-note"></div>
+  </div>
+    </div><!-- /subpage-body -->
+  </div><!-- /main-area -->
+</div><!-- /app-window -->
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const pipelineKey = params.get('pipeline') || 'neo';
+  // This page opens in place of crm.html (not a popup), so there's no window.opener to
+  // read from or write back into. crm.html hands off all pipelines' data via
+  // sessionStorage right before navigating here (needed for cross-pipeline contact
+  // autocomplete); submitOpportunity() below writes the new card back the same way and
+  // navigates to crm.html?pipeline=<id> to apply it.
+  let addSource = null;
+  try { addSource = JSON.parse(sessionStorage.getItem('titan-crm-add-opportunity-source') || 'null'); } catch (e) {}
+  const allPipelines = (addSource && addSource.pipelines) || null;
+  const REAL_BASE_PATH = location.pathname.replace(/[^/]*$/, '');
+  function goBack() { location.href = REAL_BASE_PATH + 'crm.html?pipeline=' + encodeURIComponent(pipelineKey); }
+  const ENTITY_LABELS = {
+    Opportunity: { name: 'Opportunity name', stage: 'Opportunity stage', date: 'Expected close date' },
+    Project:     { name: 'Project name',     stage: 'Project stage',     date: 'Expected launch date' },
+    Order:       { name: 'Order name',       stage: 'Order stage',       date: 'Expected completion date' },
+    Candidate:   { name: 'Candidate name',   stage: 'Candidate stage',   date: 'Expected close date' },
+    Record:      { name: 'Record name',      stage: 'Record stage',      date: 'Expected end date' },
+  };
+  function entityLabels(entity) { return ENTITY_LABELS[entity] || ENTITY_LABELS.Record; }
+  function esc(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
+
+  const pipeline = allPipelines ? allPipelines[pipelineKey] : null;
+  const entity = (pipeline && pipeline.entity) || 'Opportunity';
+  if (!pipeline) {
+    document.getElementById('ao-opener-note').innerHTML =
+      'This pipeline’s data isn’t available (opened directly, not from Titan CRM). ' +
+      '<a href="crm.html">Open Titan CRM</a> and use “+ Add” again.';
+  }
+
+  // Hide any field this pipeline's "Opportunity setting" turned off.
+  (function hideDisabledFields() {
+    const hiddenKeys = (pipeline && pipeline.hiddenFields) || [];
+    hiddenKeys.forEach(function (key) {
+      const el = document.getElementById('ao-' + key);
+      if (!el) return;
+      const parent = el.parentElement;
+      if (parent && parent.children.length === 2 && parent.querySelector('.np-label')) {
+        parent.style.display = 'none';
+      } else {
+        const prev = el.previousElementSibling;
+        if (prev && prev.classList && prev.classList.contains('np-label')) prev.style.display = 'none';
+        el.style.display = 'none';
+      }
+    });
+  })();
+
+  document.getElementById('ao-top-title').textContent = 'Add a new ' + entity.toLowerCase();
+  document.getElementById('ao-btn-entity').textContent = entity.toLowerCase();
+  document.querySelector('.ao-btn-primary').style.background = (pipeline && pipeline.color) || '#2170f4';
+  const labels = entityLabels(entity);
+  document.getElementById('ao-name-label').textContent = labels.name;
+  document.getElementById('ao-stage-label').textContent = labels.stage;
+  document.getElementById('ao-close-date-label').textContent = labels.date;
+  document.getElementById('ao-name').placeholder = 'e.g. Acme Pro plan';
+
+  // Close date: future dates only, capped at end of 2030.
+  (function () {
+    const el = document.getElementById('ao-close-date');
+    const today = new Date();
+    const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    el.min = todayStr; el.max = '2030-12-31';
+  })();
+
+  // Stage options + contact autocomplete, sourced from the handed-off pipeline data.
+  const stageSelect = document.getElementById('ao-stage');
+  const stages = (pipeline && pipeline.stages) || [];
+  stageSelect.innerHTML = stages.map(function (s) { return '<option value="' + s.key + '">' + s.label + '</option>'; }).join('');
+  ['ao-stage', 'ao-currency'].forEach(function (id) { document.getElementById(id).addEventListener('wheel', function () { this.blur(); }); });
+
+  const contactList = document.getElementById('ao-contact-list');
+  if (allPipelines) {
+    const seen = {};
+    Object.keys(allPipelines).forEach(function (pid) {
+      allPipelines[pid].cards.forEach(function (c) {
+        if (c.contact && !seen[c.contact]) {
+          seen[c.contact] = true;
+          const opt = document.createElement('option');
+          opt.value = c.contact;
+          contactList.appendChild(opt);
+        }
+      });
+    });
+  }
+  document.getElementById('ao-currency').value = (addSource && addSource.currencySymbol) || '$';
+
+  function syncContactLabel() {
+    const name = document.getElementById('ao-contact').value.trim();
+    document.getElementById('ao-contact-info-heading').textContent = name ? name + '’s contact details' : 'Contact’s details';
+  }
+
+  // ── Custom fields: schema comes from this pipeline's Opportunity setting —
+  // only the value is entered here, the field itself is defined there. ──
+  const customFieldDefs = (pipeline && pipeline.customFieldDefs) || [];
+  const customFieldValues = {};
+  function setCustomFieldValue(key, val) { customFieldValues[key] = val; }
+  function customFieldValueHTML(f) {
+    if (f.type === 'date') {
+      return '<input class="np-name-input" type="date" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">';
+    }
+    if (f.type === 'number') {
+      return '<input class="np-name-input" type="text" inputmode="numeric" placeholder="0" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">';
+    }
+    if (f.type === 'amount') {
+      return '<div style="display:flex; gap:8px;">' +
+        '<select class="np-name-input" style="width:76px; flex-shrink:0;" onchange="setCustomFieldValue(\'' + f.key + '-currency\',this.value)">' +
+          ['$', '€', '£', 'AU$'].map(function (c) { return '<option value="' + c + '">' + c + '</option>'; }).join('') +
+        '</select>' +
+        '<input class="np-name-input" type="text" inputmode="numeric" placeholder="0" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">' +
+      '</div>';
+    }
+    return '<input class="np-name-input" type="text" placeholder="Value" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">';
+  }
+  function renderCustomFields() {
+    if (!customFieldDefs.length) return;
+    document.getElementById('ao-custom-fields-card').style.display = '';
+    const wrap = document.getElementById('ao-custom-fields');
+    wrap.innerHTML = '';
+    customFieldDefs.forEach(function (f) {
+      const row = document.createElement('div');
+      row.style.marginBottom = '18px';
+      row.innerHTML = '<div class="np-label">' + esc(f.name) + '</div>' + customFieldValueHTML(f);
+      wrap.appendChild(row);
+    });
+    wrap.lastElementChild.style.marginBottom = '0';
+  }
+  renderCustomFields();
+
+  function submitOpportunity() {
+    const name = document.getElementById('ao-name').value.trim();
+    const contact = document.getElementById('ao-contact').value.trim();
+    if (!name || !contact) { alert('Prototype only: name and contact person are required.'); return; }
+    if (!allPipelines || !allPipelines[pipelineKey]) {
+      alert('This pipeline’s data isn’t available (opened directly, not from Titan CRM), so this can’t be saved.');
+      return;
+    }
+
+    const company = document.getElementById('ao-company').value.trim();
+    const value = Number(document.getElementById('ao-value').value.replace(/[^0-9.]/g, '')) || 0;
+    const stage = document.getElementById('ao-stage').value || (stages[0] && stages[0].key);
+    const initials = contact.charAt(0).toUpperCase();
+    const contactEmail = document.getElementById('ao-contact-email').value.trim();
+    const contactPhone = document.getElementById('ao-contact-phone').value.trim();
+    const contactDesignation = document.getElementById('ao-contact-designation').value.trim();
+    const contactDepartment = document.getElementById('ao-contact-department').value.trim();
+    const contactLocation = document.getElementById('ao-contact-location').value.trim();
+    const contactLinkedin = document.getElementById('ao-contact-linkedin').value.trim();
+
+    // No shared counter to lean on once this page navigates independently — derive the
+    // next id from every card this browser currently knows about instead.
+    let maxId = 100;
+    Object.keys(allPipelines).forEach(function (pid) {
+      allPipelines[pid].cards.forEach(function (c) { if (c.id > maxId) maxId = c.id; });
+    });
+    const card = {
+      id: maxId + 1, company: company, contact: contact, initials: initials,
+      deal: name, value: value, stage: stage, lastActivity: 'just now', activityType: 'Email sent',
+      overdue: false,
+      location: document.getElementById('ao-location').value.trim(),
+      website: document.getElementById('ao-website').value.trim(),
+      companyLinkedin: document.getElementById('ao-company-linkedin').value.trim(),
+      instagram: document.getElementById('ao-instagram').value.trim(),
+      currency: document.getElementById('ao-currency').value,
+      closeDate: document.getElementById('ao-close-date').value,
+      source: document.getElementById('ao-source').value,
+      note: document.getElementById('ao-note').value.trim(),
+      contactEmail: contactEmail, contactPhone: contactPhone, contactDesignation: contactDesignation,
+      contactDepartment: contactDepartment, contactLocation: contactLocation, contactLinkedin: contactLinkedin,
+      contacts: [{
+        name: contact, email: contactEmail, phone: contactPhone, designation: contactDesignation,
+        department: contactDepartment, location: contactLocation, linkedin: contactLinkedin,
+      }],
+      customFieldValues: Object.assign({}, customFieldValues),
+    };
+
+    sessionStorage.setItem('titan-crm-commit-pipeline', JSON.stringify({ pipelineKey: pipelineKey, newCard: card }));
+    goBack();
+  }
+</script>
+</body>
+</html>
