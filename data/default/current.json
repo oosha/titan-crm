@@ -426,7 +426,7 @@
           "company": "FirstCry",
           "contact": "Leela Shankar",
           "initials": "L",
-          "deal": "Baby wear for FirstCry",
+          "deal": "Baby wear for FirstCr",
           "value": 12000,
           "stage": "processing-1",
           "lastActivity": "just now",
@@ -457,7 +457,8 @@
               "linkedin": "linkedin.com/leela-1241234"
             }
           ],
-          "customFieldValues": {}
+          "customFieldValues": {},
+          "upcomingActivities": []
         },
         {
           "id": 102,
