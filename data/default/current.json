@@ -379,7 +379,7 @@
           "initials": "L",
           "deal": "Baby wear for FirstCry",
           "value": 12000,
-          "stage": "received-0",
+          "stage": "processing-1",
           "lastActivity": "just now",
           "activityType": "Email sent",
           "overdue": false,
