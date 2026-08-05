@@ -1,5 +1,5 @@
 {
-  "currentPipelineId": "neo",
+  "currentPipelineId": "p1",
   "pipelineSeq": 1,
   "pipelines": {
     "neo": {
@@ -353,7 +353,55 @@
           "reminderDays": 3
         }
       ],
-      "cards": []
+      "cards": [
+        {
+          "id": 101,
+          "company": "FirstCry",
+          "contact": "Leela Shankar",
+          "initials": "L",
+          "deal": "Baby wear for FirstCry",
+          "value": 12000,
+          "stage": "processing-1",
+          "lastActivity": "just now",
+          "activityType": "Email sent",
+          "overdue": false,
+          "location": "Dubai, UAE",
+          "website": "firstcry.com",
+          "companyLinkedin": "linkedin.com/company/firstcry",
+          "instagram": "instagram.com/firstcry",
+          "currency": "$",
+          "closeDate": "",
+          "source": "Direct",
+          "note": "",
+          "contactEmail": "leela.s@firstcry.com",
+          "contactPhone": "+97155566666",
+          "contactDesignation": "Head Buyer",
+          "contactDepartment": "Merchandising",
+          "contactLocation": "Abu Dhabi, UAE",
+          "contactLinkedin": "linkedin.com/leela-1241234",
+          "contacts": [
+            {
+              "name": "Leela Shankar",
+              "email": "leela.s@firstcry.com",
+              "phone": "+97155566666",
+              "designation": "Head Buyer",
+              "department": "Merchandising",
+              "location": "Abu Dhabi, UAE",
+              "linkedin": "linkedin.com/leela-1241234"
+            }
+          ],
+          "customFieldValues": {}
+        }
+      ],
+      "hiddenFields": [],
+      "customFieldDefs": [
+        {
+          "key": "cf1",
+          "name": "Delivery timeline",
+          "type": "number"
+        }
+      ],
+      "contactsEnabled": true
     }
   }
 }
