@@ -242,6 +242,24 @@
   .crm-ai-summary-text { font-size: 13px; color: #333; line-height: 1.5; margin-top: 10px; display: none; }
   .crm-ai-summary-text.show { display: block; }
   .ov-title-row { display: flex; align-items: center; gap: 8px; }
+
+  /* App switcher — opens from the top-left tab-switch button (this page reuses the
+     mail/crm shell but didn't wire one up). Uses the shared grid_icons assets. */
+  .tab-switch { cursor: pointer; }
+  .ov-appsw {
+    position: fixed; top: 52px; left: 8px; width: 234px; background: #fff;
+    border: 1px solid #e6e8ec; border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    z-index: 1000; padding: 12px; display: none;
+  }
+  .ov-appsw.open { display: block; }
+  .ov-appsw-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .ov-appsw-item {
+    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    padding: 12px 4px; border-radius: 9px; cursor: pointer;
+  }
+  .ov-appsw-item:hover { background: #f2f4f7; }
+  .ov-appsw-item img { width: 26px; height: 26px; object-fit: contain; }
+  .ov-appsw-item span { font-size: 11px; color: #444; }
 </style>
 </head>
 <body data-subpage="opportunity-view">
@@ -466,6 +484,19 @@
   </div>
 </div>
 
+<div class="ov-appsw" id="ov-appsw">
+  <div class="ov-appsw-grid">
+    <div class="ov-appsw-item" onclick="location.href='/mail'"><img src="/app_switcher_assets/grid_icons/mail.svg" alt=""><span>Mail</span></div>
+    <div class="ov-appsw-item"><img src="/app_switcher_assets/grid_icons/calendar.svg" alt=""><span>Calendar</span></div>
+    <div class="ov-appsw-item"><img src="/app_switcher_assets/grid_icons/contacts.svg" alt=""><span>Contacts</span></div>
+    <div class="ov-appsw-item"><img src="/app_switcher_assets/grid_icons/bookings.svg" alt=""><span>Bookings</span></div>
+    <div class="ov-appsw-item"><img src="/app_switcher_assets/grid_icons/drive.svg" alt=""><span>Drive</span></div>
+    <div class="ov-appsw-item"><img src="/app_switcher_assets/grid_icons/backup.svg" alt=""><span>Backup</span></div>
+    <div class="ov-appsw-item"><img src="/app_switcher_assets/grid_icons/tasks.svg" alt=""><span>Tasks</span></div>
+    <div class="ov-appsw-item"><img src="/app_switcher_assets/grid_icons/site.svg" alt=""><span>Site</span></div>
+    <div class="ov-appsw-item" onclick="location.href='/crm'"><img src="/app_switcher_assets/grid_icons/crm.svg" alt=""><span>CRM</span></div>
+  </div>
+</div>
 <script src="/titan-sidebar.js"></script>
 <script>
   // ── This page is reached from OUTSIDE Titan CRM (a mail client CRM-panel link),
@@ -1018,6 +1049,17 @@
     }
   }
   function onFieldChange() { schedulePersist(); }
+
+  // App switcher: toggle from the tab-switch button; close on outside click.
+  (function initAppSwitcher() {
+    const btn = document.querySelector('.tab-switch');
+    const sw = document.getElementById('ov-appsw');
+    if (!btn || !sw) return;
+    btn.addEventListener('click', function (e) { e.stopPropagation(); sw.classList.toggle('open'); });
+    document.addEventListener('click', function (e) {
+      if (sw.classList.contains('open') && !sw.contains(e.target) && !btn.contains(e.target)) sw.classList.remove('open');
+    });
+  })();
 
   init();
 </script>
