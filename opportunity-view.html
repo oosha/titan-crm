@@ -87,6 +87,16 @@
     position: absolute; top: 12px; right: 14px; cursor: pointer; color: #c2c6cd; font-size: 18px; line-height: 1;
   }
   .ov-contact-remove:hover { color: #dc2626; }
+  .ov-contact-person-pill {
+    font-size: 11px; font-weight: 600; color: #2170f4; background: #eaf1ff;
+    border-radius: 999px; padding: 3px 10px; white-space: nowrap; flex-shrink: 0;
+  }
+  .ov-contact-x {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; margin-left: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: #b0b5bb; cursor: pointer; font-size: 16px; line-height: 1; border: 1px solid #e2e4e8;
+  }
+  .ov-contact-x:hover { color: #dc2626; border-color: #f0c6c6; background: #fdecec; }
   .ov-add-link { font-size: 12.5px; font-weight: 600; color: #2170f4; cursor: pointer; display: inline-block; margin-top: 12px; }
   .ov-add-link:hover { text-decoration: underline; }
 
@@ -716,7 +726,9 @@
       row.innerHTML =
         '<div class="ov-contact-top">' +
           '<div class="crm-contact-avatar ov-contact-avatar" style="width:28px;height:28px;border-radius:50%;background:#8a9099;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;">' + ((c.name || '?').charAt(0).toUpperCase()) + '</div>' +
-          (nameHidden ? '' : '<input placeholder="Name" value="' + esc(c.name) + '" style="flex:1; border:1px solid #d9dce1; border-radius:7px; padding:7px 9px; font-size:13px; font-weight:600;" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);">') +
+          (nameHidden ? '' : '<input placeholder="Name" value="' + esc(c.name) + '" style="width:50%; flex:0 1 auto; min-width:110px; border:1px solid #d9dce1; border-radius:7px; padding:7px 9px; font-size:13px; font-weight:600;" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);">') +
+          (i === 0 ? '<span class="ov-contact-person-pill">Contact person</span>' : '') +
+          (contactsEnabled && contacts.length > 1 ? '<span class="ov-contact-x" onclick="removeContact(' + i + ')" title="Remove">&times;</span>' : '') +
         '</div>' +
         '<div class="ov-contact-grid">' +
           (fieldHidden('contact-email') ? '' : '<input placeholder="Email" value="' + esc(c.email) + '" oninput="setContactField(' + i + ',\'email\',this.value)">') +
@@ -726,7 +738,7 @@
           (fieldHidden('contact-location') ? '' : '<input placeholder="Location" value="' + esc(c.location) + '" oninput="setContactField(' + i + ',\'location\',this.value)">') +
           (fieldHidden('contact-linkedin') ? '' : '<input placeholder="LinkedIn" value="' + esc(c.linkedin) + '" oninput="setContactField(' + i + ',\'linkedin\',this.value)">') +
         '</div>' +
-        (contactsEnabled && contacts.length > 1 ? '<span class="ov-contact-remove" onclick="removeContact(' + i + ')" title="Remove">&times;</span>' : '');
+        '';
       wrap.appendChild(row);
     });
     const addLink = document.getElementById('ov-add-contact-link');
@@ -931,7 +943,7 @@
         '<select style="width:76px; flex-shrink:0; border:1px solid #d9dce1; border-radius:7px; padding:8px 6px;" onchange="setCustomFieldValue(\'' + f.key + '-currency\',this.value)">' +
           ['$', '€', '£', 'AU$'].map(function (c) { return '<option value="' + c + '"' + (cur === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') +
         '</select>' +
-        '<input type="text" inputmode="numeric" placeholder="0" value="' + val + '" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">' +
+        '<input type="text" inputmode="numeric" placeholder="0" style="flex:1; min-width:0;" value="' + val + '" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">' +
       '</div>';
     }
     return '<input type="text" placeholder="Value" value="' + val + '" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">';
@@ -941,12 +953,15 @@
     const wrap = document.getElementById('ov-custom-fields');
     const cardEl = document.getElementById('ov-custom-fields-card');
     cardEl.style.display = defs.length ? '' : 'none';
+    // Render custom fields with the same label+input treatment as the standard
+    // fields (a 2-column .ov-field grid), not a bordered box with bare inputs.
+    wrap.className = 'ov-field-grid';
     wrap.innerHTML = '';
     defs.forEach(function (f) {
-      const row = document.createElement('div');
-      row.className = 'ov-custom-field';
-      row.innerHTML = '<div class="ov-field-label" style="margin-bottom:8px;">' + esc(f.name) + '</div>' + customFieldValueHTML(f);
-      wrap.appendChild(row);
+      const field = document.createElement('div');
+      field.className = 'ov-field';
+      field.innerHTML = '<div class="ov-field-label">' + esc(f.name) + '</div>' + customFieldValueHTML(f);
+      wrap.appendChild(field);
     });
   }
 

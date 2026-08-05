@@ -5527,43 +5527,10 @@
     function openOpportunity(cardId) {
       const card = oppCardById(cardId);
       if (!card) return;
-      oppEditingId = card.id;
-      updateCrmUrl(currentPipelineId, card.id);
-      oppContacts = (card.contacts && card.contacts.length)
-        ? card.contacts.map(function (c) { return Object.assign({}, c); })
-        : [{
-            name: card.contact || '', email: card.contactEmail || '', designation: card.contactDesignation || '',
-            phone: card.contactPhone || '', department: card.contactDepartment || '', location: card.contactLocation || '',
-            linkedin: card.contactLinkedin || '',
-          }];
-      const entity = (PIPELINES[currentPipelineId] && PIPELINES[currentPipelineId].entity) || 'Opportunity';
-      const labels = entityLabels(entity);
-      document.getElementById('opp-name').placeholder = labels.name;
-      document.getElementById('opp-stage-label').textContent = labels.stage;
-      document.getElementById('opp-close-label').textContent = labels.date;
-      document.getElementById('opp-name').value = card.deal || '';
-      document.getElementById('opp-company').value = card.company || '';
-      document.getElementById('opp-location').value = card.location || '';
-      document.getElementById('opp-currency').value = card.currency || CURRENCY_SYMBOL;
-      document.getElementById('opp-value').value = card.value || '';
-      document.getElementById('opp-close').value = card.closeDate || '';
-      document.getElementById('opp-source').value = card.source || card.leadSource || '';
-      document.getElementById('opp-website').value = card.website || '';
-      document.getElementById('opp-company-linkedin').value = card.companyLinkedin || '';
-      document.getElementById('opp-instagram').value = card.instagram || '';
-      const stageSel = document.getElementById('opp-stage');
-      stageSel.innerHTML = STAGES.map(function (s) { return '<option value="' + s.key + '">' + s.label + '</option>'; }).join('');
-      stageSel.value = card.stage;
-      const stageLabel = (STAGES.find(function (s) { return s.key === card.stage; }) || {}).label || '';
-      const badge = document.getElementById('opp-stage-badge');
-      badge.textContent = stageLabel; badge.style.background = CURRENT_PIPELINE_COLOR;
-      document.getElementById('opp-note').value = card.note || '';
-      oppRenderContacts();
-      oppRenderActivityAndFiles(card);
-      oppCustomFieldValues = Object.assign({}, card.customFieldValues || {});
-      applyOppFieldVisibility();
-      oppRenderCustomFields();
-      document.getElementById('opp-detail').classList.add('open');
+      // Record detail now lives on its own page (opportunity-view.html), so the URL and
+      // the UI always match — navigate there instead of opening the old inline panel
+      // (which only synced the URL via replaceState, showing the old UI until a reload).
+      location.href = crmPath(currentPipelineId, '/record/' + encodeURIComponent(card.id));
     }
     // Hide/show Details-card fields per this pipeline's Opportunity setting —
     // same source of truth the Add form respects.

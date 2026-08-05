@@ -2872,6 +2872,10 @@
     .crm-contact-item:last-child { padding-bottom: 0; border-bottom: none; }
     .crm-contact-item:not(.is-primary) { padding: 6px 0; }
     .crm-contact-item:not(.is-primary):last-child { padding-bottom: 12px; }
+    /* A single contact matches both :first-child and :last-child at once, zeroing
+       both paddings — the primary contact's indented info-row (email/phone/linkedin)
+       ends up flush against the section's edge instead of having room to breathe. */
+    .crm-contact-item.is-primary:last-child { padding-bottom: 12px; }
     .crm-contact-item.is-primary { flex-direction: column; align-items: stretch; gap: 6px; }
     .crm-contact-main-row { display: flex; align-items: center; gap: 10px; }
     .crm-contact-item .crm-contact-avatar {
@@ -6064,16 +6068,37 @@
     let REAL_PIPELINES = null;
     const THREAD_LINKS = { t3: { pipeline: 'neo', recordId: 6 } };
 
+    // Personas also have real pipeline data at /api/data?persona=<id> (same store
+    // crm.html/opportunity-view.html read from) — it's just not what drives their
+    // mailbox (that's still personas/<id>.js, since that's where the actual thread
+    // content lives). This only uses it to render richer CRM-panel content for
+    // whichever persona threads already have a real record behind them, via
+    // PERSONA.mailbox.threads[].pipelineRef — it never touches PIPELINES/the picker
+    // dropdown/mailbox for non-default personas, so nothing about their own rendering
+    // path changes.
     async function bootstrapRealCrmData() {
-      if (window.PERSONA_ID !== 'default') return;   // personas use their own static file, not /api/data
       try {
-        const res = await fetch('/api/data?persona=default', { cache: 'no-store' });
+        const res = await fetch('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID), { cache: 'no-store' });
         if (!res.ok) return;
         REAL_DATA = await res.json();
         REAL_PIPELINES = REAL_DATA.pipelines || {};
-        rebuildDefaultPipelineData();
-        applyAllThreadLinks();
+        if (window.PERSONA_ID === 'default') {
+          rebuildDefaultPipelineData();
+          applyAllThreadLinks();
+        } else {
+          applyAllPersonaThreadLinks();
+        }
       } catch (e) { console.error('titan-crm: failed to load pipeline data', e); }
+    }
+    // Builds THREAD_LINKS from the persona's own thread→record references, so
+    // openPersonaRecord can render from the real (richer) data instead of the thinner
+    // static-file fallback whenever a real record actually exists for that thread.
+    function applyAllPersonaThreadLinks() {
+      if (typeof PERSONA === 'undefined' || !PERSONA || !PERSONA.mailbox) return;
+      PERSONA.mailbox.threads.forEach(function (t) {
+        if (!t.pipelineRef) return;
+        THREAD_LINKS[t.id] = { pipeline: t.pipelineRef.pipeline, recordId: t.pipelineRef.pipeline + '-' + t.pipelineRef.cardId };
+      });
     }
 
     // Replaces the sales/onboarding/hiring mock with whatever pipelines actually exist
@@ -6806,6 +6831,25 @@
     }
 
     function openPersonaRecord(threadId) {
+      // Prefer the real record behind this thread (richer — real contacts/activity/
+      // files, same rendering Ryan Walker's linked record gets) over the thinner
+      // static-file-only rendering, whenever THREAD_LINKS actually has one for it.
+      var link = THREAD_LINKS[threadId];
+      var realCard = link && cardFor(link);
+      if (realCard && REAL_PIPELINES) {
+        var realPl = REAL_PIPELINES[link.pipeline];
+        var contactName = (realCard.contacts && realCard.contacts[0] && realCard.contacts[0].name) || realCard.contact || '';
+        var contactEmail = (realCard.contacts && realCard.contacts[0] && realCard.contacts[0].email) || realCard.contactEmail || '';
+        setCrmRecord({
+          title: realCard.deal, contact: contactName, email: contactEmail, company: realCard.company,
+          avatar: initialsOfName(contactName || '?'), key: link.pipeline, stage: stageLabelFor(link.pipeline, realCard.stage),
+          host: null, mirror: null, recordId: realCard.id,
+        });
+        fillRealPanel(realCard, realPl);
+        openCrmPanel();
+        return;
+      }
+
       var t = PERSONA.mailbox.threads.find(function (x) { return x.id === threadId; });
       if (!t || !t.pipelineRef) return;
       var pl = PERSONA.pipelines.find(function (p) { return p.id === t.pipelineRef.pipeline; });
@@ -6817,7 +6861,7 @@
         contact: t.from, email: t.email || info.email, company: (card && card.company) || info.company,
         avatar: initialsOfName(t.from),
         key: t.pipelineRef.pipeline, stage: t.pipelineRef.stage, host: null, mirror: null,
-        recordId: card ? card.id : null,
+        recordId: null,
       });
       fillPersonaPanel(card);
       openCrmPanel();
