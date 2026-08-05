@@ -2728,12 +2728,39 @@
 
     /* ── CRM: Right panel (inline column, like Streak in Gmail — not an overlay) ── */
     .crm-panel {
-      width: 0; overflow: hidden; flex-shrink: 0;
+      width: 0; overflow: hidden; flex-shrink: 0; position: relative;
       background: #fff; border-left: 1px solid #dedede;
       display: flex; flex-direction: column;
       transition: width 0.2s ease;
     }
     .crm-panel.open { width: 360px; }
+    /* Naming a record just created from an unlinked email — the panel opens with
+       every other field already filled in (company, contact, stage), and this floats
+       over it just for the name, instead of a blocking native prompt(). */
+    .crm-name-overlay {
+      position: absolute; inset: 0; z-index: 50; display: none;
+      background: rgba(255,255,255,0.86); backdrop-filter: blur(1.5px);
+      align-items: flex-start; justify-content: center; padding-top: 88px;
+    }
+    .crm-name-overlay.open { display: flex; }
+    .crm-name-box {
+      width: 280px; background: #fff; border: 1px solid #e2e4e8; border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.14); padding: 18px;
+    }
+    .crm-name-label { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 10px; }
+    .crm-name-box input {
+      width: 100%; border: 1px solid #d9dce1; border-radius: 7px; padding: 8px 10px;
+      font-size: 13.5px; font-family: inherit; outline: none; box-sizing: border-box; color: #222;
+    }
+    .crm-name-box input:focus { border-color: #2170f4; box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+    .crm-name-actions { display: flex; justify-content: flex-end; gap: 14px; margin-top: 14px; align-items: center; }
+    .crm-name-cancel { font-size: 13px; color: #666; cursor: pointer; }
+    .crm-name-cancel:hover { color: #333; }
+    .crm-name-confirm {
+      background: #2170f4; color: #fff; border: none; border-radius: 7px; padding: 7px 14px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .crm-name-confirm:hover { filter: brightness(1.05); }
     .crm-panel-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 10px 20px; border-bottom: 1px solid #eee; flex-shrink: 0;
@@ -2785,6 +2812,7 @@
     .crm-activity-dir.received { background: #86efac; }
     .crm-activity-text { flex: 1; font-size: 13px; color: #333; }
     .crm-activity-date { font-size: 11.5px; color: #999; }
+    .crm-empty-state { font-size: 13px; color: #333; padding: 8px 0; }
     .crm-task-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; }
     .crm-task-row input[type="checkbox"] { width: 15px; height: 15px; accent-color: #2170f4; }
     .crm-task-due { margin-left: auto; font-size: 11.5px; color: #999; }
@@ -2852,7 +2880,6 @@
     }
     .crm-contact-item .crm-contact-name { font-size: 13px; font-weight: 600; color: #333; }
     .crm-contact-item:not(.is-primary) .crm-contact-name { flex: 1; min-width: 0; }
-    .crm-contact-item.is-primary .crm-contact-main-row { justify-content: space-between; }
     .crm-contact-designation { font-size: 12px; color: #9aa1a9; margin-left: auto; padding-left: 10px; white-space: nowrap; }
     .crm-contact-info-row { display: flex; align-items: center; gap: 10px; }
     .crm-contact-item.is-primary .crm-contact-info-row { margin-left: 34px; }
@@ -4039,6 +4066,17 @@
 
         <!-- ============ CRM: Right Panel (inline column, like Streak in Gmail) ============ -->
         <div class="crm-panel" id="crm-panel">
+          <div class="crm-name-overlay" id="crm-name-overlay">
+            <div class="crm-name-box">
+              <div class="crm-name-label">Name this <span id="crm-name-entity">opportunity</span></div>
+              <input id="crm-name-input" placeholder="e.g. Acme Pro plan"
+                onkeydown="if(event.key==='Enter'){confirmNamePrompt();} else if(event.key==='Escape'){cancelNamePrompt();}">
+              <div class="crm-name-actions">
+                <span class="crm-name-cancel" onclick="cancelNamePrompt()">Cancel</span>
+                <button class="crm-name-confirm" onclick="confirmNamePrompt()">Create</button>
+              </div>
+            </div>
+          </div>
           <div class="crm-panel-header">
             <span class="crm-record-title" id="crm-record-title">
               <span id="crm-record-name">Dashboard v2 Upgrade</span>
@@ -5883,17 +5921,12 @@
         (pipelineCtx.host && pipelineCtx.host.dataset.threadId) || null;
 
       // Adding a previously-unlinked email to a pipeline creates a real record in it —
-      // prompt for its name first (Cancel leaves the email unlinked, same as before).
+      // the panel opens with everything filled in and prompts for just the name;
+      // canceling that leaves the email unlinked (labels only change on confirm).
       if (key && !prevKey) {
         closePipelinePicker();
         if (!threadId) return;
-        linkThreadToNewRecord(threadId, key).then(function (card) {
-          if (!card) return;   // cancelled the name prompt — leave the email unlinked, no label change
-          const stageLabel = stageLabelFor(key, card.stage);
-          if (pipelineCtx.host) { pipelineCtx.host.dataset.stage = stageLabel; renderPipelineLabel(pipelineCtx.host, key); }
-          if (pipelineCtx.mirror) { pipelineCtx.mirror.dataset.stage = stageLabel; renderPipelineLabel(pipelineCtx.mirror, key); }
-          openThreadRecord(threadId);
-        });
+        beginLinkThreadToNewRecord(threadId, key, pipelineCtx.host, pipelineCtx.mirror);
         return;
       }
 
@@ -6023,7 +6056,7 @@
     // ── Real pipeline data (§ same store crm.html / opportunity-view.html use) ──
     // Ryan Walker's thread (t3) is wired to actual record #6 ("Meridian AI site") in
     // the "neo" pipeline below; every other thread gets linked the first time someone
-    // adds it to a pipeline (see linkThreadToNewRecord). THREAD_LINKS is what survives
+    // adds it to a pipeline (see beginLinkThreadToNewRecord). THREAD_LINKS is what survives
     // across re-opening the same thread/tile within this page's lifetime — the tiles
     // themselves are static demo markup, not fetched, so there's no reload-persistence
     // to worry about beyond what /api/data itself stores for the pipeline records.
@@ -6267,30 +6300,70 @@
       return (raw || 'New contact').replace(/\s*\(\d+\)\s*$/, '').split(',')[0].trim();
     }
 
-    // Real record creation: the actual "if I add any other email to a pipeline" flow —
-    // prompts for a name, creates a real card in that pipeline via /api/data, and
-    // remembers the link for this thread. Returns the new card, or null if cancelled.
-    async function linkThreadToNewRecord(threadId, pipelineId) {
+    // Real record creation: the actual "if I add any other email to a pipeline" flow.
+    // Rather than a blocking native prompt(), this opens the CRM panel right away with
+    // every other field already filled in (company, contact, stage), and floats a
+    // small in-panel field over it just to name the record. The card isn't created (no
+    // /api/data write, no THREAD_LINKS entry) until the name is confirmed.
+    let pendingNameDraft = null;
+    function beginLinkThreadToNewRecord(threadId, pipelineId, host, mirror) {
       const pl = REAL_PIPELINES && REAL_PIPELINES[pipelineId];
-      if (!pl) { alert('Pipeline data isn’t loaded yet — try again in a moment.'); return null; }
-      const entityLabel = (pl.entity || 'Opportunity').toLowerCase();
+      if (!pl) { alert('Pipeline data isn’t loaded yet — try again in a moment.'); return; }
       const contact = threadContactName(threadId);
-      const name = prompt('Name this ' + entityLabel + ':', contact ? contact + ' — ' + pl.name : '');
-      if (name === null) return null;
       const info = contactInfo(contact);
       let maxId = 0;
       Object.keys(REAL_PIPELINES).forEach(function (pid) {
         REAL_PIPELINES[pid].cards.forEach(function (c) { if (c.id > maxId) maxId = c.id; });
       });
-      const card = {
-        id: maxId + 1, deal: name.trim() || (contact + ' — ' + pl.name), company: info.company,
+      const entityLabel = (pl.entity || 'Opportunity').toLowerCase();
+      const draftCard = {
+        id: maxId + 1, deal: 'New ' + entityLabel, company: info.company,
         contact: contact, contactEmail: info.email, value: 0, stage: (pl.stages[0] || {}).key || '',
-        lastActivity: 'just now', activityType: 'Email sent', overdue: false,
+        // The record is being created *from* an inbound email (that's what's being
+        // linked to a pipeline here), so the truthful default is "received", not "sent".
+        lastActivity: 'just now', activityType: 'Email received', overdue: false,
       };
-      pl.cards.push(card);
-      THREAD_LINKS[threadId] = { pipeline: pipelineId, recordId: card.id };
-      await persistRealData();
-      return card;
+      pendingNameDraft = { threadId: threadId, pipelineId: pipelineId, card: draftCard, host: host, mirror: mirror };
+
+      setCrmRecord({
+        title: draftCard.deal, contact: contact, email: info.email, company: info.company,
+        avatar: initialsOf(contact || '?'), key: pipelineId, stage: stageLabelFor(pipelineId, draftCard.stage),
+        host: host, mirror: mirror, recordId: null,
+      });
+      fillRealPanel(draftCard, pl);
+      openCrmPanel();
+
+      document.getElementById('crm-name-entity').textContent = entityLabel;
+      const input = document.getElementById('crm-name-input');
+      input.value = '';
+      input.placeholder = contact ? contact + ' — ' + pl.name : 'e.g. Acme Pro plan';
+      document.getElementById('crm-name-overlay').classList.add('open');
+      setTimeout(function () { input.focus(); }, 0);
+    }
+    function confirmNamePrompt() {
+      if (!pendingNameDraft) return;
+      const input = document.getElementById('crm-name-input');
+      const name = input.value.trim();
+      if (!name) { input.focus(); return; }
+      const draft = pendingNameDraft;
+      pendingNameDraft = null;
+      document.getElementById('crm-name-overlay').classList.remove('open');
+
+      draft.card.deal = name;
+      REAL_PIPELINES[draft.pipelineId].cards.push(draft.card);
+      THREAD_LINKS[draft.threadId] = { pipeline: draft.pipelineId, recordId: draft.card.id };
+      persistRealData();
+
+      const stageLabel = stageLabelFor(draft.pipelineId, draft.card.stage);
+      if (draft.host) { draft.host.dataset.stage = stageLabel; renderPipelineLabel(draft.host, draft.pipelineId); }
+      if (draft.mirror) { draft.mirror.dataset.stage = stageLabel; renderPipelineLabel(draft.mirror, draft.pipelineId); }
+      openThreadRecord(draft.threadId);
+    }
+    function cancelNamePrompt() {
+      if (!pendingNameDraft) return;
+      pendingNameDraft = null;
+      document.getElementById('crm-name-overlay').classList.remove('open');
+      closeCrmPanel();
     }
 
     // The thread currently shown in the reading pane (linked or unlinked).
@@ -6327,7 +6400,7 @@
 
     // Open the sidebar for any email tile; record name defaults to the contact name.
     // (Only reached for a tile that's already linked — creating a new link goes
-    // through selectPipelineOption → linkThreadToNewRecord → openThreadRecord instead.)
+    // through selectPipelineOption → beginLinkThreadToNewRecord → openThreadRecord instead.)
     function openCrmForEmail(tile, key) {
       if (!tile) return;
       const threadId = tile.dataset.threadId;
@@ -6340,8 +6413,9 @@
       if (threadId && THREAD_LINKS[threadId]) return openThreadRecord(threadId);
     }
 
-    // Suggestion pill (AI): still prompts for a name and creates a real record, same
-    // as the tile hover pill / action bar — this is just a third route to the same flow.
+    // Suggestion pill (AI): pipeline is already suggested, so still opens the same
+    // name-the-record flow — just a third route into it, same as the tile hover pill /
+    // reading-pane action bar.
     function addSuggestedToPipeline(evt) {
       if (evt) evt.stopPropagation();
       const view = document.getElementById('thread-view-unlinked');
@@ -6349,16 +6423,11 @@
       const threadId = header && header.dataset.threadId;
       const key = 'neo';
       if (!threadId) return;
-      linkThreadToNewRecord(threadId, key).then(function (card) {
-        if (!card) return;
-        const pill = evt && (evt.currentTarget || (evt.target && evt.target.closest('.pc-suggested')));
-        if (pill && pill.classList.contains('pc-suggested')) pill.style.display = 'none';
-        const stageLabel = stageLabelFor(key, card.stage);
-        if (header) { header.dataset.stage = stageLabel; renderPipelineLabel(header, key); }
-        const tile = document.querySelector('.email-tile[data-thread-id="' + threadId + '"]');
-        if (tile) { const row = ensurePreviewRow(tile); row.dataset.stage = stageLabel; renderPipelineLabel(row, key); }
-        openThreadRecord(threadId);
-      });
+      const pill = evt && (evt.currentTarget || (evt.target && evt.target.closest('.pc-suggested')));
+      if (pill && pill.classList.contains('pc-suggested')) pill.style.display = 'none';
+      const tile = document.querySelector('.email-tile[data-thread-id="' + threadId + '"]');
+      const row = tile ? ensurePreviewRow(tile) : null;
+      beginLinkThreadToNewRecord(threadId, key, header, row);
     }
 
     function openRecordForLabel(label) {
