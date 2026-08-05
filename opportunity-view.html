@@ -41,7 +41,7 @@
      display it. ── */
   .ov-title-input {
     font-size: 20px; font-weight: 700; color: #1a1a1a; border: none; outline: none;
-    width: 100%; font-family: inherit; padding: 2px 0; background: transparent;
+    flex: 1; min-width: 0; font-family: inherit; padding: 2px 0; background: transparent;
   }
   .ov-title-input::placeholder { color: #b3b7bd; }
   .ov-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
@@ -158,11 +158,77 @@
   }
   .crm-act-ic svg { width: 14px; height: 14px; }
   .crm-empty-state { font-size: 13px; color: #9a9fa7; padding: 4px 0; }
+  .crm-activity-snippet { font-size: 13px; line-height: 1.5; color: #999; margin-top: 4px; }
 
   .crm-file-row {
-    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px; margin-bottom: 6px;
     background: #f6f7f8; border-radius: 8px;
   }
+  .crm-file-row:last-child { margin-bottom: 0; }
+  .crm-file-name { flex: 1; min-width: 0; font-size: 12.5px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .crm-file-icon {
+    width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .crm-file-icon.pdf { background: #e5484d; }
+  .crm-file-icon.doc { background: #2170f4; }
+  .crm-file-icon.zip { background: #9aa1a9; }
+  .crm-file-right { position: relative; display: flex; align-items: center; justify-content: flex-end; min-width: 66px; flex-shrink: 0; }
+  .crm-file-meta { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #999; transition: opacity 0.15s ease; }
+  .crm-file-direction { display: inline-flex; flex-shrink: 0; }
+  .crm-file-direction.sent { color: #7aa8f2; }
+  .crm-file-direction.received { color: #6fcf8e; }
+  .crm-file-actions {
+    position: absolute; right: 0; display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s ease;
+    background: #f6f7f8;
+  }
+  .crm-file-row:hover .crm-file-meta { opacity: 0; }
+  .crm-file-row:hover .crm-file-actions { opacity: 1; }
+  .crm-file-action-btn {
+    width: 22px; height: 22px; border-radius: 6px; background: #e9eaec; color: #666; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .crm-file-action-btn:hover { background: #dcdde0; color: #333; }
+
+  /* Task activities: a real checkbox you can mark done (matches the mailclient CRM
+     panel's .crm-act-check), except checking one here actually completes it — it moves
+     from Upcoming to Recent activity instead of just toggling a visual state. */
+  .crm-act-check {
+    width: 26px; height: 26px; flex-shrink: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .crm-act-check .box {
+    width: 17px; height: 17px; box-sizing: border-box;
+    border: 1.6px solid #c4c9d0; border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .crm-act-check .box svg { width: 11px; height: 11px; display: none; }
+
+  .crm-add-activity {
+    font-size: 12.5px; line-height: 16px; color: #2170f4; font-weight: 600; cursor: pointer;
+    margin-top: 12px; display: inline-flex; align-items: center;
+  }
+  .crm-activity-menu {
+    position: fixed; display: none; background: #fff; border-radius: 8px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.16); width: 214px; overflow: hidden; z-index: 600;
+  }
+  .crm-activity-menu.open { display: block; }
+  .cam2-bar { font-size: 12.5px; font-weight: 700; padding: 11px 12px; background: #eef0f2; color: #333; }
+  .cam2-items { padding: 6px; }
+  .cam2-item { display: flex; align-items: center; gap: 9px; font-size: 13px; color: #333; padding: 8px 10px; border-radius: 6px; cursor: pointer; }
+  .cam2-item:hover { background: #f4f6f8; }
+  .cam2-item .ic { width: 15px; height: 15px; flex-shrink: 0; display: flex; color: #667085; }
+  .cam2-item .ic svg { width: 15px; height: 15px; }
+
+  /* ── AI summary toggle (matches the mailclient CRM panel's) ── */
+  .crm-ai-icon-btn {
+    width: 22px; height: 22px; border-radius: 50%; background: #eaf1ff; color: #2170f4;
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  }
+  .crm-ai-icon-btn:hover { background: #dbe9ff; }
+  .crm-ai-summary-text { font-size: 13px; color: #333; line-height: 1.5; margin-top: 10px; display: none; }
+  .crm-ai-summary-text.show { display: block; }
+  .ov-title-row { display: flex; align-items: center; gap: 8px; }
 </style>
 </head>
 <body data-subpage="opportunity-view">
@@ -261,7 +327,13 @@
       <div class="ov-wrap" id="ov-wrap" style="display:none;">
 
         <div class="ov-card">
-          <input class="ov-title-input" id="ov-name" placeholder="Opportunity name" oninput="onFieldChange()">
+          <div class="ov-title-row">
+            <input class="ov-title-input" id="ov-name" placeholder="Opportunity name" oninput="onFieldChange()">
+            <span class="crm-ai-icon-btn" onclick="toggleAiSummary()" title="AI summary">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
+            </span>
+          </div>
+          <div class="crm-ai-summary-text" id="ov-ai-summary-text"></div>
           <div class="ov-meta-row">
             <input class="ov-inline-input ov-company-input" id="ov-company" data-field="company" placeholder="Company" oninput="onFieldChange()">
             <span class="ov-dot">&middot;</span>
@@ -331,6 +403,32 @@
         <div class="ov-card">
           <div class="ov-heading">Upcoming activity</div>
           <div id="ov-upcoming-activity"></div>
+          <div class="crm-add-activity" onclick="openActivityMenu(event)">+ Add activity</div>
+          <div class="crm-activity-menu" id="ov-activity-menu">
+            <div class="cam2-bar" id="ov-activity-menu-bar">No activity yet</div>
+            <div class="cam2-items">
+              <div class="cam2-item" onclick="addActivity('followup')">
+                <span class="ic"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3.5" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.6 4.6L8 8.4l5.4-3.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span>
+                Follow-up on email
+              </div>
+              <div class="cam2-item" onclick="addActivity('call')">
+                <span class="ic"><svg viewBox="0 0 16 16" fill="none"><path d="M5.4 2.8H4c-1 0-1.7.8-1.5 1.8.4 2 1.5 3.9 3 5.4s3.4 2.6 5.4 3c1 .2 1.8-.5 1.8-1.5v-1.4c0-.5-.4-.9-.8-1l-1.7-.4c-.4-.1-.9 0-1.2.4l-.5.6C7 8.9 6 7.9 5.4 6.7l.6-.5c.3-.3.5-.8.4-1.2L6 3.6c-.1-.5-.5-.8-1-.8z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></span>
+                Schedule a call
+              </div>
+              <div class="cam2-item" onclick="addActivity('booking')">
+                <span class="ic"><svg viewBox="0 0 16 16" fill="none"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 6.5h11M5.5 2.3v2.2M10.5 2.3v2.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span>
+                Send a booking link
+              </div>
+              <div class="cam2-item" onclick="addActivity('task')">
+                <span class="ic"><svg viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M5.4 8l1.8 1.8L11 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                Create a task
+              </div>
+              <div class="cam2-item" onclick="addActivity('note')">
+                <span class="ic"><svg viewBox="0 0 16 16" fill="none"><path d="M3 2.5h10v11H3v-11Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5.3 5.8h5.4M5.3 8h5.4M5.3 10.2h3.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></span>
+                Add a note
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="ov-card">
@@ -508,9 +606,30 @@
     renderContacts();
 
     renderActivityAndFiles();
+    renderAiSummary();
 
     customFieldValues = Object.assign({}, card.customFieldValues || {});
     renderCustomFields();
+  }
+
+  // The mailclient CRM panel's AI summary is a fixed, hardcoded string regardless of
+  // which record is open — not useful reused verbatim here. This composes a real
+  // one-line summary from the record's own data instead (contact, company, stage,
+  // value, latest note), which is both true parity (the same toggleable AI-summary
+  // affordance) and "more" (it actually reflects the record you're looking at).
+  function toggleAiSummary() {
+    const text = document.getElementById('ov-ai-summary-text');
+    if (text) text.classList.toggle('show');
+  }
+  function renderAiSummary() {
+    const contact = contacts[0] || {};
+    const stageLabel = ((pipeline.stages || []).find(function (s) { return s.key === card.stage; }) || {}).label || card.stage || '';
+    const who = contact.name ? (contact.name + (card.company ? ' at ' + card.company : '')) : (card.company || 'This ' + (pipeline.entity || 'record').toLowerCase());
+    const amount = card.value ? (card.currency || '$') + Number(card.value).toLocaleString() : '';
+    let summary = who + ' is at the "' + stageLabel + '" stage' +
+      (card.deal ? ' for ' + card.deal : '') + (amount ? ' (' + amount + ')' : '') + '.';
+    if (card.note) summary += ' ' + card.note;
+    document.getElementById('ov-ai-summary-text').textContent = summary;
   }
 
   function renderStage() {
@@ -615,28 +734,180 @@
   }
   function removeContact(i) { contacts.splice(i, 1); renderContacts(); onFieldChange(); }
 
-  function renderActivityAndFiles() {
-    const up = document.getElementById('ov-upcoming-activity');
-    const rows = [];
-    if (card.nextActivity) rows.push(formatNextActivity(card.nextActivity));
-    if (card.overdue) rows.push('Follow-up overdue');
-    up.innerHTML = rows.length
-      ? rows.map(function (t) { return '<div class="crm-activity-row"><span class="crm-act-ic"><svg viewBox="0 0 16 16" fill="none"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 6.5h11M5.5 2.3v2.2M10.5 2.3v2.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span><div class="crm-activity-text">' + esc(t) + '</div></div>'; }).join('')
-      : '<div class="crm-empty-state">No upcoming activity.</div>';
+  // Same icon set as the mailclient CRM panel's activity rows (§ Recent activity type
+  // icons in index.html) — kept neutral-colored (see .crm-act-ic rule) so the glyph is
+  // what distinguishes types, not color.
+  const ACT_ICONS = {
+    email: '<rect x="2" y="3.5" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.6 4.6L8 8.4l5.4-3.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+    followup: '<rect x="2" y="3.5" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.6 4.6L8 8.4l5.4-3.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+    meeting: '<rect x="2.5" y="3.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 6.5h11M5.5 2.3v2.2M10.5 2.3v2.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+    phone: '<path d="M5.4 2.8H4c-1 0-1.7.8-1.5 1.8.4 2 1.5 3.9 3 5.4s3.4 2.6 5.4 3c1 .2 1.8-.5 1.8-1.5v-1.4c0-.5-.4-.9-.8-1l-1.7-.4c-.4-.1-.9 0-1.2.4l-.5.6C7 8.9 6 7.9 5.4 6.7l.6-.5c.3-.3.5-.8.4-1.2L6 3.6c-.1-.5-.5-.8-1-.8z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>',
+    task: '<rect x="2.5" y="2.5" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M5.4 8l1.8 1.8L11 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>',
+    note: '<path d="M3 2.5h10v11H3v-11Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5.3 5.8h5.4M5.3 8h5.4M5.3 10.2h3.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>',
+  };
+  function actIcon(type) { return '<span class="crm-act-ic"><svg viewBox="0 0 16 16" fill="none">' + (ACT_ICONS[type] || ACT_ICONS.task) + '</svg></span>'; }
 
-    const recent = document.getElementById('ov-recent-activity');
-    recent.innerHTML = (card.activityType || card.lastActivity)
-      ? '<div class="crm-activity-row"><span class="crm-act-ic"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3.5" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.6 4.6L8 8.4l5.4-3.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span><div class="crm-activity-text">' + esc(card.activityType || 'Activity') + '</div><div class="crm-activity-date">' + esc(card.lastActivity || '') + '</div></div>'
-      : '<div class="crm-empty-state">No recent activity.</div>';
-
-    document.getElementById('ov-files').innerHTML = '<div class="crm-empty-state">No files yet.</div>';
-  }
   function formatNextActivity(next) {
     if (next.label) return next.label + (next.date ? ' · ' + next.date : '');
     if (next.type === 'followup') return 'Follow-up scheduled for ' + next.date;
     if (next.type === 'meeting') return 'Meeting scheduled for ' + next.date;
     if (next.type === 'task') return 'Task "' + next.name + '" due on ' + next.date;
     return '';
+  }
+
+  // Prefers a real per-record activity/file log (card.upcomingActivities /
+  // recentActivities / files — richer, multi-entry, matching-or-exceeding what the
+  // mailclient CRM panel shows) and falls back to the single row derivable from the
+  // card's plain fields (nextActivity/overdue/activityType/lastActivity) for records
+  // that don't have a log yet.
+  // Materializes the derived (nextActivity/overdue) fallback into a real, splice-able
+  // card.upcomingActivities array — called before anything that mutates the list, so
+  // toggleActTask/addActivity work the same way whether or not this record already had
+  // a real activity log.
+  function upcomingActivityList() {
+    if (!card.upcomingActivities) {
+      card.upcomingActivities = []
+        .concat(card.nextActivity ? [{ type: card.nextActivity.type, text: formatNextActivity(card.nextActivity), date: card.nextActivity.date }] : [])
+        .concat(card.overdue ? [{ type: 'task', text: 'Follow-up overdue', overdue: true }] : []);
+    }
+    return card.upcomingActivities;
+  }
+
+  function renderActivityAndFiles() {
+    const up = document.getElementById('ov-upcoming-activity');
+    const upItems = (card.upcomingActivities && card.upcomingActivities.length) ? card.upcomingActivities : upcomingActivityList();
+    up.innerHTML = upItems.length
+      ? upItems.map(function (a, i) {
+          // Task-type rows get a real checkbox (matching the mailclient CRM panel's
+          // .crm-act-check look) — checking one off actually completes it here, rather
+          // than just toggling a visual state.
+          const iconHTML = a.type === 'task'
+            ? '<span class="crm-act-check" onclick="toggleActTask(' + i + ')" title="Mark done"><span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l2.6 2.6L11.8 5" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>'
+            : actIcon(a.type);
+          return '<div class="crm-activity-row">' + iconHTML +
+            '<div class="crm-activity-text">' + esc(a.text) + '</div>' +
+            (a.date ? '<div class="crm-activity-date' + (a.overdue ? ' overdue' : '') + '">' + esc(a.date) + '</div>' : '') +
+            '</div>';
+        }).join('')
+      : '<div class="crm-empty-state">No upcoming activity.</div>';
+
+    const recent = document.getElementById('ov-recent-activity');
+    const recentItems = (card.recentActivities && card.recentActivities.length)
+      ? card.recentActivities
+      : ((card.activityType || card.lastActivity) ? [{ type: 'email', text: card.activityType || 'Activity', date: card.lastActivity || '' }] : []);
+    recent.innerHTML = recentItems.length
+      ? recentItems.map(function (a) {
+          return '<div class="crm-activity-row">' + actIcon(a.type) +
+            '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + esc(a.text) + '</div>' +
+            (a.snippet ? '<div class="crm-activity-snippet">' + esc(a.snippet) + '</div>' : '') + '</div>' +
+            (a.date ? '<div class="crm-activity-date">' + esc(a.date) + '</div>' : '') +
+            '</div>';
+        }).join('')
+      : '<div class="crm-empty-state">No recent activity.</div>';
+
+    renderFiles();
+  }
+
+  // Matches the mailclient CRM panel's file rows (type icon by extension, sent/received
+  // direction, size, Download/Add-to-Drive actions) rather than just a bare filename.
+  const DOWNLOAD_SVG = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2v8.5M8 10.5L4.8 7.3M8 10.5l3.2-3.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+  const DRIVE_SVG = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="8.5" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 6.2h12" stroke="currentColor" stroke-width="1.2"/><path d="M6 9h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+  const SENT_SVG = '<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 12L12 4M12 4H6M12 4V10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const RECEIVED_SVG = '<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 12H10M4 12V6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function fileIconClass(name) {
+    const ext = String(name || '').split('.').pop().toLowerCase();
+    if (ext === 'pdf') return 'pdf';
+    if (['zip', 'rar', '7z'].indexOf(ext) !== -1) return 'zip';
+    return 'doc';
+  }
+  function fileTypeStroke(cls) { return cls === 'pdf' ? '#e5484d' : cls === 'zip' ? '#9aa1a9' : '#2170f4'; }
+  function renderFiles() {
+    const files = card.files || [];
+    document.getElementById('ov-files').innerHTML = files.length
+      ? files.map(function (f) {
+          const cls = fileIconClass(f.name);
+          return '<div class="crm-file-row">' +
+            '<span class="crm-file-icon ' + cls + '"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-7-6Z" fill="currentColor"/><path d="M13 2v6h6" fill="none" stroke="' + fileTypeStroke(cls) + '" stroke-width="1.8" stroke-linejoin="round"/></svg></span>' +
+            '<span class="crm-file-name">' + esc(f.name) + '</span>' +
+            '<div class="crm-file-right">' +
+              '<span class="crm-file-meta">' +
+                (f.direction ? '<span class="crm-file-direction ' + esc(f.direction) + '" title="' + (f.direction === 'sent' ? 'Sent' : 'Received') + '">' + (f.direction === 'sent' ? SENT_SVG : RECEIVED_SVG) + '</span>' : '') +
+                esc(f.size || '') +
+              '</span>' +
+              '<div class="crm-file-actions">' +
+                '<span class="crm-file-action-btn" title="Download">' + DOWNLOAD_SVG + '</span>' +
+                '<span class="crm-file-action-btn" title="Add to Drive">' + DRIVE_SVG + '</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('')
+      : '<div class="crm-empty-state">No files yet.</div>';
+  }
+
+  // Checking off a task actually completes it here (unlike the mailclient CRM panel's
+  // toggleActTask, which is purely a visual .done toggle) — it's removed from Upcoming
+  // and logged into Recent activity, and persisted.
+  function toggleActTask(i) {
+    const list = upcomingActivityList();
+    const done = list.splice(i, 1)[0];
+    if (!done) return;
+    if (done.overdue) card.overdue = false;
+    if (!card.recentActivities) card.recentActivities = [];
+    card.recentActivities.unshift({ type: 'task', text: done.text, date: 'Just now' });
+    renderActivityAndFiles();
+    schedulePersist();
+  }
+
+  // "+ Add activity" — same menu the mailclient CRM panel's card action icon shows, but
+  // wired to actually create the activity (that panel leaves it as a prototype-only
+  // stub for everything except notes).
+  function openActivityMenu(evt) {
+    if (evt) evt.stopPropagation();
+    const m = document.getElementById('ov-activity-menu');
+    const trigger = evt && (evt.currentTarget || evt.target);
+    const bar = document.getElementById('ov-activity-menu-bar');
+    const recentItems = (card.recentActivities && card.recentActivities.length) ? card.recentActivities : null;
+    bar.textContent = recentItems
+      ? ('Last activity: ' + recentItems[0].text + (recentItems[0].date ? ' · ' + recentItems[0].date : ''))
+      : ((card.activityType || card.lastActivity) ? ('Last activity: ' + (card.activityType || 'Activity') + ' ' + (card.lastActivity || '')) : 'No activity yet');
+    m.classList.add('open');
+    if (trigger && trigger.getBoundingClientRect) {
+      const r = trigger.getBoundingClientRect();
+      const w = m.offsetWidth || 214;
+      const h = m.offsetHeight || 190;
+      let left = r.left;
+      if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+      if (left < 8) left = 8;
+      let top = r.bottom + 6;
+      if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 6);
+      m.style.left = left + 'px';
+      m.style.top = top + 'px';
+    }
+    setTimeout(function () { document.addEventListener('click', outsideActivityMenu); }, 0);
+  }
+  function outsideActivityMenu(e) {
+    const m = document.getElementById('ov-activity-menu');
+    if (m && !m.contains(e.target)) closeActivityMenu();
+  }
+  function closeActivityMenu() {
+    const m = document.getElementById('ov-activity-menu');
+    if (m) m.classList.remove('open');
+    document.removeEventListener('click', outsideActivityMenu);
+  }
+  function addActivity(kind) {
+    closeActivityMenu();
+    if (kind === 'note') {
+      const input = document.getElementById('ov-note-input');
+      if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); input.focus(); }
+      return;
+    }
+    const LABELS = { followup: 'Follow-up on email', call: 'Schedule a call', booking: 'Send a booking link', task: 'Create a task' };
+    const text = prompt('What should this ' + (kind === 'task' ? 'task' : 'activity') + ' say?', LABELS[kind] || '');
+    if (text === null) return;
+    const date = prompt('When is it due? (e.g. "Fri", "Aug 12, 3pm")', '') || '';
+    upcomingActivityList().push({ type: kind, text: text.trim() || LABELS[kind], date: date.trim() });
+    renderActivityAndFiles();
+    schedulePersist();
   }
 
   function setCustomFieldValue(key, val) { customFieldValues[key] = val; onFieldChange(); }
