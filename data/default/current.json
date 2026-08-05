@@ -1,5 +1,5 @@
 {
-  "currentPipelineId": "p1",
+  "currentPipelineId": "neo",
   "pipelineSeq": 1,
   "pipelines": {
     "neo": {
@@ -201,8 +201,33 @@
           "customFieldValues": {
             "cf1": "High"
           },
-          "note": "The meeting went well and they are reviewing the proposal with the team.",
-          "noteDate": "5 Aug"
+          "note": "Got a call back from Ryan that they may need another week or so.",
+          "noteDate": "5 Aug",
+          "upcomingActivities": [],
+          "currency": "$",
+          "location": "",
+          "website": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "contacts": [
+            {
+              "name": "Ryan Walker",
+              "email": "",
+              "designation": "",
+              "phone": "",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactEmail": "",
+          "contactPhone": "",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": ""
         },
         {
           "id": 7,
