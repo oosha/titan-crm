@@ -1,5 +1,5 @@
 {
-  "currentPipelineId": "inquiries",
+  "currentPipelineId": "projects",
   "pipelineSeq": 0,
   "pipelines": {
     "inquiries": {
@@ -331,10 +331,37 @@
           "stage": "s0",
           "weddingDate": "2027-05-22",
           "future": true,
-          "note": "Reminder fires 6 weeks before wedding to schedule drop-off",
+          "note": "Chloe wants white lilies",
           "lastActivity": "4d ago",
           "activityType": "Email sent",
-          "overdue": false
+          "overdue": false,
+          "upcomingActivities": [],
+          "noteDate": "5 Aug",
+          "currency": "$",
+          "location": "",
+          "website": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "contacts": [
+            {
+              "name": "Chloe Watson",
+              "email": "",
+              "designation": "",
+              "phone": "",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactEmail": "",
+          "contactPhone": "",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
         }
       ],
       "hiddenFields": [],
