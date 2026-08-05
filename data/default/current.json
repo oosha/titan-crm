@@ -4,7 +4,7 @@
   "pipelines": {
     "neo": {
       "id": "neo",
-      "name": "Neo partnership for the future",
+      "name": "Neo partnerships",
       "entity": "Opportunity",
       "plural": "opportunities",
       "color": "#7a6ba3",
