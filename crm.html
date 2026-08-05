@@ -535,6 +535,9 @@
       color: #fff;
       white-space: nowrap;
       flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .nav-item-label.active {
@@ -6250,6 +6253,9 @@
       };
       npAddSidebarPipeline(name, id);
       switchPipeline(id);
+      // Persist the new pipeline — without this it lives only in memory + the sidebar
+      // DOM and is gone on the next load (switchPipeline doesn't save on its own).
+      schedulePersist();
 
       closeNewPipeline();
       npToast('“' + name + '” created — link an email to add your first ' + entity.toLowerCase() + '.');

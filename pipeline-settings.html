@@ -13,7 +13,9 @@
   }
   .ps-btn-primary:hover { filter: brightness(1.05); }
   .ps-wrap { max-width: 1040px; margin: 0 auto; padding: 28px 24px 60px; }
-  .ps-card { background: #fff; border: 1px solid #e8eaed; border-radius: 12px; padding: 24px 26px; margin-bottom: 18px; }
+  .ps-card { background: #fff; border: 1px solid #e8eaed; border-radius: 12px; padding: 22px 26px; margin-bottom: 20px; }
+  /* Section header — matches .os-card-title on the opportunity settings page. */
+  .ps-card-title { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 16px; }
   .np-label { font-size: 15px; font-weight: 400; color: #1a1a1a; margin: 0 2px 8px; }
   .np-name-input {
     width: 100%; padding: 10px 12px; border: 1px solid #d9dce1; border-radius: 7px;
@@ -79,11 +81,11 @@
   .ps-stage-detail-name { font-size: 13.5px; font-weight: 600; color: #1a1a1a; flex: 1; }
   .ps-stage-detail-summary { font-size: 12px; color: #9a9fa7; }
   .ps-stage-detail-chevron {
-    color: #6b7280; flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+    color: #6b7280; flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     transition: transform 0.15s ease, background 0.1s ease;
   }
-  .ps-stage-detail-chevron svg { width: 14px; height: 10px; }
+  .ps-stage-detail-chevron svg { width: 10px; height: 7px; }
   .ps-stage-detail-header:hover .ps-stage-detail-chevron { background: #eceef1; color: #333; }
   .ps-stage-detail.open .ps-stage-detail-chevron { transform: rotate(180deg); }
   .ps-stage-detail-body { display: none; padding: 4px 16px 24px; border-top: 1px solid #eee; }
@@ -140,6 +142,7 @@
     <div class="subpage-body">
       <div class="ps-wrap">
         <div class="ps-card">
+          <div class="ps-card-title">Pipeline details</div>
           <div class="np-label">Pipeline name</div>
           <input class="np-name-input" id="ps-name" style="margin-bottom:22px;">
 
@@ -148,13 +151,13 @@
         </div>
 
         <div class="ps-card">
-          <div class="np-label">Stages</div>
+          <div class="ps-card-title">Stages</div>
           <div class="np-help">Click a stage to rename it. Drag to reorder. These are the columns on your board.</div>
           <div class="np-chev-chain" id="ps-stages"></div>
         </div>
 
         <div class="ps-card">
-          <div class="np-label">Stage details</div>
+          <div class="ps-card-title">Stage details</div>
           <div class="np-help">Set up what happens at each stage — tasks, email sequences, and how records move to the next one.</div>
           <div id="ps-stage-details"></div>
         </div>
