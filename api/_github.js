@@ -6,6 +6,22 @@
 // "default" (the built-in Neo partnerships demo) keeps a seed.json/current.json
 // split so it can be reverted on request. Other personas (joanna, and whatever
 // comes next) are just a single file — no seed, no revert.
+//
+// ── Adding a new persona ──────────────────────────────────────────────────
+//   1. Create data/personas/<id>.json with the persona's pipelines (its starting
+//      content). <id> must match /^[a-z0-9_-]{1,32}$/ (see isValidPersonaId).
+//      Reach it in the app with ?u=<id>.
+//   2. That file is the persona's LIVE store — the app both reads AND writes it
+//      via the GitHub API. It has no seed/revert; whatever is saved stays until a
+//      record is deleted. Do NOT add a seed for it (seed.json is a manual, code-
+//      side revert tool for "default" only, never used by the app at runtime).
+//   3. Guard it from git so a stray push can't overwrite live saves with the
+//      committed snapshot:
+//        git update-index --skip-worktree data/personas/<id>.json
+//      To intentionally edit it from code later (e.g. re-seed its starting data),
+//      lift the flag first: git update-index --no-skip-worktree <file>, commit,
+//      then re-apply --skip-worktree. Same rule already applies to
+//      data/default/current.json.
 const OWNER = 'oosha';
 const REPO = 'titan-crm';
 const BRANCH = 'main';
