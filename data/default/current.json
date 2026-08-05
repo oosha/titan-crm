@@ -1,5 +1,5 @@
 {
-  "currentPipelineId": "p1",
+  "currentPipelineId": "neo",
   "pipelineSeq": 1,
   "pipelines": {
     "neo": {
@@ -207,7 +207,9 @@
             { "name": "theming_requirements.docx", "size": "48 KB", "direction": "received" },
             { "name": "mockups_v2_final.zip", "size": "3.4 MB", "direction": "sent" }
           ],
-          "customFieldValues": { "cf1": "High" }
+          "customFieldValues": {
+            "cf1": "High"
+          }
         },
         {
           "id": 7,
@@ -265,7 +267,11 @@
       ],
       "hiddenFields": [],
       "customFieldDefs": [
-        { "key": "cf1", "name": "Renewal Risk", "type": "text" }
+        {
+          "key": "cf1",
+          "name": "Renewal Risk",
+          "type": "text"
+        }
       ],
       "contactsEnabled": true
     },
