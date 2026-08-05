@@ -41,11 +41,53 @@
           "contact": "Olivia Bennett",
           "initials": "OB",
           "deal": "BrightPath Pro plan",
-          "value": 3000,
+          "value": 3200,
           "stage": "lead",
           "lastActivity": "2d ago",
           "activityType": "Email sent",
-          "overdue": false
+          "overdue": false,
+          "location": "",
+          "currency": "$",
+          "closeDate": "",
+          "source": "",
+          "website": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "note": "",
+          "contacts": [
+            {
+              "name": "Olivia Bennett",
+              "email": "",
+              "designation": "",
+              "phone": "",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactEmail": "",
+          "contactPhone": "",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
+        },
+        {
+          "id": 2,
+          "company": "Lumen Retail",
+          "contact": "Marcus Webb",
+          "initials": "MW",
+          "deal": "Lumen CD only",
+          "value": 5400,
+          "stage": "lead",
+          "lastActivity": "1d ago",
+          "activityType": "Email received",
+          "overdue": false,
+          "nextActivity": {
+            "type": "followup",
+            "date": "12 Feb"
+          }
         },
         {
           "id": 3,
