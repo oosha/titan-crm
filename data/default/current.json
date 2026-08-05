@@ -174,7 +174,16 @@
           "stage": "proposal",
           "lastActivity": "8d ago",
           "activityType": "Email sent",
-          "overdue": true
+          "overdue": false,
+          "recentActivities": [
+            { "type": "task", "text": "Follow-up overdue", "date": "Just now" }
+          ],
+          "files": [
+            { "name": "proposal.pdf", "size": "102 KB", "direction": "sent" },
+            { "name": "requirements.docx", "size": "48 KB", "direction": "received" },
+            { "name": "archive.zip", "size": "3.4 MB" }
+          ],
+          "customFieldValues": { "cf1": "High" }
         },
         {
           "id": 7,
@@ -231,7 +240,9 @@
         }
       ],
       "hiddenFields": [],
-      "customFieldDefs": [],
+      "customFieldDefs": [
+        { "key": "cf1", "name": "Renewal Risk", "type": "text" }
+      ],
       "contactsEnabled": true
     },
     "p1": {
