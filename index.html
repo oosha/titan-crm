@@ -6169,7 +6169,12 @@
     async function persistRealData() {
       if (!REAL_DATA || !REAL_PIPELINES) return;
       try {
-        await fetch('/api/data?persona=default', {
+        // Must match whichever persona's data was actually fetched into REAL_PIPELINES
+        // (bootstrapRealCrmData fetches by window.PERSONA_ID) — this was hardcoded to
+        // 'default' before, so saving anything from a persona's rich record (e.g. a
+        // note or stage change on one of Joanna's records) silently overwrote the
+        // *default* persona's entire pipeline data with the persona's data instead.
+        await fetch('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID), {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ currentPipelineId: REAL_DATA.currentPipelineId, pipelineSeq: REAL_DATA.pipelineSeq, pipelines: REAL_PIPELINES }),
         });

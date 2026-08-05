@@ -1,324 +1,486 @@
 {
-  "currentPipelineId": "inquiries",
-  "pipelineSeq": 0,
+  "currentPipelineId": "p1",
+  "pipelineSeq": 1,
   "pipelines": {
-    "inquiries": {
-      "id": "inquiries",
-      "name": "Inquiries",
+    "neo": {
+      "id": "neo",
+      "name": "Neo partnerships",
       "entity": "Opportunity",
       "plural": "opportunities",
-      "color": "#4f6d9e",
+      "color": "#7a6ba3",
       "stages": [
         {
-          "key": "s0",
-          "label": "New Inquiry"
+          "key": "lead",
+          "label": "Lead",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
-          "key": "s1",
-          "label": "Replied"
+          "key": "qualified",
+          "label": "Qualified",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
-          "key": "s2",
-          "label": "Nurturing"
+          "key": "demo",
+          "label": "Demo Scheduled",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
-          "key": "s3",
-          "label": "Quoted"
+          "key": "proposal",
+          "label": "Proposal Sent",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
-          "key": "s4",
-          "label": "Booked"
+          "key": "negotiation",
+          "label": "Negotiation",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
-          "key": "s5",
-          "label": "Lost"
+          "key": "closed",
+          "label": "Closed",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         }
       ],
       "cards": [
         {
-          "id": "inquiries-i1",
-          "deal": "Mia Thompson — Nov wedding",
-          "company": "Mia Thompson",
-          "contact": "Mia Thompson",
-          "value": 0,
-          "stage": "s0",
-          "leadSource": "Website",
-          "weddingDate": "2026-11-14",
-          "lastActivity": "3h ago",
-          "activityType": "Email received",
-          "overdue": false,
-          "nextActivity": {
-            "type": "followup",
-            "label": "Reply to inquiry",
-            "date": "Today"
-          }
-        },
-        {
-          "id": "inquiries-i2",
-          "deal": "Priya Nair — resin keepsake",
-          "company": "Priya Nair",
-          "contact": "Priya Nair",
-          "value": 0,
-          "stage": "s1",
-          "leadSource": "Instagram",
-          "weddingDate": "2026-09-05",
+          "id": 1,
+          "company": "BrightPath Co",
+          "contact": "Olivia Bennett",
+          "initials": "OB",
+          "deal": "BrightPath Pro plan",
+          "value": 3000,
+          "stage": "lead",
           "lastActivity": "2d ago",
           "activityType": "Email sent",
           "overdue": false
         },
         {
-          "id": "inquiries-i3",
-          "deal": "Lily McGregor — shadow box",
-          "company": "Lily McGregor",
-          "contact": "Lily McGregor",
-          "value": 0,
-          "stage": "s2",
-          "leadSource": "Instagram",
-          "weddingDate": "2026-03-14",
-          "exchanges": 3,
-          "nextStep": "Waiting on her to confirm flower types",
+          "id": 2,
+          "company": "Lumen Retail",
+          "contact": "Marcus Webb",
+          "initials": "MW",
+          "deal": "Lumen CD only",
+          "value": 5400,
+          "stage": "lead",
           "lastActivity": "1d ago",
           "activityType": "Email received",
           "overdue": false,
-          "threadRef": "thread-lily",
+          "nextActivity": {
+            "type": "followup",
+            "date": "12 Feb"
+          }
+        },
+        {
+          "id": 3,
+          "company": "Northfield Group",
+          "contact": "Grace Turner",
+          "initials": "GT",
+          "deal": "Northfield Site freemium",
+          "value": 7200,
+          "stage": "qualified",
+          "lastActivity": "3d ago",
+          "activityType": "Phone call",
+          "overdue": false
+        },
+        {
+          "id": 4,
+          "company": "Coastal Supply",
+          "contact": "Ethan Price",
+          "initials": "EP",
+          "deal": "Coastal migration from Google",
+          "value": 2950,
+          "stage": "qualified",
+          "lastActivity": "6d ago",
+          "activityType": "Email received",
+          "overdue": true
+        },
+        {
+          "id": 5,
+          "company": "Union Analytics",
+          "contact": "Sophie Hart",
+          "initials": "SH",
+          "deal": "Union Enterprise plan",
+          "value": 12000,
+          "stage": "demo",
+          "lastActivity": "4h ago",
+          "activityType": "Meeting",
+          "overdue": false,
+          "nextActivity": {
+            "type": "task",
+            "name": "Send proposal",
+            "date": "5 Mar"
+          }
+        },
+        {
+          "id": 6,
+          "company": "Meridian Labs",
+          "contact": "Ryan Walker",
+          "initials": "RW",
+          "deal": "Meridian AI site",
+          "value": 18000,
+          "stage": "proposal",
+          "lastActivity": "8d ago",
+          "activityType": "Email sent",
+          "overdue": false,
+          "currency": "$",
+          "website": "meridianlabs.com",
+          "companyLinkedin": "linkedin.com/company/meridianlabs",
+          "instagram": "instagram.com/meridianlabs",
+          "location": "San Jose, US",
+          "closeDate": "",
+          "source": "",
+          "note": "Got a call back from Ryan that they may need another week or so.",
+          "noteDate": "5 Aug",
           "contacts": [
             {
-              "name": "Lily McGregor",
-              "email": "lily.mcgregor92@gmail.com"
+              "name": "Ryan Walker",
+              "designation": "VP, Product",
+              "email": "ryan.walker@meridianlabs.com",
+              "phone": "+1 (415) 555-0134",
+              "linkedin": "linkedin.com/in/ryanwalker"
+            },
+            {
+              "name": "Jason Miller",
+              "email": "jason.miller@meridianlabs.com",
+              "linkedin": "linkedin.com/in/jasonmiller"
+            },
+            {
+              "name": "Owen Price",
+              "email": "owen.price@meridianlabs.com",
+              "linkedin": "linkedin.com/in/owenprice"
             }
           ],
-          "note": "Waiting on her to confirm flower types",
-          "noteDate": "6 May"
-        },
-        {
-          "id": "inquiries-i4",
-          "deal": "Chloe Watson — 2027 wedding",
-          "company": "Chloe Watson",
-          "contact": "Chloe Watson",
-          "value": 450,
-          "deposit": 150,
-          "stage": "s3",
-          "leadSource": "Referral",
-          "weddingDate": "2027-05-22",
-          "note": "Long-horizon booking — keep neutral, not stalling",
-          "quotedDaysAgo": 4,
-          "lastActivity": "4d ago",
-          "activityType": "Email sent",
-          "overdue": false
-        },
-        {
-          "id": "inquiries-i5",
-          "deal": "Sarah Chen — pressed frame",
-          "company": "Sarah Chen",
-          "contact": "Sarah Chen",
-          "value": 420,
-          "deposit": 150,
-          "stage": "s4",
-          "leadSource": "Website",
-          "weddingDate": "2026-06-07",
-          "note": "Sarah wanted water lily designs",
-          "noteDate": "5 Aug",
-          "won": true,
-          "lastActivity": "1d ago",
-          "activityType": "Email received",
-          "overdue": false,
-          "threadRef": "thread-sarah-booking",
-          "contacts": [
+          "upcomingActivities": [
             {
-              "name": "Sarah Chen",
-              "email": "sarah.chen.bride@outlook.com"
-            }
-          ]
-        },
-        {
-          "id": "inquiries-i6",
-          "deal": "Hannah Lee — price too high",
-          "company": "Hannah Lee",
-          "contact": "Hannah Lee",
-          "value": 0,
-          "stage": "s5",
-          "leadSource": "Website",
-          "lostReason": "Price after quote",
-          "lastActivity": "3w ago",
-          "activityType": "Email sent",
-          "overdue": false
-        }
-      ],
-      "hiddenFields": [],
-      "customFieldDefs": [],
-      "contactsEnabled": true
-    },
-    "projects": {
-      "id": "projects",
-      "name": "Preservation Projects",
-      "entity": "Project",
-      "plural": "projects",
-      "color": "#3f8a7d",
-      "stages": [
-        {
-          "key": "s0",
-          "label": "Drop-off Scheduled"
-        },
-        {
-          "key": "s1",
-          "label": "Drying"
-        },
-        {
-          "key": "s2",
-          "label": "Design Proposals"
-        },
-        {
-          "key": "s3",
-          "label": "Design Confirmed"
-        },
-        {
-          "key": "s4",
-          "label": "With Framer"
-        },
-        {
-          "key": "s5",
-          "label": "Ready for Pickup"
-        },
-        {
-          "key": "s6",
-          "label": "Completed"
-        }
-      ],
-      "cards": [
-        {
-          "id": "projects-p1",
-          "deal": "Sarah Chen — pressed frame",
-          "company": "Sarah Chen",
-          "contact": "Sarah Chen",
-          "value": 420,
-          "balance": 0,
-          "stage": "s5",
-          "weddingDate": "2026-06-07",
-          "dropOffDate": "2026-06-14",
-          "driedOn": "2026-07-12",
-          "invoicePaid": true,
-          "nextActivity": {
-            "type": "meeting",
-            "label": "Pickup",
-            "date": "Sat 11am"
-          },
-          "lastActivity": "1d ago",
-          "activityType": "Email received",
-          "overdue": false,
-          "threadRef": "thread-sarah-pickup",
-          "contacts": [
+              "type": "email",
+              "text": "Follow-up on proposal",
+              "date": "Thu"
+            },
             {
-              "name": "Sarah Chen",
-              "email": "sarah.chen.bride@outlook.com"
+              "type": "meeting",
+              "text": "Proposal follow-up questions",
+              "date": "Jul 30, 3:00 PM"
+            },
+            {
+              "type": "task",
+              "text": "Send updated proposal deck",
+              "overdue": true
+            },
+            {
+              "type": "task",
+              "text": "Schedule follow-up call",
+              "date": "Mon, 5pm"
             }
           ],
           "recentActivities": [
             {
               "type": "email",
-              "text": "Your bouquet preservation is ready for pickup! 🎉",
-              "snippet": "Sarah paid the final balance and asked to pick up Saturday the 9th at 11am.",
-              "date": "29 Jul"
+              "text": "Project roadmap for Dashboard v2",
+              "snippet": "Ryan confirmed the Jun 12 timeline and asked about multi-theme support.",
+              "date": "Jun 12"
             },
             {
-              "type": "email",
-              "text": "Your bouquet preservation design proposals! 🌸",
-              "snippet": "Sarah loved option 2 and asked for more white ranunculus, her gran's favourite flower.",
-              "date": "16 Jul"
+              "type": "meeting",
+              "text": "Design review call with Ryan Walker",
+              "snippet": "Walk through the v2 mockups and align on theming approach.",
+              "date": "Jun 10"
+            },
+            {
+              "type": "note",
+              "text": "Note added by Usha",
+              "snippet": "Wants multi-theme support prioritized before signing off on the proposal.",
+              "date": "Jun 10"
+            },
+            {
+              "type": "phone",
+              "text": "Intro call with Ryan",
+              "snippet": "First call - walked through Titan's plans and pricing tiers.",
+              "date": "Jun 8"
+            },
+            {
+              "type": "task",
+              "text": "Send updated proposal deck",
+              "snippetLink": "Project roadmap for Dashboard v2",
+              "date": "Jun 7"
             }
-          ]
+          ],
+          "files": [
+            {
+              "name": "dashboard_v2_proposal.pdf",
+              "size": "102 KB",
+              "direction": "sent"
+            },
+            {
+              "name": "theming_requirements.docx",
+              "size": "48 KB",
+              "direction": "received"
+            },
+            {
+              "name": "mockups_v2_final.zip",
+              "size": "3.4 MB",
+              "direction": "sent"
+            }
+          ],
+          "customFieldValues": {
+            "cf1": "High"
+          }
         },
         {
-          "id": "projects-p2",
-          "deal": "Emma Sinclair — dome",
-          "company": "Emma Sinclair",
-          "contact": "Emma Sinclair",
-          "value": 380,
-          "balance": 230,
-          "stage": "s1",
-          "weddingDate": "2026-05-30",
-          "dropOffDate": "2026-07-15",
-          "dryingDoneEst": "2026-08-12",
-          "daysRemaining": 14,
-          "nextActivity": {
-            "type": "task",
-            "label": "Send day-14 drying update",
-            "date": "in 2d"
-          },
-          "lastActivity": "1w ago",
-          "activityType": "Email sent",
-          "overdue": false
-        },
-        {
-          "id": "projects-p3",
-          "deal": "Olivia Brooks — shadow box",
-          "company": "Olivia Brooks",
-          "contact": "Olivia Brooks",
-          "value": 540,
-          "balance": 390,
-          "stage": "s4",
-          "framer": "Framing Room Co",
-          "framerDue": "2026-07-31",
-          "overdue": true,
-          "nextActivity": {
-            "type": "task",
-            "label": "Chase framer — piece overdue",
-            "date": "Overdue"
-          },
+          "id": 7,
+          "company": "Fairview Logistics",
+          "contact": "Noah Bennett",
+          "initials": "NB",
+          "deal": "Fairview seat expansion",
+          "value": 6500,
+          "stage": "proposal",
           "lastActivity": "2d ago",
-          "activityType": "Phone call"
-        },
-        {
-          "id": "projects-p4",
-          "deal": "Grace Miller — resin block",
-          "company": "Grace Miller",
-          "contact": "Grace Miller",
-          "value": 300,
-          "balance": 300,
-          "stage": "s5",
-          "invoiceSent": true,
-          "invoicePaid": false,
+          "activityType": "Phone call",
+          "overdue": false,
           "nextActivity": {
             "type": "meeting",
-            "label": "Pickup",
-            "date": "Sat 11am"
-          },
+            "date": "2 Mar"
+          }
+        },
+        {
+          "id": 8,
+          "company": "Delta Freight",
+          "contact": "Chloe Sanders",
+          "initials": "CS",
+          "deal": "Delta annual renewal",
+          "value": 22000,
+          "stage": "negotiation",
           "lastActivity": "5d ago",
-          "activityType": "Email sent",
+          "activityType": "Meeting",
           "overdue": false
         },
         {
-          "id": "projects-p5",
-          "deal": "Amelia Reid — frame",
-          "company": "Amelia Reid",
-          "contact": "Amelia Reid",
-          "value": 460,
-          "balance": 0,
-          "stage": "s6",
+          "id": 9,
+          "company": "Vantage Group",
+          "contact": "Liam Carter",
+          "initials": "LC",
+          "deal": "Vantage Business plan",
+          "value": 9800,
+          "stage": "closed",
           "won": true,
-          "instagramTagged": true,
-          "reviewLeft": false,
-          "lastActivity": "2w ago",
+          "lastActivity": "1d ago",
           "activityType": "Email sent",
           "overdue": false
         },
         {
-          "id": "projects-p6",
-          "deal": "Chloe Watson — 2027 (future)",
-          "company": "Chloe Watson",
-          "contact": "Chloe Watson",
-          "value": 450,
-          "balance": 300,
-          "stage": "s0",
-          "weddingDate": "2027-05-22",
-          "future": true,
-          "note": "Reminder fires 6 weeks before wedding to schedule drop-off",
-          "lastActivity": "4d ago",
+          "id": 10,
+          "deal": "home food",
+          "company": "Northwind",
+          "contact": "Emma Clarke",
+          "contactEmail": "emma.clarke@northwind.co",
+          "value": 0,
+          "stage": "lead",
+          "lastActivity": "just now",
           "activityType": "Email sent",
           "overdue": false
         }
       ],
       "hiddenFields": [],
-      "customFieldDefs": [],
+      "customFieldDefs": [
+        {
+          "key": "cf1",
+          "name": "Renewal Risk",
+          "type": "text"
+        }
+      ],
+      "contactsEnabled": true
+    },
+    "p1": {
+      "id": "p1",
+      "name": "Tee orders",
+      "entity": "Order",
+      "plural": "orders",
+      "color": "#b5813f",
+      "stages": [
+        {
+          "key": "received-0",
+          "label": "Received",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "processing-1",
+          "label": "Processing",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "shipped-2",
+          "label": "Shipped",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "delivered-3",
+          "label": "Delivered",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "closed-4",
+          "label": "Closed",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        }
+      ],
+      "cards": [
+        {
+          "id": 101,
+          "company": "FirstCry",
+          "contact": "Leela Shankar",
+          "initials": "L",
+          "deal": "Baby wear for FirstCry",
+          "value": 12000,
+          "stage": "processing-1",
+          "lastActivity": "just now",
+          "activityType": "Email sent",
+          "overdue": false,
+          "location": "Dubai, UAE",
+          "website": "firstcry.com",
+          "companyLinkedin": "linkedin.com/company/firstcry",
+          "instagram": "instagram.com/firstcry",
+          "currency": "$",
+          "closeDate": "",
+          "source": "Direct",
+          "note": "",
+          "contactEmail": "leela.s@firstcry.com",
+          "contactPhone": "+97155566666",
+          "contactDesignation": "Head Buyer",
+          "contactDepartment": "Merchandising",
+          "contactLocation": "Abu Dhabi, UAE",
+          "contactLinkedin": "linkedin.com/leela-1241234",
+          "contacts": [
+            {
+              "name": "Leela Shankar",
+              "email": "leela.s@firstcry.com",
+              "phone": "+97155566666",
+              "designation": "Head Buyer",
+              "department": "Merchandising",
+              "location": "Abu Dhabi, UAE",
+              "linkedin": "linkedin.com/leela-1241234"
+            }
+          ],
+          "customFieldValues": {},
+          "upcomingActivities": []
+        },
+        {
+          "id": 102,
+          "deal": "Emma's coffee",
+          "company": "Northwind",
+          "contact": "Emma Clarke",
+          "contactEmail": "emma.clarke@northwind.co",
+          "value": 0,
+          "stage": "received-0",
+          "lastActivity": "just now",
+          "activityType": "Email received",
+          "overdue": false
+        }
+      ],
+      "hiddenFields": [],
+      "customFieldDefs": [
+        {
+          "key": "cf1",
+          "name": "Delivery timeline",
+          "type": "number"
+        }
+      ],
       "contactsEnabled": true
     }
   }
