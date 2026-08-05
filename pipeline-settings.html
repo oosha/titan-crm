@@ -86,33 +86,39 @@
   .ps-stage-detail-chevron svg { width: 14px; height: 10px; }
   .ps-stage-detail-header:hover .ps-stage-detail-chevron { background: #eceef1; color: #333; }
   .ps-stage-detail.open .ps-stage-detail-chevron { transform: rotate(180deg); }
-  .ps-stage-detail-body { display: none; padding: 4px 16px 20px; border-top: 1px solid #eee; }
+  .ps-stage-detail-body { display: none; padding: 4px 16px 24px; border-top: 1px solid #eee; }
   .ps-stage-detail.open .ps-stage-detail-body { display: block; }
-  .ps-stage-field { margin-top: 16px; }
-  .ps-stage-field-label { font-size: 12.5px; font-weight: 600; color: #444; margin-bottom: 6px; }
+  .ps-stage-field { margin-top: 26px; }
+  .ps-stage-field-label { font-size: 14.5px; font-weight: 600; color: #333; margin-bottom: 9px; }
   .ps-stage-textarea, .ps-stage-select, .ps-stage-input {
-    padding: 9px 11px; border: 1px solid #d9dce1; border-radius: 7px; font-size: 13px;
+    padding: 10px 12px; border: 1px solid #d9dce1; border-radius: 7px; font-size: 14px;
     font-family: inherit; outline: none; color: #222; background: #fff;
   }
   .ps-stage-textarea:focus, .ps-stage-select:focus, .ps-stage-input:focus { border-color: #2170f4; }
-  .ps-stage-textarea { width: 100%; min-height: 56px; resize: vertical; }
-  .ps-task-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .ps-stage-textarea { width: 100%; min-height: 60px; resize: vertical; }
+  .ps-task-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
   .ps-task-row .ps-stage-input { flex: 1; }
-  .ps-task-remove { cursor: pointer; color: #b0b5bb; font-size: 15px; line-height: 1; flex-shrink: 0; }
+  .ps-task-remove { cursor: pointer; color: #b0b5bb; font-size: 16px; line-height: 1; flex-shrink: 0; }
   .ps-task-remove:hover { color: #dc2626; }
-  .ps-task-add-row { display: flex; gap: 8px; }
+  .ps-task-add-row { display: flex; gap: 10px; }
   .ps-task-add-row .ps-stage-input { flex: 1; }
   .ps-task-add-btn {
-    background: #f2f3f5; border: none; border-radius: 7px; padding: 0 14px; font-size: 12.5px;
-    font-weight: 600; color: #2170f4; cursor: pointer; flex-shrink: 0;
+    background: #2170f4; border: none; border-radius: 7px; padding: 0 16px; font-size: 13.5px;
+    font-weight: 600; color: #fff; cursor: pointer; flex-shrink: 0;
   }
-  .ps-task-add-btn:hover { background: #e8f0fe; }
-  .ps-radio-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; color: #222; }
-  .ps-radio-row input { margin: 0; accent-color: #2170f4; }
-  .ps-advance-condition { margin-left: 22px; margin-top: -2px; }
-  .ps-reminder-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #222; flex-wrap: wrap; }
-  .ps-reminder-row input[type="checkbox"] { margin: 0; accent-color: #2170f4; }
-  .ps-reminder-row .ps-stage-input { width: 54px; text-align: center; padding: 7px 8px; }
+  .ps-task-add-btn:hover { filter: brightness(1.05); }
+  .ps-task-add-pill {
+    display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1.5px dashed #c5cbd4;
+    border-radius: 999px; padding: 8px 16px; font-size: 13.5px; font-weight: 600; color: #2170f4; cursor: pointer;
+  }
+  .ps-task-add-pill:hover { border-color: #2170f4; background: #f5f9ff; }
+  .ps-stage-subnote { font-size: 13px; color: #9a9fa7; margin-top: 4px; }
+  .ps-advance-sub { margin-top: 12px; margin-left: 0; }
+  .ps-advance-sub .ps-stage-input { width: 70px; text-align: center; display: inline-block; }
+  .ps-advance-days-row { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #222; }
+  .ps-reminder-row { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #222; flex-wrap: wrap; }
+  .ps-reminder-row input[type="checkbox"] { margin: 0; accent-color: #2170f4; width: 16px; height: 16px; }
+  .ps-reminder-row .ps-stage-input { width: 58px; text-align: center; padding: 8px; }
 </style>
 </head>
 <body data-subpage="pipeline-settings">
@@ -180,18 +186,38 @@
       '<a href="/crm">Open Titan CRM</a> and try again.';
   }
 
-  const EMAIL_SEQUENCE_OPTIONS = [
+  const EMAIL_TEMPLATE_OPTIONS = [
     { value: '', label: 'None' },
-    { value: 'welcome', label: 'Welcome sequence' },
-    { value: 'nurture', label: 'Nurture sequence' },
-    { value: 're-engagement', label: 'Re-engagement sequence' },
-    { value: 'custom', label: 'Custom…' },
+    { value: 'welcome', label: 'Welcome email' },
+    { value: 'intro-call', label: 'Intro call follow-up' },
+    { value: 'demo-invite', label: 'Demo invite' },
+    { value: 'proposal-sent', label: 'Proposal sent' },
+    { value: 'check-in', label: 'Check-in / nurture' },
+    { value: 'custom', label: 'Custom template…' },
   ];
   const ADVANCE_CONDITION_OPTIONS = [
-    { value: 'all-tasks-done', label: 'All tasks above are completed' },
-    { value: 'days-in-stage', label: 'A set number of days after entering this stage' },
-    { value: 'field-updated', label: 'A custom field is updated' },
-    { value: 'contact-replies', label: 'The contact replies to an email' },
+    { value: 'task-completed', label: 'A task is completed' },
+    { value: 'field-updated', label: 'Data is added for a field' },
+    { value: 'days-in-stage', label: 'A number of days have passed' },
+  ];
+  // Same standard fields a record can have (add-opportunity.html / opportunity-
+  // settings.html) — picking one here means "when this field gets a value".
+  const RECORD_FIELD_OPTIONS = [
+    { value: 'value', label: 'Total value' },
+    { value: 'close-date', label: 'Expected close date' },
+    { value: 'source', label: 'Source' },
+    { value: 'note', label: 'Note' },
+    { value: 'company', label: 'Company' },
+    { value: 'location', label: 'Location' },
+    { value: 'website', label: 'Company website' },
+    { value: 'company-linkedin', label: 'Company LinkedIn' },
+    { value: 'instagram', label: 'Company Instagram' },
+    { value: 'contact-email', label: 'Contact email' },
+    { value: 'contact-phone', label: 'Contact phone' },
+    { value: 'contact-designation', label: 'Contact designation' },
+    { value: 'contact-department', label: 'Contact department' },
+    { value: 'contact-location', label: 'Contact location' },
+    { value: 'contact-linkedin', label: 'Contact LinkedIn' },
   ];
   // Older saved pipelines won't have these yet — fill in sensible defaults rather
   // than erroring, so this feature can roll out without a data migration.
@@ -199,6 +225,7 @@
     return {
       description: '', tasks: [], emailSequence: '',
       advanceMode: 'manual', advanceCondition: ADVANCE_CONDITION_OPTIONS[0].value,
+      advanceTaskName: '', advanceFieldKey: RECORD_FIELD_OPTIONS[0].value, advanceDays: 3,
       reminderEnabled: false, reminderDays: 3,
     };
   }
@@ -207,6 +234,7 @@
     Object.keys(d).forEach(function (k) { if (s[k] === undefined) s[k] = d[k]; });
     return s;
   }
+  function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 
   let color = pipeline ? (pipeline.color || '#2170f4') : '#2170f4';
   let stages = pipeline ? pipeline.stages.map(function (s) { return ensureStageDetailFields(Object.assign({}, s)); }) : [];
@@ -357,8 +385,10 @@
     renderStages();
   }
 
+  let taskAddOpenForIdx = null;
   function toggleStageDetail(i) {
     openStageDetailIdx = (openStageDetailIdx === i) ? null : i;
+    taskAddOpenForIdx = null;
     renderStageDetails();
   }
 
@@ -406,7 +436,7 @@
       descInput.addEventListener('input', function () { stage.description = descInput.value; });
       body.appendChild(descField);
 
-      // Tasks
+      // Tasks — no input shown by default; "+ Add task" reveals one.
       const tasksField = document.createElement('div');
       tasksField.className = 'ps-stage-field';
       tasksField.innerHTML = '<div class="ps-stage-field-label">Tasks</div><div class="ps-task-list"></div>';
@@ -415,7 +445,7 @@
         const taskRow = document.createElement('div');
         taskRow.className = 'ps-task-row';
         taskRow.innerHTML =
-          '<input class="ps-stage-input" type="text" value="' + task.replace(/"/g, '&quot;') + '">' +
+          '<input class="ps-stage-input" type="text" value="' + escHtml(task) + '">' +
           '<span class="ps-task-remove" title="Remove">&times;</span>';
         taskRow.querySelector('input').addEventListener('input', function (e) { stage.tasks[ti] = e.target.value; });
         taskRow.querySelector('.ps-task-remove').addEventListener('click', function () {
@@ -424,63 +454,46 @@
         });
         taskList.appendChild(taskRow);
       });
-      const addTaskRow = document.createElement('div');
-      addTaskRow.className = 'ps-task-add-row';
-      addTaskRow.innerHTML =
-        '<input class="ps-stage-input" type="text" placeholder="e.g. Send intro email">' +
-        '<button class="ps-task-add-btn" type="button">+ Add task</button>';
-      const addTaskInput = addTaskRow.querySelector('input');
-      const commitAddTask = function () {
-        const v = addTaskInput.value.trim();
-        if (!v) return;
-        stage.tasks.push(v);
-        renderStageDetails();
-      };
-      addTaskRow.querySelector('.ps-task-add-btn').addEventListener('click', commitAddTask);
-      addTaskInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); commitAddTask(); } });
-      tasksField.appendChild(addTaskRow);
+      if (taskAddOpenForIdx === i) {
+        const addTaskRow = document.createElement('div');
+        addTaskRow.className = 'ps-task-add-row';
+        addTaskRow.innerHTML =
+          '<input class="ps-stage-input" type="text" placeholder="e.g. Send intro email">' +
+          '<button class="ps-task-add-btn" type="button">Add</button>';
+        const addTaskInput = addTaskRow.querySelector('input');
+        const commitAddTask = function () {
+          const v = addTaskInput.value.trim();
+          if (v) stage.tasks.push(v);
+          taskAddOpenForIdx = null;
+          renderStageDetails();
+        };
+        addTaskRow.querySelector('.ps-task-add-btn').addEventListener('click', commitAddTask);
+        addTaskInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); commitAddTask(); }
+          else if (e.key === 'Escape') { taskAddOpenForIdx = null; renderStageDetails(); }
+        });
+        tasksField.appendChild(addTaskRow);
+      } else {
+        const addTaskPill = document.createElement('span');
+        addTaskPill.className = 'ps-task-add-pill';
+        addTaskPill.innerHTML = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Add task';
+        addTaskPill.addEventListener('click', function () { taskAddOpenForIdx = i; renderStageDetails(); });
+        tasksField.appendChild(addTaskPill);
+      }
       body.appendChild(tasksField);
 
-      // Email sequence
+      // Email template
       const emailField = document.createElement('div');
       emailField.className = 'ps-stage-field';
       emailField.innerHTML =
-        '<div class="ps-stage-field-label">Email sequence</div>' +
+        '<div class="ps-stage-field-label">Email template</div>' +
         '<select class="ps-stage-select">' +
-        EMAIL_SEQUENCE_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') +
+        EMAIL_TEMPLATE_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') +
         '</select>';
       const emailSelect = emailField.querySelector('select');
       emailSelect.value = stage.emailSequence;
       emailSelect.addEventListener('change', function () { stage.emailSequence = emailSelect.value; });
       body.appendChild(emailField);
-
-      // Move to next stage when
-      const advanceField = document.createElement('div');
-      advanceField.className = 'ps-stage-field';
-      const manualId = 'ps-advance-manual-' + i, autoId = 'ps-advance-auto-' + i;
-      advanceField.innerHTML =
-        '<div class="ps-stage-field-label">Move to next stage when</div>' +
-        '<label class="ps-radio-row"><input type="radio" name="ps-advance-' + i + '" id="' + manualId + '" value="manual">Manually</label>' +
-        '<label class="ps-radio-row"><input type="radio" name="ps-advance-' + i + '" id="' + autoId + '" value="auto">Automatically when…</label>' +
-        '<select class="ps-stage-select ps-advance-condition">' +
-        ADVANCE_CONDITION_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') +
-        '</select>';
-      const manualRadio = advanceField.querySelector('#' + manualId);
-      const autoRadio = advanceField.querySelector('#' + autoId);
-      const conditionSelect = advanceField.querySelector('.ps-advance-condition');
-      manualRadio.checked = stage.advanceMode !== 'auto';
-      autoRadio.checked = stage.advanceMode === 'auto';
-      conditionSelect.value = stage.advanceCondition;
-      conditionSelect.style.display = stage.advanceMode === 'auto' ? '' : 'none';
-      function updateAdvanceMode() {
-        stage.advanceMode = autoRadio.checked ? 'auto' : 'manual';
-        conditionSelect.style.display = stage.advanceMode === 'auto' ? '' : 'none';
-        header.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(stage);
-      }
-      manualRadio.addEventListener('change', updateAdvanceMode);
-      autoRadio.addEventListener('change', updateAdvanceMode);
-      conditionSelect.addEventListener('change', function () { stage.advanceCondition = conditionSelect.value; });
-      body.appendChild(advanceField);
 
       // Follow-up reminder
       const reminderField = document.createElement('div');
@@ -505,6 +518,76 @@
         stage.reminderDays = Number(reminderDays.value) || 1;
       });
       body.appendChild(reminderField);
+
+      // Move to next stage when — a mode select (Manually / Automatically when…);
+      // choosing "auto" reveals a condition select, which in turn reveals whichever
+      // specific control that condition needs (a task to watch, a field to watch,
+      // or a day count).
+      const advanceField = document.createElement('div');
+      advanceField.className = 'ps-stage-field';
+      advanceField.innerHTML =
+        '<div class="ps-stage-field-label">Move to next stage when</div>' +
+        '<select class="ps-stage-select ps-advance-mode">' +
+          '<option value="manual">Manually</option>' +
+          '<option value="auto">Automatically when…</option>' +
+        '</select>' +
+        '<div class="ps-advance-sub" style="display:none;">' +
+          '<select class="ps-stage-select ps-advance-condition">' +
+            ADVANCE_CONDITION_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') +
+          '</select>' +
+          '<div class="ps-advance-sub-control" style="margin-top:12px;"></div>' +
+        '</div>';
+      const modeSelect = advanceField.querySelector('.ps-advance-mode');
+      const advanceSub = advanceField.querySelector('.ps-advance-sub');
+      const conditionSelect = advanceField.querySelector('.ps-advance-condition');
+      const subControl = advanceField.querySelector('.ps-advance-sub-control');
+      modeSelect.value = stage.advanceMode;
+      conditionSelect.value = stage.advanceCondition;
+      advanceSub.style.display = stage.advanceMode === 'auto' ? '' : 'none';
+
+      function renderAdvanceSubControl() {
+        subControl.innerHTML = '';
+        if (stage.advanceCondition === 'task-completed') {
+          if (!stage.tasks.length) {
+            subControl.innerHTML = '<div class="ps-stage-subnote">Add a task above first.</div>';
+            return;
+          }
+          const sel = document.createElement('select');
+          sel.className = 'ps-stage-select';
+          sel.innerHTML = stage.tasks.map(function (t) { return '<option value="' + escHtml(t) + '">' + escHtml(t) + '</option>'; }).join('');
+          sel.value = stage.advanceTaskName && stage.tasks.indexOf(stage.advanceTaskName) !== -1 ? stage.advanceTaskName : stage.tasks[0];
+          stage.advanceTaskName = sel.value;
+          sel.addEventListener('change', function () { stage.advanceTaskName = sel.value; });
+          subControl.appendChild(sel);
+        } else if (stage.advanceCondition === 'field-updated') {
+          const sel = document.createElement('select');
+          sel.className = 'ps-stage-select';
+          sel.innerHTML = RECORD_FIELD_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('');
+          sel.value = stage.advanceFieldKey;
+          sel.addEventListener('change', function () { stage.advanceFieldKey = sel.value; });
+          subControl.appendChild(sel);
+        } else if (stage.advanceCondition === 'days-in-stage') {
+          const row = document.createElement('div');
+          row.className = 'ps-advance-days-row';
+          row.innerHTML = 'After <input type="number" class="ps-stage-input" min="1" max="365"> days in this stage';
+          const input = row.querySelector('input');
+          input.value = stage.advanceDays;
+          input.addEventListener('input', function () { stage.advanceDays = Number(input.value) || 1; });
+          subControl.appendChild(row);
+        }
+      }
+      renderAdvanceSubControl();
+
+      modeSelect.addEventListener('change', function () {
+        stage.advanceMode = modeSelect.value;
+        advanceSub.style.display = stage.advanceMode === 'auto' ? '' : 'none';
+        header.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(stage);
+      });
+      conditionSelect.addEventListener('change', function () {
+        stage.advanceCondition = conditionSelect.value;
+        renderAdvanceSubControl();
+      });
+      body.appendChild(advanceField);
 
       row.appendChild(body);
       wrap.appendChild(row);
