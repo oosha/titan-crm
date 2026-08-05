@@ -78,7 +78,13 @@
   .ps-stage-detail-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
   .ps-stage-detail-name { font-size: 13.5px; font-weight: 600; color: #1a1a1a; flex: 1; }
   .ps-stage-detail-summary { font-size: 12px; color: #9a9fa7; }
-  .ps-stage-detail-chevron { color: #9a9fa7; font-size: 11px; transition: transform 0.15s ease; flex-shrink: 0; }
+  .ps-stage-detail-chevron {
+    color: #6b7280; flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s ease, background 0.1s ease;
+  }
+  .ps-stage-detail-chevron svg { width: 14px; height: 10px; }
+  .ps-stage-detail-header:hover .ps-stage-detail-chevron { background: #eceef1; color: #333; }
   .ps-stage-detail.open .ps-stage-detail-chevron { transform: rotate(180deg); }
   .ps-stage-detail-body { display: none; padding: 4px 16px 20px; border-top: 1px solid #eee; }
   .ps-stage-detail.open .ps-stage-detail-body { display: block; }
@@ -242,6 +248,18 @@
     const rgb = hexToRgb(hex).map(function (c) { return Math.round(c * f); });
     return 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
   }
+  // Same per-stage progression as the chevron chips (shadeFor) — later stages
+  // read more saturated — but solid and boosted well past shadeFor's pale
+  // 0.06–0.36 wash, since that's calibrated for a 60px chip background, not a
+  // 9px dot that needs to actually be visible against a white card.
+  function solidShadeFor(hex, idx, total) {
+    const rgb = hexToRgb(hex);
+    const min = 0.4, max = 0.95;
+    const t = total <= 1 ? 0 : idx / (total - 1);
+    const alpha = min + (max - min) * t;
+    const blended = rgb.map(function (c) { return Math.round(255 * (1 - alpha) + c * alpha); });
+    return 'rgb(' + blended[0] + ',' + blended[1] + ',' + blended[2] + ')';
+  }
 
   let stageDragIndex = null;
   function renderStages() {
@@ -363,10 +381,12 @@
       const header = document.createElement('div');
       header.className = 'ps-stage-detail-header';
       header.innerHTML =
-        '<span class="ps-stage-detail-dot" style="background:' + color + ';"></span>' +
+        '<span class="ps-stage-detail-dot" style="background:' + solidShadeFor(color, i, stages.length) + ';"></span>' +
         '<span class="ps-stage-detail-name"></span>' +
         '<span class="ps-stage-detail-summary"></span>' +
-        '<span class="ps-stage-detail-chevron">▾</span>';
+        '<span class="ps-stage-detail-chevron">' +
+          '<svg width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</span>';
       header.querySelector('.ps-stage-detail-name').textContent = stage.label || '—';
       header.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(stage);
       header.addEventListener('click', function () { toggleStageDetail(i); });
