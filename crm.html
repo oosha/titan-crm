@@ -563,6 +563,18 @@
     .nav-item:hover .nav-item-menu-btn { display: flex; }
     .nav-item-menu-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
 
+    /* Global dropdown caret — one consistent caret with space after it, app-wide.
+       !important overrides each select's own background/padding shorthand. */
+    select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1.2l4 4 4-4' fill='none' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 13px center !important;
+      padding-right: 34px !important;
+    }
+
     .pipeline-nav-menu {
       position: fixed; background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
       padding: 6px; min-width: 190px; z-index: 300; display: none;

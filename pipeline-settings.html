@@ -98,10 +98,20 @@
   }
   .ps-stage-textarea:focus, .ps-stage-select:focus, .ps-stage-input:focus { border-color: #2170f4; }
   .ps-stage-textarea { width: 100%; min-height: 60px; resize: vertical; }
-  .ps-task-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-  .ps-task-row .ps-stage-input { flex: 1; }
-  .ps-task-remove { cursor: pointer; color: #b0b5bb; font-size: 16px; line-height: 1; flex-shrink: 0; }
-  .ps-task-remove:hover { color: #dc2626; }
+  /* Added tasks render as slightly-rounded pills with the × inside on the right. */
+  .ps-task-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ps-task-list:not(:empty) { margin-bottom: 10px; }
+  .ps-task-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #f2f3f5; border-radius: 6px; padding: 7px 8px 7px 12px;
+    font-size: 13.5px; color: #222;
+  }
+  .ps-task-pill-x { cursor: pointer; color: #b0b5bb; font-size: 15px; line-height: 1; }
+  .ps-task-pill-x:hover { color: #dc2626; }
+  /* Inline field rows — dropdowns/inputs sit on one line (Send email, advance). */
+  .ps-inline-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ps-inline-label { font-size: 14px; color: #555; }
+  .ps-advance-sub-control { display: flex; align-items: center; }
   .ps-task-add-row { display: flex; gap: 10px; }
   .ps-task-add-row .ps-stage-input { flex: 1; }
   .ps-task-add-btn {
@@ -198,6 +208,13 @@
     { value: 'check-in', label: 'Check-in / nurture' },
     { value: 'custom', label: 'Custom template…' },
   ];
+  const EMAIL_SEQUENCE_OPTIONS = [
+    { value: '', label: 'None' },
+    { value: 'onboarding', label: 'Onboarding sequence' },
+    { value: 'nurture', label: 'Nurture sequence' },
+    { value: 're-engage', label: 'Re-engagement sequence' },
+    { value: 'custom-seq', label: 'Custom sequence…' },
+  ];
   const ADVANCE_CONDITION_OPTIONS = [
     { value: 'task-completed', label: 'A task is completed' },
     { value: 'field-updated', label: 'Data is added for a field' },
@@ -226,7 +243,9 @@
   // than erroring, so this feature can roll out without a data migration.
   function stageDefaults() {
     return {
-      description: '', tasks: [], emailSequence: '',
+      description: '', tasks: [],
+      // "Send email": sendUsing picks template vs sequence; each keeps its own value.
+      sendUsing: 'template', emailTemplate: '', emailSeqName: '',
       advanceMode: 'manual', advanceCondition: ADVANCE_CONDITION_OPTIONS[0].value,
       advanceTaskName: '', advanceFieldKey: RECORD_FIELD_OPTIONS[0].value, advanceDays: 3,
       reminderEnabled: false, reminderDays: 3,
@@ -235,6 +254,8 @@
   function ensureStageDetailFields(s) {
     const d = stageDefaults();
     Object.keys(d).forEach(function (k) { if (s[k] === undefined) s[k] = d[k]; });
+    // Migrate the older single "emailSequence" field into the new template slot.
+    if (!s.emailTemplate && s.emailSequence) { s.emailTemplate = s.emailSequence; }
     return s;
   }
   function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
@@ -398,7 +419,6 @@
   function stageDetailSummary(stage) {
     const bits = [];
     bits.push(stage.advanceMode === 'auto' ? 'Auto-advance' : 'Manual advance');
-    if (stage.tasks.length) bits.push(stage.tasks.length + ' task' + (stage.tasks.length === 1 ? '' : 's'));
     if (stage.reminderEnabled) bits.push('Reminder after ' + stage.reminderDays + 'd');
     return bits.join(' · ');
   }
@@ -445,17 +465,15 @@
       tasksField.innerHTML = '<div class="ps-stage-field-label">Tasks</div><div class="ps-task-list"></div>';
       const taskList = tasksField.querySelector('.ps-task-list');
       stage.tasks.forEach(function (task, ti) {
-        const taskRow = document.createElement('div');
-        taskRow.className = 'ps-task-row';
-        taskRow.innerHTML =
-          '<input class="ps-stage-input" type="text" value="' + escHtml(task) + '">' +
-          '<span class="ps-task-remove" title="Remove">&times;</span>';
-        taskRow.querySelector('input').addEventListener('input', function (e) { stage.tasks[ti] = e.target.value; });
-        taskRow.querySelector('.ps-task-remove').addEventListener('click', function () {
+        const pill = document.createElement('span');
+        pill.className = 'ps-task-pill';
+        pill.innerHTML = '<span class="ps-task-pill-label"></span><span class="ps-task-pill-x" title="Remove">&times;</span>';
+        pill.querySelector('.ps-task-pill-label').textContent = task;
+        pill.querySelector('.ps-task-pill-x').addEventListener('click', function () {
           stage.tasks.splice(ti, 1);
           renderStageDetails();
         });
-        taskList.appendChild(taskRow);
+        taskList.appendChild(pill);
       });
       if (taskAddOpenForIdx === i) {
         const addTaskRow = document.createElement('div');
@@ -485,17 +503,33 @@
       }
       body.appendChild(tasksField);
 
-      // Email template
+      // Send email — pick template vs sequence, then the specific one (same row).
       const emailField = document.createElement('div');
       emailField.className = 'ps-stage-field';
       emailField.innerHTML =
-        '<div class="ps-stage-field-label">Email template</div>' +
-        '<select class="ps-stage-select">' +
-        EMAIL_TEMPLATE_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') +
-        '</select>';
-      const emailSelect = emailField.querySelector('select');
-      emailSelect.value = stage.emailSequence;
-      emailSelect.addEventListener('change', function () { stage.emailSequence = emailSelect.value; });
+        '<div class="ps-stage-field-label">Send email</div>' +
+        '<div class="ps-inline-row">' +
+          '<span class="ps-inline-label">Send using</span>' +
+          '<select class="ps-stage-select ps-send-using">' +
+            '<option value="template">Email template</option>' +
+            '<option value="sequence">Email sequence</option>' +
+          '</select>' +
+          '<select class="ps-stage-select ps-send-value"></select>' +
+        '</div>';
+      const sendUsing = emailField.querySelector('.ps-send-using');
+      const sendValue = emailField.querySelector('.ps-send-value');
+      function fillSendValue() {
+        const opts = stage.sendUsing === 'sequence' ? EMAIL_SEQUENCE_OPTIONS : EMAIL_TEMPLATE_OPTIONS;
+        sendValue.innerHTML = opts.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('');
+        sendValue.value = stage.sendUsing === 'sequence' ? stage.emailSeqName : stage.emailTemplate;
+      }
+      sendUsing.value = stage.sendUsing;
+      fillSendValue();
+      sendUsing.addEventListener('change', function () { stage.sendUsing = sendUsing.value; fillSendValue(); });
+      sendValue.addEventListener('change', function () {
+        if (stage.sendUsing === 'sequence') stage.emailSeqName = sendValue.value;
+        else stage.emailTemplate = sendValue.value;
+      });
       body.appendChild(emailField);
 
       // Follow-up reminder
@@ -530,23 +564,28 @@
       advanceField.className = 'ps-stage-field';
       advanceField.innerHTML =
         '<div class="ps-stage-field-label">Move to next stage when</div>' +
-        '<select class="ps-stage-select ps-advance-mode">' +
-          '<option value="manual">Manually</option>' +
-          '<option value="auto">Automatically when…</option>' +
-        '</select>' +
-        '<div class="ps-advance-sub" style="display:none;">' +
+        '<div class="ps-inline-row ps-advance-row">' +
+          '<select class="ps-stage-select ps-advance-mode">' +
+            '<option value="manual">Manually</option>' +
+            '<option value="auto">Automatically when</option>' +
+          '</select>' +
           '<select class="ps-stage-select ps-advance-condition">' +
             ADVANCE_CONDITION_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') +
           '</select>' +
-          '<div class="ps-advance-sub-control" style="margin-top:12px;"></div>' +
+          '<div class="ps-advance-sub-control"></div>' +
         '</div>';
       const modeSelect = advanceField.querySelector('.ps-advance-mode');
-      const advanceSub = advanceField.querySelector('.ps-advance-sub');
       const conditionSelect = advanceField.querySelector('.ps-advance-condition');
       const subControl = advanceField.querySelector('.ps-advance-sub-control');
       modeSelect.value = stage.advanceMode;
       conditionSelect.value = stage.advanceCondition;
-      advanceSub.style.display = stage.advanceMode === 'auto' ? '' : 'none';
+      // Manual → only the mode select shows; auto → condition + its control join the row.
+      function applyAdvanceModeVisibility() {
+        const auto = stage.advanceMode === 'auto';
+        conditionSelect.style.display = auto ? '' : 'none';
+        subControl.style.display = auto ? '' : 'none';
+      }
+      applyAdvanceModeVisibility();
 
       function renderAdvanceSubControl() {
         subControl.innerHTML = '';
@@ -583,7 +622,7 @@
 
       modeSelect.addEventListener('change', function () {
         stage.advanceMode = modeSelect.value;
-        advanceSub.style.display = stage.advanceMode === 'auto' ? '' : 'none';
+        applyAdvanceModeVisibility();
         header.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(stage);
       });
       conditionSelect.addEventListener('change', function () {
