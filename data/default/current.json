@@ -120,16 +120,16 @@
             {
               "name": "Olivia Bennett",
               "email": "olivia.bennett@brightpathco.com",
-              "designation": "",
-              "phone": "",
+              "designation": "Head of Operations",
+              "phone": "+1 (212) 555-0142",
               "department": "",
               "location": "",
               "linkedin": ""
             }
           ],
           "contactEmail": "olivia.bennett@brightpathco.com",
-          "contactPhone": "",
-          "contactDesignation": "",
+          "contactPhone": "+1 (212) 555-0142",
+          "contactDesignation": "Head of Operations",
           "contactDepartment": "",
           "contactLocation": "",
           "contactLinkedin": "",
@@ -150,7 +150,9 @@
             "type": "followup",
             "date": "12 Feb"
           },
-          "contactEmail": "marcus.webb@lumenretail.com"
+          "contactEmail": "marcus.webb@lumenretail.com",
+          "contactPhone": "+1 (312) 555-0187",
+          "contactDesignation": "IT Director"
         },
         {
           "id": 3,
@@ -163,7 +165,9 @@
           "lastActivity": "3d ago",
           "activityType": "Phone call",
           "overdue": false,
-          "contactEmail": "grace.turner@northfieldgroup.com"
+          "contactEmail": "grace.turner@northfieldgroup.com",
+          "contactPhone": "+1 (503) 555-0119",
+          "contactDesignation": "Growth Lead"
         },
         {
           "id": 4,
@@ -176,7 +180,9 @@
           "lastActivity": "6d ago",
           "activityType": "Email received",
           "overdue": true,
-          "contactEmail": "ethan.price@coastalsupply.com"
+          "contactEmail": "ethan.price@coastalsupply.com",
+          "contactPhone": "+1 (619) 555-0163",
+          "contactDesignation": "VP Engineering"
         },
         {
           "id": 5,
@@ -194,7 +200,9 @@
             "name": "Send proposal",
             "date": "5 Mar"
           },
-          "contactEmail": "sophie.hart@unionanalytics.com"
+          "contactEmail": "sophie.hart@unionanalytics.com",
+          "contactPhone": "+1 (206) 555-0128",
+          "contactDesignation": "Head of Data"
         },
         {
           "id": 6,
@@ -390,7 +398,9 @@
             "type": "meeting",
             "date": "2 Mar"
           },
-          "contactEmail": "noah.bennett@fairviewlogistics.com"
+          "contactEmail": "noah.bennett@fairviewlogistics.com",
+          "contactPhone": "+1 (773) 555-0155",
+          "contactDesignation": "Operations Director"
         },
         {
           "id": 8,
@@ -403,7 +413,9 @@
           "lastActivity": "5d ago",
           "activityType": "Meeting",
           "overdue": false,
-          "contactEmail": "chloe.sanders@deltafreight.com"
+          "contactEmail": "chloe.sanders@deltafreight.com",
+          "contactPhone": "+1 (720) 555-0174",
+          "contactDesignation": "Procurement Manager"
         },
         {
           "id": 9,
@@ -431,16 +443,16 @@
             {
               "name": "Liam Carter",
               "email": "liam.carter@vantagegroup.com",
-              "designation": "",
-              "phone": "",
+              "designation": "CEO",
+              "phone": "+1 (646) 555-0139",
               "department": "",
               "location": "",
               "linkedin": ""
             }
           ],
           "contactEmail": "liam.carter@vantagegroup.com",
-          "contactPhone": "",
-          "contactDesignation": "",
+          "contactPhone": "+1 (646) 555-0139",
+          "contactDesignation": "CEO",
           "contactDepartment": "",
           "contactLocation": "",
           "contactLinkedin": "",
@@ -468,8 +480,8 @@
           "source": "",
           "note": "",
           "contactEmail": "pearson@firstcry.com",
-          "contactPhone": "",
-          "contactDesignation": "",
+          "contactPhone": "+971 55 567 7788",
+          "contactDesignation": "Buying Manager",
           "contactDepartment": "",
           "contactLocation": "",
           "contactLinkedin": "",
@@ -477,8 +489,8 @@
             {
               "name": "Pearson",
               "email": "pearson@firstcry.com",
-              "phone": "",
-              "designation": "",
+              "phone": "+971 55 567 7788",
+              "designation": "Buying Manager",
               "department": "",
               "location": "",
               "linkedin": ""
@@ -628,7 +640,9 @@
           "stage": "received-0",
           "lastActivity": "just now",
           "activityType": "Email received",
-          "overdue": false
+          "overdue": false,
+          "contactPhone": "+1 (415) 555-0198",
+          "contactDesignation": "Purchasing Lead"
         }
       ],
       "hiddenFields": [],
