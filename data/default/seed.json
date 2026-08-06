@@ -45,7 +45,8 @@
           "stage": "lead",
           "lastActivity": "2d ago",
           "activityType": "Email sent",
-          "overdue": false
+          "overdue": false,
+          "contactEmail": "olivia.bennett@brightpathco.com"
         },
         {
           "id": 2,
@@ -61,7 +62,8 @@
           "nextActivity": {
             "type": "followup",
             "date": "12 Feb"
-          }
+          },
+          "contactEmail": "marcus.webb@lumenretail.com"
         },
         {
           "id": 3,
@@ -73,7 +75,8 @@
           "stage": "qualified",
           "lastActivity": "3d ago",
           "activityType": "Phone call",
-          "overdue": false
+          "overdue": false,
+          "contactEmail": "grace.turner@northfieldgroup.com"
         },
         {
           "id": 4,
@@ -85,7 +88,8 @@
           "stage": "qualified",
           "lastActivity": "6d ago",
           "activityType": "Email received",
-          "overdue": true
+          "overdue": true,
+          "contactEmail": "ethan.price@coastalsupply.com"
         },
         {
           "id": 5,
@@ -102,7 +106,8 @@
             "type": "task",
             "name": "Send proposal",
             "date": "5 Mar"
-          }
+          },
+          "contactEmail": "sophie.hart@unionanalytics.com"
         },
         {
           "id": 6,
@@ -114,7 +119,8 @@
           "stage": "proposal",
           "lastActivity": "8d ago",
           "activityType": "Email sent",
-          "overdue": true
+          "overdue": true,
+          "contactEmail": "ryan.walker@meridianlabs.com"
         },
         {
           "id": 7,
@@ -130,7 +136,8 @@
           "nextActivity": {
             "type": "meeting",
             "date": "2 Mar"
-          }
+          },
+          "contactEmail": "noah.bennett@fairviewlogistics.com"
         },
         {
           "id": 8,
@@ -142,7 +149,8 @@
           "stage": "negotiation",
           "lastActivity": "5d ago",
           "activityType": "Meeting",
-          "overdue": false
+          "overdue": false,
+          "contactEmail": "chloe.sanders@deltafreight.com"
         },
         {
           "id": 9,
@@ -155,7 +163,8 @@
           "won": true,
           "lastActivity": "1d ago",
           "activityType": "Email sent",
-          "overdue": false
+          "overdue": false,
+          "contactEmail": "liam.carter@vantagegroup.com"
         }
       ],
       "hiddenFields": [],
