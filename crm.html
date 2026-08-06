@@ -5961,7 +5961,7 @@
         '<div class="kanban-card-footer">' +
           '<span class="kanban-card-avatar" style="background:' + avatarColorFor(card.contact) + ';" title="' + card.contact + '">' + card.contact.charAt(0) + '</span>' +
           '<span class="kanban-card-value">' + fmtMoney(card.value) + '</span>' +
-          (card.won
+          ((card.status ? card.status === 'Won' : card.won)
             ? '<span class="kanban-won-pill">Won</span>'
             : '<span class="kanban-card-task">' + card.lastActivity + '</span>') +
         '</div>';

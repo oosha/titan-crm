@@ -141,6 +141,28 @@
   .crm-stage-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .crm-stage-item.active { font-weight: 600; }
 
+  /* ── Status (In progress / Won / Lost) — Sales pipelines only, shown next to Stage ── */
+  .ov-status-wrap { position: relative; margin-top: 16px; flex-shrink: 0; }
+  .ov-status-pill {
+    display: flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap;
+    padding: 8px 12px; border-radius: 7px; font-size: 13.5px; font-weight: 600;
+  }
+  .ov-status-pill:hover { filter: brightness(0.97); }
+  .ov-status-pill .caret { font-size: 16px; opacity: .8; margin-left: 3px; display: inline-block; transform: scaleX(1.4); }
+  .ov-status-wrap.inprogress .ov-status-pill { background: #eef0f2; color: #555; }
+  .ov-status-wrap.won .ov-status-pill { background: #e7f8ec; color: #15803d; }
+  .ov-status-wrap.lost .ov-status-pill { background: #fdecec; color: #dc2626; }
+  .ov-status-menu {
+    position: absolute; top: calc(100% + 4px); right: 0; z-index: 40; display: none;
+    background: #fff; border: 1px solid #e6e6e6; border-radius: 8px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.14); padding: 6px 0; min-width: 140px;
+  }
+  .ov-status-menu.open { display: block; }
+  .ov-status-item { display: flex; align-items: center; gap: 9px; padding: 7px 14px; font-size: 13px; color: #2b2f36; cursor: pointer; }
+  .ov-status-item:hover { background: #f4f7fb; }
+  .ov-status-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .ov-status-item.active { font-weight: 600; }
+
   .crm-note {
     background: rgba(33,112,244,0.05); border-radius: 6px; padding: 12px 14px; font-size: 12.5px; color: #444; margin-bottom: 8px;
   }
@@ -479,13 +501,27 @@
             </div>
           </div>
 
-          <div class="crm-ps-wrap">
-            <div class="crm-pipeline-stage" id="ov-pipeline-stage" onclick="toggleStageMenu(event)">
-              <svg class="pl-icon" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="currentColor"/></svg>
-              <span id="ov-ps-text">Stage</span>
-              <span class="caret">&#9662;</span>
+          <div style="display:flex; align-items:flex-start; gap:10px;">
+            <div class="crm-ps-wrap">
+              <div class="crm-pipeline-stage" id="ov-pipeline-stage" onclick="toggleStageMenu(event)">
+                <svg class="pl-icon" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="currentColor"/></svg>
+                <span id="ov-ps-text">Stage</span>
+                <span class="caret">&#9662;</span>
+              </div>
+              <div class="crm-stage-menu" id="ov-stage-menu"></div>
             </div>
-            <div class="crm-stage-menu" id="ov-stage-menu"></div>
+            <!-- Sales-pipeline records only (pipeline.entity === 'Opportunity') — see renderStatus(). -->
+            <div class="ov-status-wrap" id="ov-status-wrap" style="display:none;">
+              <div class="ov-status-pill" id="ov-status-pill" onclick="toggleStatusMenu(event)">
+                <span id="ov-status-text">In progress</span>
+                <span class="caret">&#9662;</span>
+              </div>
+              <div class="ov-status-menu" id="ov-status-menu">
+                <div class="ov-status-item" onclick="selectStatus('In progress')"><span class="dot" style="background:#9aa1a9;"></span>In progress</div>
+                <div class="ov-status-item" onclick="selectStatus('Won')"><span class="dot" style="background:#16a34a;"></span>Won</div>
+                <div class="ov-status-item" onclick="selectStatus('Lost')"><span class="dot" style="background:#dc2626;"></span>Lost</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -774,6 +810,7 @@
     });
 
     renderStage();
+    renderStatus();
 
     if (card.note) {
       document.getElementById('ov-last-note').style.display = '';
@@ -878,6 +915,40 @@
     renderStage();
     document.getElementById('ov-stage-menu').classList.remove('open');
     document.removeEventListener('click', outsideStageMenu);
+    schedulePersist();
+  }
+
+  // Status (In progress / Won / Lost) — sales pipelines only (pipeline.entity ===
+  // 'Opportunity'); shown next to Stage. Default "In progress" if the card has none yet.
+  function renderStatus() {
+    const wrap = document.getElementById('ov-status-wrap');
+    if (pipeline.entity !== 'Opportunity') { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    const status = card.status || 'In progress';
+    wrap.className = 'ov-status-wrap ' + (status === 'Won' ? 'won' : status === 'Lost' ? 'lost' : 'inprogress');
+    document.getElementById('ov-status-text').textContent = status;
+    document.querySelectorAll('#ov-status-menu .ov-status-item').forEach(function (item) {
+      item.classList.toggle('active', item.textContent.trim() === status);
+    });
+  }
+  function toggleStatusMenu(evt) {
+    if (evt) evt.stopPropagation();
+    const m = document.getElementById('ov-status-menu');
+    if (m.classList.toggle('open')) setTimeout(function () { document.addEventListener('click', outsideStatusMenu); }, 0);
+    else document.removeEventListener('click', outsideStatusMenu);
+  }
+  function outsideStatusMenu(e) {
+    const wrap = document.getElementById('ov-status-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('ov-status-menu').classList.remove('open');
+      document.removeEventListener('click', outsideStatusMenu);
+    }
+  }
+  function selectStatus(status) {
+    card.status = status;
+    renderStatus();
+    document.getElementById('ov-status-menu').classList.remove('open');
+    document.removeEventListener('click', outsideStatusMenu);
     schedulePersist();
   }
 
