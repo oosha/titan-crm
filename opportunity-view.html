@@ -208,15 +208,11 @@
   .crm-file-row:hover .crm-file-actions { opacity: 1; }
   .crm-file-action-btn {
     position: relative;
-    width: 27px; height: 27px; border-radius: 7px; background: #e9eaec; color: #555; flex-shrink: 0;
+    width: 22px; height: 22px; border-radius: 6px; background: #e9eaec; color: #555; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
   }
-  .crm-file-action-btn svg { width: 13px; height: 13px; }
-  /* :not(.drive) so this never competes with .drive's always-dark background below —
-     otherwise the two rules tie on specificity and which one "wins" gets ambiguous. */
-  .crm-file-action-btn:not(.drive):hover { background: #dcdde0; color: #333; }
-  .crm-file-action-btn.drive { background: #1c1c1c; color: #fff; }
-  .crm-file-action-btn.drive:hover { background: #000; color: #fff; }
+  .crm-file-action-btn svg { width: 11px; height: 11px; }
+  .crm-file-action-btn:hover { background: #dcdde0; color: #333; }
   /* Custom dark tooltip (native title= is too plain to match the drive-button treatment) */
   .crm-file-action-btn[data-tip] { overflow: visible; }
   .crm-file-action-btn[data-tip]::after {
@@ -263,6 +259,14 @@
   .ov-modal-row .lbl { color: #9a9fa7; width: 46px; flex-shrink: 0; }
   .ov-modal-row .val { flex: 1; min-width: 0; }
   .ov-modal-divider { height: 1px; background: #eee; margin: 14px 0; }
+  /* Email modal: "To" is short, so the fixed 46px label leaves a big gap before the
+     recipient names — narrow it just here rather than for every modal row. */
+  #ov-email-modal .ov-modal-row { gap: 6px; }
+  #ov-email-modal .ov-modal-row .lbl { width: auto; }
+  /* Meeting modal: "Attendees" is wider than the default 46px label — the label text
+     was overflowing into (and overlapping) the attendee chips next to it. */
+  #ov-meeting-modal .ov-modal-row { align-items: flex-start; }
+  #ov-meeting-modal .ov-modal-row .lbl { width: 68px; padding-top: 2px; }
   .ov-modal-text { font-size: 13.5px; color: #333; line-height: 1.6; white-space: pre-wrap; }
   .ov-modal-attendees { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
   .ov-modal-attendee { display: inline-flex; align-items: center; gap: 6px; background: #f2f4f6; border-radius: 999px; padding: 4px 10px 4px 4px; font-size: 12px; color: #333; }
@@ -615,7 +619,7 @@
       <span class="ov-modal-close" onclick="closeOvModal('ov-meeting-modal')">&times;</span>
     </div>
     <div class="ov-modal-body">
-      <div class="ov-modal-row"><span class="lbl">Attendees</span><span class="val" id="ov-meeting-modal-attendees"></span></div>
+      <div class="ov-modal-row"><span class="lbl">Attendees</span><div class="val" id="ov-meeting-modal-attendees"></div></div>
       <div class="ov-modal-row" style="margin-top:6px;"><span class="lbl">Zoom</span><a class="ov-modal-zoom val" id="ov-meeting-modal-zoom" target="_blank" rel="noopener"></a></div>
       <div class="ov-modal-divider"></div>
       <div class="ov-modal-row" style="flex-direction:column; gap:4px;"><span class="lbl" style="width:auto;">Agenda</span><div class="ov-modal-text" id="ov-meeting-modal-agenda"></div></div>
@@ -1082,10 +1086,11 @@
     const c = primaryContact();
     return [{ name: RECORD_CREATOR, email: 'usha@titan.email' }, { name: c.name || 'Contact', email: c.email || 'contact@example.com' }];
   }
-  function initialsOf(name) { return String(name || '?').trim().split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); }
+  // Meeting-attendee avatar chips show a single initial only (not first+last).
+  function firstInitial(name) { return String(name || '?').trim().charAt(0).toUpperCase() || '?'; }
   function attendeeChipsHTML(list) {
     return '<div class="ov-modal-attendees">' + list.map(function (p) {
-      return '<span class="ov-modal-attendee"><span class="av">' + esc(initialsOf(p.name)) + '</span>' + esc(p.name) + '</span>';
+      return '<span class="ov-modal-attendee"><span class="av">' + esc(firstInitial(p.name)) + '</span>' + esc(p.name) + '</span>';
     }).join('') + '</div>';
   }
   function mailtoAll(list, subject) {
@@ -1116,10 +1121,18 @@
     document.getElementById('ov-email-modal-reply-all').href = mailtoAll(recipients, 'Re: ' + (a.text || ''));
     document.getElementById('ov-email-modal').classList.add('open');
   }
+  // Always show both a date and a time — a.time if the activity has one; otherwise a
+  // fallback, unless a.date already reads as having a time embedded (e.g. "Jul 30, 3:00 PM").
+  function meetingDateTime(a) {
+    if (a.time) return (a.date ? a.date + ' · ' : '') + a.time;
+    const d = a.date || '';
+    if (/\d{1,2}:\d{2}\s*(am|pm)?/i.test(d)) return d;
+    return d ? d + ' · 10:00 AM' : '10:00 AM';
+  }
   function openMeetingModal(a) {
     const attendees = meetingAttendees(a);
     document.getElementById('ov-meeting-modal-title').textContent = a.text || 'Meeting';
-    document.getElementById('ov-meeting-modal-date').textContent = a.date || '';
+    document.getElementById('ov-meeting-modal-date').textContent = meetingDateTime(a);
     document.getElementById('ov-meeting-modal-attendees').innerHTML = attendeeChipsHTML(attendees);
     const zoom = document.getElementById('ov-meeting-modal-zoom');
     zoom.href = a.zoomLink || 'https://zoom.us/j/1234567890';
@@ -1158,7 +1171,7 @@
               '</span>' +
               '<div class="crm-file-actions">' +
                 '<span class="crm-file-action-btn" data-tip="Download">' + DOWNLOAD_SVG + '</span>' +
-                '<span class="crm-file-action-btn drive" data-tip="Add to Drive" onclick="addToDrive(' + i + ')">' + DRIVE_SVG + '</span>' +
+                '<span class="crm-file-action-btn" data-tip="Add to Drive" onclick="addToDrive(' + i + ')">' + DRIVE_SVG + '</span>' +
               '</div>' +
             '</div>' +
           '</div>';
