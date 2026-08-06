@@ -462,7 +462,13 @@
           "type": "text"
         }
       ],
-      "contactsEnabled": true
+      "contactsEnabled": true,
+      "team": [
+        {
+          "name": "Sam Mathews",
+          "email": "sam.mathews@avontechlabs.com"
+        }
+      ]
     },
     "p1": {
       "id": "p1",
