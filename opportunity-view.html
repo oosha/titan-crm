@@ -578,6 +578,56 @@
   <span class="view-link" onclick="hideDriveToast()" title="Prototype only: Drive isn't wired up yet">View</span>
   <span class="close-x" onclick="hideDriveToast()">&times;</span>
 </div>
+
+<!-- Email activity detail — shown when the email was logged by someone other than the
+     current user (your own emails open for real in the mailclient instead). -->
+<div class="ov-modal-overlay" id="ov-email-modal" onclick="if(event.target===this) closeOvModal('ov-email-modal')">
+  <div class="ov-modal">
+    <div class="ov-modal-header">
+      <div>
+        <div class="ov-modal-title" id="ov-email-modal-subject"></div>
+        <div class="ov-modal-subtitle" id="ov-email-modal-meta"></div>
+      </div>
+      <span class="ov-modal-close" onclick="closeOvModal('ov-email-modal')">&times;</span>
+    </div>
+    <div class="ov-modal-body">
+      <div class="ov-modal-row"><span class="lbl">To</span><span class="val" id="ov-email-modal-to"></span></div>
+      <div class="ov-modal-divider"></div>
+      <div class="ov-modal-text" id="ov-email-modal-body"></div>
+    </div>
+    <div class="ov-modal-footer">
+      <a class="ov-modal-btn" id="ov-email-modal-reply-all" href="#">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M6 4L2.6 7.2 6 10.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 7.2h6.4c2 0 3.6 1.6 3.6 3.6V12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Email all recipients
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Meeting activity detail — always a modal, regardless of who logged it. -->
+<div class="ov-modal-overlay" id="ov-meeting-modal" onclick="if(event.target===this) closeOvModal('ov-meeting-modal')">
+  <div class="ov-modal">
+    <div class="ov-modal-header">
+      <div>
+        <div class="ov-modal-title" id="ov-meeting-modal-title"></div>
+        <div class="ov-modal-subtitle" id="ov-meeting-modal-date"></div>
+      </div>
+      <span class="ov-modal-close" onclick="closeOvModal('ov-meeting-modal')">&times;</span>
+    </div>
+    <div class="ov-modal-body">
+      <div class="ov-modal-row"><span class="lbl">Attendees</span><span class="val" id="ov-meeting-modal-attendees"></span></div>
+      <div class="ov-modal-row" style="margin-top:6px;"><span class="lbl">Zoom</span><a class="ov-modal-zoom val" id="ov-meeting-modal-zoom" target="_blank" rel="noopener"></a></div>
+      <div class="ov-modal-divider"></div>
+      <div class="ov-modal-row" style="flex-direction:column; gap:4px;"><span class="lbl" style="width:auto;">Agenda</span><div class="ov-modal-text" id="ov-meeting-modal-agenda"></div></div>
+    </div>
+    <div class="ov-modal-footer">
+      <a class="ov-modal-btn" id="ov-meeting-modal-email-all" href="#">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M6 4L2.6 7.2 6 10.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 7.2h6.4c2 0 3.6 1.6 3.6 3.6V12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Email all attendees
+      </a>
+    </div>
+  </div>
+</div>
 <script src="/titan-sidebar.js"></script>
 <script>
   // ── This page is reached from OUTSIDE Titan CRM (a mail client CRM-panel link),
@@ -972,7 +1022,10 @@
           const iconHTML = a.type === 'task'
             ? '<span class="crm-act-check" onclick="toggleActTask(' + i + ')" title="Mark done"><span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l2.6 2.6L11.8 5" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>'
             : actIcon(a.type);
-          return '<div class="crm-activity-row">' + iconHTML +
+          // Email/meeting rows open detail (mailclient, or a modal here) on click.
+          const isOpenable = a.type === 'email' || a.type === 'meeting';
+          return '<div class="crm-activity-row' + (isOpenable ? ' clickable' : '') + '"' +
+            (isOpenable ? ' onclick="openActivityDetail(\'upcoming\',' + i + ')"' : '') + '>' + iconHTML +
             '<div class="crm-activity-text">' + esc(a.text) + '</div>' +
             (a.date ? '<div class="crm-activity-date' + (a.overdue ? ' overdue' : '') + '">' + esc(a.date) + '</div>' : '') +
             '</div>';
@@ -984,7 +1037,7 @@
       ? card.recentActivities
       : ((card.activityType || card.lastActivity) ? [{ type: 'email', text: card.activityType || 'Activity', date: card.lastActivity || '' }] : []);
     recent.innerHTML = recentItems.length
-      ? recentItems.map(function (a) {
+      ? recentItems.map(function (a, i) {
           // A task whose snippet is really a reference to another activity (e.g. "Send
           // updated proposal deck" pointing back at the email that requested it) renders
           // as an icon + linked-looking label instead of plain snippet text.
@@ -994,7 +1047,10 @@
           const snippetHTML = a.snippetLink
             ? '<div class="crm-activity-snippet crm-snippet-link">' + actIconSvgOnly('email') + '<span>' + esc(a.snippetLink) + '</span></div>'
             : ((a.snippet || (isNote && a.text)) ? '<div class="crm-activity-snippet">' + esc(a.snippet || a.text) + '</div>' : '');
-          return '<div class="crm-activity-row">' + actIcon(a.type) +
+          // Email/meeting rows open detail (mailclient, or a modal here) on click.
+          const isOpenable = a.type === 'email' || a.type === 'meeting';
+          return '<div class="crm-activity-row' + (isOpenable ? ' clickable' : '') + '"' +
+            (isOpenable ? ' onclick="openActivityDetail(\'recent\',' + i + ')"' : '') + '>' + actIcon(a.type) +
             '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + title + '</div>' + snippetHTML + '</div>' +
             (a.date ? '<div class="crm-activity-date">' + esc(a.date) + '</div>' : '') +
             '</div>';
@@ -1003,6 +1059,76 @@
 
     renderFiles();
   }
+
+  // ── Email / meeting activity detail (§ clicking a Recent/Upcoming activity row) ──
+  // "Usha" and "Usha Loutongbam" are the same person (NOTE_AUTHOR vs RECORD_CREATOR
+  // just use different granularity) — compare first names only.
+  function normalizeAuthorName(n) { return String(n || '').trim().split(/\s+/)[0].toLowerCase(); }
+  function isCurrentUser(author) { return normalizeAuthorName(author || 'Usha') === normalizeAuthorName(NOTE_AUTHOR); }
+
+  function primaryContact() {
+    return (contacts && contacts[0]) || { name: card.contact || 'Contact', email: card.contactEmail || '' };
+  }
+  // Prototype has no real per-activity mail/meeting store — these fill in sensible
+  // details from the record's own contact/company data when an activity wasn't
+  // seeded with its own (recipients/body, or attendees/zoomLink/agenda).
+  function emailRecipients(a) {
+    if (a.recipients && a.recipients.length) return a.recipients;
+    const c = primaryContact();
+    return [{ name: c.name || 'Contact', email: c.email || 'contact@example.com' }];
+  }
+  function meetingAttendees(a) {
+    if (a.attendees && a.attendees.length) return a.attendees;
+    const c = primaryContact();
+    return [{ name: RECORD_CREATOR, email: 'usha@titan.email' }, { name: c.name || 'Contact', email: c.email || 'contact@example.com' }];
+  }
+  function initialsOf(name) { return String(name || '?').trim().split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); }
+  function attendeeChipsHTML(list) {
+    return '<div class="ov-modal-attendees">' + list.map(function (p) {
+      return '<span class="ov-modal-attendee"><span class="av">' + esc(initialsOf(p.name)) + '</span>' + esc(p.name) + '</span>';
+    }).join('') + '</div>';
+  }
+  function mailtoAll(list, subject) {
+    const addrs = list.map(function (p) { return p.email; }).filter(Boolean).join(',');
+    return 'mailto:' + addrs + (subject ? '?subject=' + encodeURIComponent(subject) : '');
+  }
+
+  function openActivityDetail(listKind, i) {
+    const list = listKind === 'upcoming' ? upcomingActivityList() : (card.recentActivities || []);
+    const a = list[i];
+    if (!a) return;
+    if (a.type === 'email') {
+      // Own email -> go read it for real in the mailclient; someone else's -> show it
+      // here instead of navigating away from the record.
+      if (isCurrentUser(a.author)) location.href = '/mail' + location.search;
+      else openEmailModal(a);
+    } else if (a.type === 'meeting') {
+      openMeetingModal(a);
+    }
+  }
+
+  function openEmailModal(a) {
+    const recipients = emailRecipients(a);
+    document.getElementById('ov-email-modal-subject').textContent = a.text || 'Email';
+    document.getElementById('ov-email-modal-meta').textContent = 'From ' + (a.author || 'Usha') + (a.date ? ' · ' + a.date : '');
+    document.getElementById('ov-email-modal-to').textContent = recipients.map(function (p) { return p.name; }).join(', ');
+    document.getElementById('ov-email-modal-body').textContent = a.body || a.snippet || a.text || '';
+    document.getElementById('ov-email-modal-reply-all').href = mailtoAll(recipients, 'Re: ' + (a.text || ''));
+    document.getElementById('ov-email-modal').classList.add('open');
+  }
+  function openMeetingModal(a) {
+    const attendees = meetingAttendees(a);
+    document.getElementById('ov-meeting-modal-title').textContent = a.text || 'Meeting';
+    document.getElementById('ov-meeting-modal-date').textContent = a.date || '';
+    document.getElementById('ov-meeting-modal-attendees').innerHTML = attendeeChipsHTML(attendees);
+    const zoom = document.getElementById('ov-meeting-modal-zoom');
+    zoom.href = a.zoomLink || 'https://zoom.us/j/1234567890';
+    zoom.textContent = a.zoomLink || 'https://zoom.us/j/1234567890';
+    document.getElementById('ov-meeting-modal-agenda').textContent = a.agenda || a.snippet || 'No agenda notes added.';
+    document.getElementById('ov-meeting-modal-email-all').href = mailtoAll(attendees, a.text || 'Meeting');
+    document.getElementById('ov-meeting-modal').classList.add('open');
+  }
+  function closeOvModal(id) { document.getElementById(id).classList.remove('open'); }
 
   // Matches the mailclient CRM panel's file rows (type icon by extension, sent/received
   // direction, size, Download/Add-to-Drive actions) rather than just a bare filename.
