@@ -463,7 +463,12 @@
         }
       ],
       "contactsEnabled": true,
-      "team": []
+      "team": [
+        {
+          "name": "Elena Rodriguez",
+          "email": "elena.rodriguez@avontechlabs.com"
+        }
+      ]
     },
     "p1": {
       "id": "p1",
