@@ -52,7 +52,9 @@
             "label": "Reply to inquiry",
             "date": "Today"
           },
-          "contactEmail": "mia.thompson@gmail.com"
+          "contactEmail": "mia.thompson@gmail.com",
+          "contactPhone": "+61 412 334 551",
+          "contactDesignation": "Marketing Coordinator"
         },
         {
           "id": "inquiries-i2",
@@ -66,7 +68,9 @@
           "lastActivity": "2d ago",
           "activityType": "Email sent",
           "overdue": false,
-          "contactEmail": "priya.nair@gmail.com"
+          "contactEmail": "priya.nair@gmail.com",
+          "contactPhone": "+61 423 118 902",
+          "contactDesignation": "Registered Nurse"
         },
         {
           "id": "inquiries-i3",
@@ -86,7 +90,9 @@
           "contacts": [
             {
               "name": "Lily McGregor",
-              "email": "lily.mcgregor92@gmail.com"
+              "email": "lily.mcgregor92@gmail.com",
+              "phone": "+61 401 556 774",
+              "designation": "Primary School Teacher"
             }
           ],
           "note": "Waiting on her to confirm flower types",
@@ -111,7 +117,9 @@
               "date": "2 May"
             }
           ],
-          "contactEmail": "lily.mcgregor92@gmail.com"
+          "contactEmail": "lily.mcgregor92@gmail.com",
+          "contactPhone": "+61 401 556 774",
+          "contactDesignation": "Primary School Teacher"
         },
         {
           "id": "inquiries-i4",
@@ -128,7 +136,9 @@
           "lastActivity": "4d ago",
           "activityType": "Email sent",
           "overdue": false,
-          "contactEmail": "chloe.watson@gmail.com"
+          "contactEmail": "chloe.watson@gmail.com",
+          "contactPhone": "+61 434 220 116",
+          "contactDesignation": "Graphic Designer"
         },
         {
           "id": "inquiries-i5",
@@ -150,10 +160,14 @@
           "contacts": [
             {
               "name": "Sarah Chen",
-              "email": "sarah.chen.bride@outlook.com"
+              "email": "sarah.chen.bride@outlook.com",
+              "phone": "+61 447 883 210",
+              "designation": "Software Engineer"
             }
           ],
-          "contactEmail": "sarah.chen.bride@outlook.com"
+          "contactEmail": "sarah.chen.bride@outlook.com",
+          "contactPhone": "+61 447 883 210",
+          "contactDesignation": "Software Engineer"
         },
         {
           "id": "inquiries-i6",
@@ -167,7 +181,9 @@
           "lastActivity": "3w ago",
           "activityType": "Email sent",
           "overdue": false,
-          "contactEmail": "hannah.lee@gmail.com"
+          "contactEmail": "hannah.lee@gmail.com",
+          "contactPhone": "+61 419 662 038",
+          "contactDesignation": "Retail Manager"
         }
       ],
       "hiddenFields": [],
@@ -235,7 +251,9 @@
           "contacts": [
             {
               "name": "Sarah Chen",
-              "email": "sarah.chen.bride@outlook.com"
+              "email": "sarah.chen.bride@outlook.com",
+              "phone": "+61 447 883 210",
+              "designation": "Software Engineer"
             }
           ],
           "recentActivities": [
@@ -252,7 +270,9 @@
               "date": "16 Jul"
             }
           ],
-          "contactEmail": "sarah.chen.bride@outlook.com"
+          "contactEmail": "sarah.chen.bride@outlook.com",
+          "contactPhone": "+61 447 883 210",
+          "contactDesignation": "Software Engineer"
         },
         {
           "id": "projects-p2",
@@ -274,7 +294,9 @@
           "lastActivity": "1w ago",
           "activityType": "Email sent",
           "overdue": false,
-          "contactEmail": "emma.sinclair@gmail.com"
+          "contactEmail": "emma.sinclair@gmail.com",
+          "contactPhone": "+61 405 771 264",
+          "contactDesignation": "Physiotherapist"
         },
         {
           "id": "projects-p3",
@@ -294,7 +316,9 @@
           },
           "lastActivity": "2d ago",
           "activityType": "Phone call",
-          "contactEmail": "olivia.brooks@gmail.com"
+          "contactEmail": "olivia.brooks@gmail.com",
+          "contactPhone": "+61 438 902 517",
+          "contactDesignation": "Accountant"
         },
         {
           "id": "projects-p4",
@@ -314,7 +338,9 @@
           "lastActivity": "5d ago",
           "activityType": "Email sent",
           "overdue": false,
-          "contactEmail": "grace.miller@gmail.com"
+          "contactEmail": "grace.miller@gmail.com",
+          "contactPhone": "+61 411 267 890",
+          "contactDesignation": "HR Coordinator"
         },
         {
           "id": "projects-p5",
@@ -330,7 +356,9 @@
           "lastActivity": "2w ago",
           "activityType": "Email sent",
           "overdue": false,
-          "contactEmail": "amelia.reid@gmail.com"
+          "contactEmail": "amelia.reid@gmail.com",
+          "contactPhone": "+61 422 645 391",
+          "contactDesignation": "Interior Designer"
         },
         {
           "id": "projects-p6",
@@ -359,16 +387,16 @@
             {
               "name": "Chloe Watson",
               "email": "chloe.watson@gmail.com",
-              "designation": "",
-              "phone": "",
+              "designation": "Graphic Designer",
+              "phone": "+61 434 220 116",
               "department": "",
               "location": "",
               "linkedin": ""
             }
           ],
           "contactEmail": "chloe.watson@gmail.com",
-          "contactPhone": "",
-          "contactDesignation": "",
+          "contactPhone": "+61 434 220 116",
+          "contactDesignation": "Graphic Designer",
           "contactDepartment": "",
           "contactLocation": "",
           "contactLinkedin": "",
