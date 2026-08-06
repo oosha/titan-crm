@@ -200,18 +200,21 @@
   .crm-file-direction.sent { color: #7aa8f2; }
   .crm-file-direction.received { color: #6fcf8e; }
   .crm-file-actions {
-    position: absolute; right: 0; display: flex; gap: 6px; opacity: 0; transition: opacity 0.15s ease;
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    display: flex; align-items: center; gap: 6px; opacity: 0; transition: opacity 0.15s ease;
     background: #f6f7f8;
   }
   .crm-file-row:hover .crm-file-meta { opacity: 0; }
   .crm-file-row:hover .crm-file-actions { opacity: 1; }
   .crm-file-action-btn {
     position: relative;
-    width: 34px; height: 34px; border-radius: 8px; background: #e9eaec; color: #555; flex-shrink: 0;
+    width: 27px; height: 27px; border-radius: 7px; background: #e9eaec; color: #555; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
   }
-  .crm-file-action-btn svg { width: 16px; height: 16px; }
-  .crm-file-action-btn:hover { background: #dcdde0; color: #333; }
+  .crm-file-action-btn svg { width: 13px; height: 13px; }
+  /* :not(.drive) so this never competes with .drive's always-dark background below —
+     otherwise the two rules tie on specificity and which one "wins" gets ambiguous. */
+  .crm-file-action-btn:not(.drive):hover { background: #dcdde0; color: #333; }
   .crm-file-action-btn.drive { background: #1c1c1c; color: #fff; }
   .crm-file-action-btn.drive:hover { background: #000; color: #fff; }
   /* Custom dark tooltip (native title= is too plain to match the drive-button treatment) */
@@ -237,6 +240,38 @@
   .ov-drive-toast .view-link:hover { text-decoration: underline; }
   .ov-drive-toast .close-x { color: #9a9fa7; cursor: pointer; font-size: 15px; line-height: 1; margin-left: 2px; }
   .ov-drive-toast .close-x:hover { color: #fff; }
+
+  /* Email / meeting recent-activity rows are clickable (email opens in mailclient or a
+     modal here, depending on who logged it; meetings always open a details modal). */
+  .crm-activity-row.clickable { cursor: pointer; }
+  .crm-activity-row.clickable:hover { background: #f7f8fa; margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 6px; }
+
+  .ov-modal-overlay {
+    position: fixed; inset: 0; background: rgba(20,20,24,0.5); z-index: 800;
+    display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  .ov-modal-overlay.open { display: flex; }
+  .ov-modal { background: #fff; border-radius: 12px; width: 100%; max-width: 520px; max-height: 84vh;
+    overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .ov-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 22px 16px; border-bottom: 1px solid #eee; }
+  .ov-modal-title { font-size: 16.5px; font-weight: 700; color: #1a1a1a; line-height: 1.35; }
+  .ov-modal-subtitle { font-size: 12.5px; color: #9a9fa7; margin-top: 4px; }
+  .ov-modal-close { color: #9a9fa7; cursor: pointer; font-size: 20px; line-height: 1; flex-shrink: 0; padding: 2px; }
+  .ov-modal-close:hover { color: #333; }
+  .ov-modal-body { padding: 18px 22px; }
+  .ov-modal-row { display: flex; gap: 10px; font-size: 12.5px; color: #555; padding: 5px 0; }
+  .ov-modal-row .lbl { color: #9a9fa7; width: 46px; flex-shrink: 0; }
+  .ov-modal-row .val { flex: 1; min-width: 0; }
+  .ov-modal-divider { height: 1px; background: #eee; margin: 14px 0; }
+  .ov-modal-text { font-size: 13.5px; color: #333; line-height: 1.6; white-space: pre-wrap; }
+  .ov-modal-attendees { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .ov-modal-attendee { display: inline-flex; align-items: center; gap: 6px; background: #f2f4f6; border-radius: 999px; padding: 4px 10px 4px 4px; font-size: 12px; color: #333; }
+  .ov-modal-attendee .av { width: 18px; height: 18px; border-radius: 50%; background: #8a9099; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ov-modal-zoom { display: inline-flex; align-items: center; gap: 6px; color: #2170f4; font-weight: 600; font-size: 13px; text-decoration: none; }
+  .ov-modal-zoom:hover { text-decoration: underline; }
+  .ov-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid #eee; }
+  .ov-modal-btn { background: #2170f4; color: #fff; border: none; border-radius: 7px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .ov-modal-btn:hover { filter: brightness(1.05); }
 
   /* Task activities: a real checkbox you can mark done (matches the mailclient CRM
      panel's .crm-act-check), except checking one here actually completes it — it moves
