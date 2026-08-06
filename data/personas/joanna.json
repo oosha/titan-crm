@@ -1,6 +1,6 @@
 {
-  "currentPipelineId": "projects",
-  "pipelineSeq": 0,
+  "currentPipelineId": "p1",
+  "pipelineSeq": 1,
   "pipelines": {
     "inquiries": {
       "id": "inquiries",
@@ -37,7 +37,7 @@
       "cards": [
         {
           "id": "inquiries-i1",
-          "deal": "Mia Thompson \u2014 Nov wedding",
+          "deal": "Mia Thompson — Nov wedding",
           "company": "Mia Thompson",
           "contact": "Mia Thompson",
           "value": 0,
@@ -58,7 +58,7 @@
         },
         {
           "id": "inquiries-i2",
-          "deal": "Priya Nair \u2014 resin keepsake",
+          "deal": "Priya Nair — resin keepsake",
           "company": "Priya Nair",
           "contact": "Priya Nair",
           "value": 0,
@@ -74,7 +74,7 @@
         },
         {
           "id": "inquiries-i3",
-          "deal": "Lily McGregor \u2014 shadow box",
+          "deal": "Lily McGregor — shadow box",
           "company": "Lily McGregor",
           "contact": "Lily McGregor",
           "value": 0,
@@ -100,19 +100,19 @@
           "recentActivities": [
             {
               "type": "email",
-              "text": "Re: Bouquet preservation enquiry \u2014 wedding March 2026",
-              "snippet": "Lily confirmed the shadow box option and asked about drop-off availability in late March / early April \u2014 happy to pay a deposit to lock it in.",
+              "text": "Re: Bouquet preservation enquiry — wedding March 2026",
+              "snippet": "Lily confirmed the shadow box option and asked about drop-off availability in late March / early April — happy to pay a deposit to lock it in.",
               "date": "6 May"
             },
             {
               "type": "email",
-              "text": "Re: Bouquet preservation enquiry \u2014 wedding March 2026",
-              "snippet": "Joanna explained the drop-off \u2192 drying \u2192 proposals \u2192 framing process, with pieces starting from $380.",
+              "text": "Re: Bouquet preservation enquiry — wedding March 2026",
+              "snippet": "Joanna explained the drop-off → drying → proposals → framing process, with pieces starting from $380.",
               "date": "3 May"
             },
             {
               "type": "email",
-              "text": "Bouquet preservation enquiry \u2014 wedding March 2026",
+              "text": "Bouquet preservation enquiry — wedding March 2026",
               "snippet": "Lily asked about materials (garden roses, pampas grass, eucalyptus), turnaround time and price range.",
               "date": "2 May"
             }
@@ -123,7 +123,7 @@
         },
         {
           "id": "inquiries-i4",
-          "deal": "Chloe Watson \u2014 2027 wedding",
+          "deal": "Chloe Watson — 2027 wedding",
           "company": "Chloe Watson",
           "contact": "Chloe Watson",
           "value": 450,
@@ -131,7 +131,7 @@
           "stage": "s3",
           "leadSource": "Referral",
           "weddingDate": "2027-05-22",
-          "note": "Long-horizon booking \u2014 keep neutral, not stalling",
+          "note": "Long-horizon booking — keep neutral, not stalling",
           "quotedDaysAgo": 4,
           "lastActivity": "4d ago",
           "activityType": "Email sent",
@@ -142,7 +142,7 @@
         },
         {
           "id": "inquiries-i5",
-          "deal": "Sarah Chen \u2014 pressed frame",
+          "deal": "Sarah Chen — pressed frame",
           "company": "Sarah Chen",
           "contact": "Sarah Chen",
           "value": 420,
@@ -150,7 +150,7 @@
           "stage": "s4",
           "leadSource": "Website",
           "weddingDate": "2026-06-07",
-          "note": "Deposit paid \u2014 auto-moves to Preservation Projects",
+          "note": "Deposit paid — auto-moves to Preservation Projects",
           "noteDate": "24 May",
           "won": true,
           "lastActivity": "1d ago",
@@ -171,7 +171,7 @@
         },
         {
           "id": "inquiries-i6",
-          "deal": "Hannah Lee \u2014 price too high",
+          "deal": "Hannah Lee — price too high",
           "company": "Hannah Lee",
           "contact": "Hannah Lee",
           "value": 0,
@@ -229,7 +229,7 @@
       "cards": [
         {
           "id": "projects-p1",
-          "deal": "Sarah Chen \u2014 pressed frame",
+          "deal": "Sarah Chen — pressed frame",
           "company": "Sarah Chen",
           "contact": "Sarah Chen",
           "value": 420,
@@ -259,13 +259,13 @@
           "recentActivities": [
             {
               "type": "email",
-              "text": "Your bouquet preservation is ready for pickup! \ud83c\udf89",
+              "text": "Your bouquet preservation is ready for pickup! 🎉",
               "snippet": "Sarah paid the final balance and asked to pick up Saturday the 9th at 11am.",
               "date": "29 Jul"
             },
             {
               "type": "email",
-              "text": "Your bouquet preservation design proposals! \ud83c\udf38",
+              "text": "Your bouquet preservation design proposals! 🌸",
               "snippet": "Sarah loved option 2 and asked for more white ranunculus, her gran's favourite flower.",
               "date": "16 Jul"
             }
@@ -276,7 +276,7 @@
         },
         {
           "id": "projects-p2",
-          "deal": "Emma Sinclair \u2014 dome",
+          "deal": "Emma Sinclair — dome",
           "company": "Emma Sinclair",
           "contact": "Emma Sinclair",
           "value": 380,
@@ -300,7 +300,7 @@
         },
         {
           "id": "projects-p3",
-          "deal": "Olivia Brooks \u2014 shadow box",
+          "deal": "Olivia Brooks — shadow box",
           "company": "Olivia Brooks",
           "contact": "Olivia Brooks",
           "value": 540,
@@ -311,7 +311,7 @@
           "overdue": true,
           "nextActivity": {
             "type": "task",
-            "label": "Chase framer \u2014 piece overdue",
+            "label": "Chase framer — piece overdue",
             "date": "Overdue"
           },
           "lastActivity": "2d ago",
@@ -322,7 +322,7 @@
         },
         {
           "id": "projects-p4",
-          "deal": "Grace Miller \u2014 resin block",
+          "deal": "Grace Miller — resin block",
           "company": "Grace Miller",
           "contact": "Grace Miller",
           "value": 300,
@@ -344,7 +344,7 @@
         },
         {
           "id": "projects-p5",
-          "deal": "Amelia Reid \u2014 frame",
+          "deal": "Amelia Reid — frame",
           "company": "Amelia Reid",
           "contact": "Amelia Reid",
           "value": 460,
@@ -362,7 +362,7 @@
         },
         {
           "id": "projects-p6",
-          "deal": "Chloe Watson \u2014 2027 (future)",
+          "deal": "Chloe Watson — 2027 (future)",
           "company": "Chloe Watson",
           "contact": "Chloe Watson",
           "value": 450,
@@ -406,6 +406,52 @@
       "hiddenFields": [],
       "customFieldDefs": [],
       "contactsEnabled": true
+    },
+    "p1": {
+      "id": "p1",
+      "name": "Wedding flower preservation",
+      "entity": "Order",
+      "plural": "orders",
+      "color": "#ab5f74",
+      "stages": [
+        {
+          "key": "booked-0",
+          "label": "Booked"
+        },
+        {
+          "key": "flower-drying-1",
+          "label": "Flower drying"
+        },
+        {
+          "key": "progress-update-2",
+          "label": "Progress update"
+        },
+        {
+          "key": "design-3",
+          "label": "Design"
+        },
+        {
+          "key": "design-proposal-4",
+          "label": "Design proposal"
+        },
+        {
+          "key": "design-picked-5",
+          "label": "Design picked"
+        },
+        {
+          "key": "with-farmer-6",
+          "label": "With farmer"
+        },
+        {
+          "key": "pickup-scheduled-7",
+          "label": "Pickup scheduled"
+        },
+        {
+          "key": "delivered-8",
+          "label": "Delivered"
+        }
+      ],
+      "cards": []
     }
   }
 }
