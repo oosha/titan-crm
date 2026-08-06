@@ -2969,13 +2969,14 @@
 
     /* ── Add team (pipeline overflow menu + pipeline screen header) ── */
     #at-overlay .np-body { flex: 1; }
+    .at-modal-subtitle { font-size: 12.5px; color: #9a9fa7; margin-top: 4px; }
+    /* List sits inline right under the search box (not a floating popover) — the whole
+       directory shows up front; typing just filters the same list in place. */
     .at-combobox { position: relative; }
     .at-dropdown {
-      position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 40; display: none;
-      background: #fff; border: 1px solid #e6e6e6; border-radius: 8px;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.16); padding: 6px; max-height: 280px; overflow-y: auto;
+      margin-top: 10px; background: #fafbfc; border: 1px solid #eee; border-radius: 8px;
+      padding: 6px; max-height: 300px; overflow-y: auto;
     }
-    .at-dropdown.open { display: block; }
     .at-dd-item { display: flex; align-items: center; gap: 10px; padding: 8px 8px; border-radius: 6px; cursor: pointer; }
     .at-dd-item:hover { background: #f4f7fb; }
     .at-dd-avatar {
@@ -5324,6 +5325,7 @@
       if (!pl) return;
       if (!pl.team) pl.team = [];
       document.getElementById('at-input').value = '';
+      document.getElementById('at-modal-subtitle').textContent = 'Track progress on ' + (pl.name || 'this pipeline') + ' together';
       atRenderDropdown('');
       atRenderChips();
       document.getElementById('at-overlay').classList.add('open');
@@ -5331,11 +5333,12 @@
     }
     function closeAddTeamModal() {
       document.getElementById('at-overlay').classList.remove('open');
-      document.getElementById('at-dropdown').classList.remove('open');
     }
     function atFilterDirectory() {
       atRenderDropdown(document.getElementById('at-input').value.trim().toLowerCase());
     }
+    // The full directory shows up front (list is inline under the search box, not a
+    // floating popover) — typing just narrows the same list in place.
     function atRenderDropdown(q) {
       const pl = PIPELINES[atPipelineKey];
       const already = (pl.team || []).map(function (p) { return p.email; });
@@ -5353,7 +5356,6 @@
             '</div>';
           }).join('')
         : '<div class="at-dd-empty">No matches</div>';
-      dd.classList.add('open');
     }
     function atSelectMember(i) {
       const p = atCurrentMatches[i];
@@ -5384,11 +5386,6 @@
           }).join('')
         : '<div class="at-empty-hint">No teammates added yet.</div>';
     }
-    document.addEventListener('click', function (e) {
-      const box = document.querySelector('.at-combobox');
-      const dd = document.getElementById('at-dropdown');
-      if (dd && dd.classList.contains('open') && box && !box.contains(e.target)) dd.classList.remove('open');
-    });
 
     function deletePipeline(pipelineKey) {
       const pl = PIPELINES[pipelineKey];
@@ -6659,7 +6656,10 @@
   <div class="np-overlay" id="at-overlay" onclick="if(event.target===this) closeAddTeamModal()">
     <div class="np-modal" style="width:420px; min-height:480px;">
       <div class="np-header">
-        <span class="np-title">Add team</span>
+        <div style="flex:1; min-width:0;">
+          <div class="np-title">Add your team</div>
+          <div class="at-modal-subtitle" id="at-modal-subtitle"></div>
+        </div>
         <span class="np-close" onclick="closeAddTeamModal()">&times;</span>
       </div>
       <div class="np-body">
