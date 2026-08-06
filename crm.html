@@ -3008,10 +3008,12 @@
     /* Toast confirmation */
     .np-toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px);
+      display: flex; align-items: center; gap: 8px;
       background: #1c1c1c; color: #fff; font-size: 13px; font-weight: 500;
       padding: 11px 18px; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,0.28);
       opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 700;
     }
+    .np-toast .chk { color: #4ade80; display: inline-flex; flex-shrink: 0; }
     .np-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     /* ── CRM: Right panel (inline column, like Streak in Gmail — not an overlay) ── */
@@ -5378,7 +5380,7 @@
       if (atNewlyAdded.length && pl) {
         const names = atNewlyAdded.map(function (p) { return p.name; });
         const who = names.length === 1 ? names[0] : (names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1]);
-        npToast('Invite sent to ' + who + ' to join and track ' + (pl.name || 'this pipeline') + '.');
+        npToast('Invite sent to ' + who + ' to join and track ' + (pl.name || 'this pipeline') + '.', true);
       }
       closeAddTeamModal();
     }
@@ -6391,7 +6393,7 @@
       schedulePersist();
 
       closeNewPipeline();
-      npToast('“' + name + '” created — link an email to add your first ' + entity.toLowerCase() + '.');
+      npToast('“' + name + '” created — link an email to add your first ' + entity.toLowerCase() + '.', true);
     }
 
     function npAddSidebarPipeline(name, id) {
@@ -6412,10 +6414,14 @@
     }
 
     let npToastTimer = null;
-    function npToast(msg) {
+    // showCheck: true for success confirmations (matches the green check used on the
+    // record page's "Add to Drive" toast) — omit for validation/error messages.
+    function npToast(msg, showCheck) {
       const t = document.getElementById('np-toast');
       if (!t) return;
-      t.textContent = msg;
+      t.innerHTML = (showCheck
+        ? '<span class="chk"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M4.8 8.2l2.1 2.1L11.3 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
+        : '') + '<span>' + atEsc(msg) + '</span>';
       t.classList.add('show');
       clearTimeout(npToastTimer);
       npToastTimer = setTimeout(function () { t.classList.remove('show'); }, 3200);
