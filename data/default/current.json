@@ -235,12 +235,25 @@
             {
               "type": "email",
               "text": "Follow-up on proposal",
-              "date": "Thu"
+              "date": "Thu",
+              "author": "Usha"
             },
             {
               "type": "meeting",
               "text": "Proposal follow-up questions",
-              "date": "Jul 30, 3:00 PM"
+              "date": "Jul 30, 3:00 PM",
+              "attendees": [
+                {
+                  "name": "Usha",
+                  "email": "usha@titan.email"
+                },
+                {
+                  "name": "Ryan Walker",
+                  "email": "ryan.walker@meridianlabs.com"
+                }
+              ],
+              "zoomLink": "https://zoom.us/j/8891234567",
+              "agenda": "Answer Ryan's open questions on the proposal before he takes it to his team."
             },
             {
               "type": "task",
@@ -269,13 +282,41 @@
               "type": "email",
               "text": "Project roadmap for Dashboard v2",
               "snippet": "Ryan confirmed the Jun 12 timeline and asked about multi-theme support.",
-              "date": "Jun 12"
+              "date": "Jun 12",
+              "author": "Jason",
+              "recipients": [
+                {
+                  "name": "Ryan Walker",
+                  "email": "ryan.walker@meridianlabs.com"
+                },
+                {
+                  "name": "Jason Miller",
+                  "email": "jason.miller@meridianlabs.com"
+                }
+              ],
+              "body": "Hi team,\n\nRyan confirmed the Jun 12 timeline on our end and asked whether the dashboard will support multi-theme support out of the box, or if that needs to be scoped separately.\n\nCan we get a quick answer back to him before EOD?\n\nThanks,\nJason"
             },
             {
               "type": "meeting",
               "text": "Design review call with Ryan Walker",
               "snippet": "Walk through the v2 mockups and align on theming approach.",
-              "date": "Jun 10"
+              "date": "Jun 10",
+              "attendees": [
+                {
+                  "name": "Usha",
+                  "email": "usha@titan.email"
+                },
+                {
+                  "name": "Ryan Walker",
+                  "email": "ryan.walker@meridianlabs.com"
+                },
+                {
+                  "name": "Jason Miller",
+                  "email": "jason.miller@meridianlabs.com"
+                }
+              ],
+              "zoomLink": "https://zoom.us/j/8827761045",
+              "agenda": "Walk through the v2 mockups, align on theming approach, confirm rollout timeline for the pilot."
             },
             {
               "type": "phone",
