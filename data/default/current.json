@@ -382,7 +382,7 @@
             }
           ],
           "status": "In progress",
-          "autoLinkActivity": false
+          "autoLinkActivity": true
         },
         {
           "id": 7,
