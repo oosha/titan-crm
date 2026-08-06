@@ -5443,6 +5443,11 @@
       for (let i = 0; i < name.length; i++) { hash = (hash + name.charCodeAt(i)) % AVATAR_COLORS.length; }
       return AVATAR_COLORS[hash];
     }
+    // Email shown alongside the name in the card avatar's hover tooltip — prefers the
+    // legacy scalar field, falls back to the first entry in the full contacts array.
+    function contactEmailFor(card) {
+      return card.contactEmail || (card.contacts && card.contacts[0] && card.contacts[0].email) || '';
+    }
 
     // ── Add Opportunity flow (§4.1-style, but for a single record rather than a whole pipeline) ──
     let cardSeq = 100;
@@ -5963,7 +5968,7 @@
         '</div>' +
         '<div class="kanban-card-company">' + card.company + '</div>' +
         '<div class="kanban-card-footer">' +
-          '<span class="kanban-card-avatar" style="background:' + avatarColorFor(card.contact) + ';" title="' + card.contact + '">' + card.contact.charAt(0) + '</span>' +
+          '<span class="kanban-card-avatar" style="background:' + avatarColorFor(card.contact) + ';" title="' + card.contact + (contactEmailFor(card) ? '\n' + contactEmailFor(card) : '') + '">' + card.contact.charAt(0) + '</span>' +
           '<span class="kanban-card-value">' + fmtMoney(card.value) + '</span>' +
           // Won/Lost pill comes from card.status now (only shown for those two values);
           // records that predate the Status field fall back to the old won boolean.

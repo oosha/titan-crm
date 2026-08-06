@@ -141,6 +141,12 @@
   .crm-stage-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .crm-stage-item.active { font-weight: 600; }
 
+  .ov-autolink-row {
+    display: flex; align-items: flex-start; gap: 8px; margin-top: 18px; font-size: 12.5px;
+    color: #6b7178; cursor: pointer; user-select: none;
+  }
+  .ov-autolink-row input[type="checkbox"] { margin-top: 1px; width: 14px; height: 14px; accent-color: #2170f4; cursor: pointer; flex-shrink: 0; }
+
   /* ── Status (In progress / Won / Lost) — Sales pipelines only, shown next to Stage ── */
   .ov-status-wrap { position: relative; margin-top: 16px; width: calc(50% - 10px); }
   .ov-status-pill {
@@ -524,6 +530,11 @@
               </div>
             </div>
           </div>
+
+          <label class="ov-autolink-row">
+            <input type="checkbox" id="ov-autolink" checked onchange="onFieldChange()">
+            <span>Automatically link all activity with contacts to this <span id="ov-autolink-entity">opportunity</span></span>
+          </label>
         </div>
 
         <div class="ov-card" data-field="note">
@@ -803,6 +814,9 @@
     document.getElementById('ov-instagram').value = card.instagram || '';
     document.getElementById('ov-close-date').value = card.closeDate || '';
     document.getElementById('ov-source').value = card.source || card.leadSource || '';
+
+    document.getElementById('ov-autolink-entity').textContent = entity.toLowerCase();
+    document.getElementById('ov-autolink').checked = card.autoLinkActivity !== false;
 
     hiddenFields = pipeline.hiddenFields || [];
     contactsEnabled = pipeline.contactsEnabled !== false;
@@ -1405,6 +1419,7 @@
     card.instagram = document.getElementById('ov-instagram').value.trim();
     card.closeDate = document.getElementById('ov-close-date').value;
     card.source = document.getElementById('ov-source').value.trim();
+    card.autoLinkActivity = document.getElementById('ov-autolink').checked;
     const cleanContacts = contacts.filter(function (c) { return (c.name || '').trim(); });
     card.contacts = cleanContacts;
     if (cleanContacts[0]) {
