@@ -463,12 +463,7 @@
         }
       ],
       "contactsEnabled": true,
-      "team": [
-        {
-          "name": "Priya Nair",
-          "email": "priya.nair@avontechlabs.com"
-        }
-      ]
+      "team": []
     },
     "p1": {
       "id": "p1",
