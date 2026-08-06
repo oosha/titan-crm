@@ -5314,7 +5314,7 @@
       { name: 'Tariq Hassan', email: 'tariq.hassan@avontechlabs.com' },
     ];
     function atEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-    function atInitials(name) { return String(name || '?').trim().split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); }
+    function atInitials(name) { return String(name || '?').trim().charAt(0).toUpperCase() || '?'; }
 
     let atPipelineKey = null;
     let atCurrentMatches = [];
