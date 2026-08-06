@@ -451,7 +451,24 @@
           "label": "Delivered"
         }
       ],
-      "cards": []
+      "cards": [],
+      "hiddenFields": [
+        "contact-department",
+        "contact-linkedin"
+      ],
+      "customFieldDefs": [
+        {
+          "key": "cf1",
+          "name": "Wedding date",
+          "type": "date"
+        },
+        {
+          "key": "cf2",
+          "name": "Farmer phone",
+          "type": "number"
+        }
+      ],
+      "contactsEnabled": true
     }
   }
 }
