@@ -5319,11 +5319,13 @@
 
     let atPipelineKey = null;
     let atCurrentMatches = [];
+    let atNewlyAdded = [];
     function openAddTeamModal(pipelineKey) {
       atPipelineKey = pipelineKey || currentPipelineId;
       const pl = PIPELINES[atPipelineKey];
       if (!pl) return;
       if (!pl.team) pl.team = [];
+      atNewlyAdded = [];
       document.getElementById('at-input').value = '';
       document.getElementById('at-modal-subtitle').textContent = 'Track progress on ' + (pl.name || 'this pipeline') + ' together';
       atRenderDropdown('');
@@ -5363,10 +5365,22 @@
       if (!p || !pl) return;
       if (!pl.team) pl.team = [];
       pl.team.push(p);
+      atNewlyAdded.push(p);
       document.getElementById('at-input').value = '';
       atRenderDropdown('');
       atRenderChips();
       schedulePersist();
+    }
+    // "Invite" confirms + closes: shows a sent-invite toast for whoever was added this
+    // time the modal was open (silently just closes if nobody was added).
+    function atSendInvites() {
+      const pl = PIPELINES[atPipelineKey];
+      if (atNewlyAdded.length && pl) {
+        const names = atNewlyAdded.map(function (p) { return p.name; });
+        const who = names.length === 1 ? names[0] : (names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1]);
+        npToast('Invite sent to ' + who + ' to join and track ' + (pl.name || 'this pipeline') + '.');
+      }
+      closeAddTeamModal();
     }
     function atRemoveMember(email) {
       const pl = PIPELINES[atPipelineKey];
@@ -6672,7 +6686,7 @@
         <div class="at-team-chips" id="at-team-chips"></div>
       </div>
       <div class="np-footer">
-        <span class="np-btn-primary" onclick="closeAddTeamModal()">Invite</span>
+        <span class="np-btn-primary" onclick="atSendInvites()">Invite</span>
       </div>
     </div>
   </div>
