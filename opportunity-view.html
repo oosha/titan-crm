@@ -138,9 +138,8 @@
   .crm-stage-menu.open { display: block; }
   .crm-stage-item { display: flex; align-items: center; gap: 9px; padding: 7px 14px; font-size: 13px; color: #2b2f36; cursor: pointer; }
   .crm-stage-item:hover { background: #f4f7fb; }
-  .crm-stage-item .dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
+  .crm-stage-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .crm-stage-item.active { font-weight: 600; }
-  .crm-stage-item.active .dot { background: #2170f4; }
 
   .crm-note {
     background: rgba(33,112,244,0.05); border-radius: 6px; padding: 12px 14px; font-size: 12.5px; color: #444; margin-bottom: 8px;
@@ -201,16 +200,43 @@
   .crm-file-direction.sent { color: #7aa8f2; }
   .crm-file-direction.received { color: #6fcf8e; }
   .crm-file-actions {
-    position: absolute; right: 0; display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s ease;
+    position: absolute; right: 0; display: flex; gap: 6px; opacity: 0; transition: opacity 0.15s ease;
     background: #f6f7f8;
   }
   .crm-file-row:hover .crm-file-meta { opacity: 0; }
   .crm-file-row:hover .crm-file-actions { opacity: 1; }
   .crm-file-action-btn {
-    width: 22px; height: 22px; border-radius: 6px; background: #e9eaec; color: #666; flex-shrink: 0;
+    position: relative;
+    width: 34px; height: 34px; border-radius: 8px; background: #e9eaec; color: #555; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
   }
+  .crm-file-action-btn svg { width: 16px; height: 16px; }
   .crm-file-action-btn:hover { background: #dcdde0; color: #333; }
+  .crm-file-action-btn.drive { background: #1c1c1c; color: #fff; }
+  .crm-file-action-btn.drive:hover { background: #000; color: #fff; }
+  /* Custom dark tooltip (native title= is too plain to match the drive-button treatment) */
+  .crm-file-action-btn[data-tip] { overflow: visible; }
+  .crm-file-action-btn[data-tip]::after {
+    content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: #1c1c1c; color: #fff; font-size: 11.5px; font-weight: 500; white-space: nowrap;
+    padding: 6px 10px; border-radius: 6px; opacity: 0; pointer-events: none; transition: opacity 0.12s ease;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.22);
+  }
+  .crm-file-action-btn[data-tip]:hover::after { opacity: 1; }
+
+  .ov-drive-toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px);
+    display: flex; align-items: center; gap: 10px;
+    background: #1c1c1c; color: #fff; font-size: 13px; font-weight: 500;
+    padding: 11px 16px; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,0.28);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 700;
+  }
+  .ov-drive-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+  .ov-drive-toast .chk { color: #4ade80; display: inline-flex; flex-shrink: 0; }
+  .ov-drive-toast .view-link { color: #7aa8f2; font-weight: 600; cursor: pointer; }
+  .ov-drive-toast .view-link:hover { text-decoration: underline; }
+  .ov-drive-toast .close-x { color: #9a9fa7; cursor: pointer; font-size: 15px; line-height: 1; margin-left: 2px; }
+  .ov-drive-toast .close-x:hover { color: #fff; }
 
   /* Task activities: a real checkbox you can mark done (matches the mailclient CRM
      panel's .crm-act-check), except checking one here actually completes it — it moves
@@ -482,6 +508,8 @@
         <div class="ov-card">
           <div class="ov-heading">Files</div>
           <div id="ov-files"></div>
+          <span class="ov-add-link" onclick="document.getElementById('ov-file-input').click()">+ Add file</span>
+          <input type="file" id="ov-file-input" multiple style="display:none;" onchange="addFiles(this.files)">
         </div>
 
         <div class="ov-card" id="ov-custom-fields-card" style="display:none;">
@@ -507,6 +535,13 @@
     <div class="ov-appsw-item"><img src="/app_switcher_assets/grid_icons/site.svg" alt=""><span>Site</span></div>
     <div class="ov-appsw-item" style="background:#eaf1ff;" onclick="location.href='/crm' + location.search"><img src="/app_switcher_assets/grid_icons/crm.svg" alt=""><span style="color:#2170f4; font-weight:700;">CRM</span></div>
   </div>
+</div>
+
+<div class="ov-drive-toast" id="ov-drive-toast">
+  <span class="chk"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M4.8 8.2l2.1 2.1L11.3 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  <span id="ov-drive-toast-msg">Attachment has been added to Drive</span>
+  <span class="view-link" onclick="hideDriveToast()" title="Prototype only: Drive isn't wired up yet">View</span>
+  <span class="close-x" onclick="hideDriveToast()">&times;</span>
 </div>
 <script src="/titan-sidebar.js"></script>
 <script>
@@ -705,6 +740,22 @@
     document.getElementById('ov-ai-summary-text').textContent = summary;
   }
 
+  // Same per-stage color gradient the kanban board uses for its stage dots (crm.html's
+  // blueDot): the pipeline's single color, at increasing opacity from first to last
+  // stage — so the dropdown reads consistently with the board instead of a flat
+  // active/inactive grey split.
+  function hexToRgb(hex) {
+    hex = (hex || '#2170f4').replace('#', '');
+    if (hex.length === 3) hex = hex.split('').map(function (c) { return c + c; }).join('');
+    const n = parseInt(hex, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function stageDotColor(hex, idx, total) {
+    const rgb = hexToRgb(hex);
+    const min = 0.4, max = 1;
+    const t = total <= 1 ? 0 : idx / (total - 1);
+    return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + (min + (max - min) * t).toFixed(3) + ')';
+  }
   function renderStage() {
     const color = pipeline.color || '#2170f4';
     const stages = pipeline.stages || [];
@@ -714,10 +765,10 @@
     document.getElementById('ov-ps-text').textContent = pipeline.name + ': ' + stageLabel;
 
     const menu = document.getElementById('ov-stage-menu');
-    menu.innerHTML = stages.map(function (s) {
+    menu.innerHTML = stages.map(function (s, i) {
       return '<div class="crm-stage-item' + (s.key === card.stage ? ' active' : '') +
         '" onclick="selectStage(\'' + s.key + '\')">' +
-        '<span class="dot" style="background:' + (s.key === card.stage ? color : '#cbd5e1') + ';"></span>' + esc(s.label) + '</div>';
+        '<span class="dot" style="background:' + stageDotColor(color, i, stages.length) + ';"></span>' + esc(s.label) + '</div>';
     }).join('');
   }
   function toggleStageMenu(evt) {
@@ -920,8 +971,8 @@
 
   // Matches the mailclient CRM panel's file rows (type icon by extension, sent/received
   // direction, size, Download/Add-to-Drive actions) rather than just a bare filename.
-  const DOWNLOAD_SVG = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2v8.5M8 10.5L4.8 7.3M8 10.5l3.2-3.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
-  const DRIVE_SVG = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="8.5" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 6.2h12" stroke="currentColor" stroke-width="1.2"/><path d="M6 9h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+  const DOWNLOAD_SVG = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8.5M8 10.5L4.8 7.3M8 10.5l3.2-3.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+  const DRIVE_SVG = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="8.5" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 6.2h12" stroke="currentColor" stroke-width="1.2"/><path d="M6 9h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
   const SENT_SVG = '<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 12L12 4M12 4H6M12 4V10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const RECEIVED_SVG = '<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 12H10M4 12V6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function fileIconClass(name) {
@@ -934,7 +985,7 @@
   function renderFiles() {
     const files = card.files || [];
     document.getElementById('ov-files').innerHTML = files.length
-      ? files.map(function (f) {
+      ? files.map(function (f, i) {
           const cls = fileIconClass(f.name);
           return '<div class="crm-file-row">' +
             '<span class="crm-file-icon ' + cls + '"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-7-6Z" fill="currentColor"/><path d="M13 2v6h6" fill="none" stroke="' + fileTypeStroke(cls) + '" stroke-width="1.8" stroke-linejoin="round"/></svg></span>' +
@@ -945,13 +996,44 @@
                 esc(f.size || '') +
               '</span>' +
               '<div class="crm-file-actions">' +
-                '<span class="crm-file-action-btn" title="Download">' + DOWNLOAD_SVG + '</span>' +
-                '<span class="crm-file-action-btn" title="Add to Drive">' + DRIVE_SVG + '</span>' +
+                '<span class="crm-file-action-btn" data-tip="Download">' + DOWNLOAD_SVG + '</span>' +
+                '<span class="crm-file-action-btn drive" data-tip="Add to Drive" onclick="addToDrive(' + i + ')">' + DRIVE_SVG + '</span>' +
               '</div>' +
             '</div>' +
           '</div>';
         }).join('')
       : '<div class="crm-empty-state">No files yet.</div>';
+  }
+
+  function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+  function addFiles(fileList) {
+    if (!fileList || !fileList.length) return;
+    if (!card.files) card.files = [];
+    Array.prototype.forEach.call(fileList, function (f) {
+      card.files.unshift({ name: f.name, size: formatFileSize(f.size), direction: 'sent' });
+    });
+    document.getElementById('ov-file-input').value = '';
+    renderFiles();
+    schedulePersist();
+  }
+  let driveToastTimer = null;
+  function addToDrive(i) {
+    const f = (card.files || [])[i];
+    const msg = document.getElementById('ov-drive-toast-msg');
+    if (msg) msg.textContent = f ? '"' + f.name + '" has been added to Drive' : 'Attachment has been added to Drive';
+    const t = document.getElementById('ov-drive-toast');
+    t.classList.add('show');
+    clearTimeout(driveToastTimer);
+    driveToastTimer = setTimeout(hideDriveToast, 4000);
+  }
+  function hideDriveToast() {
+    const t = document.getElementById('ov-drive-toast');
+    if (t) t.classList.remove('show');
+    clearTimeout(driveToastTimer);
   }
 
   // Checking off a task actually completes it here (unlike the mailclient CRM panel's
