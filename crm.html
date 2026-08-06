@@ -3221,17 +3221,18 @@
        Replaces the native title=, whose ~1s delay felt laggy. */
     .avatar-tip {
       position: fixed; z-index: 900; display: none;
-      background: #1c1c1c; color: #fff; border-radius: 6px; padding: 7px 10px;
+      background: #1c1c1c; color: #fff; border-radius: 6px; padding: 9px 11px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.22); pointer-events: none;
-      opacity: 0; transition: opacity 0.12s ease; max-width: 260px;
+      opacity: 0; transition: opacity 0.12s ease; max-width: 260px; line-height: 1.45;
     }
     .avatar-tip.open { display: block; }
     .avatar-tip.show { opacity: 1; }
     .avatar-tip .at-name { font-size: 12px; font-weight: 600; white-space: nowrap; }
-    /* Designation is a label, not a contact method — no icon, sits tight under the name. */
-    .avatar-tip .at-role { font-size: 11px; color: #8f959d; margin-top: 1px; white-space: nowrap; }
+    /* Designation is a label, not a contact method — no icon, but still spaced off the
+       name so the four lines read as an evenly-set block rather than a name with a tail. */
+    .avatar-tip .at-role { font-size: 11px; color: #8f959d; margin-top: 3px; white-space: nowrap; }
     .avatar-tip .at-row {
-      display: flex; align-items: center; gap: 6px; font-size: 11px; color: #b6bbc2; margin-top: 4px;
+      display: flex; align-items: center; gap: 6px; font-size: 11px; color: #b6bbc2; margin-top: 6px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .avatar-tip .at-ic { width: 11px; height: 11px; flex-shrink: 0; display: inline-flex; color: #8f959d; }
