@@ -545,7 +545,7 @@
           "initials": "L",
           "deal": "Lucy's wedding bouquet",
           "value": 500,
-          "stage": "flower-drying-1",
+          "stage": "progress-update-2",
           "lastActivity": "just now",
           "activityType": "Email sent",
           "overdue": false,
