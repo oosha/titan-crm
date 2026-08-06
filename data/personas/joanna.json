@@ -1,5 +1,5 @@
 {
-  "currentPipelineId": "projects",
+  "currentPipelineId": "p1",
   "pipelineSeq": 1,
   "pipelines": {
     "inquiries": {
@@ -537,7 +537,51 @@
           "label": "Delivered"
         }
       ],
-      "cards": [],
+      "cards": [
+        {
+          "id": 101,
+          "company": "",
+          "contact": "Lucy Mathews",
+          "initials": "L",
+          "deal": "Lucy's wedding bouquet",
+          "value": 500,
+          "stage": "booked-0",
+          "lastActivity": "just now",
+          "activityType": "Email sent",
+          "overdue": false,
+          "createdBy": "Usha Loutongbam",
+          "noteAuthor": "Usha",
+          "location": "",
+          "website": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "currency": "AU$",
+          "closeDate": "2026-09-25",
+          "source": "Referral",
+          "note": "",
+          "contactEmail": "lucy123@gmail.com",
+          "contactPhone": "+21 4539012342",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "contacts": [
+            {
+              "name": "Lucy Mathews",
+              "email": "lucy123@gmail.com",
+              "phone": "+21 4539012342",
+              "designation": "",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "customFieldValues": {
+            "cf1": "2026-08-15",
+            "cf2": "+2123546534626"
+          }
+        }
+      ],
       "hiddenFields": [
         "contact-department",
         "contact-linkedin"
