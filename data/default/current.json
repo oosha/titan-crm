@@ -199,7 +199,7 @@
           "initials": "RW",
           "deal": "Meridian AI site",
           "value": 18000,
-          "stage": "proposal",
+          "stage": "negotiation",
           "lastActivity": "8d ago",
           "activityType": "Email sent",
           "overdue": false,
@@ -314,7 +314,19 @@
           "contactPhone": "+1 (415) 555-0134",
           "contactDesignation": "VP, Product",
           "contactLinkedin": "linkedin.com/in/ryanwalker",
-          "noteAuthor": "John"
+          "noteAuthor": "John",
+          "noteHistory": [
+            {
+              "text": "AI capabilities are not clear to them yet and need a walkthrough",
+              "author": "Usha",
+              "date": "5 Aug"
+            },
+            {
+              "text": "From Ryan: They are still figuring out priorities internally.",
+              "author": "Usha",
+              "date": "5 Aug"
+            }
+          ]
         },
         {
           "id": 7,
