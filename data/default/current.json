@@ -415,7 +415,7 @@
           "company": "FirstCry",
           "contact": "Pearson",
           "initials": "P",
-          "deal": "Testing only",
+          "deal": "On",
           "value": 0,
           "stage": "lead",
           "lastActivity": "just now",
@@ -448,7 +448,9 @@
               "linkedin": ""
             }
           ],
-          "customFieldValues": {}
+          "customFieldValues": {},
+          "noteHistory": [],
+          "upcomingActivities": []
         }
       ],
       "hiddenFields": [],
