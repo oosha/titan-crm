@@ -3219,6 +3219,10 @@
       font-size: 10.5px; font-weight: 700; color: #15803d; background: #ecfdf5; border-radius: 10px;
       padding: 2px 8px; margin-left: auto;
     }
+    .kanban-lost-pill {
+      font-size: 10.5px; font-weight: 700; color: #dc2626; background: #fdecec; border-radius: 10px;
+      padding: 2px 8px; margin-left: auto;
+    }
   </style>
 </head>
 
@@ -5961,9 +5965,13 @@
         '<div class="kanban-card-footer">' +
           '<span class="kanban-card-avatar" style="background:' + avatarColorFor(card.contact) + ';" title="' + card.contact + '">' + card.contact.charAt(0) + '</span>' +
           '<span class="kanban-card-value">' + fmtMoney(card.value) + '</span>' +
-          ((card.status ? card.status === 'Won' : card.won)
+          // Won/Lost pill comes from card.status now (only shown for those two values);
+          // records that predate the Status field fall back to the old won boolean.
+          (card.status === 'Won' || (!card.status && card.won)
             ? '<span class="kanban-won-pill">Won</span>'
-            : '<span class="kanban-card-task">' + card.lastActivity + '</span>') +
+            : card.status === 'Lost'
+              ? '<span class="kanban-lost-pill">Lost</span>'
+              : '<span class="kanban-card-task">' + card.lastActivity + '</span>') +
         '</div>';
       return el;
     }
