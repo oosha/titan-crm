@@ -381,7 +381,8 @@
               "date": "5 Aug"
             }
           ],
-          "status": "In progress"
+          "status": "In progress",
+          "autoLinkActivity": false
         },
         {
           "id": 7,
