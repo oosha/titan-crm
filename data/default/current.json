@@ -410,7 +410,35 @@
           "won": true,
           "lastActivity": "1d ago",
           "activityType": "Email sent",
-          "overdue": false
+          "overdue": false,
+          "noteHistory": [],
+          "upcomingActivities": [],
+          "status": "Won",
+          "currency": "$",
+          "location": "",
+          "website": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "contacts": [
+            {
+              "name": "Liam Carter",
+              "email": "",
+              "designation": "",
+              "phone": "",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactEmail": "",
+          "contactPhone": "",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
         },
         {
           "id": 103,
