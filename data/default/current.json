@@ -102,7 +102,7 @@
           "initials": "OB",
           "deal": "BrightPath Pro plan",
           "value": 3000,
-          "stage": "lead",
+          "stage": "proposal",
           "lastActivity": "2d ago",
           "activityType": "Email sent",
           "overdue": false,
