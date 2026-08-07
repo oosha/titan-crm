@@ -517,7 +517,7 @@
           "company": "Northwind",
           "contact": "Emma Clarke",
           "contactEmail": "emma.clarke@northwind.co",
-          "value": 0,
+          "value": 20,
           "stage": "lead",
           "lastActivity": "just now",
           "activityType": "Email received",
