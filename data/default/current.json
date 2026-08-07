@@ -548,7 +548,18 @@
           "contactDepartment": "",
           "contactLocation": "",
           "contactLinkedin": "linkedin.com/in/clark-emma",
-          "customFieldValues": {}
+          "customFieldValues": {},
+          "recentActivities": [
+            {
+              "type": "note",
+              "text": "some note",
+              "author": "Usha",
+              "date": "7 Aug"
+            }
+          ],
+          "note": "some note",
+          "noteDate": "7 Aug",
+          "noteAuthor": "Usha"
         }
       ],
       "hiddenFields": [],
