@@ -521,7 +521,34 @@
           "stage": "lead",
           "lastActivity": "just now",
           "activityType": "Email received",
-          "overdue": false
+          "overdue": false,
+          "noteHistory": [],
+          "upcomingActivities": [],
+          "currency": "$",
+          "location": "",
+          "website": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "autoLinkActivity": true,
+          "contacts": [
+            {
+              "name": "Emma Clarke",
+              "email": "emma.clarke@northwind.co",
+              "designation": "",
+              "phone": "09034401875",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactPhone": "09034401875",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
         }
       ],
       "hiddenFields": [],
