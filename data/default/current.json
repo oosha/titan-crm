@@ -510,6 +510,18 @@
           ],
           "noteDate": "7 Aug",
           "autoLinkActivity": true
+        },
+        {
+          "id": 104,
+          "deal": "Enterprise Plan Enquiry",
+          "company": "Northwind",
+          "contact": "Emma Clarke",
+          "contactEmail": "emma.clarke@northwind.co",
+          "value": 0,
+          "stage": "lead",
+          "lastActivity": "just now",
+          "activityType": "Email received",
+          "overdue": false
         }
       ],
       "hiddenFields": [],
