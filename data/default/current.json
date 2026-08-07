@@ -540,14 +540,14 @@
               "phone": "09034401875",
               "department": "",
               "location": "",
-              "linkedin": ""
+              "linkedin": "linkedin"
             }
           ],
           "contactPhone": "09034401875",
           "contactDesignation": "",
           "contactDepartment": "",
           "contactLocation": "",
-          "contactLinkedin": "",
+          "contactLinkedin": "linkedin",
           "customFieldValues": {}
         }
       ],
