@@ -471,7 +471,7 @@
           "activityType": "Email sent",
           "overdue": false,
           "createdBy": "John",
-          "noteAuthor": "John",
+          "noteAuthor": "Ishant",
           "location": "",
           "website": "",
           "companyLinkedin": "",
@@ -479,7 +479,7 @@
           "currency": "$",
           "closeDate": "",
           "source": "",
-          "note": "",
+          "note": "FirstCry team has a an internal quarterly meet, and need to wait for that.",
           "contactEmail": "pearson@firstcry.com",
           "contactPhone": "+971 55 567 7788",
           "contactDesignation": "Buying Manager",
@@ -499,7 +499,17 @@
           ],
           "customFieldValues": {},
           "noteHistory": [],
-          "upcomingActivities": []
+          "upcomingActivities": [],
+          "recentActivities": [
+            {
+              "type": "note",
+              "text": "FirstCry team has a an internal quarterly meet, and need to wait for that.",
+              "author": "Ishant",
+              "date": "7 Aug"
+            }
+          ],
+          "noteDate": "7 Aug",
+          "autoLinkActivity": true
         }
       ],
       "hiddenFields": [],
