@@ -46,7 +46,8 @@
           "lastActivity": "2d ago",
           "activityType": "Email sent",
           "overdue": false,
-          "contactEmail": "olivia.bennett@brightpathco.com"
+          "contactEmail": "olivia.bennett@brightpathco.com",
+          "website": "brightpath.com"
         },
         {
           "id": 2,
@@ -63,7 +64,8 @@
             "type": "followup",
             "date": "12 Feb"
           },
-          "contactEmail": "marcus.webb@lumenretail.com"
+          "contactEmail": "marcus.webb@lumenretail.com",
+          "website": "lumenretail.com"
         },
         {
           "id": 3,
@@ -76,7 +78,8 @@
           "lastActivity": "3d ago",
           "activityType": "Phone call",
           "overdue": false,
-          "contactEmail": "grace.turner@northfieldgroup.com"
+          "contactEmail": "grace.turner@northfieldgroup.com",
+          "website": "northfieldgroup.com"
         },
         {
           "id": 4,
@@ -89,7 +92,8 @@
           "lastActivity": "6d ago",
           "activityType": "Email received",
           "overdue": true,
-          "contactEmail": "ethan.price@coastalsupply.com"
+          "contactEmail": "ethan.price@coastalsupply.com",
+          "website": "coastalsupply.com"
         },
         {
           "id": 5,
@@ -107,7 +111,8 @@
             "name": "Send proposal",
             "date": "5 Mar"
           },
-          "contactEmail": "sophie.hart@unionanalytics.com"
+          "contactEmail": "sophie.hart@unionanalytics.com",
+          "website": "unionadvisory.com"
         },
         {
           "id": 6,
@@ -120,7 +125,8 @@
           "lastActivity": "8d ago",
           "activityType": "Email sent",
           "overdue": true,
-          "contactEmail": "ryan.walker@meridianlabs.com"
+          "contactEmail": "ryan.walker@meridianlabs.com",
+          "website": "meridiandatalabs.com"
         },
         {
           "id": 7,
@@ -137,7 +143,8 @@
             "type": "meeting",
             "date": "2 Mar"
           },
-          "contactEmail": "noah.bennett@fairviewlogistics.com"
+          "contactEmail": "noah.bennett@fairviewlogistics.com",
+          "website": "fairviewlogistics.com"
         },
         {
           "id": 8,
@@ -150,7 +157,8 @@
           "lastActivity": "5d ago",
           "activityType": "Meeting",
           "overdue": false,
-          "contactEmail": "chloe.sanders@deltafreight.com"
+          "contactEmail": "chloe.sanders@deltafreight.com",
+          "website": "deltafreightsystems.com"
         },
         {
           "id": 9,
@@ -164,7 +172,8 @@
           "lastActivity": "1d ago",
           "activityType": "Email sent",
           "overdue": false,
-          "contactEmail": "liam.carter@vantagegroup.com"
+          "contactEmail": "liam.carter@vantagegroup.com",
+          "website": "vantagegroup.com"
         }
       ],
       "hiddenFields": [],

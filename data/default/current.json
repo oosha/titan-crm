@@ -111,7 +111,7 @@
           "noteDate": "5 Aug",
           "currency": "$",
           "location": "",
-          "website": "",
+          "website": "brightpath.com",
           "companyLinkedin": "",
           "instagram": "",
           "closeDate": "",
@@ -152,7 +152,8 @@
           },
           "contactEmail": "marcus.webb@lumenretail.com",
           "contactPhone": "+1 (312) 555-0187",
-          "contactDesignation": "IT Director"
+          "contactDesignation": "IT Director",
+          "website": "lumenretail.com"
         },
         {
           "id": 3,
@@ -167,7 +168,8 @@
           "overdue": false,
           "contactEmail": "grace.turner@northfieldgroup.com",
           "contactPhone": "+1 (503) 555-0119",
-          "contactDesignation": "Growth Lead"
+          "contactDesignation": "Growth Lead",
+          "website": "northfieldgroup.com"
         },
         {
           "id": 4,
@@ -182,7 +184,8 @@
           "overdue": true,
           "contactEmail": "ethan.price@coastalsupply.com",
           "contactPhone": "+1 (619) 555-0163",
-          "contactDesignation": "VP Engineering"
+          "contactDesignation": "VP Engineering",
+          "website": "coastalsupply.com"
         },
         {
           "id": 5,
@@ -202,7 +205,8 @@
           },
           "contactEmail": "sophie.hart@unionanalytics.com",
           "contactPhone": "+1 (206) 555-0128",
-          "contactDesignation": "Head of Data"
+          "contactDesignation": "Head of Data",
+          "website": "unionadvisory.com"
         },
         {
           "id": 6,
@@ -216,7 +220,7 @@
           "activityType": "Email sent",
           "overdue": false,
           "currency": "$",
-          "website": "https://www.meridiandatalabs.com/",
+          "website": "meridiandatalabs.com",
           "companyLinkedin": "linkedin.com/company/meridianlabs",
           "instagram": "instagram.com/meridianlabs",
           "location": "San Jose, US",
@@ -401,7 +405,8 @@
           },
           "contactEmail": "noah.bennett@fairviewlogistics.com",
           "contactPhone": "+1 (773) 555-0155",
-          "contactDesignation": "Operations Director"
+          "contactDesignation": "Operations Director",
+          "website": "fairviewlogistics.com"
         },
         {
           "id": 8,
@@ -416,7 +421,8 @@
           "overdue": false,
           "contactEmail": "chloe.sanders@deltafreight.com",
           "contactPhone": "+1 (720) 555-0174",
-          "contactDesignation": "Procurement Manager"
+          "contactDesignation": "Procurement Manager",
+          "website": "deltafreightsystems.com"
         },
         {
           "id": 9,
@@ -435,7 +441,7 @@
           "status": "Won",
           "currency": "$",
           "location": "",
-          "website": "",
+          "website": "vantagegroup.com",
           "companyLinkedin": "",
           "instagram": "",
           "closeDate": "",
@@ -473,7 +479,7 @@
           "createdBy": "John",
           "noteAuthor": "Ishant",
           "location": "",
-          "website": "",
+          "website": "firstcry.com",
           "companyLinkedin": "",
           "instagram": "",
           "currency": "$",
@@ -526,7 +532,7 @@
           "upcomingActivities": [],
           "currency": "$",
           "location": "",
-          "website": "",
+          "website": "northwindgroup.com",
           "companyLinkedin": "",
           "instagram": "",
           "closeDate": "",
@@ -703,7 +709,8 @@
           "activityType": "Email received",
           "overdue": false,
           "contactPhone": "+1 (415) 555-0198",
-          "contactDesignation": "Purchasing Lead"
+          "contactDesignation": "Purchasing Lead",
+          "website": "northwindgroup.com"
         }
       ],
       "hiddenFields": [],
