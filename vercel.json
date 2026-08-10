@@ -3,6 +3,10 @@
   "rewrites": [
     { "source": "/mail", "destination": "/index.html" },
     { "source": "/mail/", "destination": "/index.html" },
+    { "source": "/crm/contacts", "destination": "/contacts.html" },
+    { "source": "/crm/contacts/", "destination": "/contacts.html" },
+    { "source": "/crm/companies", "destination": "/companies.html" },
+    { "source": "/crm/companies/", "destination": "/companies.html" },
     { "source": "/crm/pipeline/:id/setting", "destination": "/pipeline-settings.html" },
     { "source": "/crm/pipeline/:id/setting/", "destination": "/pipeline-settings.html" },
     { "source": "/crm/pipeline/:id/record-setting", "destination": "/opportunity-settings.html" },

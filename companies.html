@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Companies — Titan CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Persona loader: ?u=<id> scopes the /api/data fetch, and loads personas/<id>.js
+     purely for the account's currency symbol (records don't all carry their own). -->
+<script>
+  (function () {
+    var raw = new URLSearchParams(location.search).get('u');
+    var u = (raw && /^[a-z0-9_-]{1,32}$/.test(raw)) ? raw.toLowerCase() : null;
+    if (u) document.write('<' + 'script src="/personas/' + u + '.js"><' + '/script>');
+  })();
+</script>
+<link rel="stylesheet" href="/titan-sidebar.css">
+<link rel="stylesheet" href="/crm-directory.css">
+</head>
+<body data-subpage="companies">
+
+<div class="app-window">
+  <div class="sidebar">
+
+    <div class="sidebar-header">
+      <div class="tab-switch">
+        <img src="/app_switcher_assets/grid_icons/crm.svg" alt="CRM">
+        <div class="tab-switch-arrow">
+          <img src="/assets/1c88a1be-2a78-4065-86f7-8eb060dbb526.svg" alt="">
+        </div>
+      </div>
+      <div class="titan-logo">
+        <img src="/assets/fa36f613-977c-444a-bef5-e1b5f5f1b340.svg" alt="Titan">
+      </div>
+    </div>
+
+    <div class="nav-scroll">
+      <div class="sidebar-line" style="margin-top:2px;"></div>
+      <div class="account-header" id="account-header" onclick="toggleAccountMenu(event)">
+        <div class="account-avatar">
+          <img class="bg" src="/assets/d2c6a617-0407-4985-8c8b-740201e73dfe.svg" alt="">
+          <span id="account-active-initial">E</span>
+        </div>
+        <span class="account-email-text" id="account-active-email">ella.henderson@avontechlabs.com</span>
+        <div class="account-chevron">
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#bdbdbd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="account-menu" id="account-menu">
+          <div class="account-menu-label">Titan accounts</div>
+          <div class="account-menu-item active">
+            <span class="account-menu-avatar" style="background:#3f6ea5;">E</span>
+            <div class="account-menu-text">
+              <div class="account-menu-email">ella.henderson@avontechlabs.com</div>
+              <div class="account-menu-sub">Avontech Labs</div>
+            </div>
+            <svg class="account-menu-check" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-item" onclick="openNewPipeline()">
+        <div class="nav-item-icon" style="color:#2170f4; font-weight:700; font-size:16px;">+</div>
+        <span class="nav-item-label" style="color:#2170f4; font-weight:600;">New pipeline</span>
+      </div>
+
+      <div class="sidebar-line" id="pipeline-nav-line"></div>
+      <!-- Pipeline rows are rebuilt from the fetched data at load time. -->
+
+      <div class="sidebar-line"></div>
+
+      <div class="nav-item" onclick="location.href=crmPath('/crm/contacts')">
+        <div class="nav-item-icon">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4.5" r="2.5" stroke="#fff" stroke-width="1.3"/><path d="M2.5 12.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="#fff" stroke-width="1.3"/></svg>
+        </div>
+        <span class="nav-item-label">Contacts</span>
+      </div>
+      <div class="nav-item active" onclick="location.href=crmPath('/crm/companies')">
+        <div class="nav-item-icon">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="11" stroke="#fff" stroke-width="1.3"/><path d="M6 7V3h8v4" stroke="#fff" stroke-width="1.3"/></svg>
+        </div>
+        <span class="nav-item-label active">Companies</span>
+      </div>
+    </div>
+
+    <div style="position:relative; flex-shrink:0;">
+      <div style="height:1px; position:relative; overflow:visible;">
+        <img src="/assets/0d00b891-46d6-4063-acc9-0db4c8c41036.svg" alt=""
+          style="position:absolute; inset:-1px 0; width:100%; height:2px; object-fit:fill;">
+      </div>
+      <div class="sidebar-footer">
+        <div class="footer-btn">
+          <div class="footer-btn-icon"><img src="/assets/34686e57-21d5-4bf6-82c4-1c6e474d25d3.svg" alt=""></div>
+          <span>Bug</span>
+        </div>
+        <div class="footer-divider"></div>
+        <div class="footer-btn">
+          <div class="footer-btn-icon"><img src="/assets/03a449fb-b16b-4b26-8eec-0fa033eff13e.svg" alt=""></div>
+          <span>Feature</span>
+        </div>
+        <div class="footer-divider"></div>
+        <div class="footer-btn" onclick="toggleSettingsModal()">
+          <div class="footer-btn-icon settings-icon"><img src="/assets/6ea52e57-1d75-47b1-97cd-e416a5d2372d.svg" alt=""></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div class="subpage-top">
+      <span class="subpage-back" onclick="location.href=crmPath('/crm')">
+        <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </span>
+      <span class="subpage-title">Companies</span>
+    </div>
+
+    <div class="subpage-body">
+      <div class="dir-wrap">
+        <div class="dir-toolbar">
+          <input class="dir-search" id="k-search" type="search" placeholder="Search by company, website, location…">
+          <span class="dir-count" id="k-count"></span>
+        </div>
+        <div class="dir-card">
+          <table class="dir-table">
+            <thead>
+              <tr>
+                <th style="width:24%;">Company</th>
+                <th style="width:16%;">Location</th>
+                <th style="width:12%;">Contacts</th>
+                <th style="width:14%;">Value</th>
+                <th>Records</th>
+              </tr>
+            </thead>
+            <tbody id="k-body"></tbody>
+          </table>
+          <div class="dir-empty" id="k-empty" style="display:none;"></div>
+        </div>
+        <div class="dir-note" id="k-note"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/titan-sidebar.js"></script>
+<script src="/crm-directory.js"></script>
+<script>
+  // One row per company, merged across every pipeline it appears in.
+  function buildCompanies(pipelines) {
+    const byKey = new Map();
+    allCards(pipelines).forEach(function (entry) {
+      const card = entry.card;
+      const name = String(card.company || '').trim();
+      if (!name) return;   // records with no company don't belong on this page
+      const key = name.toLowerCase();
+      let row = byKey.get(key);
+      if (!row) {
+        row = { company: name, website: '', location: '', records: [], contacts: new Map(), totals: {} };
+        byKey.set(key, row);
+      }
+      if (!row.website && card.website) row.website = card.website;
+      if (!row.location && card.location) row.location = card.location;
+      row.records.push(entry);
+      contactsOf(card).forEach(function (c) {
+        const ck = String(c.email || c.name || '').trim().toLowerCase();
+        if (ck && !row.contacts.has(ck)) row.contacts.set(ck, c);
+      });
+      // Records in a pipeline can carry different currencies, so total per symbol
+      // rather than silently adding unlike amounts together.
+      const cur = card.currency || defaultCurrency();
+      row.totals[cur] = (row.totals[cur] || 0) + (Number(card.value) || 0);
+    });
+    return Array.from(byKey.values()).sort(function (a, b) { return a.company.localeCompare(b.company); });
+  }
+
+  function totalsText(totals) {
+    const parts = Object.keys(totals)
+      .filter(function (cur) { return totals[cur] > 0; })
+      .map(function (cur) { return cur + Number(totals[cur]).toLocaleString(); });
+    return parts.length ? parts.join(' · ') : '';
+  }
+
+  function renderCompanies(rows) {
+    const body = document.getElementById('k-body');
+    const empty = document.getElementById('k-empty');
+    document.getElementById('k-count').textContent = rows.length + (rows.length === 1 ? ' company' : ' companies');
+    if (!rows.length) {
+      body.innerHTML = '';
+      empty.style.display = '';
+      empty.textContent = 'No companies yet — they appear here once records have a company set.';
+      return;
+    }
+    empty.style.display = 'none';
+    body.innerHTML = rows.map(function (r) {
+      const firstEmail = (Array.from(r.contacts.values())[0] || {}).email || '';
+      const domain = companyDomainFor({ company: r.company, website: r.website, contactEmail: firstEmail });
+      const nContacts = r.contacts.size;
+      const money = totalsText(r.totals);
+      const search = [r.company, r.website, r.location, domain].join(' ').toLowerCase();
+      return '<tr data-search="' + esc(search) + '">' +
+        '<td><div class="dir-name-cell">' +
+          companyLogoHTML({ company: r.company, website: r.website, contactEmail: firstEmail }) +
+          '<div class="dir-name-text">' +
+            '<div class="dir-name">' + esc(r.company) + '</div>' +
+            (domain
+              ? '<div class="dir-sub"><a class="dir-link" href="https://' + esc(domain) + '" target="_blank" rel="noopener">' + esc(domain) + '</a></div>'
+              : '') +
+          '</div>' +
+        '</div></td>' +
+        '<td>' + (r.location ? esc(r.location) : '<span class="dir-muted">—</span>') + '</td>' +
+        '<td>' + (nContacts ? nContacts + (nContacts === 1 ? ' contact' : ' contacts') : '<span class="dir-muted">—</span>') + '</td>' +
+        '<td>' + (money ? esc(money) : '<span class="dir-muted">—</span>') + '</td>' +
+        '<td><div class="dir-chips">' + r.records.map(recordChipHTML).join('') + '</div></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  (async function init() {
+    let data;
+    try { data = await fetchPipelineData(); }
+    catch (e) {
+      document.getElementById('k-note').innerHTML =
+        'Couldn’t reach the CRM data API. <a href="' + crmPath('/crm') + '">Open Titan CRM</a>';
+      return;
+    }
+    const pipelines = data.pipelines || {};
+    rebuildPipelineNav(Object.keys(pipelines).map(function (id) { return pipelines[id]; }));
+    renderCompanies(buildCompanies(pipelines));
+    wireSearch('k-search', 'k-body', 'k-count', 'company');
+  })();
+</script>
+</body>
+</html>

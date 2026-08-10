@@ -1,0 +1,67 @@
+/* Shared styling for the CRM directory pages (Contacts, Companies). Both are
+   read-mostly tables aggregated across every pipeline, so they share one look
+   rather than each re-deriving it. Pairs with titan-sidebar.css. */
+
+.subpage-body { background: #f7f8fa; color: #222; }
+
+.dir-wrap { max-width: 1040px; margin: 0 auto; padding: 28px 24px 60px; }
+
+.dir-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.dir-search {
+  flex: 1; padding: 10px 14px; border: 1px solid #e0e3e8; border-radius: 9px;
+  font-size: 14px; font-family: inherit; color: #222; outline: none; background: #fff;
+}
+.dir-search::placeholder { color: #b3b7bd; }
+.dir-search:focus { border-color: #2170f4; box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+.dir-count { font-size: 13px; color: #9a9fa7; flex-shrink: 0; }
+
+.dir-card { background: #fff; border: 1px solid #e8eaed; border-radius: 12px; overflow: hidden; }
+.dir-table { width: 100%; border-collapse: collapse; }
+.dir-table th {
+  text-align: left; font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: #9a9fa7; padding: 12px 18px; border-bottom: 1px solid #eef0f3;
+  white-space: nowrap; background: #fbfcfd;
+}
+.dir-table td { padding: 14px 18px; border-bottom: 1px solid #f2f4f6; font-size: 13.5px; color: #333; vertical-align: middle; }
+.dir-table tr:last-child td { border-bottom: none; }
+.dir-table tbody tr:hover { background: #fafbfc; }
+
+/* Name cell: avatar/logo + name (+ muted secondary line). */
+.dir-name-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.dir-name-text { min-width: 0; }
+.dir-name { font-weight: 600; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dir-sub { font-size: 12px; color: #9a9fa7; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.dir-avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; background: #8a9099;
+  color: #fff; font-size: 12px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+/* Company favicon-as-logo — same behaviour as the board/record pages: the initial
+   sits underneath and the <img> removes itself if /api/logo 404s. */
+.company-logo {
+  position: relative; flex-shrink: 0; overflow: hidden; border-radius: 6px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; line-height: 1;
+  width: 30px; height: 30px; font-size: 12px;
+}
+.company-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #fff; }
+
+.dir-link { color: #2170f4; text-decoration: none; }
+.dir-link:hover { text-decoration: underline; }
+.dir-muted { color: #b3b7bd; }
+
+/* Record chips linking back to each opportunity this row appears on. */
+.dir-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dir-chip {
+  display: inline-flex; align-items: center; gap: 6px; background: #f2f3f5; border-radius: 999px;
+  padding: 5px 11px; font-size: 12px; color: #333; text-decoration: none; white-space: nowrap;
+  /* Long deal names would otherwise be sliced mid-character by the cell edge. */
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+}
+.dir-chip:hover { background: #e8f0fe; color: #2170f4; }
+.dir-chip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+.dir-empty { padding: 44px 18px; text-align: center; color: #9a9fa7; font-size: 13.5px; }
+.dir-note { font-size: 12px; color: #9a9fa7; padding: 14px 22px; text-align: center; }
+.dir-note a { color: #2170f4; text-decoration: none; }
