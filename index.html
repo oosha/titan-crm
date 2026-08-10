@@ -2864,6 +2864,16 @@
     .crm-opp-website:hover { text-decoration: underline; }
     .crm-opp-value { font-size: 12.5px; font-weight: 500; color: #888; }
     .crm-company-name { font-weight: 700; color: #1a1a1a; font-size: 15px; }
+    /* Company favicon-as-logo. The initial sits underneath as a styled fallback; the
+       <img> covers it and removes itself if the favicon 404s (see companyLogoHTML),
+       so unknown/fictional domains degrade to the initial. */
+    .company-logo {
+      position: relative; flex-shrink: 0; overflow: hidden; border-radius: 4px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; line-height: 1;
+      width: 18px; height: 18px; font-size: 10px;
+    }
+    .company-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #fff; }
     .crm-company-icon-row { display: flex; align-items: center; gap: 10px; margin-top: 13px; }
     .crm-social-icon {
       width: 20px; height: 20px; border-radius: 6px; color: #fff; flex-shrink: 0;
@@ -4113,6 +4123,7 @@
                 Ryan at Meridian Labs is evaluating the Dashboard v2 upgrade. Proposal was sent Jun 9; main open item is multi-theme support before he'll sign off. Next step: confirm theming scope on Monday's call.
               </div>
               <div class="crm-opp-meta-row">
+                <span id="crm-company-logo"></span>
                 <span class="crm-company-name" id="crm-company">Meridian Labs</span>
                 <span class="dot">&middot;</span>
                 <span class="crm-opp-value" id="crm-opp-value">$18,000</span>
@@ -5453,6 +5464,58 @@
 
   <script>
 
+    // ── Company logo (favicon of the company's own domain) — mirrors crm.html ──
+    // Declared up here (not beside its call sites) so the const is initialized
+    // before any panel render can reach it.
+    // An @gmail.com address says nothing about a company's domain — deriving a logo
+    // from one would show Gmail's icon as the "company logo", so these are skipped.
+    const GENERIC_EMAIL_DOMAINS = [
+      'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'live.com', 'msn.com',
+      'yahoo.com', 'yahoo.co.uk', 'ymail.com', 'icloud.com', 'me.com', 'mac.com', 'aol.com',
+      'proton.me', 'protonmail.com', 'pm.me', 'gmx.com', 'mail.com', 'zoho.com',
+      'yandex.com', 'qq.com', '163.com', 'titan.email',
+    ];
+    function companyDomainFor(rec) {
+      const site = String((rec && rec.website) || '').trim();
+      if (site) {
+        const d = site.replace(/^[a-z]+:\/\//i, '').replace(/^www\./i, '').split(/[/?#]/)[0].toLowerCase();
+        if (d.indexOf('.') !== -1) return d;
+      }
+      // `rec.email` is the mailclient panel's own shape; `contactEmail`/`contacts[]`
+      // come from a real CRM card.
+      const email = String((rec && (rec.contactEmail || rec.email || ((rec.contacts || [])[0] || {}).email)) || '').trim();
+      const at = email.lastIndexOf('@');
+      if (at !== -1) {
+        const d = email.slice(at + 1).toLowerCase();
+        if (d.indexOf('.') !== -1 && GENERIC_EMAIL_DOMAINS.indexOf(d) === -1) return d;
+      }
+      return '';
+    }
+    // Goes through our own /api/logo, which turns "no icon for this domain" into a
+    // real 404 so the initial-fallback below actually fires (see api/logo.js).
+    function renderCompanyLogoPanel(rec) {
+      const el = document.getElementById('crm-company-logo');
+      if (!el) return;
+      const name = String((rec && rec.company) || '').trim();
+      if (!name) { el.innerHTML = ''; return; }
+      const domain = companyDomainFor(rec);
+      el.innerHTML = '<span class="company-logo" style="background:#8a9099;">' +
+        (name.charAt(0) || '?').toUpperCase().replace(/[&<>"]/g, '') +
+        (domain
+          ? '<img src="/api/logo?domain=' + encodeURIComponent(domain) + '" alt="" onerror="this.remove()">'
+          : '') +
+      '</span>';
+    }
+
+    // The panel's default (unlinked) state is static markup, so nothing has called
+    // renderCompanyLogoPanel() for it yet — seed it from that markup on load.
+    document.addEventListener('DOMContentLoaded', function () {
+      const compEl = document.getElementById('crm-company');
+      if (!compEl || !compEl.textContent.trim()) return;
+      const mailEl = document.getElementById('crm-contact-email');
+      const m = mailEl && /([^\s'"(),]+@[^\s'"(),]+)/.exec(mailEl.getAttribute('title') || '');
+      renderCompanyLogoPanel({ company: compEl.textContent.trim(), email: m ? m[1] : '' });
+    });
 
     // ── Email name tooltip ───────────────────────────────────────────────
     document.querySelectorAll('.account-email-text').forEach(emailText => {
@@ -5998,6 +6061,7 @@
         emailLink.title = 'Email ' + firstName + ' ' + rec.email;
       }
       document.getElementById('crm-company').textContent = rec.company;
+      renderCompanyLogoPanel(rec);
       document.getElementById('crm-contact-avatar').textContent = (rec.contact || rec.avatar || '?').charAt(0).toUpperCase();
       renderStageLabel(rec.key, rec.stage);
       buildStageMenu(rec.key, rec.stage);
@@ -6298,6 +6362,7 @@
       if (valEl) valEl.textContent = card.value ? ((card.currency || '$') + Number(card.value).toLocaleString()) : '';
       const compEl = document.getElementById('crm-company');
       if (compEl) compEl.textContent = card.company || '';
+      renderCompanyLogoPanel(card);
 
       const iconRow = panel.querySelector('.crm-company-icon-row');
       if (iconRow) {
@@ -6816,6 +6881,7 @@
       if (valEl) valEl.textContent = (card && card.value) ? personaMoney(card.value) : '';
       var compEl = document.getElementById('crm-company');
       if (compEl) compEl.textContent = (card && card.company) || '';
+      renderCompanyLogoPanel(card);
 
       // Company website / LinkedIn / Instagram / location — persona clients have none → hide.
       var iconRow = panel.querySelector('.crm-company-icon-row');

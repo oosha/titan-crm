@@ -45,6 +45,16 @@
   }
   .ov-title-input::placeholder { color: #b3b7bd; }
   .ov-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  /* Company favicon-as-logo. The initial sits underneath as a styled fallback; the
+     <img> covers it and removes itself if the favicon 404s (see companyLogoHTML),
+     so unknown/fictional domains degrade to the initial. */
+  .company-logo {
+    position: relative; flex-shrink: 0; overflow: hidden; border-radius: 5px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; line-height: 1;
+    width: 22px; height: 22px; font-size: 11px;
+  }
+  .company-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #fff; }
   .ov-created-by { font-size: 11.5px; color: #9a9fa7; margin-top: 8px; }
   .ov-inline-input {
     border: 1px solid transparent; border-radius: 6px; padding: 4px 7px; font-family: inherit;
@@ -471,6 +481,7 @@
           </div>
           <div class="crm-ai-summary-text" id="ov-ai-summary-text"></div>
           <div class="ov-meta-row">
+            <span id="ov-company-logo"></span>
             <input class="ov-inline-input ov-company-input" id="ov-company" data-field="company" placeholder="Company" oninput="onFieldChange()">
             <span class="ov-dot">&middot;</span>
             <span class="ov-value-label">Total value:</span>
@@ -700,6 +711,55 @@
   // etc.) on any link built from this page — same convention as crm.html's crmPath().
   function crmPath(suffix) { return (suffix || '/crm') + location.search; }
 
+  // ── Company logo (favicon of the company's own domain) — mirrors crm.html ──
+  // An @gmail.com address says nothing about a company's domain — deriving a logo
+  // from one would show Gmail's icon as the "company logo", so these are skipped.
+  const GENERIC_EMAIL_DOMAINS = [
+    'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'live.com', 'msn.com',
+    'yahoo.com', 'yahoo.co.uk', 'ymail.com', 'icloud.com', 'me.com', 'mac.com', 'aol.com',
+    'proton.me', 'protonmail.com', 'pm.me', 'gmx.com', 'mail.com', 'zoho.com',
+    'yandex.com', 'qq.com', '163.com', 'titan.email',
+  ];
+  const LOGO_COLORS = ['#8a9099'];
+  function logoColorFor(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) { hash = (hash + name.charCodeAt(i)) % LOGO_COLORS.length; }
+    return LOGO_COLORS[hash];
+  }
+  function companyDomainFor(rec) {
+    const site = String((rec && rec.website) || '').trim();
+    if (site) {
+      const d = site.replace(/^[a-z]+:\/\//i, '').replace(/^www\./i, '').split(/[/?#]/)[0].toLowerCase();
+      if (d.indexOf('.') !== -1) return d;
+    }
+    const email = String((rec && (rec.contactEmail || ((rec.contacts || [])[0] || {}).email)) || '').trim();
+    const at = email.lastIndexOf('@');
+    if (at !== -1) {
+      const d = email.slice(at + 1).toLowerCase();
+      if (d.indexOf('.') !== -1 && GENERIC_EMAIL_DOMAINS.indexOf(d) === -1) return d;
+    }
+    return '';
+  }
+  // Goes through our own /api/logo, which turns "no icon for this domain" into a
+  // real 404 so the initial-fallback below actually fires (see api/logo.js).
+  function companyLogoHTML(rec) {
+    const name = String((rec && rec.company) || '').trim();
+    const initial = (name.charAt(0) || '?').toUpperCase();
+    const domain = companyDomainFor(rec);
+    return '<span class="company-logo" style="background:' + logoColorFor(name || '?') + ';">' +
+      esc(initial) +
+      (domain
+        ? '<img src="/api/logo?domain=' + encodeURIComponent(domain) + '" alt="" onerror="this.remove()">'
+        : '') +
+    '</span>';
+  }
+  // Re-rendered live as the company/website fields are edited, so the logo tracks
+  // whatever domain the record currently points at.
+  function renderCompanyLogo() {
+    const el = document.getElementById('ov-company-logo');
+    if (el && card) el.innerHTML = companyLogoHTML(card);
+  }
+
   // Acting user: ?by=<name> overrides the defaults (e.g. ?u=joanna&by=John). Notes
   // attribute to this name (default "Usha"); a record's "Created by" uses the full
   // default "Usha Loutongbam" unless ?by= gives an explicit name.
@@ -812,6 +872,7 @@
 
     document.getElementById('ov-name').value = card.deal || '';
     document.getElementById('ov-company').value = card.company || '';
+    renderCompanyLogo();
     document.getElementById('ov-currency').value = card.currency || '$';
     document.getElementById('ov-value').value = card.value || '';
     document.getElementById('ov-location').value = card.location || '';
@@ -1436,6 +1497,7 @@
     card.website = document.getElementById('ov-website').value.trim();
     card.companyLinkedin = document.getElementById('ov-company-linkedin').value.trim();
     card.instagram = document.getElementById('ov-instagram').value.trim();
+    renderCompanyLogo();   // company/website may have just changed
     card.closeDate = document.getElementById('ov-close-date').value;
     card.source = document.getElementById('ov-source').value.trim();
     card.autoLinkActivity = document.getElementById('ov-autolink').checked;

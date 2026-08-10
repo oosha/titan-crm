@@ -3205,7 +3205,17 @@
     .cam-item.cam-delete .cam-ic { color: #dc2626; }
     .cam-item.cam-delete:hover { background: #fdecec; }
     .kanban-card-deal { font-size: 13px; font-weight: 700; color: #222; margin-bottom: 4px; }
-    .kanban-card-company { font-size: 12px; color: #888; margin-bottom: 14px; }
+    .kanban-card-company { font-size: 12px; color: #888; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+    /* Company favicon-as-logo. The initial sits underneath as a styled fallback;
+       the <img> covers it and removes itself if the favicon 404s (see
+       companyLogoHTML), so unknown/fictional domains degrade to the initial. */
+    .company-logo {
+      position: relative; flex-shrink: 0; overflow: hidden; border-radius: 4px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; line-height: 1;
+      width: 16px; height: 16px; font-size: 9px;
+    }
+    .company-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #fff; }
     .kanban-card-footer { display: flex; align-items: center; gap: 6px; }
     .kanban-card-value { font-size: 12.5px; font-weight: 500; color: #888; }
     .kanban-card-task { font-size: 11px; color: #999; margin-left: auto; }
@@ -5465,6 +5475,43 @@
       for (let i = 0; i < name.length; i++) { hash = (hash + name.charCodeAt(i)) % AVATAR_COLORS.length; }
       return AVATAR_COLORS[hash];
     }
+
+    // ── Company logo (favicon of the company's own domain) ──
+    // An @gmail.com address says nothing about a company's domain — deriving a logo
+    // from one would show Gmail's icon as the "company logo", so these are skipped.
+    const GENERIC_EMAIL_DOMAINS = [
+      'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'live.com', 'msn.com',
+      'yahoo.com', 'yahoo.co.uk', 'ymail.com', 'icloud.com', 'me.com', 'mac.com', 'aol.com',
+      'proton.me', 'protonmail.com', 'pm.me', 'gmx.com', 'mail.com', 'zoho.com',
+      'yandex.com', 'qq.com', '163.com', 'titan.email',
+    ];
+    function companyDomainFor(card) {
+      const site = String((card && card.website) || '').trim();
+      if (site) {
+        const d = site.replace(/^[a-z]+:\/\//i, '').replace(/^www\./i, '').split(/[/?#]/)[0].toLowerCase();
+        if (d.indexOf('.') !== -1) return d;
+      }
+      const email = String((card && (card.contactEmail || contactDetailFor(card, 'email'))) || '').trim();
+      const at = email.lastIndexOf('@');
+      if (at !== -1) {
+        const d = email.slice(at + 1).toLowerCase();
+        if (d.indexOf('.') !== -1 && GENERIC_EMAIL_DOMAINS.indexOf(d) === -1) return d;
+      }
+      return '';
+    }
+    // Goes through our own /api/logo, which turns "no icon for this domain" into a
+    // real 404 so the initial-fallback below actually fires (see api/logo.js).
+    function companyLogoHTML(card, extraStyle) {
+      const name = String((card && card.company) || '').trim();
+      const initial = (name.charAt(0) || '?').toUpperCase();
+      const domain = companyDomainFor(card);
+      return '<span class="company-logo" style="background:' + avatarColorFor(name || '?') + ';' + (extraStyle || '') + '">' +
+        escAttr(initial) +
+        (domain
+          ? '<img src="/api/logo?domain=' + encodeURIComponent(domain) + '" alt="" onerror="this.remove()">'
+          : '') +
+      '</span>';
+    }
     // Contact details shown in the card avatar's hover tooltip — prefer the legacy
     // scalar fields, falling back to the first entry in the full contacts array.
     const CONTACT_SCALAR_KEYS = {
@@ -6049,7 +6096,7 @@
           '<div class="kanban-card-deal">' + card.deal + '</div>' +
           '<div class="kanban-action-icon" onclick="toggleCardActionMenu(event, \'' + card.id + '\')" title="Actions">' + statusIconSvg(card) + '</div>' +
         '</div>' +
-        '<div class="kanban-card-company">' + card.company + '</div>' +
+        '<div class="kanban-card-company">' + companyLogoHTML(card) + '<span>' + card.company + '</span></div>' +
         '<div class="kanban-card-footer">' +
           '<span class="kanban-card-avatar" data-contact="' + escAttr(card.contact) + '" data-designation="' + escAttr(contactDetailFor(card, 'designation')) + '" data-email="' + escAttr(contactDetailFor(card, 'email')) + '" data-phone="' + escAttr(contactDetailFor(card, 'phone')) + '" style="background:' + avatarColorFor(card.contact) + ';">' + card.contact.charAt(0) + '</span>' +
           '<span class="kanban-card-value">' + fmtMoney(card.value) + '</span>' +
