@@ -290,6 +290,18 @@ body.has-panel[data-subpage="companies"] .dir-table th:nth-child(5) { width: 30%
 .dir-rec + .stage-caption { margin-top: 10px; }
 
 .dir-person { display: flex; align-items: center; gap: 12px; }
+/* A person in a company's panel is a link through to that contact, so the whole row
+   is the hit target and a chevron says so. Padded and inset by the same amount the
+   record rows use, so the hover wash lines up with them. */
+.dir-person.is-link {
+  text-decoration: none; color: inherit; border-radius: 10px;
+  padding: 7px 8px; margin: 0 -8px;
+}
+.dir-person.is-link + .dir-person.is-link { margin-top: 2px; }
+.dir-person.is-link:hover { background: var(--dir-tint); }
+.dir-person.is-link:focus-visible { outline: 2px solid var(--dir-accent); outline-offset: 1px; }
+.dir-person-go { margin-left: auto; flex-shrink: 0; color: var(--dir-faint); }
+.dir-person.is-link:hover .dir-person-go { color: var(--dir-accent); }
 .dir-person + .dir-person { margin-top: 14px; }
 .dir-person-text { min-width: 0; }
 .dir-person-name { font-size: 13px; font-weight: 600; color: var(--dir-ink); line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

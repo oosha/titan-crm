@@ -370,6 +370,10 @@ body {
 
 .pipeline-nav-menu-item:hover { background: #f2f3f5; }
 
+.pipeline-nav-menu-sep { height: 1px; background: #eee; margin: 5px 4px; }
+.pipeline-nav-menu-item.pnm-delete { color: #dc2626; }
+.pipeline-nav-menu-item.pnm-delete:hover { background: #fdecec; }
+
 .nav-item-arrow {
   width: 24px;
   height: 24px;

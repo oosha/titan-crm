@@ -95,23 +95,18 @@
     padding: 16px 17px; box-shadow: var(--dash-shadow); display: flex; flex-direction: column;
     position: relative;
   }
-  /* A handful of tiles get a faint wash of their own accent so the board isn't a
-     field of identical white cards — spent sparingly, on the tiles that carry a
-     headline number. */
-  .tile.tint { background: color-mix(in srgb, var(--accent) 5%, #fff); border-color: color-mix(in srgb, var(--accent) 20%, var(--dir-line)); }
+  /* Every tile sits on the same white surface. The accent shows up in the dot, the
+     meter and the marks — never as a wash behind the card, which made a few tiles
+     read as a different kind of thing from their neighbours. */
 
-  .tile-head { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
-  .badge {
-    width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: color-mix(in srgb, var(--accent) 15%, #fff); color: var(--accent);
-  }
-  .tile-title { font-size: 12.5px; font-weight: 700; color: var(--dir-ink); letter-spacing: 0.01em; }
+  .tile-head { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; min-height: 26px; }
+  /* Same treatment as the KPI labels up top — uppercase, tracked out, muted. The
+     chart is the thing on these tiles; the title just names it. */
+  .tile-title { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dir-muted); }
   .tile-meta { margin-left: auto; font-size: 11.5px; color: var(--dir-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
 
   /* ── KPI tile ────────────────────────────────────────────────────────────────
-     No icon up here: four glyphs competing with four big numbers is noise, and
-     the number is the thing. A dot in the tile's own accent is enough to tell
+     The number is the thing. A dot in the tile's own accent is enough to tell
      the four apart at a glance. */
   .kpi .kpi-label { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dir-muted); }
   .kpi-dot { width: 8px; height: 8px; border-radius: 3px; background: var(--accent); flex-shrink: 0; }
@@ -121,34 +116,17 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .kpi-sub { font-size: 12px; color: var(--dir-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .kpi.is-alert .kpi-value { color: #c0392b; }
-  /* Thin context meter under a KPI — the number in relation to its whole. */
-  .meter { height: 5px; border-radius: 3px; background: var(--dir-hair); overflow: hidden; margin-top: 12px; }
-  .meter > span { display: block; height: 100%; border-radius: 3px; background: var(--accent); transition: width 560ms cubic-bezier(0.22,0.61,0.36,1); }
-  /* Where the average sits between the smallest and largest amount. */
-  .range { position: relative; height: 5px; border-radius: 3px; background: var(--dir-hair); margin-top: 12px; }
-  .range > i { position: absolute; top: 50%; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid #fff; transform: translate(-50%, -50%); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, #fff); transition: left 560ms cubic-bezier(0.22,0.61,0.36,1); }
-
-  /* ── Win-rate ring ───────────────────────────────────────────────────────── */
-  .ring-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 6px 0; }
-  .ring { position: relative; width: 128px; height: 128px; }
-  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-  .ring-track { fill: none; stroke: var(--dir-hair); stroke-width: 12; }
-  .ring-val { fill: none; stroke: var(--accent); stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset 760ms cubic-bezier(0.22,0.61,0.36,1); }
-  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .ring-center b { font-size: 28px; font-weight: 760; color: var(--dir-ink); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-  .ring-center span { font-size: 10.5px; color: var(--dir-muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-top: 1px; }
-  .ring-foot { font-size: 12px; color: var(--dir-body); text-align: center; font-variant-numeric: tabular-nums; }
-
-  /* ── Funnel bars (stage breakdown) ───────────────────────────────────────── */
-  .funnel { display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center; }
-  .frow { display: grid; grid-template-columns: 116px 1fr auto; align-items: center; gap: 12px; }
-  .frow-label { font-size: 12.5px; color: var(--dir-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .frow-track { position: relative; height: 24px; background: var(--dir-hair); border-radius: 7px; overflow: hidden; }
-  .frow-fill { position: absolute; inset: 0 auto 0 0; border-radius: 7px; min-width: 4px; background: var(--accent); transition: width 620ms cubic-bezier(0.22,0.61,0.36,1); }
-  .frow-right { font-size: 12.5px; color: var(--dir-ink); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .frow-right small { color: var(--dir-muted); font-weight: 500; }
-  @container dash (max-width: 460px) { .frow { grid-template-columns: 86px 1fr auto; gap: 8px; } }
+  /* ── Stage composition (one stacked bar + legend) ─────────────────────────
+     A 2px gap in the surface colour does the separating between segments — no
+     stroke around the marks. Only the two outer ends are data ends, so only they
+     round off. */
+  .stackwrap { flex: 1; display: flex; flex-direction: column; }
+  .stack { display: flex; gap: 2px; height: 30px; }
+  .stack-seg { min-width: 3px; border-radius: 2px; transition: flex-grow 620ms cubic-bezier(0.22,0.61,0.36,1); }
+  .stack-seg:first-child { border-radius: 6px 2px 2px 6px; }
+  .stack-seg:last-child { border-radius: 2px 6px 6px 2px; }
+  .stack-seg:only-child { border-radius: 6px; }
+  .stack + .legend { margin-top: 15px; }
 
   /* ── Amount-by-pipeline donut ─────────────────────────────────────────────── */
   .split { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; flex: 1; }
@@ -159,7 +137,7 @@
   .donut-center b { font-size: 17px; font-weight: 760; color: var(--dir-ink); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
   .donut-center span { font-size: 10.5px; color: var(--dir-muted); margin-top: 2px; }
   .legend { flex: 1; min-width: 150px; }
-  .legend-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 7px 0; }
+  .legend-row { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 10px; padding: 7px 0; }
   .legend-row + .legend-row { border-top: 1px solid var(--dir-hair); }
   .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
   .legend-name { font-size: 12.5px; color: var(--dir-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -174,14 +152,30 @@
   .hcol-bar { width: 100%; max-width: 46px; border-radius: 7px 7px 3px 3px; background: var(--accent); transition: height 620ms cubic-bezier(0.22,0.61,0.36,1); }
   .hcol-x { font-size: 11px; color: var(--dir-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
-  /* ── Activity / source bars ──────────────────────────────────────────────── */
-  .brow { display: grid; grid-template-columns: 108px 1fr auto; align-items: center; gap: 12px; }
-  .brow + .brow { margin-top: 10px; }
-  .brow-label { font-size: 12.5px; color: var(--dir-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .brow-track { height: 20px; background: var(--dir-hair); border-radius: 6px; overflow: hidden; position: relative; }
-  .brow-fill { position: absolute; inset: 0 auto 0 0; border-radius: 6px; min-width: 4px; transition: width 560ms cubic-bezier(0.22,0.61,0.36,1); }
-  .brow-n { font-size: 12.5px; font-weight: 700; color: var(--dir-ink); font-variant-numeric: tabular-nums; }
-  @container dash (max-width: 460px) { .brow { grid-template-columns: 84px 1fr auto; gap: 8px; } }
+  /* ── Source pie ───────────────────────────────────────────────────────────
+     Rotated so the first wedge starts at twelve o'clock and reads clockwise.
+     Hovering a wedge holds it and drops the rest back, so a share can be picked
+     out of the circle without hunting for its colour in the legend. */
+  .pie-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; flex-shrink: 0; }
+  .pie { width: 168px; height: 168px; position: relative; }
+  .pie svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+  .pie-seg {
+    transition: stroke-dasharray 620ms cubic-bezier(0.22,0.61,0.36,1), opacity 160ms ease;
+  }
+  .pie:hover .pie-seg { opacity: 0.38; }
+  .pie .pie-seg:hover { opacity: 1; }
+  .pie-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; pointer-events: none;
+  }
+  .pie-center b { font-size: 24px; font-weight: 760; color: var(--dir-ink); letter-spacing: -0.02em; }
+  .pie-center span { font-size: 10.5px; color: var(--dir-muted); margin-top: 1px; }
+  .pie-caption { font-size: 12px; color: var(--dir-muted); text-align: center; }
+  .pie-caption b { color: var(--dir-body); font-weight: 650; }
+  /* A circular legend key for a circular chart; the square swatch is the bar
+     charts' key and stays theirs. */
+  .legend.is-pie .legend-row { padding: 9px 0; }
+  .legend.is-pie .legend-dot { width: 11px; height: 11px; border-radius: 50%; }
 
   /* ── Top opportunities ───────────────────────────────────────────────────── */
   .top-row { display: grid; grid-template-columns: 26px 1fr 132px auto; align-items: center; gap: 12px; padding: 9px 8px; margin: 0 -8px; border-radius: 10px; text-decoration: none; color: inherit; }
@@ -287,7 +281,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .bento > .tile { animation: none; }
-    .meter > span, .range > i, .ring-val, .donut-seg, .frow-fill, .brow-fill, .top-bar-fill, .hcol-bar { transition: none; }
+    .ring-val, .donut-seg, .stack-seg, .pie-seg, .top-bar-fill, .hcol-bar { transition: none; }
     .ai-typing i { animation: none; }
   }
 
@@ -299,104 +293,12 @@
   .dash-toggle-desc { font-size: 12px; color: var(--dir-muted); margin-top: 2px; }
 </style>
 </head>
-<body data-subpage="dashboard">
+<body data-subpage="dashboard" data-sidebar-data="page">
 
 <div class="app-window">
-  <div class="sidebar">
-
-    <div class="sidebar-header">
-      <div class="tab-switch">
-        <img src="/app_switcher_assets/grid_icons/crm.svg" alt="CRM">
-        <div class="tab-switch-arrow">
-          <img src="/assets/1c88a1be-2a78-4065-86f7-8eb060dbb526.svg" alt="">
-        </div>
-      </div>
-      <div class="titan-logo">
-        <img src="/assets/fa36f613-977c-444a-bef5-e1b5f5f1b340.svg" alt="Titan">
-      </div>
-    </div>
-
-    <div class="nav-scroll">
-      <div class="sidebar-line" style="margin-top:2px;"></div>
-      <div class="account-header" id="account-header" onclick="toggleAccountMenu(event)">
-        <div class="account-avatar">
-          <img class="bg" src="/assets/d2c6a617-0407-4985-8c8b-740201e73dfe.svg" alt="">
-          <span id="account-active-initial">E</span>
-        </div>
-        <span class="account-email-text" id="account-active-email">ella.henderson@avontechlabs.com</span>
-        <div class="account-chevron">
-          <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#bdbdbd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <div class="account-menu" id="account-menu">
-          <div class="account-menu-label">Titan accounts</div>
-          <div class="account-menu-item active">
-            <span class="account-menu-avatar" style="background:#3f6ea5;">E</span>
-            <div class="account-menu-text">
-              <div class="account-menu-email">ella.henderson@avontechlabs.com</div>
-              <div class="account-menu-sub">Avontech Labs</div>
-            </div>
-            <svg class="account-menu-check" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-        </div>
-      </div>
-
-      <div class="sidebar-line"></div>
-
-      <!-- Dashboard is the first destination in the CRM nav. -->
-      <div class="nav-item active" onclick="location.href=crmPath('/crm/dashboard')">
-        <div class="nav-item-icon">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="1.5" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/></svg>
-        </div>
-        <span class="nav-item-label active">Dashboard</span>
-      </div>
-
-      <div class="nav-item" onclick="openNewPipeline()">
-        <div class="nav-item-icon" style="color:#2170f4; font-weight:700; font-size:16px;">+</div>
-        <span class="nav-item-label" style="color:#2170f4; font-weight:600;">New pipeline</span>
-      </div>
-
-      <!-- Anchor only: rebuildPipelineNav() inserts the pipeline rows after this
-           and clears them by walking forward to the next .sidebar-line. -->
-      <div id="pipeline-nav-line" class="nav-anchor"></div>
-
-      <div class="sidebar-line"></div>
-
-      <div class="nav-item" onclick="location.href=crmPath('/crm/contacts')">
-        <div class="nav-item-icon">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4.5" r="2.5" stroke="#fff" stroke-width="1.3"/><path d="M2.5 12.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="#fff" stroke-width="1.3"/></svg>
-        </div>
-        <span class="nav-item-label">Contacts</span>
-      </div>
-      <div class="nav-item" onclick="location.href=crmPath('/crm/companies')">
-        <div class="nav-item-icon">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="11" stroke="#fff" stroke-width="1.3"/><path d="M6 7V3h8v4" stroke="#fff" stroke-width="1.3"/></svg>
-        </div>
-        <span class="nav-item-label">Companies</span>
-      </div>
-    </div>
-
-    <div style="position:relative; flex-shrink:0;">
-      <div style="height:1px; position:relative; overflow:visible;">
-        <img src="/assets/0d00b891-46d6-4063-acc9-0db4c8c41036.svg" alt=""
-          style="position:absolute; inset:-1px 0; width:100%; height:2px; object-fit:fill;">
-      </div>
-      <div class="sidebar-footer">
-        <div class="footer-btn">
-          <div class="footer-btn-icon"><img src="/assets/34686e57-21d5-4bf6-82c4-1c6e474d25d3.svg" alt=""></div>
-          <span>Bug</span>
-        </div>
-        <div class="footer-divider"></div>
-        <div class="footer-btn">
-          <div class="footer-btn-icon"><img src="/assets/03a449fb-b16b-4b26-8eec-0fa033eff13e.svg" alt=""></div>
-          <span>Feature</span>
-        </div>
-        <div class="footer-divider"></div>
-        <div class="footer-btn" onclick="toggleSettingsModal()">
-          <div class="footer-btn-icon settings-icon"><img src="/assets/6ea52e57-1d75-47b1-97cd-e416a5d2372d.svg" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- The sidebar is one component: titan-sidebar.js renders it and owns its
+       markup, rows and active state. Do not hand-maintain nav markup here. -->
+  <div id="sidebar-mount"></div>
 
   <div class="main-area">
     <!-- No "< Back" header. The dashboard is a destination in the left nav, not a
@@ -461,30 +363,84 @@
 <script src="/crm-directory.js"></script>
 <script>
   // ── Palette ────────────────────────────────────────────────────────────────
-  const CAT = ['#2170f4', '#7a6ba3', '#2e9e7b', '#d98634', '#c65f6f', '#4a8fc7', '#8a8f5c', '#a2678f'];
-  const C_OPEN = '#2170f4', C_WON = '#2e9e7b', C_AVG = '#d98634', C_OVERDUE = '#d9534f', C_RATE = '#7a6ba3', C_DIST = '#4a8fc7';
+  // No categorical set here any more. Nothing on this board plots two or more
+  // *series* — every tile is one measure over one dimension — so identity is
+  // carried by position and the ordinal ramp, and a per-row hue would only have
+  // restated the bar length in a second channel.
+  const C_OPEN = '#2170f4', C_WON = '#2e9e7b', C_AVG = '#d98634', C_RATE = '#7a6ba3', C_DIST = '#4a8fc7';
 
-  // Small header glyphs, keyed by tile. Only the chart tiles carry one — the KPI
-  // row is label + number + accent dot, nothing else.
-  const ICON = {
-    rate:   '<circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.4"/>',
-    funnel: '<path d="M2.5 3.5h11l-4 4.5v4l-3 1.5V8L2.5 3.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
-    dist:   '<path d="M3 13V8M6.5 13V4M10 13V9.5M13.5 13V6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
-    activity:'<path d="M2 8.5h3l1.5-4 3 8L14 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
-    source: '<path d="M4 3v3.5a2 2 0 002 2h4a2 2 0 002 2V13M4 3H2.5M4 3h1.5M12 13h-1.5M12 13h1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>',
-    top:    '<path d="M8 2l1.6 3.5L13.5 6l-2.7 2.6.6 3.8L8 10.6 4.6 12.4l.6-3.8L2.5 6l3.9-.5L8 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>',
-  };
-  function badge(icon) { return '<span class="badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none">' + icon + '</svg></span>'; }
+  // ── Ordinal ramp ────────────────────────────────────────────────────────────
+  // Ordered categories (pipeline stages) get one hue stepped light → dark. Doing
+  // that by mixing the pipeline's colour with white does not work: the steps come
+  // out too close to tell apart, and a pale green ends up invisible against a
+  // white card. So the ramp is built in OKLCH, where lightness is perceptual and
+  // can be stepped evenly, then converted back and gamut-clamped.
+  //
+  // Two constraints it holds to: each step sits ≥0.06 OKLCH-L from its
+  // neighbours, and the palest step still clears 2:1 against the card. Both are
+  // checked with the dataviz validator (7 hues × 2–9 stages, all passing) — the
+  // gaps compress past 9 stages, which no pipeline here has.
+  function srgbToLin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+  function linToSrgb(c) { return c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055; }
+
+  function hexToOklch(hex) {
+    const s = String(hex || '').replace('#', '');
+    const r = srgbToLin(parseInt(s.slice(0, 2), 16) || 0), g = srgbToLin(parseInt(s.slice(2, 4), 16) || 0), b = srgbToLin(parseInt(s.slice(4, 6), 16) || 0);
+    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+    const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+    const q = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    const A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * q;
+    const B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * q;
+    return { L: 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * q, C: Math.sqrt(A * A + B * B), h: Math.atan2(B, A) };
+  }
+  function oklchToRgb(L, C, h) {
+    const A = C * Math.cos(h), B = C * Math.sin(h);
+    const l = Math.pow(L + 0.3963377774 * A + 0.2158037573 * B, 3);
+    const m = Math.pow(L - 0.1055613458 * A - 0.0638541728 * B, 3);
+    const q = Math.pow(L - 0.0894841775 * A - 1.2914855480 * B, 3);
+    return [linToSrgb(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * q),
+            linToSrgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * q),
+            linToSrgb(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * q)];
+  }
+  function oklchToHex(L, C, h) {
+    let lo = 0, hi = C;                                  // shrink chroma into gamut
+    for (let i = 0; i < 18; i++) {
+      const mid = (lo + hi) / 2;
+      if (oklchToRgb(L, mid, h).every(function (v) { return v >= -0.001 && v <= 1.001; })) lo = mid; else hi = mid;
+    }
+    return '#' + oklchToRgb(L, lo, h).map(function (v) {
+      return Math.max(0, Math.min(255, Math.round(v * 255))).toString(16).padStart(2, '0');
+    }).join('');
+  }
+  function contrastOnWhite(hex) {
+    const s = hex.replace('#', '');
+    const c = [0, 2, 4].map(function (i) { return srgbToLin(parseInt(s.slice(i, i + 2), 16)); });
+    return 1.05 / (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2] + 0.05);
+  }
+  const RAMP_STEP = 0.075, RAMP_L_FLOOR = 0.26;
+  function rampSteps(base, n) {
+    const oc = hexToOklch(base);
+    if (n < 2) return [base];
+    // The pale end is hue-dependent — an equal-lightness green carries far more
+    // luminance than a violet — so search for the lightest passing step per hue.
+    let lo = 0.45, hi = 0.95;
+    for (let i = 0; i < 20; i++) {
+      const mid = (lo + hi) / 2;
+      if (contrastOnWhite(oklchToHex(mid, oc.C, oc.h)) >= 2.05) lo = mid; else hi = mid;
+    }
+    const top = lo, bottom = Math.max(RAMP_L_FLOOR, top - (n - 1) * RAMP_STEP);
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(oklchToHex(top - (top - bottom) * (i / (n - 1)), oc.C, oc.h));
+    return out;
+  }
 
   // Sections a reader can turn off. Order here is the render order. `money: true`
   // marks a section that only means something where records carry an amount — it
   // never appears on a hiring board.
   const WIDGETS = [
-    { id: 'kpis',      name: 'Key metrics',        desc: 'The four headline numbers for this kind of pipeline.' },
-    { id: 'winrate',   name: 'Completion rate',    desc: 'Records that reached the last stage, as a share of all.' },
+    { id: 'kpis',      name: 'Key metrics',        desc: 'The four headline numbers, completion rate included.' },
     { id: 'breakdown', name: 'Pipeline breakdown', desc: 'Where records sit, stage by stage.' },
     { id: 'distribution', name: 'Amount spread',   desc: 'How open records cluster by amount.', money: true },
-    { id: 'activity',  name: 'Activity mix',       desc: 'Recent touches broken down by type.' },
     { id: 'sources',   name: 'By source',          desc: 'Where records came from (hidden until sources are set).' },
     { id: 'top',       name: 'Focus list',         desc: 'The records worth opening first.' },
   ];
@@ -584,8 +540,8 @@
   // ── Tile shell ──────────────────────────────────────────────────────────────
   function tile(opts) {
     const style = 'grid-column: span ' + (opts.span || 1) + '; --accent:' + (opts.accent || C_OPEN) + ';';
-    return '<section class="tile' + (opts.tint ? ' tint' : '') + '" style="' + style + '">' +
-      (opts.title ? '<div class="tile-head">' + badge(opts.icon) + '<span class="tile-title">' + esc(opts.title) + '</span>' +
+    return '<section class="tile" style="' + style + '">' +
+      (opts.title ? '<div class="tile-head">' + '<span class="tile-title">' + esc(opts.title) + '</span>' +
         (opts.meta ? '<span class="tile-meta">' + esc(opts.meta) + '</span>' : '') + '</div>' : '') +
       opts.body + '</section>';
   }
@@ -597,22 +553,24 @@
     const all = scopedCards();
     const open = all.filter(function (e) { return !isClosed(e); });
     const closed = all.filter(isClosed);
-    const overdue = open.filter(function (e) { return e.card.overdue; });
     const pl = scopedPipelines()[0];
     // The last stage is the finish line, whatever this pipeline calls it —
     // "Closed" on a sales board, "Hired" on a hiring one.
     const endLabel = pl ? stageLabel(pl, terminalKey(pl)) : 'Closed';
 
     function kpi(o) {
-      return '<div class="tile kpi' + (o.alert ? ' is-alert' : '') + (o.tint ? ' tint' : '') + '" style="--accent:' + o.accent + '">' +
+      return '<div class="tile kpi" style="--accent:' + o.accent + '">' +
         '<div class="tile-head" style="margin-bottom:0"><span class="kpi-dot"></span><span class="kpi-label">' + esc(o.label) + '</span></div>' +
         '<div class="kpi-value" title="' + esc(o.value) + '">' + esc(o.value) + '</div>' +
-        '<div class="kpi-sub">' + esc(o.sub) + '</div>' + (o.viz || '') + '</div>';
+        '<div class="kpi-sub">' + esc(o.sub) + '</div></div>';
     }
-    const meter = function (pct, color) { return '<div class="meter" style="--accent:' + color + '"><span style="width:' + Math.max(0, Math.min(100, pct)) + '%"></span></div>'; };
-    const overdueTile = kpi({ label: 'Overdue', accent: C_OVERDUE, alert: overdue.length > 0, tint: overdue.length > 0,
-      value: String(overdue.length), sub: overdue.length ? 'need follow-up' : 'all on track',
-      viz: meter(open.length ? (overdue.length / open.length) * 100 : 0, C_OVERDUE) });
+    // The completion rate as a number rather than a ring: "win rate" on a sales
+    // board, "hire rate" on a hiring one. It replaced an Overdue count, which read
+    // off a hand-authored boolean nothing in the app computes.
+    const rateLabel = activeType().rateLabel;
+    const ratePct = all.length ? Math.round((closed.length / all.length) * 100) : 0;
+    const rateTile = kpi({ label: rateLabel, accent: C_RATE,
+      value: ratePct + '%', sub: closed.length + ' of ' + all.length + ' reached the end' });
 
     if (!hasMoney()) {
       // No amounts on this kind of pipeline, so the headline is where records are.
@@ -620,62 +578,29 @@
       const lastOpen = pl && (pl.stages || []).length > 1 ? (pl.stages || [])[(pl.stages || []).length - 2] : null;
       const inLast = lastOpen ? open.filter(function (e) { return e.card.stage === lastOpen.key; }) : [];
       return [
-        kpi({ label: 'Active ' + noun(2), accent: C_OPEN, tint: true,
-          value: String(open.length), sub: 'of ' + all.length + ' total',
-          viz: meter(all.length ? (open.length / all.length) * 100 : 0, C_OPEN) }),
+        kpi({ label: 'Active ' + noun(2), accent: C_OPEN,
+          value: String(open.length), sub: 'of ' + all.length + ' total' }),
         lastOpen ? kpi({ label: lastOpen.label, accent: C_AVG,
-          value: String(inLast.length), sub: 'nearly there',
-          viz: meter(open.length ? (inLast.length / open.length) * 100 : 0, C_AVG) }) : '',
+          value: String(inLast.length), sub: 'nearly there' }) : '',
         kpi({ label: endLabel, accent: C_WON,
-          value: String(closed.length), sub: 'reached the end',
-          viz: meter(all.length ? (closed.length / all.length) * 100 : 0, C_WON) }),
-        overdueTile,
+          value: String(closed.length), sub: 'reached the end' }),
+        rateTile,
       ].join('');
     }
 
-    const openSum = sumValue(open), wonSum = sumValue(closed), totalSum = openSum + wonSum;
     const cur = dominantCurrency(all);
     const avg = all.length ? Math.round(sumValue(all) / all.length) : 0;
-    // The dot's position says where the average sits between the smallest and the
-    // largest — the same context the old "from $X to $Y" line gave, without the
-    // two extra numbers.
-    const vals = all.map(function (e) { return Number(e.card.value) || 0; });
-    const pos = vals.filter(function (v) { return v > 0; });   // a record with no amount shouldn't drag the floor to 0
-    const lo = pos.length ? Math.min.apply(null, pos) : 0, hi = vals.length ? Math.max.apply(null, vals) : 0;
-    const avgPos = hi > lo ? Math.round(((avg - lo) / (hi - lo)) * 100) : 50;
+    // How amounts spread out is the Amount spread tile's job — up here the average
+    // is just the average.
     return [
-      kpi({ label: 'Open amount', accent: C_OPEN, tint: true,
-        value: moneyText(moneyByCurrency(open)), sub: open.length + ' open',
-        viz: meter(totalSum ? (openSum / totalSum) * 100 : 0, C_OPEN) }),
+      kpi({ label: 'Open amount', accent: C_OPEN,
+        value: moneyText(moneyByCurrency(open)), sub: open.length + ' open' }),
       kpi({ label: endLabel + ' amount', accent: C_WON,
-        value: moneyText(moneyByCurrency(closed)), sub: closed.length + ' ' + endLabel.toLowerCase(),
-        viz: meter(totalSum ? (wonSum / totalSum) * 100 : 0, C_WON) }),
+        value: moneyText(moneyByCurrency(closed)), sub: closed.length + ' ' + endLabel.toLowerCase() }),
       kpi({ label: 'Avg amount', accent: C_AVG,
-        value: cur + avg.toLocaleString(), sub: 'per ' + noun(1),
-        viz: '<div class="range" style="--accent:' + C_AVG + '"><i style="left:' + avgPos + '%"></i></div>' }),
-      overdueTile,
+        value: cur + avg.toLocaleString(), sub: 'per ' + noun(1) }),
+      rateTile,
     ].join('');
-  }
-
-  // ── Completion-rate ring ───────────────────────────────────────────────────
-  // "Win rate" on a sales board, "hire rate" on a hiring one — the same figure
-  // either way: how many records made it to the last stage.
-  function winRateTile(span) {
-    const all = scopedCards(), closed = all.filter(isClosed);
-    const label = activeType().rateLabel;
-    const pct = all.length ? Math.round((closed.length / all.length) * 100) : 0;
-    const R = 58, C = 2 * Math.PI * R, off = C * (1 - pct / 100);
-    const body = '<div class="ring-body">' +
-      '<div class="ring" role="img" aria-label="' + esc(label) + ' ' + pct + ' percent">' +
-        '<svg viewBox="0 0 128 128">' +
-          '<circle class="ring-track" cx="64" cy="64" r="' + R + '"></circle>' +
-          '<circle class="ring-val" cx="64" cy="64" r="' + R + '" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '"></circle>' +
-        '</svg>' +
-        '<div class="ring-center"><b>' + pct + '%</b><span>' + esc(label) + '</span></div>' +
-      '</div>' +
-      '<div class="ring-foot">' + closed.length + ' of ' + all.length + '</div>' +
-    '</div>';
-    return tile({ span: span, accent: C_RATE, icon: ICON.rate, title: label.charAt(0).toUpperCase() + label.slice(1), body: body, tint: true });
   }
 
   // ── Breakdown: funnel (one pipeline) or donut (several) ─────────────────────
@@ -684,32 +609,52 @@
     return pls.length > 1 ? donutTile(pls, span) : funnelTile(pls[0], span);
   }
 
-  // One figure per row, not two: the amount where records carry one, otherwise the
-  // headcount. The other number is in the row's tooltip for anyone who wants it.
+  // Stages are an ordered scale and every record sits in exactly one of them, so
+  // the honest question is composition — what share of the pipeline is parked
+  // where. That's one 100%-wide stacked bar, not a row of bars: a row of bars
+  // invites reading stage-to-stage drop-off, which these numbers do not measure
+  // (a stage count is who is sitting there now, not who passed through).
+  //
+  // Ordered categories get the ordinal ramp of the pipeline's own hue — earliest
+  // stage lightest, last stage full strength. Interior segments have no free end
+  // to label without clipping, so the counts ride the legend underneath instead.
   function funnelTile(pl, span) {
     if (!pl) return '';
     const money = hasMoney();
     const stages = pl.stages || [], cards = pl.cards || [];
-    const rows = stages.map(function (st, i) {
+    const rows = stages.map(function (st) {
       const inStage = cards.filter(function (c) { return c.stage === st.key; });
       return { label: st.label, count: inStage.length, value: inStage.reduce(function (a, c) { return a + (Number(c.value) || 0); }, 0),
-        cur: (inStage[0] && inStage[0].currency) || window.defaultCurrency(), last: i === stages.length - 1 };
+        cur: (inStage[0] && inStage[0].currency) || window.defaultCurrency() };
     });
     const metric = function (r) { return money ? r.value : r.count; };
-    const maxVal = Math.max(1, Math.max.apply(null, rows.map(metric)));
+    const total = rows.reduce(function (a, r) { return a + metric(r); }, 0);
     const base = pl.color || C_OPEN;
-    const body = '<div class="funnel">' + rows.map(function (r, i) {
-      const op = r.last ? 1 : (0.92 - (i / Math.max(1, rows.length - 1)) * 0.5);
-      const w = Math.round((metric(r) / maxVal) * 100);
-      const shown = money ? r.cur + r.value.toLocaleString() : String(r.count);
-      const title = r.label + ' · ' + r.count + ' ' + noun(r.count) + (money ? ' · ' + r.cur + r.value.toLocaleString() : '');
-      return '<div class="frow" title="' + esc(title) + '">' +
-        '<div class="frow-label">' + esc(r.label) + '</div>' +
-        '<div class="frow-track"><div class="frow-fill" style="width:' + w + '%;background:' + esc(base) + ';opacity:' + op.toFixed(2) + '"></div></div>' +
-        '<div class="frow-right">' + esc(shown) + '</div>' +
+    if (!total) return tile({ span: span, accent: base, title: 'By stage', meta: esc(pl.name),
+      body: '<div class="dash-empty" style="padding:24px 0">Nothing in the pipeline yet.</div>' });
+
+    const ramp = rampSteps(base, rows.length);
+    const shade = function (i) { return ramp[i] || base; };
+    const fmt = function (r) { return money ? r.cur + r.value.toLocaleString() : String(r.count); };
+    const label = function (r) { return r.label + ' · ' + r.count + ' ' + noun(r.count) + (money ? ' · ' + r.cur + r.value.toLocaleString() : '') + ' · ' + Math.round((metric(r) / total) * 100) + '%'; };
+
+    // flex-grow carries the share, so the 2px gaps never come out of the data.
+    const bar = rows.map(function (r, i) {
+      if (metric(r) <= 0) return '';
+      return '<div class="stack-seg" style="flex:' + metric(r) + ' 0 0;background:' + shade(i) + '" title="' + esc(label(r)) + '"></div>';
+    }).join('');
+    const legend = rows.map(function (r, i) {
+      return '<div class="legend-row" title="' + esc(label(r)) + '">' +
+        '<span class="legend-dot" style="background:' + shade(i) + '"></span>' +
+        '<span class="legend-name">' + esc(r.label) + '</span>' +
+        '<span class="legend-val">' + esc(fmt(r)) + '</span>' +
+        '<span class="legend-pct">' + Math.round((metric(r) / total) * 100) + '%</span>' +
       '</div>';
-    }).join('') + '</div>';
-    return tile({ span: span, accent: base, icon: ICON.funnel, title: 'By stage', meta: esc(pl.name), body: body });
+    }).join('');
+    const body = '<div class="stackwrap">' +
+      '<div class="stack" role="img" aria-label="Share of pipeline by stage">' + bar + '</div>' +
+      '<div class="legend">' + legend + '</div></div>';
+    return tile({ span: span, accent: base, title: 'By stage', meta: esc(pl.name), body: body });
   }
 
   // Several pipelines of the same kind in view: split them by open amount, or by
@@ -724,7 +669,7 @@
         cur: money ? ((open[0] && open[0].currency) || window.defaultCurrency()) : '' };
     }).filter(function (s) { return s.value > 0; }).sort(function (a, b) { return b.value - a.value; });
 
-    if (!segs.length) return tile({ span: span, accent: C_OPEN, icon: ICON.funnel, title: title, body: '<div class="dash-empty" style="padding:24px 0">Nothing open yet.</div>' });
+    if (!segs.length) return tile({ span: span, accent: C_OPEN, title: title, body: '<div class="dash-empty" style="padding:24px 0">Nothing open yet.</div>' });
 
     const total = segs.reduce(function (a, s) { return a + s.value; }, 0);
     const fmt = function (s, n) { return money ? s.cur + n.toLocaleString() : String(n); };
@@ -744,7 +689,7 @@
       '<svg viewBox="0 0 42 42">' + ring + '</svg>' +
       '<div class="donut-center"><b>' + esc(fmt(segs[0], total)) + '</b><span>' + (money ? 'open amount' : 'open') + '</span></div></div>' +
       '<div class="legend">' + legend + '</div></div>';
-    return tile({ span: span, accent: C_RATE, icon: ICON.funnel, title: title, body: body });
+    return tile({ span: span, accent: C_RATE, title: title, body: body });
   }
 
   // ── Amount histogram (open records) ─────────────────────────────────────────
@@ -764,34 +709,114 @@
       for (let i = 0; i < buckets.length; i++) { if (v >= buckets[i].lo && v < buckets[i].hi) { buckets[i].n++; break; } }
     });
     const max = Math.max(1, Math.max.apply(null, buckets.map(function (b) { return b.n; })));
+    // Amount bands are an ordered scale, so they take the same validated ordinal
+    // ramp as the stages — bigger amounts darker. It replaces an opacity fade,
+    // which pushed the low band close enough to the card to stop reading as a mark.
+    const ramp = rampSteps(C_DIST, buckets.length);
     const body = '<div class="hist">' + buckets.map(function (b, i) {
       const h = Math.round((b.n / max) * 118);
-      const op = 0.55 + (i / (buckets.length - 1)) * 0.45;   // bigger amounts read as stronger
       return '<div class="hcol" title="' + b.n + ' ' + noun(b.n) + ' · ' + esc(cur + b.label) + '">' +
         '<span class="hcol-n' + (b.n ? '' : ' zero') + '">' + b.n + '</span>' +
-        '<div class="hcol-bar" style="height:' + (b.n ? Math.max(h, 4) : 2) + 'px;opacity:' + op.toFixed(2) + '"></div>' +
+        '<div class="hcol-bar" style="height:' + (b.n ? Math.max(h, 4) : 2) + 'px;background:' + ramp[i] + '"></div>' +
         '<span class="hcol-x">' + esc(cur + b.label) + '</span></div>';
     }).join('') + '</div>';
-    return tile({ span: span, accent: C_DIST, icon: ICON.dist, title: 'Amount spread', meta: open.length + ' open', body: body });
+    return tile({ span: span, accent: C_DIST, title: 'Amount spread', meta: open.length + ' open', body: body });
   }
 
-  // ── Categorical bars (activity type, source) ─────────────────────────────────
-  function tallyTile(id, title, field, icon, span, opts) {
-    opts = opts || {};
-    const counts = {}; let filled = 0;
+  // ── Tally over a nominal field (source) ──────────────────────────────────────
+  // Ranks unordered categories by count. Not a set of distinct *series*, so no
+  // categorical hue per row: one series, one colour.
+  function tally(field) {
+    const counts = {};
     scopedCards().forEach(function (e) {
-      const v = String(e.card[field] || '').trim(); if (!v) return; filled++; counts[v] = (counts[v] || 0) + 1;
+      const v = String(e.card[field] || '').trim(); if (!v) return; counts[v] = (counts[v] || 0) + 1;
     });
-    const keys = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
-    if (keys.length < (opts.min || 1)) return '';
-    const max = Math.max.apply(null, keys.map(function (k) { return counts[k]; }));
-    const body = keys.map(function (k, i) {
-      const w = Math.round((counts[k] / max) * 100);
-      return '<div class="brow"><div class="brow-label" title="' + esc(k) + '">' + esc(k) + '</div>' +
-        '<div class="brow-track"><div class="brow-fill" style="width:' + w + '%;background:' + CAT[i % CAT.length] + '"></div></div>' +
-        '<div class="brow-n">' + counts[k] + '</div></div>';
+    const keys = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a] || a.localeCompare(b); });
+    return { keys: keys, counts: counts, total: keys.reduce(function (a, k) { return a + counts[k]; }, 0),
+      max: keys.length ? counts[keys[0]] : 0 };
+  }
+
+  // ── Source split (pie) ───────────────────────────────────────────────────────
+  // Part-to-whole over a handful of nominal classes, so the wedges are categorical:
+  // one hue per source, assigned in a fixed order so a source keeps its colour when
+  // the set changes. The palette is the validated categorical order (adjacent CVD
+  // separation and the lightness/chroma gates all pass on a white surface); three of
+  // its slots sit under 3:1 against the card, which obliges visible labels — the
+  // legend carries name, count and share, so no value is readable only as a wedge.
+  //
+  // Worth knowing about this form: close values are exactly what a pie is worst at.
+  // Two sources at 2 each are two wedges nobody can tell apart by eye, which is why
+  // every figure is also in the legend.
+  // The deeper step of each validated hue rather than the bright one: same order,
+  // same separation guarantees, but every slot also clears 3:1 against the card, so
+  // the wedges read as considered colour instead of primaries.
+  const PIE = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300'];
+  const PIE_MAX = 6;
+
+  function sourcePieTile(title, field, span, opts) {
+    opts = opts || {};
+    const t = tally(field);
+    if (t.keys.length < (opts.min || 1)) return '';
+
+    // Past six classes the wedges blur into each other, so the tail folds into one
+    // "Other" rather than reaching for more hues.
+    let keys = t.keys, counts = t.counts;
+    if (keys.length > PIE_MAX) {
+      const head = keys.slice(0, PIE_MAX - 1);
+      const tail = keys.slice(PIE_MAX - 1);
+      counts = {};
+      head.forEach(function (k) { counts[k] = t.counts[k]; });
+      counts['Other'] = tail.reduce(function (a, k) { return a + t.counts[k]; }, 0);
+      keys = head.concat(['Other']);
+    }
+    const total = keys.reduce(function (a, k) { return a + counts[k]; }, 0);
+    if (!total) return '';
+
+    // The stroke is the ring: a circle of radius R stroked at width W paints the band
+    // from R-W/2 to R+W/2, so these values put the ring between an inner 28 and an
+    // outer 44 of the 100-unit box — a thin band with a hole wide enough for the
+    // total to sit in it.
+    //
+    // Segments meet edge to edge, matching the pipeline donut. That leaves hue as the
+    // only thing separating two neighbours, so the legend and the hover-to-isolate
+    // below are doing real work rather than decorating — the palette's adjacent pairs
+    // are validated for exactly this case.
+    const R = 36, W = 16, C = 2 * Math.PI * R;
+    let acc = 0;
+    const wedges = keys.map(function (k, i) {
+      const len = (counts[k] / total) * C;
+      const seg = '<circle class="pie-seg" cx="50" cy="50" r="' + R + '" fill="none"' +
+        ' stroke="' + PIE[i % PIE.length] + '" stroke-width="' + W + '"' +
+        ' stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '"' +
+        ' stroke-dashoffset="' + (-acc).toFixed(2) + '"></circle>';
+      acc += len;
+      return seg;
     }).join('');
-    return tile({ span: span, accent: CAT[0], icon: icon, title: title, body: body });
+
+    const legend = keys.map(function (k, i) {
+      const pct = Math.round((counts[k] / total) * 100);
+      return '<div class="legend-row" title="' + esc(k + ' · ' + counts[k] + ' of ' + total + ' · ' + pct + '%') + '">' +
+        '<span class="legend-dot" style="background:' + PIE[i % PIE.length] + '"></span>' +
+        '<span class="legend-name">' + esc(k) + '</span>' +
+        '<span class="legend-val">' + counts[k] + '</span>' +
+        '<span class="legend-pct">' + pct + '%</span>' +
+      '</div>';
+    }).join('');
+
+    // One direct label rather than a number on every wedge: the leader is the only
+    // reading a part-to-whole chart owes you at a glance.
+    const lead = keys[0], leadPct = Math.round((counts[lead] / total) * 100);
+    const body = '<div class="split">' +
+      '<div class="pie-wrap">' +
+        '<div class="pie" role="img" aria-label="' + esc(title) + '">' +
+          '<svg viewBox="0 0 100 100">' + wedges + '</svg>' +
+          '<div class="pie-center"><b>' + total + '</b><span>with a source</span></div>' +
+        '</div>' +
+        '<div class="pie-caption"><b>' + esc(lead) + '</b> leads at ' + leadPct + '%</div>' +
+      '</div>' +
+      '<div class="legend is-pie">' + legend + '</div></div>';
+    // The total is in the ring now, so the header doesn't say it a second time.
+    return tile({ span: span, accent: PIE[0], title: title, body: body });
   }
 
   // ── Focus list ───────────────────────────────────────────────────────────────
@@ -837,7 +862,7 @@
             '<span class="top-val' + (c.overdue ? ' is-late' : '') + '">' + esc(c.lastActivity || '') + '</span>') +
       '</a>';
     }).join('');
-    return tile({ span: span, accent: C_AVG, icon: ICON.top, title: title, body: body });
+    return tile({ span: span, accent: C_AVG, title: title, body: body });
   }
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -851,28 +876,21 @@
     let html = '';
     if (isShown('kpis')) html += kpiTiles();
 
-    // Headline row: win-rate ring (narrow) beside the breakdown (wide). Whichever
-    // is present alone takes the full width.
-    const hasRate = isShown('winrate'), hasBreak = isShown('breakdown');
-    if (hasRate && hasBreak) { html += winRateTile(1) + breakdownTile(3); }
-    else if (hasRate) { html += winRateTile(4); }
-    else if (hasBreak) { html += breakdownTile(4); }
-
-    // Medium row: distribution / activity / source. An odd count would leave a
-    // half-empty row, so the last one stretches to fill it.
-    const med = [];
-    if (isShown('distribution')) med.push(distributionTile);
-    if (isShown('activity')) med.push(function (s) { return tallyTile('activity', 'Activity mix', 'activityType', ICON.activity, s, { min: 1 }); });
-    if (isShown('sources')) med.push(function (s) { return tallyTile('sources', 'By source', 'source', ICON.source, s, { min: 2 }); });
-    const medHTML = med.map(function (fn) { return fn(2); }).filter(Boolean);
-    if (medHTML.length % 2 === 1) {
-      // Re-render the last present tile at full width.
-      let lastFn = med[med.length - 1], produced = medHTML.length;
-      // Find the fn that produced the last non-empty tile.
-      for (let i = med.length - 1; i >= 0; i--) { if (med[i](2)) { lastFn = med[i]; break; } }
-      medHTML[medHTML.length - 1] = lastFn(4);
+    // Chart tiles, paired two-up in this order: the stage/pipeline breakdown, then
+    // the amount histogram (money boards only), then the source split. So a sales
+    // board reads "open amount by pipeline" beside "amount spread", and a hiring
+    // board reads "by stage" beside "by source". A lone tile at the end of an odd
+    // count stretches to the full width rather than leaving half a row empty.
+    const charts = [];
+    if (isShown('breakdown')) charts.push(breakdownTile);
+    if (isShown('distribution')) charts.push(distributionTile);
+    if (isShown('sources')) charts.push(function (s) { return sourcePieTile('By source', 'source', s, { min: 2 }); });
+    const rendered = charts.map(function (fn) { return { fn: fn, html: fn(2) }; }).filter(function (r) { return r.html; });
+    if (rendered.length % 2 === 1) {
+      const last = rendered[rendered.length - 1];
+      last.html = last.fn(4);
     }
-    html += medHTML.join('');
+    html += rendered.map(function (r) { return r.html; }).join('');
 
     if (isShown('top')) html += topTile(4);
 
@@ -894,8 +912,12 @@
 
   function animateBars(host) {
     requestAnimationFrame(function () {
-      host.querySelectorAll('.frow-fill, .brow-fill, .top-bar-fill, .meter > span').forEach(function (el) {
+      host.querySelectorAll('.top-bar-fill').forEach(function (el) {
         const w = el.style.width; el.style.width = '0%'; requestAnimationFrame(function () { el.style.width = w; });
+      });
+      // The stacked bar grows out of the left edge.
+      host.querySelectorAll('.stack-seg').forEach(function (el) {
+        const g = el.style.flexGrow; el.style.flexGrow = '0'; requestAnimationFrame(function () { el.style.flexGrow = g; });
       });
       host.querySelectorAll('.hcol-bar').forEach(function (el) {
         const h = el.style.height; el.style.height = '2px'; requestAnimationFrame(function () { el.style.height = h; });
@@ -1138,7 +1160,7 @@
       return;
     }
     const pipelines = data.pipelines || {};
-    rebuildPipelineNav(Object.keys(pipelines).map(function (id) { return pipelines[id]; }));
+    window.titanSidebar.setPipelines(Object.keys(pipelines).map(function (id) { return pipelines[id]; }));
 
     fillTabs();
     fillScope();

@@ -14,10 +14,31 @@
   // Preserves ?u=<persona> (and ?apiBase=... for local testing) across in-app links.
   window.crmPath = function (suffix) { return (suffix || '/crm') + location.search; };
 
+  // Deep link to one contact on the Contacts page — the mirror of companyHref, so a
+  // person named anywhere in the app can be opened where they actually live.
+  // Keyed by email because that is what contacts are deduplicated by; falls back to
+  // the name for the rare record that has one without the other.
+  // Only the environment params travel: copying the whole query dragged the current
+  // page's own deep-link param along, so opening a person from a company's panel
+  // produced /crm/contacts?company=Delta+Retail&contact=… — a stale company filter
+  // riding on a contacts URL.
+  function envQuery() {
+    var from = new URLSearchParams(location.search), q = new URLSearchParams();
+    ['u', 'apiBase'].forEach(function (k) { if (from.get(k)) q.set(k, from.get(k)); });
+    return q;
+  }
+  window.contactHref = function (contact) {
+    var q = envQuery();
+    var email = String((contact && contact.email) || '').trim();
+    if (email) q.set('contact', email);
+    else q.set('contactName', String((contact && contact.name) || '').trim());
+    return '/crm/contacts?' + q.toString();
+  };
+
   // Deep link to one company on the Companies page. Keeps the current query
   // (persona, apiBase) and adds the company to open on arrival.
   window.companyHref = function (company) {
-    var q = new URLSearchParams(location.search);
+    var q = envQuery();
     q.set('company', company);
     return '/crm/companies?' + q.toString();
   };
@@ -26,6 +47,22 @@
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
     });
+  };
+
+  // Many designations already carry the employer ("Backend Engineer at Delta
+  // Retail"), so a view that also names the company ends up saying it twice. This
+  // drops a trailing "at <employer>" when it names the company being shown
+  // alongside — matched loosely, since the stored designation and the record's
+  // company field disagree on suffixes ("Brightpath" vs "Brightpath Co").
+  // Anything that doesn't match is left exactly as typed.
+  function sameOrg(a, b) {
+    var norm = function (x) { return String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''); };
+    var x = norm(a), y = norm(b);
+    return !!x && !!y && (x === y || x.indexOf(y) === 0 || y.indexOf(x) === 0);
+  }
+  window.titleWithoutOrg = function (designation, company) {
+    var m = String(designation || '').match(/^(.*\S)\s+at\s+(\S.*)$/i);
+    return (m && sameOrg(m[2], company)) ? m[1] : designation;
   };
 
   // ── Company logo — same derivation and fallback as crm.html / opportunity-view.html ──
@@ -100,7 +137,7 @@
     { key: 'name', label: 'Name', type: 'text', locked: true },
     { key: 'email', label: 'Email', type: 'email', locked: true },
     { key: 'phone', label: 'Phone', type: 'tel' },
-    { key: 'designation', label: 'Job title', type: 'text' },
+    { key: 'designation', label: 'Designation', type: 'text' },
     { key: 'department', label: 'Department', type: 'text' },
     { key: 'location', label: 'Location', type: 'text' },
     { key: 'linkedin', label: 'LinkedIn', type: 'url' },
@@ -125,71 +162,12 @@
     return key;
   };
 
-  // Sidebar pipeline rows — same markup/behaviour crm.html builds at load time.
-  // Scoped per persona: ?u=joanna has a different set of pipelines than default.
-  function navCacheKey() { return 'titan-crm-pipeline-nav:' + window.PERSONA_ID; }
-  var renderedNavSig = null;
-
-  window.rebuildPipelineNav = function (list, opts) {
-    var line = document.getElementById('pipeline-nav-line');
-    if (!line) return;
-
-    // Nothing changed since the rows currently on screen — leave them alone
-    // rather than tearing them down and rebuilding an identical list.
-    var sig = JSON.stringify(list.map(function (p) { return [p.id, p.name, p.color]; }));
-    if (sig === renderedNavSig) return;
-    renderedNavSig = sig;
-
-    var n = line.nextElementSibling, had = 0;
-    while (n && !n.classList.contains('sidebar-line')) {
-      var next = n.nextElementSibling; n.remove(); had++; n = next;
-    }
-    // Only animate when the list is genuinely appearing for the first time —
-    // i.e. this tab has no cached list to paint from. Rows restored from cache
-    // never animate: fading them in on every navigation is the same blink,
-    // just prettier.
-    var animate = (opts && opts.animate === false) ? false : had === 0;
-
-    var after = line;
-    list.forEach(function (pl, i) {
-      var item = document.createElement('div');
-      item.className = 'nav-item' + (animate ? ' is-entering' : '');
-      // Staggered so the rows read as the list filling in, not as one flash.
-      // Capped so a long pipeline list doesn't crawl in.
-      if (animate) item.style.animationDelay = Math.min(i * 45, 270) + 'ms';
-      item.dataset.pipelineId = pl.id;
-      item.onclick = function () { location.href = window.crmPath('/crm/pipeline/' + encodeURIComponent(pl.id)); };
-      item.innerHTML =
-        '<div class="nav-item-icon"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="' + (pl.color || '#2170f4') + '"/></svg></div>' +
-        '<span class="nav-item-label"></span>';
-      item.querySelector('.nav-item-label').textContent = pl.name;
-      item.addEventListener('animationend', function () {
-        item.classList.remove('is-entering');
-        item.style.animationDelay = '';
-      }, { once: true });
-      after.after(item);
-      after = item;
-    });
-
-    // Remembered for the next page in this tab, so its rows are on screen at
-    // paint time instead of after its own /api/data round-trip.
-    try {
-      sessionStorage.setItem(navCacheKey(), JSON.stringify(
-        list.map(function (p) { return { id: p.id, name: p.name, color: p.color }; })
-      ));
-    } catch (e) { /* private mode / quota — the nav just falls back to loading late */ }
-  };
-
-  // Contacts and Companies are separate documents, so navigating between them
-  // reloads the sidebar and the pipeline rows would blink out until /api/data
-  // came back. Painting the previous page's list synchronously here (this script
-  // runs after the sidebar markup) keeps them on screen across the navigation;
-  // rebuildPipelineNav() then no-ops if the fetched list matches.
-  (function primePipelineNav() {
-    var cached = null;
-    try { cached = JSON.parse(sessionStorage.getItem(navCacheKey()) || 'null'); } catch (e) {}
-    if (cached && cached.length) window.rebuildPipelineNav(cached, { animate: false });
-  })();
+  // The sidebar — its markup, its pipeline rows, its cache and its active state —
+  // belongs to titan-sidebar.js, which every CRM page loads. It used to be
+  // reimplemented here as well (and in crm.html, and in opportunity-view.html),
+  // which is how the four copies drifted apart. Pages hand their fetched
+  // pipelines over with titanSidebar.setPipelines(); nothing else here touches
+  // the nav.
 
   // Every card across every pipeline, tagged with the pipeline it came from so rows
   // can link back to the right /crm/pipeline/<id>/record/<id>.

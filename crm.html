@@ -29,6 +29,13 @@
       }
     })();
   </script>
+  <!-- The sidebar is a shared component: titan-sidebar.css owns every sidebar
+       style and titan-sidebar.js owns its markup. This page used to carry its own
+       copy of both, which is how the two drifted (its separator rule still had
+       the pre-fix margin). Loaded before the page styles so page-specific rules
+       can still override. -->
+  <link rel="stylesheet" href="/titan-sidebar.css">
+  <script src="/titan-sidebar.js"></script>
   <style>
     .persona-cloak .app-window { visibility: hidden; }
   </style>
@@ -49,112 +56,6 @@
       --selected-bg: #eff6ff;
       --selected-bg-strong: #e0ecfc;
     }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
-      background: #e0e0e0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-
-    /* ── App Window ── */
-    .app-window {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-      background: #fff;
-    }
-
-    /* ── Sidebar ── */
-    .sidebar {
-      width: 250px;
-      background: #1c1c1c;
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-      overflow: visible;
-    }
-
-    .sidebar-header {
-      height: 64px;
-      display: flex;
-      align-items: center;
-      padding: 0 12px;
-      gap: 11px;
-      flex-shrink: 0;
-    }
-
-    .tab-switch {
-      position: relative;
-      border-radius: 8px;
-      padding: 3px 5px;
-      background: #2c2c30;
-      display: flex;
-      align-items: center;
-      flex-shrink: 0;
-      cursor: pointer;
-      z-index: 1;
-
-    }
-
-
-
-
-    .tab-switch img {
-      width: 28px;
-      height: 28px;
-    }
-
-    /* crm.svg's viewBox has no internal padding around its shape (unlike mail.svg's),
-       so the same width/height reads visibly bigger — same calibration the
-       app-switcher grid already applies to crm/tasks/drive vs mail/calendar/contacts. */
-    .tab-switch img[src*="crm.svg"] {
-      width: 21px;
-      height: 21px;
-    }
-
-    .tab-switch-arrow {
-      width: 16px;
-      height: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .tab-switch-arrow img {
-      width: 9px;
-      height: 5px;
-      object-fit: contain;
-      opacity: 0.5;
-      transition: opacity 0.15s ease;
-    }
-
-    .tab-switch:hover .tab-switch-arrow img { opacity: 1; }
-
-    .titan-logo {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding-right: 24px;
-      padding-top: 3px;
-    }
-
-    .titan-logo img {
-      width: 77px;
-      height: 20px;
-      object-fit: contain;
-    }
-
     /* ── Reusable Titan Split Button Component ── */
     .titan-split-btn {
       background: #2170f4;
@@ -270,149 +171,6 @@
     .ripple-active {
       animation: border-ripple 0.4s cubic-bezier(0.1, 0.8, 0.3, 1);
     }
-
-    .nav-scroll {
-      overflow-y: auto;
-      flex: 1;
-      position: relative;
-    }
-
-    .nav-scroll::-webkit-scrollbar {
-      width: 0;
-    }
-
-    .sidebar-line {
-      height: 1px;
-      background: #2d2d2d;
-      margin: 8px 0 0;
-      flex-shrink: 0;
-    }
-
-    /* Account switcher — rounded pill trigger + dropdown menu */
-    .account-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 4px 12px 2px;
-      padding: 7px 8px 7px 10px;
-      background: #2a2a2a;
-      border-radius: 8px;
-      cursor: pointer;
-      flex-shrink: 0;
-      position: relative;
-      transition: background 0.15s;
-    }
-
-    .account-header:hover { background: #333333; }
-    .account-header.open { background: #333333; }
-
-    .account-chevron {
-      width: 18px;
-      height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: transform 0.18s ease;
-    }
-
-    .account-header.open .account-chevron { transform: rotate(180deg); }
-
-    .account-chevron img { width: 10px; height: 6px; object-fit: contain; }
-
-    .account-menu {
-      position: absolute;
-      top: calc(100% + 6px);
-      left: 0;
-      right: 0;
-      background: #2a2a2a;
-      border: 1px solid #3d3d3d;
-      border-radius: 10px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
-      padding: 6px;
-      display: none;
-      z-index: 200;
-    }
-    .account-menu.open { display: block; }
-
-    .account-menu-label {
-      font-size: 10.5px;
-      font-weight: 600;
-      color: #7d7d7d;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 6px 8px 4px;
-    }
-
-    .account-menu-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 7px 8px;
-      border-radius: 7px;
-      cursor: pointer;
-    }
-    .account-menu-item:hover { background: #3a3a3a; }
-
-    .account-menu-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-      color: #fff;
-    }
-
-    .account-menu-text { flex: 1; min-width: 0; }
-    .account-menu-email {
-      font-size: 13px;
-      font-weight: 500;
-      color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .account-menu-sub { font-size: 11px; color: #8a8a8a; margin-top: 1px; }
-
-    .account-menu-check {
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
-      color: #2170f4;
-      display: none;
-    }
-    .account-menu-item.active .account-menu-check { display: block; }
-
-    .account-menu-sep { height: 1px; background: #3d3d3d; margin: 5px 4px; }
-
-    .account-menu-add {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px;
-      border-radius: 7px;
-      cursor: pointer;
-      color: #d0d0d0;
-      font-size: 13px;
-      font-weight: 500;
-    }
-    .account-menu-add:hover { background: #3a3a3a; }
-    .account-menu-add-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 1px dashed #555;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      color: #9a9a9a;
-    }
-
     .account-email-id {
       display: flex;
       align-items: center;
@@ -420,46 +178,6 @@
       flex: 1;
       min-width: 0;
     }
-
-    .account-avatar {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      position: relative;
-      flex-shrink: 0;
-      overflow: hidden;
-    }
-
-    .account-avatar img.bg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .account-avatar span {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 500;
-      color: #fff;
-      line-height: 1;
-    }
-
-    .account-email-text {
-      font-size: 13px;
-      font-weight: 600;
-      color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      min-width: 0;
-      flex: 1;
-    }
-
     /* Tooltip showing full email on hover */
     #email-tooltip {
       display: none;
@@ -517,117 +235,6 @@
         transform: rotate(360deg);
       }
     }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px 6px 24px;
-      height: 32px;
-      cursor: pointer;
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    .nav-item.active {
-      background: #333333;
-    }
-
-    .nav-item-icon {
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .nav-item-icon img {
-      max-width: 16px;
-      max-height: 16px;
-      width: auto;
-      height: auto;
-    }
-
-    .nav-item-label {
-      font-size: 14px;
-      color: #fff;
-      white-space: nowrap;
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .nav-item-label.active {
-      font-weight: 600;
-    }
-
-    .nav-item-label.secondary {
-      color: #888;
-    }
-
-    .nav-badge {
-      background: transparent;
-      font-size: 13px;
-      font-weight: 600;
-      color: #c66f6f;
-      padding: 0 4px;
-    }
-
-    .nav-item-menu-btn {
-      width: 20px; height: 20px; border-radius: 4px; display: none; align-items: center; justify-content: center;
-      flex-shrink: 0; color: #9aa1a9; cursor: pointer;
-    }
-    .nav-item:hover .nav-item-menu-btn { display: flex; }
-    .nav-item-menu-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
-
-    /* Global dropdown caret — one consistent caret with space after it, app-wide.
-       !important overrides each select's own background/padding shorthand. */
-    select {
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1.2l4 4 4-4' fill='none' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
-      background-repeat: no-repeat !important;
-      background-position: right 13px center !important;
-      padding-right: 34px !important;
-    }
-
-    .pipeline-nav-menu {
-      position: fixed; background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-      padding: 6px; min-width: 190px; z-index: 300; display: none;
-    }
-    .pipeline-nav-menu.open { display: block; }
-    .pipeline-nav-menu-item {
-      padding: 8px 12px; font-size: 13px; color: #333; border-radius: 6px; cursor: pointer; white-space: nowrap;
-    }
-    .pipeline-nav-menu-item:hover { background: #f2f3f5; }
-    .pipeline-nav-menu-sep { height: 1px; background: #eee; margin: 5px 4px; }
-    .pipeline-nav-menu-item.pnm-delete { color: #dc2626; }
-    .pipeline-nav-menu-item.pnm-delete:hover { background: #fdecec; }
-
-    .nav-item-arrow {
-      width: 24px;
-      height: 24px;
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    .nav-item-arrow img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    .sidebar-footer {
-      flex-shrink: 0;
-      display: flex;
-      position: relative;
-    }
-
     .sidebar-footer-line {
       height: 1px;
       background: transparent;
@@ -639,58 +246,6 @@
       inset: 0;
       width: 100%;
     }
-
-    .footer-btn {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 12px 6px;
-      background: #252525;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .footer-btn-icon {
-      width: 16px;
-      height: 16px;
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    .footer-btn-icon.settings-icon {
-      width: 20px;
-      height: 20px;
-    }
-
-    .footer-btn-icon img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    .footer-btn span {
-      font-size: 14px;
-      color: #fff;
-    }
-
-    .footer-divider {
-      width: 1px;
-      background: #2d2d2d;
-      flex-shrink: 0;
-    }
-
-    /* ── Main area (right of sidebar) ── */
-    .main-area {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
     .content-area {
       flex: 1;
       display: flex;
@@ -2187,17 +1742,6 @@
       flex-shrink: 0;
       opacity: 0.5;
     }
-
-    .tab-switch {
-      transition: background 0.15s ease, padding 0.15s ease;
-      cursor: pointer;
-    }
-
-    .tab-switch:hover {
-      background: #38383e;
-      padding: 4px 6px;
-    }
-
     /* ── Panel resize handle ── */
     .panel-resize-handle {
       position: absolute;
@@ -3258,152 +2802,18 @@
   </style>
 </head>
 
-<body>
+<body data-sidebar-data="page">
 
   <!-- App Window -->
   <div class="app-window">
 
-    <!-- Sidebar -->
-    <div class="sidebar">
+    <!-- The sidebar is one component: titan-sidebar.js renders it (markup, account
+         switcher, pipeline rows, three-dot menu, footer) and marks the active row from
+         the URL. This page keeps its own handlers for what only the board can do — the
+         new-pipeline and settings modals, in-page pipeline switching — and hands the
+         component its pipelines with rebuildPipelineNav(). -->
+    <div id="sidebar-mount"></div>
 
-      <!-- Header with logo -->
-      <div class="sidebar-header">
-        <div class="tab-switch">
-          <img src="/app_switcher_assets/grid_icons/crm.svg" alt="CRM">
-          <div class="tab-switch-arrow">
-            <img src="/assets/1c88a1be-2a78-4065-86f7-8eb060dbb526.svg" alt="">
-          </div>
-        </div>
-        <div class="titan-logo">
-          <img src="/assets/fa36f613-977c-444a-bef5-e1b5f5f1b340.svg" alt="Titan">
-        </div>
-      </div>
-
-      <div class="nav-scroll">
-
-        <!-- Account switcher -->
-        <div class="sidebar-line" style="margin-top:2px;"></div>
-        <div class="account-header" id="account-header" onclick="toggleAccountMenu(event)">
-          <div class="account-avatar">
-            <img class="bg" src="/assets/d2c6a617-0407-4985-8c8b-740201e73dfe.svg" alt="">
-            <span id="account-active-initial">E</span>
-          </div>
-          <span class="account-email-text" id="account-active-email">ella.henderson@avontechlabs.com</span>
-          <div class="account-chevron">
-            <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#bdbdbd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-
-          <!-- Dropdown: account switcher -->
-          <div class="account-menu" id="account-menu">
-            <div class="account-menu-label">Titan accounts</div>
-            <div class="account-menu-item active" onclick="selectAccount(event, this, 'ella.henderson@avontechlabs.com', 'E', '#3f6ea5')">
-              <span class="account-menu-avatar" style="background:#3f6ea5;">E</span>
-              <div class="account-menu-text">
-                <div class="account-menu-email">ella.henderson@avontechlabs.com</div>
-                <div class="account-menu-sub">Avontech Labs</div>
-              </div>
-              <svg class="account-menu-check" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div class="account-menu-item" onclick="selectAccount(event, this, 'ella@brightpath.co', 'B', '#9a6b3f')">
-              <span class="account-menu-avatar" style="background:#9a6b3f;">B</span>
-              <div class="account-menu-text">
-                <div class="account-menu-email">ella@brightpath.co</div>
-                <div class="account-menu-sub">BrightPath Co</div>
-              </div>
-              <svg class="account-menu-check" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div class="account-menu-sep"></div>
-            <div class="account-menu-add" onclick="event.stopPropagation(); closeAccountMenu(); alert('Prototype only: adding an account is not wired up yet.');">
-              <span class="account-menu-add-icon">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-              </span>
-              Add another account
-            </div>
-          </div>
-        </div>
-
-        <!-- Dashboard: first destination in the CRM nav -->
-        <div class="nav-item" onclick="location.href='/crm/dashboard' + location.search">
-          <div class="nav-item-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="1.5" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/></svg>
-          </div>
-          <span class="nav-item-label">Dashboard</span>
-        </div>
-
-        <!-- + New Pipeline -->
-        <div class="nav-item" onclick="openNewPipeline()">
-          <div class="nav-item-icon" style="color:#2170f4; font-weight:700; font-size:16px;">+</div>
-          <span class="nav-item-label" style="color:#2170f4; font-weight:600;">New pipeline</span>
-        </div>
-
-        <div class="sidebar-line" id="pipeline-nav-line"></div>
-
-        <!-- Neo partnerships (active) -->
-        <div class="nav-item active" data-pipeline-id="neo" onclick="switchPipeline('neo')">
-          <div class="nav-item-icon">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="#7a6ba3"/></svg>
-          </div>
-          <span class="nav-item-label active">Neo partnerships</span>
-          <span class="nav-item-menu-btn" onclick="event.stopPropagation(); togglePipelineNavMenu(event, 'neo')" title="Pipeline actions">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3.5" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="12.5" r="1.3" fill="currentColor"/></svg>
-          </span>
-        </div>
-        <!-- Saved filtered views of the Neo partnerships pipeline -->
-        <div class="nav-item" style="padding-left:52px;">
-          <span class="nav-item-label secondary">Deal over $10k</span>
-        </div>
-        <div class="nav-item" style="padding-left:52px;">
-          <span class="nav-item-label secondary">North America</span>
-        </div>
-
-        <div class="sidebar-line"></div>
-
-        <div class="nav-item" onclick="location.href='/crm/contacts' + location.search">
-          <div class="nav-item-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4.5" r="2.5" stroke="#fff" stroke-width="1.3"/><path d="M2.5 12.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="#fff" stroke-width="1.3"/></svg>
-          </div>
-          <span class="nav-item-label">Contacts</span>
-        </div>
-        <div class="nav-item" onclick="location.href='/crm/companies' + location.search">
-          <div class="nav-item-icon">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="11" stroke="#fff" stroke-width="1.3"/><path d="M6 7V3h8v4" stroke="#fff" stroke-width="1.3"/></svg>
-          </div>
-          <span class="nav-item-label">Companies</span>
-        </div>
-
-      </div><!-- /nav-scroll -->
-
-      <!-- Footer -->
-      <div style="position:relative; flex-shrink:0;">
-        <div style="height:1px; position:relative; overflow:visible;">
-          <img src="/assets/0d00b891-46d6-4063-acc9-0db4c8c41036.svg" alt=""
-            style="position:absolute; inset:-1px 0; width:100%; height:2px; object-fit:fill;">
-        </div>
-        <div class="sidebar-footer">
-          <div class="footer-btn">
-            <div class="footer-btn-icon">
-              <img src="/assets/34686e57-21d5-4bf6-82c4-1c6e474d25d3.svg" alt="">
-            </div>
-            <span>Bug</span>
-          </div>
-          <div class="footer-divider"></div>
-          <div class="footer-btn">
-            <div class="footer-btn-icon">
-              <img src="/assets/03a449fb-b16b-4b26-8eec-0fa033eff13e.svg" alt="">
-            </div>
-            <span>Feature</span>
-          </div>
-          <div class="footer-divider"></div>
-          <div class="footer-btn" onclick="toggleSettingsModal()">
-            <div class="footer-btn-icon settings-icon">
-              <img src="/assets/6ea52e57-1d75-47b1-97cd-e416a5d2372d.svg" alt="">
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /sidebar -->
 
     <div class="main-area">
 
@@ -5278,12 +4688,9 @@
       const icon = document.querySelector('.nav-scroll .nav-item[data-pipeline-id="' + id + '"] .nav-item-icon path');
       if (icon) icon.setAttribute('fill', CURRENT_PIPELINE_COLOR);
 
-      document.querySelectorAll('.nav-scroll .nav-item[data-pipeline-id]').forEach(function (el) {
-        const on = el.dataset.pipelineId === id;
-        el.classList.toggle('active', on);
-        const lbl = el.querySelector('.nav-item-label');
-        if (lbl) lbl.classList.toggle('active', on);
-      });
+      // Switching here doesn't navigate, so the component can't read the new current
+      // pipeline off the URL — tell it, and let it mark the row.
+      window.titanSidebar.setActivePipeline(id);
 
       closeCardActionMenu();
       renderBoard();
@@ -5310,19 +4717,11 @@
       document.getElementById('pipeline-nav-menu').classList.remove('open');
       document.removeEventListener('click', closePipelineNavMenu);
     }
-    // Sub-pages (Pipeline setting, Opportunity setting, Add opportunity) navigate here
-    // in place rather than opening a popup — a new tab has no reliable window.opener
-    // (blocked popups, file:// pages), which broke things like the settings title. But
-    // titan-sidebar.js's shared sidebar also used to clone its HTML live from
-    // window.opener, so losing it left those pages with a blank sidebar. Stash the
-    // rendered sidebar as HTML too, so it works the same way as the pipeline data.
-    function stashSidebarForHandoff() {
-      const sidebar = document.querySelector('.sidebar');
-      const menu = document.getElementById('pipeline-nav-menu');
-      sessionStorage.setItem('titan-crm-sidebar-html', JSON.stringify({
-        sidebar: sidebar ? sidebar.outerHTML : '', menu: menu ? menu.outerHTML : '',
-      }));
-    }
+    // Sub-pages used to be handed a snapshot of this sidebar's rendered HTML through
+    // sessionStorage, and replayed it. That is why they showed a frozen copy of
+    // whatever this page looked like on the way out — and an empty black column when
+    // deep-linked with nothing stashed. They mount the component and load their own
+    // rows now, so there is nothing left to stash.
 
     // Builds a real /crm/pipeline/<id>/... path (preserving ?u=<persona> if present)
     // instead of query-string state for the pipeline/record id — see updateCrmUrl().
@@ -5341,7 +4740,6 @@
       // way before navigating back to /crm/pipeline/<id>.
       if (kind === 'pipeline-setting' || kind === 'entity-setting') {
         sessionStorage.setItem('titan-crm-edit-pipeline', JSON.stringify({ pipelineKey: pipelineKey, pipeline: pl }));
-        stashSidebarForHandoff();
         location.href = crmPath(pipelineKey, kind === 'pipeline-setting' ? '/setting' : '/record-setting');
         return;
       }
@@ -5467,7 +4865,6 @@
       sessionStorage.setItem('titan-crm-add-opportunity-source', JSON.stringify({
         pipelineKey: currentPipelineId, pipelines: PIPELINES, currencySymbol: CURRENCY_SYMBOL,
       }));
-      stashSidebarForHandoff();
       location.href = crmPath(currentPipelineId, '/record/new');
     }
 
@@ -6266,39 +5663,12 @@
       resetToSampleData();
     }
 
-    // Pipeline nav items are rebuilt from PIPELINES on every load (default persona
-    // included) since the pipeline set now comes from the API, not static HTML —
-    // only strip previously-generated pipeline rows, so the static "Deal over $10k" /
-    // "North America" saved views (which belong specifically to "Neo partnerships")
-    // aren't wiped too; they're re-attached under the "neo" pipeline's own row below.
+    // The sidebar renders its own rows — this just hands the list over. Each page
+    // used to carry its own copy of this, all subtly different: one marked no row
+    // active, one cleared its siblings to the end of the container, and only this
+    // one knew that a pipeline could have saved filter views.
     function rebuildPipelineNav(pipelines) {
-      var line = document.getElementById('pipeline-nav-line');
-      if (!line) return;
-      var n = line.nextElementSibling;
-      while (n && !n.classList.contains('sidebar-line')) { var next = n.nextElementSibling; n.remove(); n = next; }
-      var after = line;
-      pipelines.forEach(function (pl, i) {
-        var item = document.createElement('div');
-        item.className = 'nav-item' + (i === 0 ? ' active' : '');
-        item.dataset.pipelineId = pl.id;
-        item.setAttribute('onclick', "switchPipeline('" + pl.id + "')");
-        item.innerHTML =
-          '<div class="nav-item-icon"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="' + (pl.color || '#2170f4') + '"/></svg></div>' +
-          '<span class="nav-item-label' + (i === 0 ? ' active' : '') + '"></span>' +
-          '<span class="nav-item-menu-btn" onclick="event.stopPropagation(); togglePipelineNavMenu(event, \'' + pl.id + '\')" title="Pipeline actions">' +
-            '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3.5" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="12.5" r="1.3" fill="currentColor"/></svg>' +
-          '</span>';
-        item.querySelector('.nav-item-label').textContent = pl.name;
-        after.after(item);
-        after = item;
-        if (pl.id === 'neo') {
-          var views = document.createElement('div');
-          views.innerHTML =
-            '<div class="nav-item" style="padding-left:52px;"><span class="nav-item-label secondary">Deal over $10k</span></div>' +
-            '<div class="nav-item" style="padding-left:52px;"><span class="nav-item-label secondary">North America</span></div>';
-          while (views.firstChild) { after.after(views.firstChild); after = after.nextSibling; }
-        }
-      });
+      window.titanSidebar.setPipelines(pipelines);
     }
 
     async function applyPersona() {
@@ -6345,8 +5715,12 @@
         document.documentElement.classList.remove('persona-cloak');
       }
     }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyPersona);
-    else applyPersona();
+    async function bootCrm() {
+      await applyPersona();
+      consumeSidebarIntent();   // ?intent= from the shared sidebar on a sub-page
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootCrm);
+    else bootCrm();
 
     // ── New Pipeline flow (§4.1 Create · §4.2 Templates · §4.3 Stage customization) ──
     const NP_TEMPLATES = {
@@ -6364,6 +5738,20 @@
 
     const npState = { type: null, name: '', plural: 'records', color: '#4f6d9e', stages: [] };
     let npDragIndex = null;
+
+    // Sub-pages can't open these modals themselves — they have no opener to call
+    // into — so the shared sidebar sends the user here with ?intent=. Consumed once,
+    // then stripped from the URL so a refresh doesn't reopen the modal.
+    function consumeSidebarIntent() {
+      const q = new URLSearchParams(location.search);
+      const intent = q.get('intent');
+      if (!intent) return;
+      q.delete('intent');
+      const rest = q.toString();
+      history.replaceState(null, '', location.pathname + (rest ? '?' + rest : ''));
+      if (intent === 'new-pipeline') openNewPipeline();
+      else if (intent === 'settings') toggleSettingsModal();
+    }
 
     function openNewPipeline() {
       npState.type = 'sales';   // default selection so Continue is always actionable
@@ -6548,7 +5936,7 @@
         stages: clean.map(function (s, i) { return { key: slugify(s.name, i), label: s.name }; }),
         cards: [],
       };
-      npAddSidebarPipeline(name, id);
+      npAddSidebarPipeline();
       switchPipeline(id);
       // Persist the new pipeline — without this it lives only in memory + the sidebar
       // DOM and is gone on the next load (switchPipeline doesn't save on its own).
@@ -6558,21 +5946,10 @@
       npToast('“' + name + '” created — link an email to add your first ' + entity.toLowerCase() + '.', true);
     }
 
-    function npAddSidebarPipeline(name, id) {
-      // Insert the new pipeline into the sidebar just under the divider; switchPipeline
-      // handles active-state highlighting.
-      const item = document.createElement('div');
-      item.className = 'nav-item';
-      item.dataset.pipelineId = id;
-      item.setAttribute('onclick', "switchPipeline('" + id + "')");
-      item.innerHTML =
-        '<div class="nav-item-icon">' +
-          '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="' + (npState.color || '#2170f4') + '"/></svg>' +
-        '</div>' +
-        '<span class="nav-item-label"></span>';
-      item.querySelector('.nav-item-label').textContent = name;
-      const line = document.getElementById('pipeline-nav-line');
-      if (line && line.parentNode) line.parentNode.insertBefore(item, line.nextSibling);
+    // Re-renders the rows from PIPELINES rather than hand-building a single row —
+    // the hand-built one came out without the three-dot menu every other row has.
+    function npAddSidebarPipeline() {
+      rebuildPipelineNav(Object.keys(PIPELINES).map(function (k) { return PIPELINES[k]; }));
     }
 
     let npToastTimer = null;
@@ -6825,13 +6202,6 @@
     </div>
   </div>
 
-  <div class="pipeline-nav-menu" id="pipeline-nav-menu">
-    <div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction('add-team')">Add team</div>
-    <div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction('filter')">Add filter view</div>
-    <div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction('pipeline-setting')">Pipeline setting</div>
-    <div class="pipeline-nav-menu-item" data-action="entity-setting" onclick="pipelineNavMenuAction('entity-setting')">Opportunity setting</div>
-    <div class="pipeline-nav-menu-sep"></div>
-    <div class="pipeline-nav-menu-item pnm-delete" onclick="pipelineNavMenuAction('delete-pipeline')">Delete pipeline</div>
   </div>
 
   <!-- ── Add team: invite a teammate (same-domain dummy directory) to this pipeline ── -->

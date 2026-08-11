@@ -16,103 +16,12 @@
 <link rel="stylesheet" href="/titan-sidebar.css">
 <link rel="stylesheet" href="/crm-directory.css">
 </head>
-<body data-subpage="companies">
+<body data-subpage="companies" data-sidebar-data="page">
 
 <div class="app-window">
-  <div class="sidebar">
-
-    <div class="sidebar-header">
-      <div class="tab-switch">
-        <img src="/app_switcher_assets/grid_icons/crm.svg" alt="CRM">
-        <div class="tab-switch-arrow">
-          <img src="/assets/1c88a1be-2a78-4065-86f7-8eb060dbb526.svg" alt="">
-        </div>
-      </div>
-      <div class="titan-logo">
-        <img src="/assets/fa36f613-977c-444a-bef5-e1b5f5f1b340.svg" alt="Titan">
-      </div>
-    </div>
-
-    <div class="nav-scroll">
-      <div class="sidebar-line" style="margin-top:2px;"></div>
-      <div class="account-header" id="account-header" onclick="toggleAccountMenu(event)">
-        <div class="account-avatar">
-          <img class="bg" src="/assets/d2c6a617-0407-4985-8c8b-740201e73dfe.svg" alt="">
-          <span id="account-active-initial">E</span>
-        </div>
-        <span class="account-email-text" id="account-active-email">ella.henderson@avontechlabs.com</span>
-        <div class="account-chevron">
-          <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#bdbdbd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <div class="account-menu" id="account-menu">
-          <div class="account-menu-label">Titan accounts</div>
-          <div class="account-menu-item active">
-            <span class="account-menu-avatar" style="background:#3f6ea5;">E</span>
-            <div class="account-menu-text">
-              <div class="account-menu-email">ella.henderson@avontechlabs.com</div>
-              <div class="account-menu-sub">Avontech Labs</div>
-            </div>
-            <svg class="account-menu-check" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-        </div>
-      </div>
-
-      <div class="sidebar-line"></div>
-
-      <div class="nav-item" onclick="location.href=crmPath('/crm/dashboard')">
-        <div class="nav-item-icon">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="1.5" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/></svg>
-        </div>
-        <span class="nav-item-label">Dashboard</span>
-      </div>
-
-      <div class="nav-item" onclick="openNewPipeline()">
-        <div class="nav-item-icon" style="color:#2170f4; font-weight:700; font-size:16px;">+</div>
-        <span class="nav-item-label" style="color:#2170f4; font-weight:600;">New pipeline</span>
-      </div>
-
-      <!-- Anchor only: rebuildPipelineNav() inserts the pipeline rows after this
-           and clears them by walking forward to the next .sidebar-line. -->
-      <div id="pipeline-nav-line" class="nav-anchor"></div>
-
-      <div class="sidebar-line"></div>
-
-      <div class="nav-item" onclick="location.href=crmPath('/crm/contacts')">
-        <div class="nav-item-icon">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4.5" r="2.5" stroke="#fff" stroke-width="1.3"/><path d="M2.5 12.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="#fff" stroke-width="1.3"/></svg>
-        </div>
-        <span class="nav-item-label">Contacts</span>
-      </div>
-      <div class="nav-item active" onclick="location.href=crmPath('/crm/companies')">
-        <div class="nav-item-icon">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="11" stroke="#fff" stroke-width="1.3"/><path d="M6 7V3h8v4" stroke="#fff" stroke-width="1.3"/></svg>
-        </div>
-        <span class="nav-item-label active">Companies</span>
-      </div>
-    </div>
-
-    <div style="position:relative; flex-shrink:0;">
-      <div style="height:1px; position:relative; overflow:visible;">
-        <img src="/assets/0d00b891-46d6-4063-acc9-0db4c8c41036.svg" alt=""
-          style="position:absolute; inset:-1px 0; width:100%; height:2px; object-fit:fill;">
-      </div>
-      <div class="sidebar-footer">
-        <div class="footer-btn">
-          <div class="footer-btn-icon"><img src="/assets/34686e57-21d5-4bf6-82c4-1c6e474d25d3.svg" alt=""></div>
-          <span>Bug</span>
-        </div>
-        <div class="footer-divider"></div>
-        <div class="footer-btn">
-          <div class="footer-btn-icon"><img src="/assets/03a449fb-b16b-4b26-8eec-0fa033eff13e.svg" alt=""></div>
-          <span>Feature</span>
-        </div>
-        <div class="footer-divider"></div>
-        <div class="footer-btn" onclick="toggleSettingsModal()">
-          <div class="footer-btn-icon settings-icon"><img src="/assets/6ea52e57-1d75-47b1-97cd-e416a5d2372d.svg" alt=""></div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- The sidebar is one component: titan-sidebar.js renders it and owns its
+       markup, rows and active state. Do not hand-maintain nav markup here. -->
+  <div id="sidebar-mount"></div>
 
   <div class="main-area">
     <div class="subpage-top">
@@ -226,9 +135,11 @@
               '<div class="dir-name-text"><div class="dir-name" style="font-weight:400;">' +
               (esc(people[0].name) || esc(people[0].email)) + '</div></div></div>'
           : people.length
+            // A bare number beside the faces reads as ambiguous — it could as easily be
+            // a count of records or of anything else in the row. Name the unit.
             ? '<span class="dir-facepile">' +
                 people.slice(0, 3).map(function (p) { return avatarHTML(p.name || p.email); }).join('') +
-                '<span class="dir-facepile-count">' + people.length + '</span>' +
+                '<span class="dir-facepile-count">' + people.length + ' contacts</span>' +
               '</span>'
             : '<span class="dir-muted">—</span>') + '</td>' +
         '<td class="dir-num">' + (money ? esc(money) : '<span class="dir-muted">—</span>') + '</td>' +
@@ -243,42 +154,25 @@
     const people = Array.from(r.contacts.values());
     const firstEmail = (people[0] || {}).email || '';
     const domain = companyDomainFor({ company: r.company, website: r.website, contactEmail: firstEmail });
-    const money = totalsText(r.totals);
-    const last = lastActivityOf(r.records);
     const n = r.records.length;
-
-    // Website is the panel header's subtitle already, so it isn't repeated here.
-    const details = kvHTML([
-      ['Location', r.location],
-      ['LinkedIn', r.linkedin, r.linkedin ? '<a class="dir-link" href="' + esc(r.linkedin) + '" target="_blank" rel="noopener">View page</a>' : ''],
-      ['Instagram', r.instagram, r.instagram ? '<a class="dir-link" href="' + esc(r.instagram) + '" target="_blank" rel="noopener">View profile</a>' : ''],
-      ['Open value', money],
-    ]);
 
     const peopleList = people.length
       ? people.map(function (p) {
-          return '<div class="dir-person">' +
+          return '<a class="dir-person is-link" href="' + esc(contactHref(p)) + '">' +
             avatarHTML(p.name || p.email) +
             '<div class="dir-person-text">' +
               '<div class="dir-person-name">' + (esc(p.name) || esc(p.email)) + '</div>' +
-              (p.designation || p.email
-                ? '<div class="dir-person-sub">' + (p.designation ? esc(p.designation) : '') +
-                  (p.designation && p.email ? ' · ' : '') +
-                  (p.email ? '<a class="dir-link" href="mailto:' + esc(p.email) + '">' + esc(p.email) + '</a>' : '') +
-                  '</div>'
+              (p.designation
+                // Inside this company's own panel, "… at <this company>" is the panel
+                // title repeated — same trim the contact header does.
+                ? '<div class="dir-person-sub">' + esc(titleWithoutOrg(p.designation, r.company)) + '</div>'
                 : '') +
             '</div>' +
-          '</div>';
+            '<svg class="dir-person-go" width="7" height="12" viewBox="0 0 8 13" fill="none" aria-hidden="true">' +
+              '<path d="M1.5 1l5 5.5-5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          '</a>';
         }).join('')
       : '<div class="stage-caption">No one is attached to these records yet.</div>';
-
-    const activity = last
-      ? kvHTML([
-          ['When', last.card.lastActivity],
-          ['Type', last.card.activityType],
-          ['Record', last.card.deal],
-        ])
-      : '';
 
     openPanel(
       {
@@ -286,9 +180,7 @@
         name: esc(r.company),
         role: domain ? esc(domain) : '',
       },
-      sectionHTML('Details', details) +
       sectionHTML(people.length === 1 ? '1 person' : people.length + ' people', peopleList) +
-      sectionHTML('Recent activity', activity) +
       sectionHTML(n + ' ' + entityNoun(r.records, n), r.records.map(panelRecordHTML).join('')),
       row
     );
@@ -303,7 +195,7 @@
       return;
     }
     const pipelines = data.pipelines || {};
-    rebuildPipelineNav(Object.keys(pipelines).map(function (id) { return pipelines[id]; }));
+    window.titanSidebar.setPipelines(Object.keys(pipelines).map(function (id) { return pipelines[id]; }));
     const rows = buildCompanies(pipelines);
     renderCompanies(rows);
     wireSearch('k-search', 'k-body', 'k-count', 'company');
