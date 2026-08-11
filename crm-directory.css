@@ -1,40 +1,144 @@
-/* Shared styling for the CRM directory pages (Contacts, Companies). Both are
-   read-mostly tables aggregated across every pipeline, so they share one look
-   rather than each re-deriving it. Pairs with titan-sidebar.css. */
+/* Shared styling for the CRM directory pages (Contacts, Companies).
+   Both are read-mostly tables aggregated across every pipeline, so they share
+   one look rather than each re-deriving it. Pairs with titan-sidebar.css.
 
-.subpage-body { background: #f7f8fa; color: #222; }
+   The layout premise: you come here to find someone, then to remember who they
+   are. Inspecting a row must never cost you your place in the list — so the
+   detail panel opens beside the table and pushes it, rather than covering it. */
 
-.dir-wrap { max-width: 1040px; margin: 0 auto; padding: 28px 24px 60px; }
+:root {
+  --dir-ink: #1a1a1a;
+  --dir-body: #333;
+  --dir-muted: #9a9fa7;
+  --dir-faint: #b3b7bd;
+  --dir-line: #e8eaed;
+  --dir-hair: #f2f4f6;
+  --dir-surface: #fff;
+  --dir-canvas: #f7f8fa;
+  --dir-tint: #fbfcfd;
+  --dir-accent: #2170f4;
+  --dir-accent-soft: #e8f0fe;
+  --dir-panel-w: 384px;
+}
 
-.dir-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.subpage-body { background: var(--dir-canvas); color: var(--dir-body); }
+
+/* ── Pipeline rows arriving ──────────────────────────────────────────────────
+   Contacts and Companies are separate documents that fetch their own data, so
+   the sidebar chrome is identical on both and must not animate — it would
+   replay on every navigation between them, which reads as a page reload rather
+   than a move within one app. The pipeline rows are the only part that isn't
+   there at paint time (they wait on /api/data), so they're the only part that
+   animates: a short stagger, which reads as the list filling in. */
+.nav-anchor { display: none; }
+
+@keyframes nav-row-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+.nav-item.is-entering { animation: nav-row-in 260ms cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-item.is-entering { animation: none; }
+}
+
+.dir-wrap { padding: 18px 22px 40px; }
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+.dir-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .dir-search {
-  flex: 1; padding: 10px 14px; border: 1px solid #e0e3e8; border-radius: 9px;
-  font-size: 14px; font-family: inherit; color: #222; outline: none; background: #fff;
+  flex: 1; max-width: 420px; padding: 9px 13px; border: 1px solid var(--dir-line);
+  border-radius: 9px; font-size: 13.5px; font-family: inherit; color: var(--dir-body);
+  outline: none; background: var(--dir-surface);
 }
-.dir-search::placeholder { color: #b3b7bd; }
-.dir-search:focus { border-color: #2170f4; box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
-.dir-count { font-size: 13px; color: #9a9fa7; flex-shrink: 0; }
+.dir-search::placeholder { color: var(--dir-faint); }
+.dir-search:focus { border-color: var(--dir-accent); box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+.dir-count { font-size: 12.5px; color: var(--dir-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
-.dir-card { background: #fff; border: 1px solid #e8eaed; border-radius: 12px; overflow: hidden; }
-.dir-table { width: 100%; border-collapse: collapse; }
+/* ── Table ───────────────────────────────────────────────────────────────── */
+.dir-card { background: var(--dir-surface); border: 1px solid var(--dir-line); border-radius: 12px; overflow: hidden; }
+/* Fixed layout so the column widths below are honoured exactly. With auto
+   layout a long phone number wins space from the email column and truncates it
+   to nothing. */
+.dir-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .dir-table th {
-  text-align: left; font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em;
-  text-transform: uppercase; color: #9a9fa7; padding: 12px 18px; border-bottom: 1px solid #eef0f3;
-  white-space: nowrap; background: #fbfcfd;
+  text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.055em;
+  text-transform: uppercase; color: var(--dir-muted); padding: 10px 16px;
+  border-bottom: 1px solid var(--dir-hair); white-space: nowrap; background: var(--dir-tint);
 }
-.dir-table td { padding: 14px 18px; border-bottom: 1px solid #f2f4f6; font-size: 13.5px; color: #333; vertical-align: middle; }
-.dir-table tr:last-child td { border-bottom: none; }
-.dir-table tbody tr:hover { background: #fafbfc; }
+.dir-table td {
+  padding: 11px 16px; border-bottom: 1px solid var(--dir-hair);
+  font-size: 13.5px; color: var(--dir-body); vertical-align: middle;
+  /* A fixed row height so rows with a job title and rows without still scan as
+     one rhythm rather than jittering by a few pixels. */
+  height: 56px;
+}
+.dir-table tbody tr:last-child td { border-bottom: none; }
+
+/* Rows are the primary control on this page: they open the panel. */
+.dir-table tbody tr { cursor: pointer; outline: none; }
+.dir-table tbody tr:hover { background: var(--dir-tint); }
+.dir-table tbody tr:focus-visible { background: var(--dir-accent-soft); box-shadow: inset 0 0 0 2px var(--dir-accent); }
+/* Selected row keeps a marker in the accent colour so the list still tells you
+   what the panel is showing after you scroll away from it. */
+.dir-table tbody tr.is-selected { background: var(--dir-accent-soft); }
+.dir-table tbody tr.is-selected td:first-child { box-shadow: inset 3px 0 0 var(--dir-accent); }
+
+.dir-num { font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Every cell clips rather than overflowing its fixed column. */
+.dir-table td, .dir-table th { overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Column widths ───────────────────────────────────────────────────────────
+   Under table-layout:fixed the header row sets the columns, so these live on
+   the th alone. Each page gets two sets: the full table, and a narrower one for
+   when the detail panel is open. Opening the panel costs 384px, which is more
+   than the table can give up without truncating every cell — so the two columns
+   you're least likely to be scanning stand down until it closes. Everything
+   they held is in the panel you just opened. */
+[data-subpage="contacts"] .dir-table th:nth-child(1) { width: 20%; }
+[data-subpage="contacts"] .dir-table th:nth-child(2) { width: 15%; }
+[data-subpage="contacts"] .dir-table th:nth-child(3) { width: 21%; }
+[data-subpage="contacts"] .dir-table th:nth-child(4) { width: 13%; }
+[data-subpage="contacts"] .dir-table th:nth-child(5) { width: 12%; }
+[data-subpage="contacts"] .dir-table th:nth-child(6) { width: 19%; }
+body.has-panel[data-subpage="contacts"] .dir-table th:nth-child(4),
+body.has-panel[data-subpage="contacts"] .dir-table td:nth-child(4),
+body.has-panel[data-subpage="contacts"] .dir-table th:nth-child(5),
+body.has-panel[data-subpage="contacts"] .dir-table td:nth-child(5) { display: none; }
+body.has-panel[data-subpage="contacts"] .dir-table th:nth-child(1) { width: 27%; }
+body.has-panel[data-subpage="contacts"] .dir-table th:nth-child(2) { width: 20%; }
+body.has-panel[data-subpage="contacts"] .dir-table th:nth-child(3) { width: 28%; }
+body.has-panel[data-subpage="contacts"] .dir-table th:nth-child(6) { width: 25%; }
+
+[data-subpage="companies"] .dir-table th:nth-child(1) { width: 23%; }
+[data-subpage="companies"] .dir-table th:nth-child(2) { width: 19%; }
+[data-subpage="companies"] .dir-table th:nth-child(3) { width: 12%; }
+[data-subpage="companies"] .dir-table th:nth-child(4) { width: 13%; }
+[data-subpage="companies"] .dir-table th:nth-child(5) { width: 33%; }
+body.has-panel[data-subpage="companies"] .dir-table th:nth-child(4),
+body.has-panel[data-subpage="companies"] .dir-table td:nth-child(4) { display: none; }
+body.has-panel[data-subpage="companies"] .dir-table th:nth-child(1) { width: 30%; }
+body.has-panel[data-subpage="companies"] .dir-table th:nth-child(2) { width: 24%; }
+body.has-panel[data-subpage="companies"] .dir-table th:nth-child(3) { width: 16%; }
+body.has-panel[data-subpage="companies"] .dir-table th:nth-child(5) { width: 30%; }
+
+/* Below 1180px the panel overlays instead of pushing, so the table keeps every
+   column and nothing needs to stand down. */
+@media (max-width: 1180px) {
+  body.has-panel .dir-table th, body.has-panel .dir-table td { display: table-cell; }
+}
 
 /* Name cell: avatar/logo + name (+ muted secondary line). */
 .dir-name-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .dir-name-text { min-width: 0; }
-.dir-name { font-weight: 600; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dir-sub { font-size: 12px; color: #9a9fa7; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dir-name { font-weight: 600; color: var(--dir-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dir-sub { font-size: 12px; color: var(--dir-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dir-cell-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dir-cell-ellipsis a { display: block; overflow: hidden; text-overflow: ellipsis; }
 
 .dir-avatar {
-  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; background: #8a9099;
-  color: #fff; font-size: 12px; font-weight: 700;
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; background: #8a9099;
+  color: #fff; font-size: 11.5px; font-weight: 700;
   display: inline-flex; align-items: center; justify-content: center;
 }
 /* Company favicon-as-logo — same behaviour as the board/record pages: the initial
@@ -43,25 +147,248 @@
   position: relative; flex-shrink: 0; overflow: hidden; border-radius: 6px;
   display: inline-flex; align-items: center; justify-content: center;
   color: #fff; font-weight: 700; line-height: 1;
-  width: 30px; height: 30px; font-size: 12px;
+  width: 28px; height: 28px; font-size: 11.5px; background: #8a9099;
 }
-.company-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #fff; }
+/* The hairline keeps favicons that are themselves white (Northfield, Delta)
+   from dissolving into the row. */
+.company-logo img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+  background: #fff; box-shadow: inset 0 0 0 1px rgba(20, 22, 26, 0.10);
+}
 
-.dir-link { color: #2170f4; text-decoration: none; }
+.dir-link { color: var(--dir-accent); text-decoration: none; }
 .dir-link:hover { text-decoration: underline; }
-.dir-muted { color: #b3b7bd; }
+.dir-muted { color: var(--dir-faint); }
+
+/* Overlapping avatars for a company's people — the count is the fact, the faces
+   are the recognition cue. */
+.dir-facepile { display: inline-flex; align-items: center; }
+.dir-facepile .dir-avatar { width: 24px; height: 24px; font-size: 10.5px; border: 2px solid var(--dir-surface); }
+.dir-facepile .dir-avatar + .dir-avatar { margin-left: -9px; }
+.dir-facepile-count { margin-left: 9px; font-size: 13px; color: var(--dir-body); font-variant-numeric: tabular-nums; }
 
 /* Record chips linking back to each opportunity this row appears on. */
-.dir-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dir-chips { display: flex; align-items: center; gap: 5px; min-width: 0; }
 .dir-chip {
   display: inline-flex; align-items: center; gap: 6px; background: #f2f3f5; border-radius: 999px;
-  padding: 5px 11px; font-size: 12px; color: #333; text-decoration: none; white-space: nowrap;
-  /* Long deal names would otherwise be sliced mid-character by the cell edge. */
-  max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+  padding: 4px 10px; font-size: 12px; color: var(--dir-body); text-decoration: none; white-space: nowrap;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis;
 }
-.dir-chip:hover { background: #e8f0fe; color: #2170f4; }
+.dir-chip:hover { background: var(--dir-accent-soft); color: var(--dir-accent); }
 .dir-chip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+/* "+2" stands in for the chips that don't fit — the panel lists them all. */
+.dir-chip-more { background: transparent; color: var(--dir-muted); padding: 4px 2px; flex-shrink: 0; }
 
-.dir-empty { padding: 44px 18px; text-align: center; color: #9a9fa7; font-size: 13.5px; }
-.dir-note { font-size: 12px; color: #9a9fa7; padding: 14px 22px; text-align: center; }
-.dir-note a { color: #2170f4; text-decoration: none; }
+.dir-empty { padding: 44px 18px; text-align: center; color: var(--dir-muted); font-size: 13.5px; }
+.dir-note { font-size: 12px; color: var(--dir-muted); padding: 14px 22px; text-align: center; }
+.dir-note a { color: var(--dir-accent); text-decoration: none; }
+
+/* ── Detail panel ────────────────────────────────────────────────────────────
+   A flex sibling of .main-area, so opening it narrows the table instead of
+   covering it. Below 1180px there isn't room for both, and it becomes an
+   overlay with a scrim. */
+.dir-panel {
+  flex: 0 0 auto; width: 0; overflow: hidden; background: var(--dir-surface);
+  border-left: 1px solid var(--dir-line); transition: width 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.dir-panel.is-open { width: var(--dir-panel-w); }
+.dir-panel-inner { width: var(--dir-panel-w); height: 100%; display: flex; flex-direction: column; }
+
+/* Panel spacing runs on a 4px scale: 8 within a group, 16 between groups,
+   24 between sections. Mixed ad-hoc values are what make a panel feel loose. */
+.dir-panel-head {
+  display: flex; align-items: center; gap: 12px; padding: 16px 20px;
+  border-bottom: 1px solid var(--dir-hair); flex-shrink: 0;
+}
+.dir-panel-head .dir-avatar, .dir-panel-head .company-logo { width: 40px; height: 40px; font-size: 15px; border-radius: 8px; }
+.dir-panel-head .dir-avatar { border-radius: 50%; }
+.dir-panel-id { min-width: 0; flex: 1; }
+.dir-panel-name { font-size: 16px; font-weight: 700; color: var(--dir-ink); line-height: 1.3; overflow-wrap: anywhere; }
+.dir-panel-role { font-size: 12.5px; color: var(--dir-muted); margin-top: 2px; overflow-wrap: anywhere; }
+.dir-panel-close {
+  flex-shrink: 0; width: 26px; height: 26px; border: none; background: transparent; cursor: pointer;
+  border-radius: 6px; color: var(--dir-muted); display: inline-flex; align-items: center; justify-content: center;
+}
+.dir-panel-close:hover { background: var(--dir-hair); color: var(--dir-ink); }
+.dir-panel-close:focus-visible { outline: 2px solid var(--dir-accent); outline-offset: 1px; }
+
+.dir-panel-body { flex: 1; overflow-y: auto; padding: 20px 20px 36px; }
+
+.dir-actions { display: flex; gap: 8px; }
+.dir-action {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 10px; border: 1px solid var(--dir-line); border-radius: 8px;
+  font-size: 12.5px; font-weight: 600; color: var(--dir-body); text-decoration: none; background: var(--dir-surface);
+}
+.dir-action:hover { border-color: var(--dir-accent); color: var(--dir-accent); background: var(--dir-accent-soft); }
+
+.dir-sec { margin-top: 32px; }
+.dir-panel-body > .dir-sec:first-child { margin-top: 0; }
+/* The label needs to read as the heading of what follows, not as a line floating
+   between two blocks — so it sits closer to its own content than to the section
+   above it. 14px under, 32px between. */
+.dir-sec-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--dir-muted); margin-bottom: 14px;
+}
+/* Label/value rows. The label column sizes to its own content so values sit
+   next to what they answer instead of across a fixed gutter — each section
+   aligns to its own longest label. Fields with no value are omitted rather than
+   shown as dashes; an empty row tells you nothing you didn't already know. */
+.dir-kv { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13px; align-items: baseline; }
+.dir-kv dt { color: var(--dir-muted); white-space: nowrap; }
+.dir-kv dd { color: var(--dir-body); overflow-wrap: anywhere; }
+
+/* Signature: each linked record shows where it actually sits in its pipeline,
+   drawn in that pipeline's own colour. The stages are the structure of the
+   business, so the panel shows them rather than just naming the stage. */
+.dir-rec { display: block; text-decoration: none; padding: 12px 14px; border: 1px solid var(--dir-line); border-radius: 10px; }
+.dir-rec + .dir-rec { margin-top: 8px; }
+.dir-rec:hover { border-color: var(--dir-accent); background: var(--dir-tint); }
+.dir-rec:focus-visible { outline: 2px solid var(--dir-accent); outline-offset: 1px; }
+.dir-rec-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.dir-rec-deal { font-size: 13px; font-weight: 600; color: var(--dir-ink); overflow-wrap: anywhere; }
+.dir-rec-value { font-size: 12.5px; color: var(--dir-body); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.dir-rec-pipe { font-size: 11.5px; color: var(--dir-muted); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+.stage-track { display: flex; gap: 3px; margin-top: 12px; }
+.stage-seg { height: 4px; flex: 1; border-radius: 2px; background: var(--dir-hair); }
+.stage-seg.is-done { background: var(--pipe, var(--dir-accent)); }
+.stage-caption { font-size: 11.5px; color: var(--dir-muted); margin-top: 8px; font-variant-numeric: tabular-nums; }
+.dir-rec + .stage-caption { margin-top: 10px; }
+
+.dir-person { display: flex; align-items: center; gap: 12px; }
+.dir-person + .dir-person { margin-top: 14px; }
+.dir-person-text { min-width: 0; }
+.dir-person-name { font-size: 13px; font-weight: 600; color: var(--dir-ink); line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dir-person-sub { font-size: 12px; color: var(--dir-muted); line-height: 1.35; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Editable details table ──────────────────────────────────────────────────
+   A real grid: ruled rows and a tinted label column, so it reads as a table of
+   what a contact holds rather than as a form. Values stay text until you choose
+   to edit one — the pencil appears on the row you're pointing at. */
+.dir-edit-wrap { border: 1px solid var(--dir-line); border-radius: 10px; overflow: hidden; }
+.dir-edit { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.dir-edit th {
+  width: 34%; text-align: left; font-weight: 400; font-size: 12.5px; color: var(--dir-muted);
+  background: var(--dir-tint); padding: 9px 12px; border-right: 1px solid var(--dir-line);
+  vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dir-edit td { padding: 9px 12px; font-size: 13px; color: var(--dir-body); vertical-align: middle; overflow: hidden; }
+.dir-edit tr + tr th, .dir-edit tr + tr td { border-top: 1px solid var(--dir-line); }
+.dir-edit tr:hover td { background: var(--dir-tint); }
+.dir-edit-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* The pencil sits over the value cell rather than in a column of its own — a
+   reserved 36px would come straight out of the value's width and truncate long
+   emails on every row, hovered or not. The text shortens only while hovered. */
+.dir-edit td.dir-edit-val { position: relative; }
+.dir-edit tr:hover .dir-edit-text { padding-right: 26px; }
+.dir-edit-btn {
+  opacity: 0; position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+  width: 26px; height: 26px; border: none; background: transparent; border-radius: 6px;
+  color: var(--dir-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+.dir-edit tr:hover .dir-edit-btn { opacity: 1; }
+.dir-edit-btn:focus-visible { opacity: 1; outline: 2px solid var(--dir-accent); outline-offset: -1px; }
+.dir-edit-btn:hover { background: var(--dir-hair); color: var(--dir-ink); }
+/* Nothing hovers on a touch screen, so the affordance has to be permanent there. */
+@media (hover: none) { .dir-edit-btn { opacity: 1; } }
+
+.dir-edit tr.is-editing td { background: var(--dir-surface); }
+.dir-input {
+  width: 100%; font: inherit; font-size: 13px; color: var(--dir-body);
+  padding: 4px 7px; border: 1px solid var(--dir-accent); border-radius: 6px;
+  background: var(--dir-surface); outline: none; text-overflow: ellipsis;
+  box-shadow: 0 0 0 3px rgba(33,112,244,0.12);
+}
+.dir-input::placeholder { color: var(--dir-faint); }
+/* Sits on the section heading row, so an empty hint costs no vertical space and
+   the table doesn't shift when "Saving…" appears. */
+.dir-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.dir-sec-head .dir-sec-label { margin-bottom: 0; }
+.dir-save-hint { font-size: 11.5px; color: var(--dir-muted); text-align: right; }
+.dir-save-hint.is-error { color: #c0392b; }
+
+/* ── Settings button in the page header ──────────────────────────────────── */
+.subpage-action {
+  margin-left: auto; flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 11px; border: 1px solid var(--dir-line); border-radius: 8px; background: #fff;
+  font: inherit; font-size: 12.5px; font-weight: 600; color: var(--dir-body); cursor: pointer;
+}
+.subpage-action:hover { border-color: var(--dir-accent); color: var(--dir-accent); }
+.subpage-action:focus-visible { outline: 2px solid var(--dir-accent); outline-offset: 1px; }
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.dir-modal-scrim {
+  position: fixed; inset: 0; z-index: 80; background: rgba(20,22,26,0.34);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; pointer-events: none; transition: opacity 160ms;
+}
+.dir-modal-scrim.is-open { opacity: 1; pointer-events: auto; }
+.dir-modal {
+  background: var(--dir-surface); border-radius: 14px; width: 560px; max-width: 100%;
+  max-height: 100%; display: flex; flex-direction: column;
+  box-shadow: 0 18px 50px rgba(20,22,26,0.24); transform: translateY(8px); transition: transform 160ms;
+}
+.dir-modal-scrim.is-open .dir-modal { transform: none; }
+.dir-modal-head { padding: 20px 22px 16px; border-bottom: 1px solid var(--dir-hair); }
+.dir-modal-title { font-size: 15.5px; font-weight: 700; color: var(--dir-ink); }
+.dir-modal-note { font-size: 12.5px; color: var(--dir-muted); margin-top: 6px; line-height: 1.45; }
+.dir-modal-body { padding: 16px 22px; overflow-y: auto; flex: 1; }
+.dir-modal-foot {
+  padding: 14px 22px; border-top: 1px solid var(--dir-hair);
+  display: flex; align-items: center; gap: 10px; justify-content: flex-end;
+}
+.dir-modal-status { margin-right: auto; font-size: 12.5px; color: var(--dir-muted); }
+.dir-modal-status.is-error { color: #c0392b; }
+
+.dir-field-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+.dir-field-row + .dir-field-row { border-top: 1px solid var(--dir-hair); }
+.dir-field-label {
+  flex: 1; min-width: 0; font: inherit; font-size: 13px; color: var(--dir-body);
+  padding: 7px 10px; border: 1px solid var(--dir-line); border-radius: 7px; outline: none; background: #fff;
+}
+.dir-field-label:focus { border-color: var(--dir-accent); box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+.dir-field-label:disabled { background: var(--dir-tint); color: var(--dir-muted); }
+.dir-field-type {
+  flex-shrink: 0; width: 132px; font: inherit; font-size: 13px; color: var(--dir-body);
+  padding: 7px 10px; border: 1px solid var(--dir-line); border-radius: 7px; background: #fff; outline: none;
+}
+.dir-field-drop {
+  flex-shrink: 0; width: 30px; height: 30px; border: none; background: transparent; border-radius: 7px;
+  color: var(--dir-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+.dir-field-drop:hover { background: #fdecea; color: #c0392b; }
+.dir-field-drop:disabled { opacity: 0.3; cursor: not-allowed; }
+.dir-field-lock { flex-shrink: 0; width: 30px; text-align: center; font-size: 11px; color: var(--dir-faint); }
+.dir-btn {
+  font: inherit; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 8px;
+  border: 1px solid var(--dir-line); background: #fff; color: var(--dir-body); cursor: pointer;
+}
+.dir-btn:hover { border-color: #cfd4da; }
+.dir-btn-primary { background: var(--dir-accent); border-color: var(--dir-accent); color: #fff; }
+.dir-btn-primary:hover { background: #1b5fd0; border-color: #1b5fd0; }
+.dir-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+.dir-btn-add { margin-top: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dir-modal-scrim, .dir-modal { transition: none; }
+}
+
+.dir-scrim { display: none; }
+
+@media (max-width: 1180px) {
+  .dir-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 60; width: var(--dir-panel-w);
+    max-width: 92vw; transform: translateX(100%); box-shadow: -8px 0 28px rgba(0,0,0,0.10);
+    transition: transform 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .dir-panel.is-open { width: var(--dir-panel-w); transform: translateX(0); }
+  .dir-panel-inner { width: 100%; }
+  .dir-scrim { display: block; position: fixed; inset: 0; z-index: 55; background: rgba(20,22,26,0.28); opacity: 0; pointer-events: none; transition: opacity 200ms; }
+  .dir-scrim.is-open { opacity: 1; pointer-events: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dir-panel, .dir-scrim { transition: none; }
+}

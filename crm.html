@@ -6226,12 +6226,15 @@
     }
 
     let persistTimer = null;
+    // The whole fetched document, kept so a save doesn't drop top-level keys this
+    // page doesn't know about (e.g. contactFields, written by the Contacts page).
+    let LOADED_DATA = null;
     function schedulePersist() { clearTimeout(persistTimer); persistTimer = setTimeout(persistNow, 600); }
     async function persistNow() {
       try {
         await fetch(apiUrl('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID)), {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ currentPipelineId: currentPipelineId, pipelineSeq: pipelineSeq, pipelines: PIPELINES }),
+          body: JSON.stringify(Object.assign({}, LOADED_DATA || {}, { currentPipelineId: currentPipelineId, pipelineSeq: pipelineSeq, pipelines: PIPELINES })),
         });
       } catch (e) { console.error('titan-crm: failed to save — API unreachable.', e); }
     }
@@ -6299,6 +6302,7 @@
         try { data = await fetchPipelineData(window.PERSONA_ID); }
         catch (e) { console.error('titan-crm: API unreachable, using built-in sample data.', e); }
 
+        LOADED_DATA = data;
         if (data && data.pipelines && Object.keys(data.pipelines).length) {
           for (var k in PIPELINES) delete PIPELINES[k];
           Object.keys(data.pipelines).forEach(function (id) { PIPELINES[id] = data.pipelines[id]; });

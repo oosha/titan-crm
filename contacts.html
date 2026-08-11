@@ -57,13 +57,16 @@
         </div>
       </div>
 
+      <div class="sidebar-line"></div>
+
       <div class="nav-item" onclick="openNewPipeline()">
         <div class="nav-item-icon" style="color:#2170f4; font-weight:700; font-size:16px;">+</div>
         <span class="nav-item-label" style="color:#2170f4; font-weight:600;">New pipeline</span>
       </div>
 
-      <div class="sidebar-line" id="pipeline-nav-line"></div>
-      <!-- Pipeline rows are rebuilt from the fetched data at load time. -->
+      <!-- Anchor only: rebuildPipelineNav() inserts the pipeline rows after this
+           and clears them by walking forward to the next .sidebar-line. -->
+      <div id="pipeline-nav-line" class="nav-anchor"></div>
 
       <div class="sidebar-line"></div>
 
@@ -111,6 +114,14 @@
         Back
       </span>
       <span class="subpage-title">Contacts</span>
+      <button class="subpage-action" id="c-settings" type="button">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M8 1.5v1.8M8 12.7v1.8M14.5 8h-1.8M3.3 8H1.5M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3M12.6 12.6l-1.3-1.3M4.7 4.7L3.4 3.4"
+                stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Fields
+      </button>
     </div>
 
     <div class="subpage-body">
@@ -123,10 +134,11 @@
           <table class="dir-table">
             <thead>
               <tr>
-                <th style="width:26%;">Name</th>
-                <th style="width:22%;">Company</th>
-                <th style="width:22%;">Email</th>
-                <th style="width:14%;">Phone</th>
+                <th>Name</th>
+                <th>Company</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Last activity</th>
                 <th>Records</th>
               </tr>
             </thead>
@@ -161,22 +173,85 @@
         let row = byKey.get(key);
         if (!row) {
           row = {
-            name: c.name || '', email: c.email || '', phone: c.phone || '',
-            designation: c.designation || '', company: card.company || '',
-            website: card.website || '', records: [],
+            values: {},                       // keyed by field key, incl. custom ones
+            // What to match on when writing back. Held separately from values so
+            // editing the email still finds the right contact object to update.
+            matchEmail: String(c.email || '').trim().toLowerCase(),
+            matchName: String(c.name || '').trim().toLowerCase(),
+            company: card.company || '', website: card.website || '',
+            records: [], totals: {},
           };
           byKey.set(key, row);
         }
-        // Later records can fill in details an earlier one left blank.
-        ['name', 'email', 'phone', 'designation'].forEach(function (f) { if (!row[f] && c[f]) row[f] = c[f]; });
+        // Later records can fill in details an earlier one left blank. Reads every
+        // key on the contact, not a fixed list, so custom fields carry through.
+        Object.keys(c).forEach(function (f) {
+          if (!row.values[f] && c[f]) row.values[f] = c[f];
+        });
         if (!row.company && card.company) row.company = card.company;
         if (!row.website && card.website) row.website = card.website;
         row.records.push(entry);
+        // Records can carry different currencies, so total per symbol rather than
+        // silently adding unlike amounts together.
+        const cur = card.currency || defaultCurrency();
+        row.totals[cur] = (row.totals[cur] || 0) + (Number(card.value) || 0);
       });
     });
     return Array.from(byKey.values()).sort(function (a, b) {
-      return (a.name || '').localeCompare(b.name || '');
+      return (a.values.name || '').localeCompare(b.values.name || '');
     });
+  }
+
+  // ── Writing an edit back ───────────────────────────────────────────────────
+  // A contact row is derived from every card the person appears on, so a change
+  // has to land on all of them or the next rebuild would resurrect the old value
+  // from whichever card still had it.
+  const LEGACY_FLAT = {
+    name: 'contact', email: 'contactEmail', phone: 'contactPhone',
+    designation: 'contactDesignation', department: 'contactDepartment',
+    location: 'contactLocation', linkedin: 'contactLinkedin',
+  };
+
+  // Older records store one contact in flat card fields instead of a contacts[]
+  // array. Custom fields have nowhere to live there, so those cards are migrated
+  // to an array on first write — the flat fields stay mirrored below for the
+  // board and record pages, which still read them.
+  function ensureContactsArray(card) {
+    if (card.contacts && card.contacts.length) return card.contacts;
+    const seeded = {};
+    Object.keys(LEGACY_FLAT).forEach(function (k) { seeded[k] = card[LEGACY_FLAT[k]] || ''; });
+    card.contacts = (seeded.name || seeded.email) ? [seeded] : [];
+    return card.contacts;
+  }
+
+  function targetContactIn(card, row) {
+    const list = ensureContactsArray(card);
+    for (let i = 0; i < list.length; i++) {
+      const c = list[i];
+      if (row.matchEmail) {
+        if (String(c.email || '').trim().toLowerCase() === row.matchEmail) return c;
+      } else if (String(c.name || '').trim().toLowerCase() === row.matchName) {
+        return c;
+      }
+    }
+    return null;
+  }
+
+  function writeContactField(row, key, value) {
+    row.records.forEach(function (entry) {
+      const card = entry.card;
+      const target = targetContactIn(card, row);
+      if (!target) return;
+      target[key] = value;
+      // Mirror the built-in seven onto the flat fields, which crm.html and
+      // opportunity-view.html still read.
+      if (LEGACY_FLAT[key] && card.contacts[0] === target) card[LEGACY_FLAT[key]] = value;
+    });
+    row.values[key] = value;
+    // The identity we match on has to follow the edit, or the next write to this
+    // same row would look for a contact that no longer exists.
+    if (key === 'email') row.matchEmail = String(value || '').trim().toLowerCase();
+    if (key === 'name') row.matchName = String(value || '').trim().toLowerCase();
   }
 
   function renderContacts(rows) {
@@ -190,27 +265,307 @@
       return;
     }
     empty.style.display = 'none';
-    body.innerHTML = rows.map(function (r) {
-      const initial = ((r.name || r.email || '?').trim().charAt(0) || '?').toUpperCase();
-      const search = [r.name, r.email, r.phone, r.designation, r.company].join(' ').toLowerCase();
-      return '<tr data-search="' + esc(search) + '">' +
+    body.innerHTML = rows.map(function (r, i) {
+      const v = r.values;
+      // Search covers every stored value, so custom fields are searchable too.
+      const search = Object.keys(v).map(function (k) { return v[k]; })
+        .concat([r.company]).join(' ').toLowerCase();
+      const last = lastActivityOf(r.records);
+      return '<tr tabindex="0" role="button" aria-selected="false" data-idx="' + i + '" data-search="' + esc(search) + '">' +
         '<td><div class="dir-name-cell">' +
-          '<span class="dir-avatar">' + esc(initial) + '</span>' +
+          avatarHTML(v.name || v.email) +
           '<div class="dir-name-text">' +
-            '<div class="dir-name">' + (esc(r.name) || '<span class="dir-muted">Unnamed</span>') + '</div>' +
-            (r.designation ? '<div class="dir-sub">' + esc(r.designation) + '</div>' : '') +
+            '<div class="dir-name">' + (esc(v.name) || '<span class="dir-muted">Unnamed</span>') + '</div>' +
+            '<div class="dir-sub">' + esc(v.designation || '') + '</div>' +
           '</div>' +
         '</div></td>' +
         '<td><div class="dir-name-cell">' +
-          (r.company ? companyLogoHTML({ company: r.company, website: r.website, contactEmail: r.email }) : '') +
+          (r.company ? companyLogoHTML({ company: r.company, website: r.website, contactEmail: v.email }) : '') +
           '<div class="dir-name-text"><div class="dir-name" style="font-weight:400;">' +
             (esc(r.company) || '<span class="dir-muted">—</span>') + '</div></div>' +
         '</div></td>' +
-        '<td>' + (r.email ? '<a class="dir-link" href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>' : '<span class="dir-muted">—</span>') + '</td>' +
-        '<td>' + (r.phone ? '<a class="dir-link" href="tel:' + esc(r.phone.replace(/\s+/g, '')) + '">' + esc(r.phone) + '</a>' : '<span class="dir-muted">—</span>') + '</td>' +
-        '<td><div class="dir-chips">' + r.records.map(recordChipHTML).join('') + '</div></td>' +
+        '<td class="dir-cell-ellipsis c-email">' + emailCellHTML(v.email) + '</td>' +
+        '<td class="dir-num c-phone">' + phoneCellHTML(v.phone) + '</td>' +
+        '<td>' + lastActivityCellHTML(last) + '</td>' +
+        '<td>' + recordChipsHTML(r.records) + '</td>' +
       '</tr>';
     }).join('');
+  }
+
+  function emailCellHTML(email) {
+    return email ? '<a class="dir-link" href="mailto:' + esc(email) + '">' + esc(email) + '</a>' : '<span class="dir-muted">—</span>';
+  }
+  function phoneCellHTML(phone) {
+    return phone ? '<a class="dir-link" href="tel:' + esc(phone.replace(/\s+/g, '')) + '">' + esc(phone) + '</a>' : '<span class="dir-muted">—</span>';
+  }
+
+  // Patches just the cells an edit can change, so the row you're editing keeps
+  // its place, its selection and its focus instead of the table re-rendering.
+  function patchRowCells(tr, r) {
+    if (!tr) return;
+    const v = r.values;
+    tr.querySelector('.dir-name').innerHTML = esc(v.name) || '<span class="dir-muted">Unnamed</span>';
+    tr.querySelector('.dir-sub').textContent = v.designation || '';
+    tr.querySelector('.c-email').innerHTML = emailCellHTML(v.email);
+    tr.querySelector('.c-phone').innerHTML = phoneCellHTML(v.phone);
+    const search = Object.keys(v).map(function (k) { return v[k]; }).concat([r.company]).join(' ').toLowerCase();
+    tr.dataset.search = search;
+  }
+
+  // ── Detail panel ───────────────────────────────────────────────────────────
+  // title carries the full value, since a long email still ellipsises in a
+  // 384px panel and there's nowhere else to read it.
+  function valueCellHTML(val) {
+    return val
+      ? '<span class="dir-edit-text" title="' + esc(val) + '">' + esc(val) + '</span>'
+      : '<span class="dir-edit-text dir-muted">—</span>';
+  }
+
+  function detailsTableHTML(r) {
+    return '<div class="dir-edit-wrap"><table class="dir-edit"><tbody>' +
+      contactFields().map(function (f) {
+        return '<tr data-key="' + esc(f.key) + '">' +
+          '<th scope="row">' + esc(f.label) + '</th>' +
+          '<td class="dir-edit-val">' + valueCellHTML(r.values[f.key] || '') +
+            '<button class="dir-edit-btn" type="button" aria-label="Edit ' + esc(f.label) + '">' +
+              '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+                '<path d="M11.2 2.4l2.4 2.4M2 14l.6-3 8-8 2.4 2.4-8 8L2 14z" stroke="currentColor" ' +
+                'stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+            '</button>' +
+          '</td>' +
+        '</tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  function openContact(r, row) {
+    const v = r.values;
+    const money = totalsText(r.totals);
+    const last = lastActivityOf(r.records);
+    const domain = companyDomainFor({ company: r.company, website: r.website, contactEmail: v.email });
+
+    const actions = (v.email || v.phone)
+      ? '<div class="dir-actions">' +
+          (v.email ? '<a class="dir-action" href="mailto:' + esc(v.email) + '">Send email</a>' : '') +
+          (v.phone ? '<a class="dir-action" href="tel:' + esc(v.phone.replace(/\s+/g, '')) + '">Call</a>' : '') +
+        '</div>'
+      : '';
+
+    const company = r.company
+      ? '<div class="dir-person">' +
+          companyLogoHTML({ company: r.company, website: r.website, contactEmail: v.email }) +
+          '<div class="dir-person-text">' +
+            '<div class="dir-person-name">' + esc(r.company) + '</div>' +
+            (domain ? '<div class="dir-person-sub"><a class="dir-link" href="https://' + esc(domain) + '" target="_blank" rel="noopener">' + esc(domain) + '</a></div>' : '') +
+          '</div>' +
+        '</div>'
+      : '';
+
+    const activity = last
+      ? kvHTML([
+          ['When', last.card.lastActivity],
+          ['Type', last.card.activityType],
+          ['Record', last.card.deal],
+        ])
+      : '';
+
+    const n = r.records.length;
+    openPanel(
+      {
+        avatar: avatarHTML(v.name || v.email),
+        name: esc(v.name) || 'Unnamed contact',
+        role: esc(v.designation || ''),      // company gets its own block below
+      },
+      actions +
+      // Built inline rather than via sectionHTML so the save hint can sit on the
+      // heading row — parked under the table it would reserve an empty line.
+      '<div class="dir-sec">' +
+        '<div class="dir-sec-head">' +
+          '<div class="dir-sec-label">Details</div>' +
+          '<span class="dir-save-hint" id="c-save-hint" role="status"></span>' +
+        '</div>' +
+        detailsTableHTML(r) +
+      '</div>' +
+      sectionHTML('Company', company) +
+      sectionHTML('Recent activity', activity) +
+      sectionHTML(
+        'On ' + n + ' ' + entityNoun(r.records, n),
+        r.records.map(panelRecordHTML).join('') +
+        // Only worth stating when it isn't just the single value shown above.
+        (n > 1 && money ? '<div class="stage-caption">' + esc(money) + ' in total</div>' : '')
+      ),
+      row
+    );
+    wireDetailEditing(r, row);
+  }
+
+  // One field at a time: the pencil turns that row's value into an input, Enter or
+  // clicking away commits, Escape puts the old value back. Committing on blur as
+  // well as Enter matters — clicking straight onto another row's pencil is a
+  // normal way to signal "done with this one".
+  function wireDetailEditing(r, tableRow) {
+    const hint = document.getElementById('c-save-hint');
+    const fields = {};
+    contactFields().forEach(function (f) { fields[f.key] = f; });
+
+    async function persist(key, value) {
+      writeContactField(r, key, value);
+      patchRowCells(tableRow, r);
+      refreshPanelIdentity(r);
+      hint.textContent = 'Saving…';
+      hint.classList.remove('is-error');
+      try {
+        await saveData();
+        hint.textContent = 'Saved';
+        setTimeout(function () { if (hint.textContent === 'Saved') hint.textContent = ''; }, 1600);
+      } catch (e) {
+        hint.textContent = 'Couldn’t save — the data API is unreachable.';
+        hint.classList.add('is-error');
+      }
+    }
+
+    document.querySelectorAll('.dir-panel .dir-edit tr').forEach(function (row) {
+      const key = row.dataset.key;
+      const f = fields[key];
+      const cell = row.querySelector('.dir-edit-val');
+      const btn = row.querySelector('.dir-edit-btn');
+
+      btn.addEventListener('click', function () {
+        if (row.classList.contains('is-editing')) return;
+        row.classList.add('is-editing');
+        const before = r.values[key] || '';
+
+        // The button lives inside this cell, so swap the text node around it
+        // rather than rewriting the cell and destroying the button with it.
+        const oldText = cell.querySelector('.dir-edit-text');
+        if (oldText) oldText.remove();
+        btn.style.display = 'none';
+
+        const input = document.createElement('input');
+        input.className = 'dir-input';
+        input.type = f.type === 'email' ? 'email' : f.type === 'tel' ? 'tel'
+                   : f.type === 'url' ? 'url' : f.type === 'date' ? 'date' : 'text';
+        input.value = before;
+        input.placeholder = 'Add ' + f.label;
+        input.setAttribute('aria-label', f.label);
+        cell.insertBefore(input, btn);
+        input.focus();
+        input.select();
+
+        let settled = false;
+        function finish(save) {
+          if (settled) return;
+          settled = true;
+          const value = save ? input.value.trim() : before;
+          row.classList.remove('is-editing');
+          input.remove();
+          cell.insertAdjacentHTML('afterbegin', valueCellHTML(value));
+          btn.style.display = '';
+          btn.focus();
+          if (save && value !== before) persist(key, value);
+        }
+        input.addEventListener('blur', function () { finish(true); });
+        input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+          // Stopped here so it doesn't reach the panel's own Escape-to-close.
+          if (e.key === 'Escape') { e.stopPropagation(); finish(false); }
+        });
+      });
+    });
+  }
+
+  // Name and job title also appear in the panel header, so keep those in step
+  // without rebuilding the panel and stealing focus from the field being edited.
+  function refreshPanelIdentity(r) {
+    const v = r.values;
+    const nameEl = document.querySelector('.dir-panel-name');
+    const roleEl = document.querySelector('.dir-panel-role');
+    if (nameEl) nameEl.textContent = v.name || 'Unnamed contact';
+    if (roleEl) roleEl.textContent = v.designation || '';
+  }
+
+  // ── Contact fields modal ───────────────────────────────────────────────────
+  const FIELD_TYPES = [['text', 'Text'], ['email', 'Email'], ['tel', 'Phone'], ['url', 'Link'], ['date', 'Date']];
+
+  function openFieldSettings(onSaved) {
+    const wrap = document.createElement('div');
+    const list = document.createElement('div');
+    wrap.appendChild(list);
+
+    const add = document.createElement('button');
+    add.type = 'button';
+    add.className = 'dir-btn dir-btn-add';
+    add.textContent = 'Add field';
+    wrap.appendChild(add);
+
+    // Working copy — nothing is written until Save.
+    let draft = contactFields().map(function (f) { return Object.assign({}, f); });
+
+    function render() {
+      list.innerHTML = '';
+      draft.forEach(function (f, i) {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'dir-field-row';
+        rowEl.innerHTML =
+          '<input class="dir-field-label" value="' + esc(f.label) + '"' + (f.locked ? ' disabled' : '') +
+            ' aria-label="Field name" placeholder="Field name">' +
+          '<select class="dir-field-type" aria-label="Field type">' +
+            FIELD_TYPES.map(function (t) {
+              return '<option value="' + t[0] + '"' + (f.type === t[0] ? ' selected' : '') + '>' + t[1] + '</option>';
+            }).join('') +
+          '</select>' +
+          (f.locked
+            ? '<span class="dir-field-lock" title="Contacts are identified by this field">Fixed</span>'
+            : '<button class="dir-field-drop" type="button" aria-label="Remove ' + esc(f.label) + '">' +
+                '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>' +
+              '</button>');
+        rowEl.querySelector('.dir-field-label').addEventListener('input', function (e) { draft[i].label = e.target.value; });
+        rowEl.querySelector('.dir-field-type').addEventListener('change', function (e) { draft[i].type = e.target.value; });
+        const drop = rowEl.querySelector('.dir-field-drop');
+        if (drop) drop.addEventListener('click', function () { draft.splice(i, 1); render(); });
+        list.appendChild(rowEl);
+      });
+    }
+    render();
+
+    add.addEventListener('click', function () {
+      draft.push({ key: '', label: '', type: 'text' });
+      render();
+      const inputs = list.querySelectorAll('.dir-field-label');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    });
+
+    openModal({
+      title: 'Contact fields',
+      note: 'Choose what a contact record holds. Name and email are fixed — contacts are ' +
+            'identified by them. Removing a field hides it here; values already saved on ' +
+            'records are kept.',
+      body: wrap,
+      confirmLabel: 'Save fields',
+      onConfirm: async function (modal) {
+        const cleaned = [];
+        const taken = [];
+        for (const f of draft) {
+          const label = String(f.label || '').trim();
+          if (!label) { modal.setStatus('Give every field a name.', true); return; }
+          if (cleaned.some(function (c) { return c.label.toLowerCase() === label.toLowerCase(); })) {
+            modal.setStatus('“' + label + '” is used twice.', true); return;
+          }
+          const key = f.key || fieldKeyFor(label, taken);
+          taken.push(key);
+          cleaned.push({ key: key, label: label, type: f.type || 'text', locked: !!f.locked });
+        }
+        modal.setBusy(true);
+        modal.setStatus('Saving…');
+        try {
+          await setContactFields(cleaned);
+          modal.close();
+          onSaved();
+        } catch (e) {
+          modal.setBusy(false);
+          modal.setStatus('Couldn’t save — the data API is unreachable.', true);
+        }
+      },
+    });
   }
 
   (async function init() {
@@ -223,8 +578,20 @@
     }
     const pipelines = data.pipelines || {};
     rebuildPipelineNav(Object.keys(pipelines).map(function (id) { return pipelines[id]; }));
-    renderContacts(buildContacts(pipelines));
+
+    let rows = buildContacts(pipelines);
+    renderContacts(rows);
     wireSearch('c-search', 'c-body', 'c-count', 'contact');
+    wireRows('c-body', function (idx, tr) { openContact(rows[idx], tr); });
+
+    document.getElementById('c-settings').addEventListener('click', function () {
+      openFieldSettings(function () {
+        // The schema changed, so any open panel is showing the old field set.
+        closePanel();
+        rows = buildContacts(pipelines);
+        renderContacts(rows);
+      });
+    });
   })();
 </script>
 </body>

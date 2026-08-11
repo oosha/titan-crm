@@ -118,7 +118,9 @@ body {
 .sidebar-line {
   height: 1px;
   background: #2d2d2d;
-  margin: 8px 0 0;
+  /* Even space on both sides: the rule used to have 8px above and none below,
+     so whatever followed it sat right on the line. */
+  margin: 14px 0;
   flex-shrink: 0;
 }
 

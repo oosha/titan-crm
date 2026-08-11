@@ -1517,7 +1517,9 @@
     try {
       await fetch('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPipelineId: pipelineKey, pipelineSeq: DATA.pipelineSeq, pipelines: pipelines }),
+        // Spread DATA first so top-level keys this page doesn't model (e.g.
+        // contactFields) survive the round-trip instead of being dropped.
+        body: JSON.stringify(Object.assign({}, DATA, { currentPipelineId: pipelineKey, pipelineSeq: DATA.pipelineSeq, pipelines: pipelines })),
       });
       document.getElementById('ov-save-hint').textContent = 'Saved';
       setTimeout(function () {

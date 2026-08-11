@@ -6252,7 +6252,9 @@
         // *default* persona's entire pipeline data with the persona's data instead.
         await fetch('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID), {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ currentPipelineId: REAL_DATA.currentPipelineId, pipelineSeq: REAL_DATA.pipelineSeq, pipelines: REAL_PIPELINES }),
+          // Spread REAL_DATA first so top-level keys this page doesn't model
+          // (e.g. contactFields) survive the round-trip instead of being dropped.
+          body: JSON.stringify(Object.assign({}, REAL_DATA, { currentPipelineId: REAL_DATA.currentPipelineId, pipelineSeq: REAL_DATA.pipelineSeq, pipelines: REAL_PIPELINES })),
         });
       } catch (e) { console.error('titan-crm: failed to save pipeline data', e); }
     }

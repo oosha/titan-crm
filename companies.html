@@ -57,13 +57,16 @@
         </div>
       </div>
 
+      <div class="sidebar-line"></div>
+
       <div class="nav-item" onclick="openNewPipeline()">
         <div class="nav-item-icon" style="color:#2170f4; font-weight:700; font-size:16px;">+</div>
         <span class="nav-item-label" style="color:#2170f4; font-weight:600;">New pipeline</span>
       </div>
 
-      <div class="sidebar-line" id="pipeline-nav-line"></div>
-      <!-- Pipeline rows are rebuilt from the fetched data at load time. -->
+      <!-- Anchor only: rebuildPipelineNav() inserts the pipeline rows after this
+           and clears them by walking forward to the next .sidebar-line. -->
+      <div id="pipeline-nav-line" class="nav-anchor"></div>
 
       <div class="sidebar-line"></div>
 
@@ -123,10 +126,10 @@
           <table class="dir-table">
             <thead>
               <tr>
-                <th style="width:24%;">Company</th>
-                <th style="width:16%;">Location</th>
-                <th style="width:12%;">Contacts</th>
-                <th style="width:14%;">Value</th>
+                <th>Company</th>
+                <th>People</th>
+                <th>Open value</th>
+                <th>Last activity</th>
                 <th>Records</th>
               </tr>
             </thead>
@@ -153,11 +156,13 @@
       const key = name.toLowerCase();
       let row = byKey.get(key);
       if (!row) {
-        row = { company: name, website: '', location: '', records: [], contacts: new Map(), totals: {} };
+        row = { company: name, website: '', location: '', linkedin: '', instagram: '', records: [], contacts: new Map(), totals: {} };
         byKey.set(key, row);
       }
       if (!row.website && card.website) row.website = card.website;
       if (!row.location && card.location) row.location = card.location;
+      if (!row.linkedin && card.companyLinkedin) row.linkedin = card.companyLinkedin;
+      if (!row.instagram && card.instagram) row.instagram = card.instagram;
       row.records.push(entry);
       contactsOf(card).forEach(function (c) {
         const ck = String(c.email || c.name || '').trim().toLowerCase();
@@ -189,13 +194,16 @@
       return;
     }
     empty.style.display = 'none';
-    body.innerHTML = rows.map(function (r) {
-      const firstEmail = (Array.from(r.contacts.values())[0] || {}).email || '';
+    body.innerHTML = rows.map(function (r, i) {
+      const people = Array.from(r.contacts.values());
+      const firstEmail = (people[0] || {}).email || '';
       const domain = companyDomainFor({ company: r.company, website: r.website, contactEmail: firstEmail });
-      const nContacts = r.contacts.size;
       const money = totalsText(r.totals);
-      const search = [r.company, r.website, r.location, domain].join(' ').toLowerCase();
-      return '<tr data-search="' + esc(search) + '">' +
+      const last = lastActivityOf(r.records);
+      const search = [r.company, r.website, r.location, domain].concat(
+        people.map(function (p) { return (p.name || '') + ' ' + (p.email || ''); })
+      ).join(' ').toLowerCase();
+      return '<tr tabindex="0" role="button" aria-selected="false" data-idx="' + i + '" data-search="' + esc(search) + '">' +
         '<td><div class="dir-name-cell">' +
           companyLogoHTML({ company: r.company, website: r.website, contactEmail: firstEmail }) +
           '<div class="dir-name-text">' +
@@ -205,12 +213,78 @@
               : '') +
           '</div>' +
         '</div></td>' +
-        '<td>' + (r.location ? esc(r.location) : '<span class="dir-muted">—</span>') + '</td>' +
-        '<td>' + (nContacts ? nContacts + (nContacts === 1 ? ' contact' : ' contacts') : '<span class="dir-muted">—</span>') + '</td>' +
-        '<td>' + (money ? esc(money) : '<span class="dir-muted">—</span>') + '</td>' +
-        '<td><div class="dir-chips">' + r.records.map(recordChipHTML).join('') + '</div></td>' +
+        // One person is worth naming; a crowd is worth counting.
+        '<td>' + (people.length === 1
+          ? '<div class="dir-name-cell">' + avatarHTML(people[0].name || people[0].email) +
+              '<div class="dir-name-text"><div class="dir-name" style="font-weight:400;">' +
+              (esc(people[0].name) || esc(people[0].email)) + '</div></div></div>'
+          : people.length
+            ? '<span class="dir-facepile">' +
+                people.slice(0, 3).map(function (p) { return avatarHTML(p.name || p.email); }).join('') +
+                '<span class="dir-facepile-count">' + people.length + '</span>' +
+              '</span>'
+            : '<span class="dir-muted">—</span>') + '</td>' +
+        '<td class="dir-num">' + (money ? esc(money) : '<span class="dir-muted">—</span>') + '</td>' +
+        '<td>' + lastActivityCellHTML(last) + '</td>' +
+        '<td>' + recordChipsHTML(r.records) + '</td>' +
       '</tr>';
     }).join('');
+  }
+
+  // ── Detail panel ───────────────────────────────────────────────────────────
+  function openCompany(r, row) {
+    const people = Array.from(r.contacts.values());
+    const firstEmail = (people[0] || {}).email || '';
+    const domain = companyDomainFor({ company: r.company, website: r.website, contactEmail: firstEmail });
+    const money = totalsText(r.totals);
+    const last = lastActivityOf(r.records);
+    const n = r.records.length;
+
+    // Website is the panel header's subtitle already, so it isn't repeated here.
+    const details = kvHTML([
+      ['Location', r.location],
+      ['LinkedIn', r.linkedin, r.linkedin ? '<a class="dir-link" href="' + esc(r.linkedin) + '" target="_blank" rel="noopener">View page</a>' : ''],
+      ['Instagram', r.instagram, r.instagram ? '<a class="dir-link" href="' + esc(r.instagram) + '" target="_blank" rel="noopener">View profile</a>' : ''],
+      ['Open value', money],
+    ]);
+
+    const peopleList = people.length
+      ? people.map(function (p) {
+          return '<div class="dir-person">' +
+            avatarHTML(p.name || p.email) +
+            '<div class="dir-person-text">' +
+              '<div class="dir-person-name">' + (esc(p.name) || esc(p.email)) + '</div>' +
+              (p.designation || p.email
+                ? '<div class="dir-person-sub">' + (p.designation ? esc(p.designation) : '') +
+                  (p.designation && p.email ? ' · ' : '') +
+                  (p.email ? '<a class="dir-link" href="mailto:' + esc(p.email) + '">' + esc(p.email) + '</a>' : '') +
+                  '</div>'
+                : '') +
+            '</div>' +
+          '</div>';
+        }).join('')
+      : '<div class="stage-caption">No one is attached to these records yet.</div>';
+
+    const activity = last
+      ? kvHTML([
+          ['When', last.card.lastActivity],
+          ['Type', last.card.activityType],
+          ['Record', last.card.deal],
+        ])
+      : '';
+
+    openPanel(
+      {
+        avatar: companyLogoHTML({ company: r.company, website: r.website, contactEmail: firstEmail }),
+        name: esc(r.company),
+        role: domain ? esc(domain) : '',
+      },
+      sectionHTML('Details', details) +
+      sectionHTML(people.length === 1 ? '1 person' : people.length + ' people', peopleList) +
+      sectionHTML('Recent activity', activity) +
+      sectionHTML(n + ' ' + entityNoun(r.records, n), r.records.map(panelRecordHTML).join('')),
+      row
+    );
   }
 
   (async function init() {
@@ -223,8 +297,10 @@
     }
     const pipelines = data.pipelines || {};
     rebuildPipelineNav(Object.keys(pipelines).map(function (id) { return pipelines[id]; }));
-    renderCompanies(buildCompanies(pipelines));
+    const rows = buildCompanies(pipelines);
+    renderCompanies(rows);
     wireSearch('k-search', 'k-body', 'k-count', 'company');
+    wireRows('k-body', function (idx, tr) { openCompany(rows[idx], tr); });
   })();
 </script>
 </body>

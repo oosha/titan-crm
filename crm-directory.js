@@ -61,32 +61,127 @@
     return (p && p.account && p.account.currency && p.account.currency.symbol) || '$';
   };
 
+  // The whole fetched document is kept so saves can write it back intact —
+  // pipelines plus any top-level keys (contactFields) the other pages don't model.
+  window.DATA = null;
+
   window.fetchPipelineData = async function () {
     var res = await fetch('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID), { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to load data (' + res.status + ')');
-    return res.json();
+    window.DATA = await res.json();
+    return window.DATA;
+  };
+
+  window.saveData = async function () {
+    var res = await fetch('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(window.DATA),
+    });
+    if (!res.ok) throw new Error('Save failed (' + res.status + ')');
+  };
+
+  // ── Contact field schema ───────────────────────────────────────────────────
+  // What a contact "is". Stored on the data document as contactFields so it
+  // survives alongside the records; the built-in seven are what every record
+  // already carried before this was configurable.
+  //
+  // name and email are locked: name is what the row shows, and email is the key
+  // contacts are deduplicated by across records. Removing either would leave
+  // people unidentifiable or silently merged.
+  window.DEFAULT_CONTACT_FIELDS = [
+    { key: 'name', label: 'Name', type: 'text', locked: true },
+    { key: 'email', label: 'Email', type: 'email', locked: true },
+    { key: 'phone', label: 'Phone', type: 'tel' },
+    { key: 'designation', label: 'Job title', type: 'text' },
+    { key: 'department', label: 'Department', type: 'text' },
+    { key: 'location', label: 'Location', type: 'text' },
+    { key: 'linkedin', label: 'LinkedIn', type: 'url' },
+  ];
+
+  window.contactFields = function () {
+    var f = window.DATA && window.DATA.contactFields;
+    return (Array.isArray(f) && f.length) ? f : window.DEFAULT_CONTACT_FIELDS.slice();
+  };
+
+  window.setContactFields = async function (fields) {
+    if (!window.DATA) throw new Error('No data loaded');
+    window.DATA.contactFields = fields;
+    await window.saveData();
+  };
+
+  // Turns a label into a storage key that won't collide with an existing one.
+  window.fieldKeyFor = function (label, taken) {
+    var base = String(label || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'field';
+    var key = base, i = 2;
+    while (taken.indexOf(key) !== -1) { key = base + '_' + i; i++; }
+    return key;
   };
 
   // Sidebar pipeline rows — same markup/behaviour crm.html builds at load time.
-  window.rebuildPipelineNav = function (list) {
+  // Scoped per persona: ?u=joanna has a different set of pipelines than default.
+  function navCacheKey() { return 'titan-crm-pipeline-nav:' + window.PERSONA_ID; }
+  var renderedNavSig = null;
+
+  window.rebuildPipelineNav = function (list, opts) {
     var line = document.getElementById('pipeline-nav-line');
     if (!line) return;
-    var n = line.nextElementSibling;
-    while (n && !n.classList.contains('sidebar-line')) { var next = n.nextElementSibling; n.remove(); n = next; }
+
+    // Nothing changed since the rows currently on screen — leave them alone
+    // rather than tearing them down and rebuilding an identical list.
+    var sig = JSON.stringify(list.map(function (p) { return [p.id, p.name, p.color]; }));
+    if (sig === renderedNavSig) return;
+    renderedNavSig = sig;
+
+    var n = line.nextElementSibling, had = 0;
+    while (n && !n.classList.contains('sidebar-line')) {
+      var next = n.nextElementSibling; n.remove(); had++; n = next;
+    }
+    // Only animate when the list is genuinely appearing for the first time —
+    // i.e. this tab has no cached list to paint from. Rows restored from cache
+    // never animate: fading them in on every navigation is the same blink,
+    // just prettier.
+    var animate = (opts && opts.animate === false) ? false : had === 0;
+
     var after = line;
-    list.forEach(function (pl) {
+    list.forEach(function (pl, i) {
       var item = document.createElement('div');
-      item.className = 'nav-item';
+      item.className = 'nav-item' + (animate ? ' is-entering' : '');
+      // Staggered so the rows read as the list filling in, not as one flash.
+      // Capped so a long pipeline list doesn't crawl in.
+      if (animate) item.style.animationDelay = Math.min(i * 45, 270) + 'ms';
       item.dataset.pipelineId = pl.id;
       item.onclick = function () { location.href = window.crmPath('/crm/pipeline/' + encodeURIComponent(pl.id)); };
       item.innerHTML =
         '<div class="nav-item-icon"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="' + (pl.color || '#2170f4') + '"/></svg></div>' +
         '<span class="nav-item-label"></span>';
       item.querySelector('.nav-item-label').textContent = pl.name;
+      item.addEventListener('animationend', function () {
+        item.classList.remove('is-entering');
+        item.style.animationDelay = '';
+      }, { once: true });
       after.after(item);
       after = item;
     });
+
+    // Remembered for the next page in this tab, so its rows are on screen at
+    // paint time instead of after its own /api/data round-trip.
+    try {
+      sessionStorage.setItem(navCacheKey(), JSON.stringify(
+        list.map(function (p) { return { id: p.id, name: p.name, color: p.color }; })
+      ));
+    } catch (e) { /* private mode / quota — the nav just falls back to loading late */ }
   };
+
+  // Contacts and Companies are separate documents, so navigating between them
+  // reloads the sidebar and the pipeline rows would blink out until /api/data
+  // came back. Painting the previous page's list synchronously here (this script
+  // runs after the sidebar markup) keeps them on screen across the navigation;
+  // rebuildPipelineNav() then no-ops if the fetched list matches.
+  (function primePipelineNav() {
+    var cached = null;
+    try { cached = JSON.parse(sessionStorage.getItem(navCacheKey()) || 'null'); } catch (e) {}
+    if (cached && cached.length) window.rebuildPipelineNav(cached, { animate: false });
+  })();
 
   // Every card across every pipeline, tagged with the pipeline it came from so rows
   // can link back to the right /crm/pipeline/<id>/record/<id>.
@@ -113,6 +208,49 @@
     }];
   };
 
+  // The records cell. One chip that can be read beats two that are both cut off
+  // mid-word; the rest are summarised, and the panel lists every one of them.
+  window.recordChipsHTML = function (records, max) {
+    var cap = max || 1;
+    var extra = records.length - cap;
+    return '<div class="dir-chips">' +
+      records.slice(0, cap).map(window.recordChipHTML).join('') +
+      (extra > 0 ? '<span class="dir-chip dir-chip-more">+' + extra + '</span>' : '') +
+    '</div>';
+  };
+
+  // Activity is stored as human text ("2d ago"), so rank by that rather than
+  // parsing a date that isn't there.
+  var RECENCY = { 'just now': 0, 'today': 1, 'yesterday': 2 };
+  var UNITS = { h: 1 / 24, d: 1, w: 7, m: 30, y: 365 };
+  window.recencyRank = function (s) {
+    var t = String(s || '').trim().toLowerCase();
+    if (t in RECENCY) return RECENCY[t];
+    var m = t.match(/^(\d+)\s*([hdwmy])/);
+    if (!m) return Infinity;
+    return 3 + Number(m[1]) * (UNITS[m[2]] || 1);
+  };
+  // The most recent touch across every record a row is attached to.
+  window.lastActivityOf = function (records) {
+    var best = null;
+    records.forEach(function (e) {
+      if (!e.card.lastActivity) return;
+      if (!best || window.recencyRank(e.card.lastActivity) < window.recencyRank(best.card.lastActivity)) best = e;
+    });
+    return best;
+  };
+  window.lastActivityCellHTML = function (entry) {
+    if (!entry) return '<span class="dir-muted">—</span>';
+    return '<div>' + window.esc(entry.card.lastActivity) + '</div>' +
+      (entry.card.activityType ? '<div class="dir-sub">' + window.esc(entry.card.activityType) + '</div>' : '');
+  };
+  // Per-symbol totals — records in a pipeline can carry different currencies,
+  // and adding unlike amounts together would quietly invent a number.
+  window.totalsText = function (totals) {
+    return Object.keys(totals).filter(function (c) { return totals[c] > 0; })
+      .map(function (c) { return c + Number(totals[c]).toLocaleString(); }).join(' · ');
+  };
+
   window.recordChipHTML = function (entry) {
     var href = window.crmPath('/crm/pipeline/' + encodeURIComponent(entry.pipelineId) + '/record/' + encodeURIComponent(entry.card.id));
     return '<a class="dir-chip" href="' + href + '" title="' + window.esc(entry.pipeline.name) + '">' +
@@ -135,6 +273,241 @@
       });
       var countEl = document.getElementById(countId);
       if (countEl) countEl.textContent = shown + ' ' + (shown === 1 ? noun : noun + 's');
+    });
+  };
+
+  // ── Avatars ────────────────────────────────────────────────────────────────
+  // A stable hue per name. Scanning a directory is mostly recognition, and a
+  // person's chip being reliably the same colour is a faster cue than reading
+  // the initial. Saturation and lightness are fixed so the set stays quiet.
+  window.avatarHTML = function (name, cls) {
+    var s = String(name || '').trim();
+    var initial = (s.charAt(0) || '?').toUpperCase();
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
+    return '<span class="dir-avatar' + (cls ? ' ' + cls : '') +
+      '" style="background:hsl(' + h + ',38%,52%)"' +
+      (s ? ' title="' + window.esc(s) + '"' : '') + '>' + window.esc(initial) + '</span>';
+  };
+
+  window.fmtMoney = function (value, currency) {
+    var n = Number(value) || 0;
+    return (currency || window.defaultCurrency()) + n.toLocaleString();
+  };
+
+  // ── Stage track ────────────────────────────────────────────────────────────
+  // Where a record actually sits in its pipeline, drawn in that pipeline's own
+  // colour. Naming the stage alone loses the thing you want at a glance: how
+  // far along it is, and how much is left.
+  window.stageTrackHTML = function (pipeline, card) {
+    var stages = (pipeline && pipeline.stages) || [];
+    if (!stages.length) return '';
+    var idx = -1;
+    for (var i = 0; i < stages.length; i++) if (stages[i].key === card.stage) { idx = i; break; }
+    if (idx === -1) return '';
+    var color = pipeline.color || '#2170f4';
+    var segs = stages.map(function (s, i) {
+      return '<span class="stage-seg' + (i <= idx ? ' is-done' : '') + '"></span>';
+    }).join('');
+    return '<div class="stage-track" style="--pipe:' + window.esc(color) + '">' + segs + '</div>' +
+      '<div class="stage-caption">' + window.esc(stages[idx].label) +
+      ' · step ' + (idx + 1) + ' of ' + stages.length + '</div>';
+  };
+
+  // A linked record, as it appears inside the panel.
+  window.panelRecordHTML = function (entry) {
+    var card = entry.card, pl = entry.pipeline;
+    var href = window.crmPath('/crm/pipeline/' + encodeURIComponent(entry.pipelineId) + '/record/' + encodeURIComponent(card.id));
+    return '<a class="dir-rec" href="' + href + '">' +
+      '<div class="dir-rec-top">' +
+        '<span class="dir-rec-deal">' + (window.esc(card.deal) || 'Untitled') + '</span>' +
+        (card.value ? '<span class="dir-rec-value">' + window.esc(window.fmtMoney(card.value, card.currency)) + '</span>' : '') +
+      '</div>' +
+      '<div class="dir-rec-pipe">' +
+        '<span class="dir-chip-dot" style="background:' + window.esc(pl.color || '#2170f4') + '"></span>' +
+        window.esc(pl.name || '') +
+      '</div>' +
+      window.stageTrackHTML(pl, card) +
+    '</a>';
+  };
+
+  // Only renders the fields that actually have a value — a panel full of dashes
+  // reads as broken rather than as empty.
+  // pairs: [label, value, valueHTML?] — valueHTML wins when the value needs to be
+  // a link; otherwise the plain value is escaped.
+  window.kvHTML = function (pairs) {
+    var rows = pairs.filter(function (p) { return p[1]; }).map(function (p) {
+      return '<dt>' + window.esc(p[0]) + '</dt><dd>' + (p[2] || window.esc(p[1])) + '</dd>';
+    });
+    return rows.length ? '<dl class="dir-kv">' + rows.join('') + '</dl>' : '';
+  };
+
+  // What a pipeline calls its records — every pipeline defines its own entity
+  // ("Opportunity"/"opportunities", "Order"/"orders", "Project"/"projects"), so
+  // say that rather than the generic "record". A row spanning pipelines that
+  // disagree falls back to "record", since there's no one right noun for a set
+  // that mixes opportunities and orders.
+  window.entityNoun = function (records, n) {
+    var seen = {};
+    records.forEach(function (e) {
+      var pl = e.pipeline || {};
+      if (pl.entity && pl.plural) seen[pl.entity + '|' + pl.plural] = pl;
+    });
+    var keys = Object.keys(seen);
+    if (keys.length === 1) {
+      var pl = seen[keys[0]];
+      return n === 1 ? pl.entity.toLowerCase() : pl.plural.toLowerCase();
+    }
+    return n === 1 ? 'record' : 'records';
+  };
+
+  window.sectionHTML = function (label, inner) {
+    if (!inner) return '';
+    return '<div class="dir-sec"><div class="dir-sec-label">' + window.esc(label) + '</div>' + inner + '</div>';
+  };
+
+  // ── Detail panel ───────────────────────────────────────────────────────────
+  // Opens beside the table rather than over it, so the list you were reading
+  // stays on screen and the row you picked stays marked.
+  var panelEl = null, scrimEl = null, selectedRow = null, rowRenderer = null;
+
+  function ensurePanel() {
+    if (panelEl) return;
+    var win = document.querySelector('.app-window');
+    scrimEl = document.createElement('div');
+    scrimEl.className = 'dir-scrim';
+    scrimEl.addEventListener('click', window.closePanel);
+    panelEl = document.createElement('aside');
+    panelEl.className = 'dir-panel';
+    panelEl.setAttribute('aria-label', 'Details');
+    panelEl.setAttribute('aria-hidden', 'true');
+    win.appendChild(panelEl);
+    document.body.appendChild(scrimEl);
+  }
+
+  window.closePanel = function () {
+    if (!panelEl) return;
+    panelEl.classList.remove('is-open');
+    panelEl.setAttribute('aria-hidden', 'true');
+    scrimEl.classList.remove('is-open');
+    document.body.classList.remove('has-panel');
+    if (selectedRow) { selectedRow.classList.remove('is-selected'); selectedRow.setAttribute('aria-selected', 'false'); }
+    selectedRow = null;
+  };
+
+  // head: {avatar, name, role}  body: HTML string
+  window.openPanel = function (head, bodyHTML, row) {
+    ensurePanel();
+    if (selectedRow) { selectedRow.classList.remove('is-selected'); selectedRow.setAttribute('aria-selected', 'false'); }
+    selectedRow = row || null;
+    if (selectedRow) { selectedRow.classList.add('is-selected'); selectedRow.setAttribute('aria-selected', 'true'); }
+
+    panelEl.innerHTML =
+      '<div class="dir-panel-inner">' +
+        '<div class="dir-panel-head">' +
+          head.avatar +
+          '<div class="dir-panel-id">' +
+            '<div class="dir-panel-name">' + head.name + '</div>' +
+            (head.role ? '<div class="dir-panel-role">' + head.role + '</div>' : '') +
+          '</div>' +
+          '<button class="dir-panel-close" type="button" aria-label="Close details">' +
+            '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>' +
+          '</button>' +
+        '</div>' +
+        '<div class="dir-panel-body">' + bodyHTML + '</div>' +
+      '</div>';
+    panelEl.querySelector('.dir-panel-close').addEventListener('click', window.closePanel);
+    panelEl.classList.add('is-open');
+    panelEl.setAttribute('aria-hidden', 'false');
+    scrimEl.classList.add('is-open');
+    document.body.classList.add('has-panel');   // narrows the table's column set
+    panelEl.querySelector('.dir-panel-body').scrollTop = 0;
+  };
+
+  // ── Modal shell ────────────────────────────────────────────────────────────
+  // Generic scrim + card. The caller supplies the body and the footer buttons,
+  // and gets back handles so it can drive its own status line.
+  window.openModal = function (opts) {
+    var scrim = document.createElement('div');
+    scrim.className = 'dir-modal-scrim';
+    scrim.innerHTML =
+      '<div class="dir-modal" role="dialog" aria-modal="true" aria-label="' + window.esc(opts.title) + '">' +
+        '<div class="dir-modal-head">' +
+          '<div class="dir-modal-title">' + window.esc(opts.title) + '</div>' +
+          (opts.note ? '<div class="dir-modal-note">' + opts.note + '</div>' : '') +
+        '</div>' +
+        '<div class="dir-modal-body"></div>' +
+        '<div class="dir-modal-foot">' +
+          '<span class="dir-modal-status"></span>' +
+          '<button class="dir-btn" data-act="cancel" type="button">' + window.esc(opts.cancelLabel || 'Cancel') + '</button>' +
+          '<button class="dir-btn dir-btn-primary" data-act="confirm" type="button">' + window.esc(opts.confirmLabel || 'Save') + '</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(scrim);
+    var body = scrim.querySelector('.dir-modal-body');
+    var status = scrim.querySelector('.dir-modal-status');
+    var confirm = scrim.querySelector('[data-act="confirm"]');
+    if (opts.body) body.appendChild(opts.body);
+
+    function close() {
+      scrim.classList.remove('is-open');
+      document.removeEventListener('keydown', onKey);
+      setTimeout(function () { scrim.remove(); }, 180);
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    scrim.addEventListener('click', function (e) { if (e.target === scrim) close(); });
+    scrim.querySelector('[data-act="cancel"]').addEventListener('click', close);
+    document.addEventListener('keydown', onKey);
+
+    var handle = {
+      close: close,
+      body: body,
+      setStatus: function (msg, isError) {
+        status.textContent = msg || '';
+        status.classList.toggle('is-error', !!isError);
+      },
+      setBusy: function (busy) { confirm.disabled = !!busy; },
+    };
+    confirm.addEventListener('click', function () { opts.onConfirm(handle); });
+    requestAnimationFrame(function () { scrim.classList.add('is-open'); });
+    var focusable = body.querySelector('input, select, button');
+    if (focusable) focusable.focus();
+    return handle;
+  };
+
+  // Rows behave like a listbox: click or Enter opens, arrows walk the visible
+  // rows with the panel following, Escape closes and returns focus to the row.
+  window.wireRows = function (tbodyId, render) {
+    rowRenderer = render;
+    var tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+
+    function visibleRows() {
+      return Array.prototype.filter.call(tbody.querySelectorAll('tr'), function (tr) { return tr.style.display !== 'none'; });
+    }
+    function open(tr) { if (tr) { tr.focus(); render(Number(tr.dataset.idx), tr); } }
+
+    tbody.addEventListener('click', function (e) {
+      if (e.target.closest('a')) return;            // chips and mailto links keep their own behaviour
+      var tr = e.target.closest('tr');
+      if (tr) render(Number(tr.dataset.idx), tr);
+    });
+    tbody.addEventListener('keydown', function (e) {
+      var tr = e.target.closest('tr');
+      if (!tr) return;
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); render(Number(tr.dataset.idx), tr); return; }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        var rows = visibleRows(), i = rows.indexOf(tr);
+        var next = rows[i + (e.key === 'ArrowDown' ? 1 : -1)];
+        if (next) { next.scrollIntoView({ block: 'nearest' }); open(next); }
+      }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      var row = selectedRow;
+      window.closePanel();
+      if (row) row.focus();
     });
   };
 })();
