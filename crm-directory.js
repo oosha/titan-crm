@@ -14,6 +14,14 @@
   // Preserves ?u=<persona> (and ?apiBase=... for local testing) across in-app links.
   window.crmPath = function (suffix) { return (suffix || '/crm') + location.search; };
 
+  // Deep link to one company on the Companies page. Keeps the current query
+  // (persona, apiBase) and adds the company to open on arrival.
+  window.companyHref = function (company) {
+    var q = new URLSearchParams(location.search);
+    q.set('company', company);
+    return '/crm/companies?' + q.toString();
+  };
+
   window.esc = function (s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
@@ -208,14 +216,16 @@
     }];
   };
 
-  // The records cell. One chip that can be read beats two that are both cut off
-  // mid-word; the rest are summarised, and the panel lists every one of them.
+  // The records cell. Chips stack vertically and the row grows to fit them, so
+  // several records can each be read in full rather than one being legible and
+  // the rest collapsing into a count. Past three the row starts to dominate the
+  // list's rhythm, so the tail is summarised and the panel lists every one.
   window.recordChipsHTML = function (records, max) {
-    var cap = max || 1;
+    var cap = max || 3;
     var extra = records.length - cap;
     return '<div class="dir-chips">' +
       records.slice(0, cap).map(window.recordChipHTML).join('') +
-      (extra > 0 ? '<span class="dir-chip dir-chip-more">+' + extra + '</span>' : '') +
+      (extra > 0 ? '<span class="dir-chip dir-chip-more">+' + extra + ' more</span>' : '') +
     '</div>';
   };
 
@@ -342,6 +352,24 @@
     return rows.length ? '<dl class="dir-kv">' + rows.join('') + '</dl>' : '';
   };
 
+  // ── Pipeline types ─────────────────────────────────────────────────────────
+  // A pipeline isn't always a sales pipeline. A hiring pipeline moves candidates,
+  // not money — showing it a "won amount" tile would be showing it a column of
+  // zeroes. The type is what says which questions are worth asking of a pipeline,
+  // and `money` is the one that matters most: false means every currency figure
+  // is dropped rather than rendered as 0.
+  //
+  // Pipelines written before types existed carry no `type`; they're sales.
+  window.PIPELINE_TYPES = [
+    { id: 'sales',  label: 'Sales',  money: true,  rateLabel: 'win rate' },
+    { id: 'hiring', label: 'Hiring', money: false, rateLabel: 'hire rate' },
+  ];
+  window.pipelineTypeOf = function (pl) {
+    var id = (pl && pl.type) || 'sales';
+    return window.PIPELINE_TYPES.filter(function (t) { return t.id === id; })[0] || window.PIPELINE_TYPES[0];
+  };
+  window.pipelineHasMoney = function (pl) { return window.pipelineTypeOf(pl).money; };
+
   // What a pipeline calls its records — every pipeline defines its own entity
   // ("Opportunity"/"opportunities", "Order"/"orders", "Project"/"projects"), so
   // say that rather than the generic "record". A row spanning pipelines that
@@ -361,9 +389,16 @@
     return n === 1 ? 'record' : 'records';
   };
 
-  window.sectionHTML = function (label, inner) {
+  // aside is optional trailing HTML for the heading row — a total, a status —
+  // which belongs beside the label it qualifies rather than trailing the section.
+  window.sectionHTML = function (label, inner, aside) {
     if (!inner) return '';
-    return '<div class="dir-sec"><div class="dir-sec-label">' + window.esc(label) + '</div>' + inner + '</div>';
+    return '<div class="dir-sec">' +
+      '<div class="dir-sec-head">' +
+        '<div class="dir-sec-label">' + window.esc(label) + '</div>' +
+        (aside ? '<span class="dir-sec-aside">' + aside + '</span>' : '') +
+      '</div>' + inner +
+    '</div>';
   };
 
   // ── Detail panel ───────────────────────────────────────────────────────────
@@ -402,26 +437,54 @@
     selectedRow = row || null;
     if (selectedRow) { selectedRow.classList.add('is-selected'); selectedRow.setAttribute('aria-selected', 'true'); }
 
-    panelEl.innerHTML =
-      '<div class="dir-panel-inner">' +
-        '<div class="dir-panel-head">' +
-          head.avatar +
-          '<div class="dir-panel-id">' +
-            '<div class="dir-panel-name">' + head.name + '</div>' +
-            (head.role ? '<div class="dir-panel-role">' + head.role + '</div>' : '') +
-          '</div>' +
-          '<button class="dir-panel-close" type="button" aria-label="Close details">' +
-            '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>' +
-          '</button>' +
+    var wasOpen = panelEl.classList.contains('is-open');
+    var previous = panelEl.querySelector('.dir-panel-inner:not(.dir-panel-ghost)');
+
+    var inner = document.createElement('div');
+    inner.className = 'dir-panel-inner';
+    inner.innerHTML =
+      '<div class="dir-panel-head">' +
+        head.avatar +
+        '<div class="dir-panel-id">' +
+          '<div class="dir-panel-name">' + head.name + '</div>' +
+          (head.role ? '<div class="dir-panel-role">' + head.role + '</div>' : '') +
         '</div>' +
-        '<div class="dir-panel-body">' + bodyHTML + '</div>' +
-      '</div>';
-    panelEl.querySelector('.dir-panel-close').addEventListener('click', window.closePanel);
+        '<button class="dir-panel-close" type="button" aria-label="Close details">' +
+          '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>' +
+        '</button>' +
+      '</div>' +
+      '<div class="dir-panel-body">' + bodyHTML + '</div>';
+
+    if (wasOpen && previous) {
+      // The new content has to be in the DOM before this call returns — callers
+      // wire up their handlers immediately after. So the outgoing content stays
+      // as an absolutely-positioned copy that animates out on top, rather than
+      // deferring the swap behind a timer.
+      previous.classList.add('dir-panel-ghost');
+      // Its ids would otherwise be duplicated in the document for the ~200ms it
+      // lingers, and getElementById would find the dying copy first.
+      previous.querySelectorAll('[id]').forEach(function (el) { el.removeAttribute('id'); });
+      previous.addEventListener('animationend', function () { previous.remove(); }, { once: true });
+      inner.classList.add('is-swapping');
+      inner.addEventListener('animationend', function () { inner.classList.remove('is-swapping'); }, { once: true });
+      panelEl.appendChild(inner);
+    } else {
+      panelEl.innerHTML = '';
+      panelEl.appendChild(inner);
+    }
+
+    inner.querySelector('.dir-panel-close').addEventListener('click', window.closePanel);
+    inner.querySelector('.dir-panel-body').scrollTop = 0;
     panelEl.classList.add('is-open');
     panelEl.setAttribute('aria-hidden', 'false');
     scrimEl.classList.add('is-open');
     document.body.classList.add('has-panel');   // narrows the table's column set
-    panelEl.querySelector('.dir-panel-body').scrollTop = 0;
+  };
+
+  // The live panel contents — never the outgoing copy. Page code must scope its
+  // queries to this while a swap is in flight, or it will find the dying nodes.
+  window.panelRoot = function () {
+    return (panelEl && panelEl.querySelector('.dir-panel-inner:not(.dir-panel-ghost)')) || document;
   };
 
   // ── Modal shell ────────────────────────────────────────────────────────────

@@ -172,6 +172,7 @@ http.createServer(async (req, res) => {
   console.log('\n  Titan CRM dev server\n');
   console.log('    Mail      http://localhost:' + PORT + '/mail');
   console.log('    CRM       http://localhost:' + PORT + '/crm');
+  console.log('    Dashboard http://localhost:' + PORT + '/crm/dashboard');
   console.log('    Contacts  http://localhost:' + PORT + '/crm/contacts');
   console.log('    Companies http://localhost:' + PORT + '/crm/companies');
   console.log('    Persona   add ?u=joanna to any of the above\n');

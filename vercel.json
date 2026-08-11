@@ -3,6 +3,8 @@
   "rewrites": [
     { "source": "/mail", "destination": "/index.html" },
     { "source": "/mail/", "destination": "/index.html" },
+    { "source": "/crm/dashboard", "destination": "/dashboard.html" },
+    { "source": "/crm/dashboard/", "destination": "/dashboard.html" },
     { "source": "/crm/contacts", "destination": "/contacts.html" },
     { "source": "/crm/contacts/", "destination": "/contacts.html" },
     { "source": "/crm/companies", "destination": "/companies.html" },

@@ -59,6 +59,13 @@
 
       <div class="sidebar-line"></div>
 
+      <div class="nav-item" onclick="location.href=crmPath('/crm/dashboard')">
+        <div class="nav-item-icon">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="1.5" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/></svg>
+        </div>
+        <span class="nav-item-label">Dashboard</span>
+      </div>
+
       <div class="nav-item" onclick="openNewPipeline()">
         <div class="nav-item-icon" style="color:#2170f4; font-weight:700; font-size:16px;">+</div>
         <span class="nav-item-label" style="color:#2170f4; font-weight:600;">New pipeline</span>
@@ -114,14 +121,6 @@
         Back
       </span>
       <span class="subpage-title">Contacts</span>
-      <button class="subpage-action" id="c-settings" type="button">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M8 1.5v1.8M8 12.7v1.8M14.5 8h-1.8M3.3 8H1.5M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3M12.6 12.6l-1.3-1.3M4.7 4.7L3.4 3.4"
-                stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        Fields
-      </button>
     </div>
 
     <div class="subpage-body">
@@ -129,6 +128,15 @@
         <div class="dir-toolbar">
           <input class="dir-search" id="c-search" type="search" placeholder="Search by name, email, company…">
           <span class="dir-count" id="c-count"></span>
+          <!-- Sits with the table it configures, not in the page chrome. -->
+          <button class="dir-toolbar-btn" id="c-settings" type="button">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M8 1.5v1.8M8 12.7v1.8M14.5 8h-1.8M3.3 8H1.5M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3M12.6 12.6l-1.3-1.3M4.7 4.7L3.4 3.4"
+                    stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            Fields
+          </button>
         </div>
         <div class="dir-card">
           <table class="dir-table">
@@ -337,11 +345,20 @@
       }).join('') + '</tbody></table></div>';
   }
 
+  // "VP Sales @ Coastal Supply" — where someone works belongs on the same line as
+  // what they do, and the company name links through to its own record.
+  function roleHTML(r) {
+    const link = r.company
+      ? '<a class="dir-link" href="' + esc(companyHref(r.company)) + '">' + esc(r.company) + '</a>'
+      : '';
+    const title = r.values.designation;
+    if (title && link) return esc(title) + ' <span class="dir-role-at">@</span> ' + link;
+    return title ? esc(title) : link;
+  }
+
   function openContact(r, row) {
     const v = r.values;
     const money = totalsText(r.totals);
-    const last = lastActivityOf(r.records);
-    const domain = companyDomainFor({ company: r.company, website: r.website, contactEmail: v.email });
 
     const actions = (v.email || v.phone)
       ? '<div class="dir-actions">' +
@@ -350,30 +367,14 @@
         '</div>'
       : '';
 
-    const company = r.company
-      ? '<div class="dir-person">' +
-          companyLogoHTML({ company: r.company, website: r.website, contactEmail: v.email }) +
-          '<div class="dir-person-text">' +
-            '<div class="dir-person-name">' + esc(r.company) + '</div>' +
-            (domain ? '<div class="dir-person-sub"><a class="dir-link" href="https://' + esc(domain) + '" target="_blank" rel="noopener">' + esc(domain) + '</a></div>' : '') +
-          '</div>' +
-        '</div>'
-      : '';
-
-    const activity = last
-      ? kvHTML([
-          ['When', last.card.lastActivity],
-          ['Type', last.card.activityType],
-          ['Record', last.card.deal],
-        ])
-      : '';
+    const role = roleHTML(r);
 
     const n = r.records.length;
     openPanel(
       {
         avatar: avatarHTML(v.name || v.email),
         name: esc(v.name) || 'Unnamed contact',
-        role: esc(v.designation || ''),      // company gets its own block below
+        role: role,                          // designation @ company, linked
       },
       actions +
       // Built inline rather than via sectionHTML so the save hint can sit on the
@@ -385,13 +386,12 @@
         '</div>' +
         detailsTableHTML(r) +
       '</div>' +
-      sectionHTML('Company', company) +
-      sectionHTML('Recent activity', activity) +
       sectionHTML(
         'On ' + n + ' ' + entityNoun(r.records, n),
-        r.records.map(panelRecordHTML).join('') +
-        // Only worth stating when it isn't just the single value shown above.
-        (n > 1 && money ? '<div class="stage-caption">' + esc(money) + ' in total</div>' : '')
+        r.records.map(panelRecordHTML).join(''),
+        // Sits beside the heading it qualifies. Only worth stating at all when
+        // it isn't just restating the single value already shown below.
+        (n > 1 && money ? esc(money) + ' total' : '')
       ),
       row
     );
@@ -403,7 +403,10 @@
   // well as Enter matters — clicking straight onto another row's pencil is a
   // normal way to signal "done with this one".
   function wireDetailEditing(r, tableRow) {
-    const hint = document.getElementById('c-save-hint');
+    // Scoped to the live panel: during a swap the outgoing copy is still in the
+    // document for a moment, and a document-wide lookup would find it first.
+    const root = panelRoot();
+    const hint = root.querySelector('#c-save-hint');
     const fields = {};
     contactFields().forEach(function (f) { fields[f.key] = f; });
 
@@ -423,7 +426,7 @@
       }
     }
 
-    document.querySelectorAll('.dir-panel .dir-edit tr').forEach(function (row) {
+    root.querySelectorAll('.dir-edit tr').forEach(function (row) {
       const key = row.dataset.key;
       const f = fields[key];
       const cell = row.querySelector('.dir-edit-val');
@@ -477,10 +480,12 @@
   // without rebuilding the panel and stealing focus from the field being edited.
   function refreshPanelIdentity(r) {
     const v = r.values;
-    const nameEl = document.querySelector('.dir-panel-name');
-    const roleEl = document.querySelector('.dir-panel-role');
+    const root = panelRoot();
+    const nameEl = root.querySelector('.dir-panel-name');
+    const roleEl = root.querySelector('.dir-panel-role');
     if (nameEl) nameEl.textContent = v.name || 'Unnamed contact';
-    if (roleEl) roleEl.textContent = v.designation || '';
+    // innerHTML, not textContent — the line carries the company link.
+    if (roleEl) roleEl.innerHTML = roleHTML(r);
   }
 
   // ── Contact fields modal ───────────────────────────────────────────────────

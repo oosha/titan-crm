@@ -1,6 +1,6 @@
 {
   "currentPipelineId": "neo",
-  "pipelineSeq": 0,
+  "pipelineSeq": 2,
   "pipelines": {
     "neo": {
       "id": "neo",
@@ -178,7 +178,431 @@
       ],
       "hiddenFields": [],
       "customFieldDefs": [],
-      "contactsEnabled": true
+      "contactsEnabled": true,
+      "type": "sales"
+    },
+    "p2": {
+      "id": "p2",
+      "name": "Engineering hiring",
+      "type": "hiring",
+      "entity": "Candidate",
+      "plural": "candidates",
+      "color": "#2e9e7b",
+      "contactsEnabled": true,
+      "hiddenFields": [
+        "company-linkedin",
+        "instagram",
+        "close-date"
+      ],
+      "customFieldDefs": [
+        {
+          "key": "cf1",
+          "name": "Years of experience",
+          "type": "number"
+        }
+      ],
+      "stages": [
+        {
+          "key": "applied",
+          "label": "Applied",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "screen",
+          "label": "Screening",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "interview",
+          "label": "Interviewing",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "offer",
+          "label": "Offer out",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "hired",
+          "label": "Hired",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        }
+      ],
+      "cards": [
+        {
+          "initials": "P",
+          "value": 0,
+          "overdue": false,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "Strong on design systems. Panel wants one more round on architecture.",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 8
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Priya Raghavan",
+              "email": "priya.raghavan@gmail.com",
+              "phone": "+91 98450 11234",
+              "designation": "Frontend Lead at Zeta Labs",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 201,
+          "contact": "Priya Raghavan",
+          "company": "Zeta Labs",
+          "website": "zeta.com",
+          "deal": "Senior Frontend Engineer",
+          "stage": "interview",
+          "lastActivity": "1d ago",
+          "activityType": "Interview held",
+          "source": "Referral",
+          "contactEmail": "priya.raghavan@gmail.com",
+          "contactPhone": "+91 98450 11234",
+          "contactDesignation": "Frontend Lead at Zeta Labs",
+          "noteDate": "9 Aug",
+          "noteAuthor": "Usha"
+        },
+        {
+          "initials": "D",
+          "value": 0,
+          "overdue": true,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "Offer out since Tuesday, no reply yet. Chase before Friday.",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 11
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Daniel Osei",
+              "email": "d.osei@outlook.com",
+              "phone": "+44 7700 900412",
+              "designation": "Staff Engineer at Northfield",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 202,
+          "contact": "Daniel Osei",
+          "company": "Northfield",
+          "website": "northfield.com",
+          "deal": "Senior Frontend Engineer",
+          "stage": "offer",
+          "lastActivity": "3d ago",
+          "activityType": "Offer sent",
+          "source": "LinkedIn",
+          "contactEmail": "d.osei@outlook.com",
+          "contactPhone": "+44 7700 900412",
+          "contactDesignation": "Staff Engineer at Northfield",
+          "noteDate": "8 Aug",
+          "noteAuthor": "Usha"
+        },
+        {
+          "initials": "M",
+          "value": 0,
+          "overdue": false,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 6
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Mei Tanaka",
+              "email": "mei.tanaka@proton.me",
+              "phone": "+81 90 1234 5678",
+              "designation": "Senior Designer at Brightpath",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 203,
+          "contact": "Mei Tanaka",
+          "company": "Brightpath Co",
+          "website": "brightpath.com",
+          "deal": "Product Designer",
+          "stage": "screen",
+          "lastActivity": "2d ago",
+          "activityType": "Call made",
+          "source": "Careers page",
+          "contactEmail": "mei.tanaka@proton.me",
+          "contactPhone": "+81 90 1234 5678",
+          "contactDesignation": "Senior Designer at Brightpath"
+        },
+        {
+          "initials": "A",
+          "value": 0,
+          "overdue": false,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 4
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Arun Mehta",
+              "email": "arun.mehta91@gmail.com",
+              "phone": "+91 99000 45120",
+              "designation": "Backend Engineer at Delta Retail",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 204,
+          "contact": "Arun Mehta",
+          "company": "Delta Retail",
+          "website": "delta.com",
+          "deal": "Backend Engineer",
+          "stage": "applied",
+          "lastActivity": "5d ago",
+          "activityType": "Application received",
+          "source": "Job board",
+          "contactEmail": "arun.mehta91@gmail.com",
+          "contactPhone": "+91 99000 45120",
+          "contactDesignation": "Backend Engineer at Delta Retail"
+        },
+        {
+          "initials": "S",
+          "value": 0,
+          "overdue": true,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "Waiting on portfolio walkthrough feedback from the panel.",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 9
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Sofia Marino",
+              "email": "sofia@velastudio.co",
+              "phone": "+39 340 555 0198",
+              "designation": "Design Lead at Vela Studio",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 205,
+          "contact": "Sofia Marino",
+          "company": "Vela Studio",
+          "website": "vela.com",
+          "deal": "Product Designer",
+          "stage": "interview",
+          "lastActivity": "4d ago",
+          "activityType": "Interview held",
+          "source": "Referral",
+          "contactEmail": "sofia@velastudio.co",
+          "contactPhone": "+39 340 555 0198",
+          "contactDesignation": "Design Lead at Vela Studio",
+          "noteDate": "7 Aug",
+          "noteAuthor": "Ishant"
+        },
+        {
+          "initials": "T",
+          "value": 0,
+          "overdue": false,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 5
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Tomas Weber",
+              "email": "tomas.weber@mail.de",
+              "phone": "+49 151 2345 6789",
+              "designation": "Engineer at Kestrel",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 206,
+          "contact": "Tomas Weber",
+          "company": "Kestrel",
+          "website": "kestrel.com",
+          "deal": "Backend Engineer",
+          "stage": "screen",
+          "lastActivity": "yesterday",
+          "activityType": "Email sent",
+          "source": "LinkedIn",
+          "contactEmail": "tomas.weber@mail.de",
+          "contactPhone": "+49 151 2345 6789",
+          "contactDesignation": "Engineer at Kestrel"
+        },
+        {
+          "initials": "G",
+          "value": 0,
+          "overdue": false,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 7
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Grace Aturo",
+              "email": "grace.aturo@gmail.com",
+              "phone": "+254 712 345 678",
+              "designation": "Frontend Engineer at Loop Health",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 207,
+          "contact": "Grace Aturo",
+          "company": "Loop Health",
+          "website": "loophealth.com",
+          "deal": "Senior Frontend Engineer",
+          "stage": "applied",
+          "lastActivity": "6d ago",
+          "activityType": "Application received",
+          "source": "Job board",
+          "contactEmail": "grace.aturo@gmail.com",
+          "contactPhone": "+254 712 345 678",
+          "contactDesignation": "Frontend Engineer at Loop Health"
+        },
+        {
+          "initials": "H",
+          "value": 0,
+          "overdue": false,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "Starts on the 1st. Laptop and accounts requested.",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 10
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Henrik Lund",
+              "email": "henrik.lund@icloud.com",
+              "phone": "+47 400 12 345",
+              "designation": "Engineer at Sable",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 208,
+          "contact": "Henrik Lund",
+          "company": "Sable",
+          "website": "sable.com",
+          "deal": "Backend Engineer",
+          "stage": "hired",
+          "lastActivity": "1w ago",
+          "activityType": "Offer accepted",
+          "source": "Referral",
+          "contactEmail": "henrik.lund@icloud.com",
+          "contactPhone": "+47 400 12 345",
+          "contactDesignation": "Engineer at Sable",
+          "noteDate": "4 Aug",
+          "noteAuthor": "Usha"
+        }
+      ]
     }
   }
 }

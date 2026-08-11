@@ -167,17 +167,19 @@ body.has-panel[data-subpage="companies"] .dir-table th:nth-child(5) { width: 30%
 .dir-facepile .dir-avatar + .dir-avatar { margin-left: -9px; }
 .dir-facepile-count { margin-left: 9px; font-size: 13px; color: var(--dir-body); font-variant-numeric: tabular-nums; }
 
-/* Record chips linking back to each opportunity this row appears on. */
-.dir-chips { display: flex; align-items: center; gap: 5px; min-width: 0; }
+/* Record chips linking back to each opportunity this row appears on. Stacked
+   rather than side by side: the column is too narrow to hold two readable chips
+   in a line, and a taller row is a better trade than a truncated one. */
+.dir-chips { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
 .dir-chip {
   display: inline-flex; align-items: center; gap: 6px; background: #f2f3f5; border-radius: 999px;
   padding: 4px 10px; font-size: 12px; color: var(--dir-body); text-decoration: none; white-space: nowrap;
-  min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
 }
 .dir-chip:hover { background: var(--dir-accent-soft); color: var(--dir-accent); }
 .dir-chip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-/* "+2" stands in for the chips that don't fit — the panel lists them all. */
-.dir-chip-more { background: transparent; color: var(--dir-muted); padding: 4px 2px; flex-shrink: 0; }
+/* "+2 more" stands in for the chips past the cap — the panel lists them all. */
+.dir-chip-more { background: transparent; color: var(--dir-muted); padding: 2px 2px; flex-shrink: 0; }
 
 .dir-empty { padding: 44px 18px; text-align: center; color: var(--dir-muted); font-size: 13.5px; }
 .dir-note { font-size: 12px; color: var(--dir-muted); padding: 14px 22px; text-align: center; }
@@ -188,11 +190,39 @@ body.has-panel[data-subpage="companies"] .dir-table th:nth-child(5) { width: 30%
    covering it. Below 1180px there isn't room for both, and it becomes an
    overlay with a scrim. */
 .dir-panel {
+  position: relative;                 /* the outgoing copy is absolute inside this */
   flex: 0 0 auto; width: 0; overflow: hidden; background: var(--dir-surface);
-  border-left: 1px solid var(--dir-line); transition: width 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  border-left: 1px solid var(--dir-line); transition: width 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .dir-panel.is-open { width: var(--dir-panel-w); }
-.dir-panel-inner { width: var(--dir-panel-w); height: 100%; display: flex; flex-direction: column; }
+/* The container's width opens the space; the inner slides into it. Width alone
+   would wipe the content into view from the left edge, which reads as a reveal
+   rather than a panel arriving from the right. */
+.dir-panel-inner {
+  width: var(--dir-panel-w); height: 100%; display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+.dir-panel.is-open .dir-panel-inner { transform: none; }
+
+/* ── Swapping between records ────────────────────────────────────────────────
+   The panel stays put and its contents change over: the old set leaves to the
+   right, the new set follows it in from the left. Same direction for both, so
+   it reads as one movement rather than two unrelated fades. */
+@keyframes panel-content-out { to { opacity: 0; transform: translateX(18px); } }
+@keyframes panel-content-in { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+/* Eased so the old set loses its opacity early and is nearly gone by the time
+   the new one starts at 70ms — overlapping two legible copies reads as a
+   glitch rather than a transition. */
+.dir-panel-ghost {
+  position: absolute; inset: 0; pointer-events: none;
+  transition: none; transform: none;
+  animation: panel-content-out 150ms cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+.dir-panel-inner.is-swapping {
+  transition: none;                   /* the keyframes own the transform here */
+  animation: panel-content-in 200ms 70ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
 
 /* Panel spacing runs on a 4px scale: 8 within a group, 16 between groups,
    24 between sections. Mixed ad-hoc values are what make a panel feel loose. */
@@ -204,7 +234,10 @@ body.has-panel[data-subpage="companies"] .dir-table th:nth-child(5) { width: 30%
 .dir-panel-head .dir-avatar { border-radius: 50%; }
 .dir-panel-id { min-width: 0; flex: 1; }
 .dir-panel-name { font-size: 16px; font-weight: 700; color: var(--dir-ink); line-height: 1.3; overflow-wrap: anywhere; }
-.dir-panel-role { font-size: 12.5px; color: var(--dir-muted); margin-top: 2px; overflow-wrap: anywhere; }
+.dir-panel-role { font-size: 12.5px; color: var(--dir-muted); margin-top: 3px; overflow-wrap: anywhere; line-height: 1.4; }
+.dir-panel-role .dir-link { font-weight: 600; }
+/* The "@" is a joiner, not content — kept lighter so the eye reads title, company. */
+.dir-role-at { color: var(--dir-faint); }
 .dir-panel-close {
   flex-shrink: 0; width: 26px; height: 26px; border: none; background: transparent; cursor: pointer;
   border-radius: 6px; color: var(--dir-muted); display: inline-flex; align-items: center; justify-content: center;
@@ -308,15 +341,24 @@ body.has-panel[data-subpage="companies"] .dir-table th:nth-child(5) { width: 30%
 .dir-sec-head .dir-sec-label { margin-bottom: 0; }
 .dir-save-hint { font-size: 11.5px; color: var(--dir-muted); text-align: right; }
 .dir-save-hint.is-error { color: #c0392b; }
-
-/* ── Settings button in the page header ──────────────────────────────────── */
-.subpage-action {
-  margin-left: auto; flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
-  padding: 6px 11px; border: 1px solid var(--dir-line); border-radius: 8px; background: #fff;
-  font: inherit; font-size: 12.5px; font-weight: 600; color: var(--dir-body); cursor: pointer;
+/* A figure that qualifies the heading (a total, a count) reads better beside it
+   than stranded under the list it sums. */
+.dir-sec-aside {
+  font-size: 11.5px; font-weight: 600; color: var(--dir-muted);
+  white-space: nowrap; font-variant-numeric: tabular-nums;
 }
-.subpage-action:hover { border-color: var(--dir-accent); color: var(--dir-accent); }
-.subpage-action:focus-visible { outline: 2px solid var(--dir-accent); outline-offset: 1px; }
+
+/* ── Toolbar button ──────────────────────────────────────────────────────────
+   Right-aligned on the search row, directly above the table it configures.
+   Matched to the search field's height so the row reads as one band. */
+.dir-toolbar-btn {
+  margin-left: auto; flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
+  height: 36px; padding: 0 13px; border: 1px solid var(--dir-line); border-radius: 9px;
+  background: var(--dir-surface); font: inherit; font-size: 13px; font-weight: 600;
+  color: var(--dir-body); cursor: pointer;
+}
+.dir-toolbar-btn:hover { border-color: var(--dir-accent); color: var(--dir-accent); }
+.dir-toolbar-btn:focus-visible { outline: 2px solid var(--dir-accent); outline-offset: 1px; }
 
 /* ── Modal ───────────────────────────────────────────────────────────────── */
 .dir-modal-scrim {
@@ -390,5 +432,7 @@ body.has-panel[data-subpage="companies"] .dir-table th:nth-child(5) { width: 30%
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dir-panel, .dir-scrim { transition: none; }
+  .dir-panel, .dir-scrim, .dir-panel-inner { transition: none; }
+  .dir-panel-ghost, .dir-panel-inner.is-swapping { animation: none; }
+  .dir-panel-ghost { display: none; }
 }

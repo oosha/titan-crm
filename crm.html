@@ -3322,6 +3322,14 @@
           </div>
         </div>
 
+        <!-- Dashboard: first destination in the CRM nav -->
+        <div class="nav-item" onclick="location.href='/crm/dashboard' + location.search">
+          <div class="nav-item-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="1.5" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/></svg>
+          </div>
+          <span class="nav-item-label">Dashboard</span>
+        </div>
+
         <!-- + New Pipeline -->
         <div class="nav-item" onclick="openNewPipeline()">
           <div class="nav-item-icon" style="color:#2170f4; font-weight:700; font-size:16px;">+</div>
@@ -5465,6 +5473,13 @@
 
     let CURRENCY_SYMBOL = '$';
     function fmtMoney(n) { return CURRENCY_SYMBOL + n.toLocaleString(); }
+    // Not every pipeline is a sales pipeline. A hiring board moves candidates, and
+    // a candidate has no amount — printing "$0" on every card would be inventing a
+    // number. The type registry in crm-directory.js is the same source the
+    // dashboard reads; this page is a monolith and doesn't load it, so the check
+    // is inlined. Both sides must agree on the type ids.
+    function pipelineHasMoney(pl) { return !pl || pl.type !== 'hiring'; }
+    function currentHasMoney() { return pipelineHasMoney(PIPELINES[currentPipelineId]); }
 
     // Muted, varied avatar colors — no real photos in this prototype, so every
     // contact falls back to a single-initial circle, colored deterministically
@@ -6000,7 +6015,7 @@
           '<div class="kanban-col-header" style="background:' + headerShade + ';">' +
             '<div class="kanban-col-title" style="color:' + titleColor + ';">' + stage.label + '</div>' +
             '<div class="kanban-col-meta" style="color:' + metaColor + ';">' +
-              '<span>' + cardsInStage.length + ' &middot; ' + fmtMoney(total) + '</span>' +
+              '<span>' + cardsInStage.length + (currentHasMoney() ? ' &middot; ' + fmtMoney(total) : '') + '</span>' +
             '</div>' +
           '</div>' +
           '<div class="kanban-col-body" data-stage="' + stage.key + '"></div>';
@@ -6031,7 +6046,7 @@
       const pt = document.getElementById('pipeline-total');
       if (pt) {
         const total = CARDS.reduce(function (sum, c) { return sum + c.value; }, 0);
-        pt.textContent = CARDS.length + ' ' + CURRENT_ENTITY_PLURAL + ' · ' + fmtMoney(total);
+        pt.textContent = CARDS.length + ' ' + CURRENT_ENTITY_PLURAL + (currentHasMoney() ? ' · ' + fmtMoney(total) : '');
       }
     }
 
@@ -6099,7 +6114,7 @@
         '<div class="kanban-card-company">' + companyLogoHTML(card) + '<span>' + card.company + '</span></div>' +
         '<div class="kanban-card-footer">' +
           '<span class="kanban-card-avatar" data-contact="' + escAttr(card.contact) + '" data-designation="' + escAttr(contactDetailFor(card, 'designation')) + '" data-email="' + escAttr(contactDetailFor(card, 'email')) + '" data-phone="' + escAttr(contactDetailFor(card, 'phone')) + '" style="background:' + avatarColorFor(card.contact) + ';">' + card.contact.charAt(0) + '</span>' +
-          '<span class="kanban-card-value">' + fmtMoney(card.value) + '</span>' +
+          (currentHasMoney() ? '<span class="kanban-card-value">' + fmtMoney(card.value) + '</span>' : '') +
           // Won/Lost pill comes from card.status now (only shown for those two values);
           // records that predate the Status field fall back to the old won boolean.
           (card.status === 'Won' || (!card.status && card.won)

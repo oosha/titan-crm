@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard — Titan CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Persona loader: ?u=<id> scopes the /api/data fetch, and loads personas/<id>.js
+     purely for the account's currency symbol (records don't all carry their own). -->
+<script>
+  (function () {
+    var raw = new URLSearchParams(location.search).get('u');
+    var u = (raw && /^[a-z0-9_-]{1,32}$/.test(raw)) ? raw.toLowerCase() : null;
+    if (u) document.write('<' + 'script src="/personas/' + u + '.js"><' + '/script>');
+  })();
+</script>
+<link rel="stylesheet" href="/titan-sidebar.css">
+<link rel="stylesheet" href="/crm-directory.css">
+<style>
+  /* Dashboard — a read-only "cockpit" for a pipeline, laid out as a bento of
+     self-contained tiles, with a mocked "Ask Titan" copilot docked on the right.
+     It reuses the shell (titan-sidebar.css) and the toolbar/button/modal
+     primitives + data helpers from crm-directory. Everything is derived from the
+     same /api/data the board reads — no new source of truth. */
+
+  :root {
+    --dash-shadow: 0 1px 2px rgba(20,22,26,0.04), 0 3px 10px rgba(20,22,26,0.04);
+    --rail-w: 344px;
+  }
+
+  /* Turn the scroll region into a two-column layout: the bento scrolls, the
+     copilot rail stays put with its own internal scroll. */
+  [data-subpage="dashboard"] .subpage-body { display: flex; overflow: hidden; padding: 0; }
+
+  .dash-scroll {
+    /* Slightly deeper top padding than the sides: with the page header gone, the
+       tabs sit against the window edge and need the room the header used to give. */
+    flex: 1; min-width: 0; overflow-y: auto; padding: 22px 22px 44px;
+    /* The bento sizes to THIS element's width via container queries, so it
+       reflows correctly whether the copilot rail is open or closed — not to the
+       viewport, which wouldn't know about the rail. */
+    container-type: inline-size; container-name: dash;
+  }
+
+  /* ── Type tabs ───────────────────────────────────────────────────────────────
+     One tab per kind of pipeline in the workspace. A hiring board and a sales
+     board don't share a scorecard, so they don't share a screen either — the tab
+     switches the whole widget set, not a filter on one. Hidden entirely when the
+     workspace only has one kind, since a lone tab is decoration. */
+  .dash-tabs { display: flex; gap: 2px; margin-bottom: 14px; border-bottom: 1px solid var(--dir-line); }
+  .dash-tab {
+    font: inherit; font-size: 13.5px; font-weight: 600; color: var(--dir-muted);
+    background: none; border: none; border-bottom: 2px solid transparent;
+    padding: 0 3px 9px; margin-right: 20px; cursor: pointer; margin-bottom: -1px;
+  }
+  .dash-tab:hover { color: var(--dir-ink); }
+  .dash-tab.is-on { color: var(--dir-accent); border-bottom-color: var(--dir-accent); }
+  .dash-tab:focus-visible { outline: 2px solid var(--dir-accent); outline-offset: 2px; border-radius: 3px; }
+
+  /* ── Toolbar ─────────────────────────────────────────────────────────────── */
+  .dash-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .dash-scope {
+    height: 36px; padding: 0 34px 0 12px; border: 1px solid var(--dir-line);
+    border-radius: 9px; background: var(--dir-surface); font: inherit; font-size: 13px;
+    font-weight: 600; color: var(--dir-body); cursor: pointer; outline: none; max-width: 240px;
+  }
+  .dash-scope:focus { border-color: var(--dir-accent); box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+  .dash-bar-spacer { flex: 1; }
+  .dash-ghost-btn {
+    display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 13px;
+    border: 1px solid var(--dir-line); border-radius: 9px; background: var(--dir-surface);
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--dir-body); cursor: pointer;
+  }
+  .dash-ghost-btn:hover { border-color: var(--dir-accent); color: var(--dir-accent); }
+  .dash-ghost-btn:focus-visible { outline: 2px solid var(--dir-accent); outline-offset: 1px; }
+  .dash-ghost-btn.is-on { border-color: var(--dir-accent); color: var(--dir-accent); background: var(--dir-accent-soft); }
+
+  /* ── Bento grid ────────────────────────────────────────────────────────────
+     Four columns at full width; each tile declares a column span inline. A tile
+     never carries a fixed height — same-row tiles stretch to the tallest, which
+     is what gives the mosaic its flush edges. */
+  .bento { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-items: stretch; }
+  .bento > * { min-width: 0; }
+  @container dash (max-width: 760px) {
+    .bento { grid-template-columns: repeat(2, 1fr); }
+    .bento > .tile { grid-column: span 2 !important; }
+    .bento > .tile.kpi { grid-column: span 1 !important; }
+  }
+  @container dash (max-width: 520px) {
+    .bento { grid-template-columns: 1fr; }
+    .bento > * { grid-column: span 1 !important; }
+  }
+
+  .tile {
+    background: var(--dir-surface); border: 1px solid var(--dir-line); border-radius: 14px;
+    padding: 16px 17px; box-shadow: var(--dash-shadow); display: flex; flex-direction: column;
+    position: relative;
+  }
+  /* A handful of tiles get a faint wash of their own accent so the board isn't a
+     field of identical white cards — spent sparingly, on the tiles that carry a
+     headline number. */
+  .tile.tint { background: color-mix(in srgb, var(--accent) 5%, #fff); border-color: color-mix(in srgb, var(--accent) 20%, var(--dir-line)); }
+
+  .tile-head { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+  .badge {
+    width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--accent) 15%, #fff); color: var(--accent);
+  }
+  .tile-title { font-size: 12.5px; font-weight: 700; color: var(--dir-ink); letter-spacing: 0.01em; }
+  .tile-meta { margin-left: auto; font-size: 11.5px; color: var(--dir-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+  /* ── KPI tile ────────────────────────────────────────────────────────────────
+     No icon up here: four glyphs competing with four big numbers is noise, and
+     the number is the thing. A dot in the tile's own accent is enough to tell
+     the four apart at a glance. */
+  .kpi .kpi-label { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dir-muted); }
+  .kpi-dot { width: 8px; height: 8px; border-radius: 3px; background: var(--accent); flex-shrink: 0; }
+  .kpi-value {
+    font-size: 27px; font-weight: 760; color: var(--dir-ink); line-height: 1.1; margin-top: 9px;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.015em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .kpi-sub { font-size: 12px; color: var(--dir-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi.is-alert .kpi-value { color: #c0392b; }
+  /* Thin context meter under a KPI — the number in relation to its whole. */
+  .meter { height: 5px; border-radius: 3px; background: var(--dir-hair); overflow: hidden; margin-top: 12px; }
+  .meter > span { display: block; height: 100%; border-radius: 3px; background: var(--accent); transition: width 560ms cubic-bezier(0.22,0.61,0.36,1); }
+  /* Where the average sits between the smallest and largest amount. */
+  .range { position: relative; height: 5px; border-radius: 3px; background: var(--dir-hair); margin-top: 12px; }
+  .range > i { position: absolute; top: 50%; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid #fff; transform: translate(-50%, -50%); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, #fff); transition: left 560ms cubic-bezier(0.22,0.61,0.36,1); }
+
+  /* ── Win-rate ring ───────────────────────────────────────────────────────── */
+  .ring-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 6px 0; }
+  .ring { position: relative; width: 128px; height: 128px; }
+  .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring-track { fill: none; stroke: var(--dir-hair); stroke-width: 12; }
+  .ring-val { fill: none; stroke: var(--accent); stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset 760ms cubic-bezier(0.22,0.61,0.36,1); }
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-center b { font-size: 28px; font-weight: 760; color: var(--dir-ink); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .ring-center span { font-size: 10.5px; color: var(--dir-muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-top: 1px; }
+  .ring-foot { font-size: 12px; color: var(--dir-body); text-align: center; font-variant-numeric: tabular-nums; }
+
+  /* ── Funnel bars (stage breakdown) ───────────────────────────────────────── */
+  .funnel { display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center; }
+  .frow { display: grid; grid-template-columns: 116px 1fr auto; align-items: center; gap: 12px; }
+  .frow-label { font-size: 12.5px; color: var(--dir-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .frow-track { position: relative; height: 24px; background: var(--dir-hair); border-radius: 7px; overflow: hidden; }
+  .frow-fill { position: absolute; inset: 0 auto 0 0; border-radius: 7px; min-width: 4px; background: var(--accent); transition: width 620ms cubic-bezier(0.22,0.61,0.36,1); }
+  .frow-right { font-size: 12.5px; color: var(--dir-ink); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .frow-right small { color: var(--dir-muted); font-weight: 500; }
+  @container dash (max-width: 460px) { .frow { grid-template-columns: 86px 1fr auto; gap: 8px; } }
+
+  /* ── Amount-by-pipeline donut ─────────────────────────────────────────────── */
+  .split { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; flex: 1; }
+  .donut { position: relative; width: 150px; height: 150px; flex-shrink: 0; }
+  .donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .donut-seg { transition: stroke-dasharray 620ms cubic-bezier(0.22,0.61,0.36,1); }
+  .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .donut-center b { font-size: 17px; font-weight: 760; color: var(--dir-ink); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .donut-center span { font-size: 10.5px; color: var(--dir-muted); margin-top: 2px; }
+  .legend { flex: 1; min-width: 150px; }
+  .legend-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 7px 0; }
+  .legend-row + .legend-row { border-top: 1px solid var(--dir-hair); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .legend-name { font-size: 12.5px; color: var(--dir-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .legend-val { font-size: 12.5px; color: var(--dir-ink); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .legend-pct { font-size: 11.5px; color: var(--dir-muted); font-variant-numeric: tabular-nums; margin-left: 4px; }
+
+  /* ── Amount histogram ─────────────────────────────────────────────────── */
+  .hist { display: flex; align-items: flex-end; gap: 12px; flex: 1; min-height: 150px; padding-top: 6px; }
+  .hcol { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; }
+  .hcol-n { font-size: 13px; font-weight: 700; color: var(--dir-ink); font-variant-numeric: tabular-nums; }
+  .hcol-n.zero { color: var(--dir-faint); font-weight: 500; }
+  .hcol-bar { width: 100%; max-width: 46px; border-radius: 7px 7px 3px 3px; background: var(--accent); transition: height 620ms cubic-bezier(0.22,0.61,0.36,1); }
+  .hcol-x { font-size: 11px; color: var(--dir-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* ── Activity / source bars ──────────────────────────────────────────────── */
+  .brow { display: grid; grid-template-columns: 108px 1fr auto; align-items: center; gap: 12px; }
+  .brow + .brow { margin-top: 10px; }
+  .brow-label { font-size: 12.5px; color: var(--dir-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brow-track { height: 20px; background: var(--dir-hair); border-radius: 6px; overflow: hidden; position: relative; }
+  .brow-fill { position: absolute; inset: 0 auto 0 0; border-radius: 6px; min-width: 4px; transition: width 560ms cubic-bezier(0.22,0.61,0.36,1); }
+  .brow-n { font-size: 12.5px; font-weight: 700; color: var(--dir-ink); font-variant-numeric: tabular-nums; }
+  @container dash (max-width: 460px) { .brow { grid-template-columns: 84px 1fr auto; gap: 8px; } }
+
+  /* ── Top opportunities ───────────────────────────────────────────────────── */
+  .top-row { display: grid; grid-template-columns: 26px 1fr 132px auto; align-items: center; gap: 12px; padding: 9px 8px; margin: 0 -8px; border-radius: 10px; text-decoration: none; color: inherit; }
+  .top-row + .top-row { border-top: 1px solid var(--dir-hair); }
+  .top-row:hover { background: var(--dir-tint); }
+  .top-rank { font-size: 12px; font-weight: 700; color: var(--dir-faint); text-align: center; font-variant-numeric: tabular-nums; }
+  .top-deal { min-width: 0; }
+  .top-deal-name { font-size: 13px; font-weight: 600; color: var(--dir-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top-deal-co { font-size: 11.5px; color: var(--dir-muted); margin-top: 1px; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top-bar-wrap { min-width: 0; }
+  .top-bar { height: 6px; border-radius: 3px; background: var(--dir-hair); overflow: hidden; }
+  .top-bar-fill { height: 100%; border-radius: 3px; transition: width 560ms cubic-bezier(0.22,0.61,0.36,1); }
+  .top-stage { font-size: 11px; color: var(--dir-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top-val { font-size: 13px; font-weight: 700; color: var(--dir-ink); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+  /* On a list ranked by attention rather than size, the figure is a staleness. */
+  .top-val.is-late { color: #c0392b; }
+  .top-rank { font-variant-numeric: tabular-nums; }
+  @container dash (max-width: 560px) { .top-row { grid-template-columns: 22px 1fr auto; } .top-bar-wrap { display: none; } }
+
+  .dash-empty { padding: 56px 18px; text-align: center; color: var(--dir-muted); font-size: 14px; }
+  .dash-note { font-size: 12px; color: var(--dir-muted); padding: 16px 4px 0; }
+  .dash-note a { color: var(--dir-accent); text-decoration: none; }
+
+  /* Gentle first-paint rise; disabled under reduced-motion. */
+  @keyframes tile-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .bento > .tile { animation: tile-in 320ms cubic-bezier(0.22,0.61,0.36,1) both; }
+
+  /* ── Copilot rail ──────────────────────────────────────────────────────────
+     The signature: a docked assistant that reads live from the same data. It's a
+     preview — it answers a fixed set of prompts from real numbers rather than a
+     model, and says so. */
+  .ai-rail {
+    width: var(--rail-w); flex-shrink: 0; background: var(--dir-surface);
+    border-left: 1px solid var(--dir-line); display: flex; flex-direction: column; overflow: hidden;
+  }
+  .ai-rail.is-hidden { display: none; }
+  .ai-head { display: flex; align-items: center; gap: 11px; padding: 15px 16px; border-bottom: 1px solid var(--dir-hair); flex-shrink: 0; }
+  .ai-mark {
+    width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #2170f4, #7a6ba3);
+  }
+  .ai-id { flex: 1; min-width: 0; }
+  .ai-name { font-size: 14px; font-weight: 700; color: var(--dir-ink); display: flex; align-items: center; gap: 7px; }
+  .ai-pill { font-size: 9.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #7a6ba3; background: color-mix(in srgb, #7a6ba3 14%, #fff); padding: 2px 6px; border-radius: 5px; }
+  .ai-sub { font-size: 11.5px; color: var(--dir-muted); margin-top: 1px; }
+  .ai-close { flex-shrink: 0; width: 28px; height: 28px; border: none; background: transparent; border-radius: 7px; color: var(--dir-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .ai-close:hover { background: var(--dir-hair); color: var(--dir-ink); }
+
+  .ai-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .ai-msg { max-width: 90%; font-size: 13px; line-height: 1.5; }
+  .ai-msg.bot { align-self: flex-start; color: var(--dir-body); }
+  .ai-msg.bot .bubble { background: var(--dir-canvas); border: 1px solid var(--dir-hair); border-radius: 4px 13px 13px 13px; padding: 10px 13px; }
+  .ai-msg.me { align-self: flex-end; }
+  .ai-msg.me .bubble { background: var(--dir-accent); color: #fff; border-radius: 13px 13px 4px 13px; padding: 10px 13px; }
+  .bubble p { margin: 0; }
+  .bubble p + p { margin-top: 7px; }
+  .bubble b { font-weight: 700; }
+  /* The assistant answers in two registers only: prose, or a table. No tiles, no
+     bars, no chrome of its own — a number is emphasised by weight, nothing else.
+     The draft is prose too, kept as pre-wrap so its line breaks survive. */
+  .bubble .draft { display: block; margin-top: 8px; white-space: pre-wrap; }
+  /* A bubble is shrink-to-fit, which would squeeze a table into its longest word.
+     One carrying a table takes the full rail width instead. */
+  .ai-msg.bot:has(.ai-table) { width: 100%; }
+  .ai-table { width: 100%; min-width: 210px; border-collapse: collapse; margin-top: 8px; font-size: 12.5px; }
+  .bubble .ai-table + p { margin-top: 9px; }
+  .ai-table th {
+    text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--dir-muted); padding: 0 0 5px;
+  }
+  .ai-table th:last-child, .ai-table td:last-child { text-align: right; }
+  .ai-table td {
+    padding: 6px 0; border-top: 1px solid var(--dir-hair); color: var(--dir-body);
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .ai-table td:first-child { max-width: 0; width: 62%; }   /* the label column is the one that clips */
+  .ai-table td b { color: var(--dir-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .ai-typing { display: inline-flex; gap: 4px; padding: 12px 14px; background: var(--dir-canvas); border: 1px solid var(--dir-hair); border-radius: 4px 13px 13px 13px; }
+  .ai-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--dir-faint); animation: ai-blink 1.2s infinite both; }
+  .ai-typing i:nth-child(2) { animation-delay: 0.2s; }
+  .ai-typing i:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes ai-blink { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }
+
+  .ai-chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 16px 12px; flex-shrink: 0; }
+  .ai-chip { font: inherit; font-size: 12px; font-weight: 600; color: var(--dir-body); background: var(--dir-surface); border: 1px solid var(--dir-line); border-radius: 999px; padding: 6px 11px; cursor: pointer; }
+  .ai-chip:hover { border-color: var(--dir-accent); color: var(--dir-accent); background: var(--dir-accent-soft); }
+
+  .ai-input { display: flex; align-items: flex-end; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--dir-hair); flex-shrink: 0; }
+  .ai-input textarea {
+    flex: 1; resize: none; font: inherit; font-size: 13px; color: var(--dir-body); line-height: 1.4;
+    border: 1px solid var(--dir-line); border-radius: 11px; padding: 9px 12px; outline: none; max-height: 96px; background: var(--dir-surface);
+  }
+  .ai-input textarea:focus { border-color: var(--dir-accent); box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+  .ai-send { flex-shrink: 0; width: 38px; height: 38px; border: none; border-radius: 11px; background: var(--dir-accent); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .ai-send:hover { background: #1b5fd0; }
+  .ai-send:disabled { opacity: 0.45; cursor: default; }
+
+  /* Below this the rail would crush the bento, so it collapses to a floating
+     toggle and the board gets the full width. */
+  @media (max-width: 1000px) { .ai-rail:not(.is-hidden) { position: fixed; top: 0; right: 0; bottom: 0; z-index: 60; box-shadow: -8px 0 28px rgba(0,0,0,0.12); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bento > .tile { animation: none; }
+    .meter > span, .range > i, .ring-val, .donut-seg, .frow-fill, .brow-fill, .top-bar-fill, .hcol-bar { transition: none; }
+    .ai-typing i { animation: none; }
+  }
+
+  /* Customize modal toggle rows */
+  .dash-toggle { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; cursor: pointer; }
+  .dash-toggle + .dash-toggle { border-top: 1px solid var(--dir-hair); }
+  .dash-toggle input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--dir-accent); flex-shrink: 0; cursor: pointer; }
+  .dash-toggle-name { font-size: 13.5px; font-weight: 600; color: var(--dir-ink); }
+  .dash-toggle-desc { font-size: 12px; color: var(--dir-muted); margin-top: 2px; }
+</style>
+</head>
+<body data-subpage="dashboard">
+
+<div class="app-window">
+  <div class="sidebar">
+
+    <div class="sidebar-header">
+      <div class="tab-switch">
+        <img src="/app_switcher_assets/grid_icons/crm.svg" alt="CRM">
+        <div class="tab-switch-arrow">
+          <img src="/assets/1c88a1be-2a78-4065-86f7-8eb060dbb526.svg" alt="">
+        </div>
+      </div>
+      <div class="titan-logo">
+        <img src="/assets/fa36f613-977c-444a-bef5-e1b5f5f1b340.svg" alt="Titan">
+      </div>
+    </div>
+
+    <div class="nav-scroll">
+      <div class="sidebar-line" style="margin-top:2px;"></div>
+      <div class="account-header" id="account-header" onclick="toggleAccountMenu(event)">
+        <div class="account-avatar">
+          <img class="bg" src="/assets/d2c6a617-0407-4985-8c8b-740201e73dfe.svg" alt="">
+          <span id="account-active-initial">E</span>
+        </div>
+        <span class="account-email-text" id="account-active-email">ella.henderson@avontechlabs.com</span>
+        <div class="account-chevron">
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#bdbdbd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="account-menu" id="account-menu">
+          <div class="account-menu-label">Titan accounts</div>
+          <div class="account-menu-item active">
+            <span class="account-menu-avatar" style="background:#3f6ea5;">E</span>
+            <div class="account-menu-text">
+              <div class="account-menu-email">ella.henderson@avontechlabs.com</div>
+              <div class="account-menu-sub">Avontech Labs</div>
+            </div>
+            <svg class="account-menu-check" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-line"></div>
+
+      <!-- Dashboard is the first destination in the CRM nav. -->
+      <div class="nav-item active" onclick="location.href=crmPath('/crm/dashboard')">
+        <div class="nav-item-icon">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="1.5" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/></svg>
+        </div>
+        <span class="nav-item-label active">Dashboard</span>
+      </div>
+
+      <div class="nav-item" onclick="openNewPipeline()">
+        <div class="nav-item-icon" style="color:#2170f4; font-weight:700; font-size:16px;">+</div>
+        <span class="nav-item-label" style="color:#2170f4; font-weight:600;">New pipeline</span>
+      </div>
+
+      <!-- Anchor only: rebuildPipelineNav() inserts the pipeline rows after this
+           and clears them by walking forward to the next .sidebar-line. -->
+      <div id="pipeline-nav-line" class="nav-anchor"></div>
+
+      <div class="sidebar-line"></div>
+
+      <div class="nav-item" onclick="location.href=crmPath('/crm/contacts')">
+        <div class="nav-item-icon">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4.5" r="2.5" stroke="#fff" stroke-width="1.3"/><path d="M2.5 12.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="#fff" stroke-width="1.3"/></svg>
+        </div>
+        <span class="nav-item-label">Contacts</span>
+      </div>
+      <div class="nav-item" onclick="location.href=crmPath('/crm/companies')">
+        <div class="nav-item-icon">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="11" stroke="#fff" stroke-width="1.3"/><path d="M6 7V3h8v4" stroke="#fff" stroke-width="1.3"/></svg>
+        </div>
+        <span class="nav-item-label">Companies</span>
+      </div>
+    </div>
+
+    <div style="position:relative; flex-shrink:0;">
+      <div style="height:1px; position:relative; overflow:visible;">
+        <img src="/assets/0d00b891-46d6-4063-acc9-0db4c8c41036.svg" alt=""
+          style="position:absolute; inset:-1px 0; width:100%; height:2px; object-fit:fill;">
+      </div>
+      <div class="sidebar-footer">
+        <div class="footer-btn">
+          <div class="footer-btn-icon"><img src="/assets/34686e57-21d5-4bf6-82c4-1c6e474d25d3.svg" alt=""></div>
+          <span>Bug</span>
+        </div>
+        <div class="footer-divider"></div>
+        <div class="footer-btn">
+          <div class="footer-btn-icon"><img src="/assets/03a449fb-b16b-4b26-8eec-0fa033eff13e.svg" alt=""></div>
+          <span>Feature</span>
+        </div>
+        <div class="footer-divider"></div>
+        <div class="footer-btn" onclick="toggleSettingsModal()">
+          <div class="footer-btn-icon settings-icon"><img src="/assets/6ea52e57-1d75-47b1-97cd-e416a5d2372d.svg" alt=""></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <!-- No "< Back" header. The dashboard is a destination in the left nav, not a
+         detour off the board — there's nothing to go back to, and the arrow used to
+         dump you on whichever pipeline happened to be current. Switching away is
+         what the nav is for. The type tabs are this page's own top edge. -->
+    <div class="subpage-body">
+      <div class="dash-scroll" id="dash-scroll">
+        <div class="dash-tabs" id="d-tabs" role="tablist"></div>
+        <div class="dash-bar">
+          <select class="dash-scope" id="d-scope" aria-label="Pipeline scope"></select>
+          <div class="dash-bar-spacer"></div>
+          <button class="dash-ghost-btn" id="d-customize" type="button">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M8 1.5v1.8M8 12.7v1.8M14.5 8h-1.8M3.3 8H1.5M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3M12.6 12.6l-1.3-1.3M4.7 4.7L3.4 3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            Customize
+          </button>
+          <button class="dash-ghost-btn is-on" id="d-ai-toggle" type="button" aria-pressed="true">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 1.5l1.4 3.7 3.7 1.4-3.7 1.4L8 11.7 6.6 8 2.9 6.6 6.6 5.2 8 1.5z" fill="currentColor"/>
+              <path d="M12.8 10.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z" fill="currentColor"/>
+            </svg>
+            Assistant
+          </button>
+        </div>
+
+        <div id="d-content"></div>
+        <div class="dash-note" id="d-note"></div>
+      </div>
+
+      <aside class="ai-rail" id="ai-rail" aria-label="Titan assistant">
+        <div class="ai-head">
+          <span class="ai-mark">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 1.6l1.5 3.9 3.9 1.5-3.9 1.5L8 12.4 6.5 8.5 2.6 7l3.9-1.5L8 1.6z" fill="currentColor"/>
+            </svg>
+          </span>
+          <div class="ai-id">
+            <div class="ai-name">Ask Titan <span class="ai-pill">Preview</span></div>
+            <div class="ai-sub">Your pipeline copilot</div>
+          </div>
+          <button class="ai-close" id="ai-close" type="button" aria-label="Hide assistant">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="ai-msgs" id="ai-msgs"></div>
+        <div class="ai-chips" id="ai-chips"></div>
+        <form class="ai-input" id="ai-form">
+          <textarea id="ai-text" rows="1" placeholder="Ask about your pipeline…" aria-label="Message Titan"></textarea>
+          <button class="ai-send" id="ai-send" type="submit" aria-label="Send" disabled>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8h9M7 4l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </form>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<script src="/titan-sidebar.js"></script>
+<script src="/crm-directory.js"></script>
+<script>
+  // ── Palette ────────────────────────────────────────────────────────────────
+  const CAT = ['#2170f4', '#7a6ba3', '#2e9e7b', '#d98634', '#c65f6f', '#4a8fc7', '#8a8f5c', '#a2678f'];
+  const C_OPEN = '#2170f4', C_WON = '#2e9e7b', C_AVG = '#d98634', C_OVERDUE = '#d9534f', C_RATE = '#7a6ba3', C_DIST = '#4a8fc7';
+
+  // Small header glyphs, keyed by tile. Only the chart tiles carry one — the KPI
+  // row is label + number + accent dot, nothing else.
+  const ICON = {
+    rate:   '<circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.4"/>',
+    funnel: '<path d="M2.5 3.5h11l-4 4.5v4l-3 1.5V8L2.5 3.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
+    dist:   '<path d="M3 13V8M6.5 13V4M10 13V9.5M13.5 13V6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+    activity:'<path d="M2 8.5h3l1.5-4 3 8L14 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+    source: '<path d="M4 3v3.5a2 2 0 002 2h4a2 2 0 002 2V13M4 3H2.5M4 3h1.5M12 13h-1.5M12 13h1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>',
+    top:    '<path d="M8 2l1.6 3.5L13.5 6l-2.7 2.6.6 3.8L8 10.6 4.6 12.4l.6-3.8L2.5 6l3.9-.5L8 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>',
+  };
+  function badge(icon) { return '<span class="badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none">' + icon + '</svg></span>'; }
+
+  // Sections a reader can turn off. Order here is the render order. `money: true`
+  // marks a section that only means something where records carry an amount — it
+  // never appears on a hiring board.
+  const WIDGETS = [
+    { id: 'kpis',      name: 'Key metrics',        desc: 'The four headline numbers for this kind of pipeline.' },
+    { id: 'winrate',   name: 'Completion rate',    desc: 'Records that reached the last stage, as a share of all.' },
+    { id: 'breakdown', name: 'Pipeline breakdown', desc: 'Where records sit, stage by stage.' },
+    { id: 'distribution', name: 'Amount spread',   desc: 'How open records cluster by amount.', money: true },
+    { id: 'activity',  name: 'Activity mix',       desc: 'Recent touches broken down by type.' },
+    { id: 'sources',   name: 'By source',          desc: 'Where records came from (hidden until sources are set).' },
+    { id: 'top',       name: 'Focus list',         desc: 'The records worth opening first.' },
+  ];
+  function widgetsForType() {
+    const money = activeType().money;
+    return WIDGETS.filter(function (w) { return !w.money || money; });
+  }
+
+  // ── Preferences (persisted on DATA.dashboard, like contactFields) ───────────
+  function prefs() {
+    const d = (window.DATA && window.DATA.dashboard) || {};
+    return { scope: d.scope || 'all', type: d.type || '', hidden: Array.isArray(d.hidden) ? d.hidden.slice() : [] };
+  }
+  async function savePrefs(patch) {
+    window.DATA.dashboard = Object.assign({}, window.DATA.dashboard, patch);
+    try { await window.saveData(); return true; } catch (e) { return false; }
+  }
+  function isShown(id) {
+    if (prefs().hidden.indexOf(id) !== -1) return false;
+    return widgetsForType().some(function (w) { return w.id === id; });
+  }
+
+  // ── Type + scope (in-memory overrides; prefs carry the saved default) ───────
+  let scopeOverride = null, typeOverride = null;
+  function pipelineList() {
+    const p = (window.DATA && window.DATA.pipelines) || {};
+    return Object.keys(p).map(function (id) { return p[id]; });
+  }
+  // Only the types actually present in this workspace get a tab.
+  function typesPresent() {
+    const seen = {};
+    pipelineList().forEach(function (pl) { seen[window.pipelineTypeOf(pl).id] = true; });
+    return window.PIPELINE_TYPES.filter(function (t) { return seen[t.id]; });
+  }
+  function activeType() {
+    const present = typesPresent();
+    if (!present.length) return window.PIPELINE_TYPES[0];
+    const want = typeOverride != null ? typeOverride : prefs().type;
+    return present.filter(function (t) { return t.id === want; })[0] || present[0];
+  }
+  // Every pipeline of the active type — the pool the scope select chooses from.
+  function typePipelines() {
+    const id = activeType().id;
+    return pipelineList().filter(function (pl) { return window.pipelineTypeOf(pl).id === id; });
+  }
+  function currentScope() {
+    const s = scopeOverride != null ? scopeOverride : prefs().scope;
+    // A scope from another tab doesn't apply here.
+    return typePipelines().some(function (p) { return p.id === s; }) ? s : 'all';
+  }
+  function scopedPipelines() {
+    const all = typePipelines();
+    const s = currentScope();
+    if (s === 'all') return all;
+    const one = all.filter(function (p) { return p.id === s; });
+    return one.length ? one : all;
+  }
+  function hasMoney() { return activeType().money; }
+  function scopedCards() {
+    const out = [];
+    scopedPipelines().forEach(function (pl) {
+      (pl.cards || []).forEach(function (card) { out.push({ card: card, pipeline: pl }); });
+    });
+    return out;
+  }
+  function terminalKey(pl) { const s = pl.stages || []; return s.length ? s[s.length - 1].key : null; }
+  function isClosed(entry) { return entry.card.stage === terminalKey(entry.pipeline); }
+  function stageLabel(pl, key) {
+    return (pl.stages || []).reduce(function (acc, s) { return s.key === key ? s.label : acc; }, key || '');
+  }
+
+  function noun(n) {
+    const set = {};
+    scopedPipelines().forEach(function (pl) { if (pl.entity && pl.plural) set[pl.entity + '|' + pl.plural] = pl; });
+    const keys = Object.keys(set);
+    if (keys.length === 1) { const pl = set[keys[0]]; return n === 1 ? pl.entity.toLowerCase() : pl.plural.toLowerCase(); }
+    return n === 1 ? 'record' : 'records';
+  }
+
+  // ── Money (per-symbol totals; never adds unlike currencies) ─────────────────
+  function moneyByCurrency(entries) {
+    const t = {};
+    entries.forEach(function (e) { const cur = e.card.currency || window.defaultCurrency(); t[cur] = (t[cur] || 0) + (Number(e.card.value) || 0); });
+    return t;
+  }
+  function moneyText(t) {
+    const parts = Object.keys(t).filter(function (c) { return t[c] > 0; }).map(function (c) { return c + Number(t[c]).toLocaleString(); });
+    return parts.length ? parts.join(' · ') : (window.defaultCurrency() + '0');
+  }
+  function sumValue(entries) { return entries.reduce(function (a, e) { return a + (Number(e.card.value) || 0); }, 0); }
+  function dominantCurrency(entries) {
+    const t = moneyByCurrency(entries); let cur = window.defaultCurrency(), best = -1;
+    Object.keys(t).forEach(function (c) { if (t[c] > best) { best = t[c]; cur = c; } });
+    return cur;
+  }
+
+  // ── Tile shell ──────────────────────────────────────────────────────────────
+  function tile(opts) {
+    const style = 'grid-column: span ' + (opts.span || 1) + '; --accent:' + (opts.accent || C_OPEN) + ';';
+    return '<section class="tile' + (opts.tint ? ' tint' : '') + '" style="' + style + '">' +
+      (opts.title ? '<div class="tile-head">' + badge(opts.icon) + '<span class="tile-title">' + esc(opts.title) + '</span>' +
+        (opts.meta ? '<span class="tile-meta">' + esc(opts.meta) + '</span>' : '') + '</div>' : '') +
+      opts.body + '</section>';
+  }
+
+  // ── KPI tiles ────────────────────────────────────────────────────────────────
+  // Four numbers, one line of context each. Anything a reader would have to hold
+  // two figures in their head to compare belongs in a chart below, not up here.
+  function kpiTiles() {
+    const all = scopedCards();
+    const open = all.filter(function (e) { return !isClosed(e); });
+    const closed = all.filter(isClosed);
+    const overdue = open.filter(function (e) { return e.card.overdue; });
+    const pl = scopedPipelines()[0];
+    // The last stage is the finish line, whatever this pipeline calls it —
+    // "Closed" on a sales board, "Hired" on a hiring one.
+    const endLabel = pl ? stageLabel(pl, terminalKey(pl)) : 'Closed';
+
+    function kpi(o) {
+      return '<div class="tile kpi' + (o.alert ? ' is-alert' : '') + (o.tint ? ' tint' : '') + '" style="--accent:' + o.accent + '">' +
+        '<div class="tile-head" style="margin-bottom:0"><span class="kpi-dot"></span><span class="kpi-label">' + esc(o.label) + '</span></div>' +
+        '<div class="kpi-value" title="' + esc(o.value) + '">' + esc(o.value) + '</div>' +
+        '<div class="kpi-sub">' + esc(o.sub) + '</div>' + (o.viz || '') + '</div>';
+    }
+    const meter = function (pct, color) { return '<div class="meter" style="--accent:' + color + '"><span style="width:' + Math.max(0, Math.min(100, pct)) + '%"></span></div>'; };
+    const overdueTile = kpi({ label: 'Overdue', accent: C_OVERDUE, alert: overdue.length > 0, tint: overdue.length > 0,
+      value: String(overdue.length), sub: overdue.length ? 'need follow-up' : 'all on track',
+      viz: meter(open.length ? (overdue.length / open.length) * 100 : 0, C_OVERDUE) });
+
+    if (!hasMoney()) {
+      // No amounts on this kind of pipeline, so the headline is where records are.
+      // The stage before the finish line is the one that predicts the next result.
+      const lastOpen = pl && (pl.stages || []).length > 1 ? (pl.stages || [])[(pl.stages || []).length - 2] : null;
+      const inLast = lastOpen ? open.filter(function (e) { return e.card.stage === lastOpen.key; }) : [];
+      return [
+        kpi({ label: 'Active ' + noun(2), accent: C_OPEN, tint: true,
+          value: String(open.length), sub: 'of ' + all.length + ' total',
+          viz: meter(all.length ? (open.length / all.length) * 100 : 0, C_OPEN) }),
+        lastOpen ? kpi({ label: lastOpen.label, accent: C_AVG,
+          value: String(inLast.length), sub: 'nearly there',
+          viz: meter(open.length ? (inLast.length / open.length) * 100 : 0, C_AVG) }) : '',
+        kpi({ label: endLabel, accent: C_WON,
+          value: String(closed.length), sub: 'reached the end',
+          viz: meter(all.length ? (closed.length / all.length) * 100 : 0, C_WON) }),
+        overdueTile,
+      ].join('');
+    }
+
+    const openSum = sumValue(open), wonSum = sumValue(closed), totalSum = openSum + wonSum;
+    const cur = dominantCurrency(all);
+    const avg = all.length ? Math.round(sumValue(all) / all.length) : 0;
+    // The dot's position says where the average sits between the smallest and the
+    // largest — the same context the old "from $X to $Y" line gave, without the
+    // two extra numbers.
+    const vals = all.map(function (e) { return Number(e.card.value) || 0; });
+    const pos = vals.filter(function (v) { return v > 0; });   // a record with no amount shouldn't drag the floor to 0
+    const lo = pos.length ? Math.min.apply(null, pos) : 0, hi = vals.length ? Math.max.apply(null, vals) : 0;
+    const avgPos = hi > lo ? Math.round(((avg - lo) / (hi - lo)) * 100) : 50;
+    return [
+      kpi({ label: 'Open amount', accent: C_OPEN, tint: true,
+        value: moneyText(moneyByCurrency(open)), sub: open.length + ' open',
+        viz: meter(totalSum ? (openSum / totalSum) * 100 : 0, C_OPEN) }),
+      kpi({ label: endLabel + ' amount', accent: C_WON,
+        value: moneyText(moneyByCurrency(closed)), sub: closed.length + ' ' + endLabel.toLowerCase(),
+        viz: meter(totalSum ? (wonSum / totalSum) * 100 : 0, C_WON) }),
+      kpi({ label: 'Avg amount', accent: C_AVG,
+        value: cur + avg.toLocaleString(), sub: 'per ' + noun(1),
+        viz: '<div class="range" style="--accent:' + C_AVG + '"><i style="left:' + avgPos + '%"></i></div>' }),
+      overdueTile,
+    ].join('');
+  }
+
+  // ── Completion-rate ring ───────────────────────────────────────────────────
+  // "Win rate" on a sales board, "hire rate" on a hiring one — the same figure
+  // either way: how many records made it to the last stage.
+  function winRateTile(span) {
+    const all = scopedCards(), closed = all.filter(isClosed);
+    const label = activeType().rateLabel;
+    const pct = all.length ? Math.round((closed.length / all.length) * 100) : 0;
+    const R = 58, C = 2 * Math.PI * R, off = C * (1 - pct / 100);
+    const body = '<div class="ring-body">' +
+      '<div class="ring" role="img" aria-label="' + esc(label) + ' ' + pct + ' percent">' +
+        '<svg viewBox="0 0 128 128">' +
+          '<circle class="ring-track" cx="64" cy="64" r="' + R + '"></circle>' +
+          '<circle class="ring-val" cx="64" cy="64" r="' + R + '" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '"></circle>' +
+        '</svg>' +
+        '<div class="ring-center"><b>' + pct + '%</b><span>' + esc(label) + '</span></div>' +
+      '</div>' +
+      '<div class="ring-foot">' + closed.length + ' of ' + all.length + '</div>' +
+    '</div>';
+    return tile({ span: span, accent: C_RATE, icon: ICON.rate, title: label.charAt(0).toUpperCase() + label.slice(1), body: body, tint: true });
+  }
+
+  // ── Breakdown: funnel (one pipeline) or donut (several) ─────────────────────
+  function breakdownTile(span) {
+    const pls = scopedPipelines();
+    return pls.length > 1 ? donutTile(pls, span) : funnelTile(pls[0], span);
+  }
+
+  // One figure per row, not two: the amount where records carry one, otherwise the
+  // headcount. The other number is in the row's tooltip for anyone who wants it.
+  function funnelTile(pl, span) {
+    if (!pl) return '';
+    const money = hasMoney();
+    const stages = pl.stages || [], cards = pl.cards || [];
+    const rows = stages.map(function (st, i) {
+      const inStage = cards.filter(function (c) { return c.stage === st.key; });
+      return { label: st.label, count: inStage.length, value: inStage.reduce(function (a, c) { return a + (Number(c.value) || 0); }, 0),
+        cur: (inStage[0] && inStage[0].currency) || window.defaultCurrency(), last: i === stages.length - 1 };
+    });
+    const metric = function (r) { return money ? r.value : r.count; };
+    const maxVal = Math.max(1, Math.max.apply(null, rows.map(metric)));
+    const base = pl.color || C_OPEN;
+    const body = '<div class="funnel">' + rows.map(function (r, i) {
+      const op = r.last ? 1 : (0.92 - (i / Math.max(1, rows.length - 1)) * 0.5);
+      const w = Math.round((metric(r) / maxVal) * 100);
+      const shown = money ? r.cur + r.value.toLocaleString() : String(r.count);
+      const title = r.label + ' · ' + r.count + ' ' + noun(r.count) + (money ? ' · ' + r.cur + r.value.toLocaleString() : '');
+      return '<div class="frow" title="' + esc(title) + '">' +
+        '<div class="frow-label">' + esc(r.label) + '</div>' +
+        '<div class="frow-track"><div class="frow-fill" style="width:' + w + '%;background:' + esc(base) + ';opacity:' + op.toFixed(2) + '"></div></div>' +
+        '<div class="frow-right">' + esc(shown) + '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+    return tile({ span: span, accent: base, icon: ICON.funnel, title: 'By stage', meta: esc(pl.name), body: body });
+  }
+
+  // Several pipelines of the same kind in view: split them by open amount, or by
+  // open headcount where there's no amount to split by.
+  function donutTile(pls, span) {
+    const money = hasMoney();
+    const title = money ? 'Open amount by pipeline' : 'Open ' + noun(2) + ' by pipeline';
+    const segs = pls.map(function (pl) {
+      const open = (pl.cards || []).filter(function (c) { return c.stage !== terminalKey(pl); });
+      return { name: pl.name, color: pl.color || C_OPEN,
+        value: money ? open.reduce(function (a, c) { return a + (Number(c.value) || 0); }, 0) : open.length,
+        cur: money ? ((open[0] && open[0].currency) || window.defaultCurrency()) : '' };
+    }).filter(function (s) { return s.value > 0; }).sort(function (a, b) { return b.value - a.value; });
+
+    if (!segs.length) return tile({ span: span, accent: C_OPEN, icon: ICON.funnel, title: title, body: '<div class="dash-empty" style="padding:24px 0">Nothing open yet.</div>' });
+
+    const total = segs.reduce(function (a, s) { return a + s.value; }, 0);
+    const fmt = function (s, n) { return money ? s.cur + n.toLocaleString() : String(n); };
+    let acc = 0;
+    const ring = segs.map(function (s) {
+      const pct = (s.value / total) * 100;
+      const seg = '<circle class="donut-seg" cx="21" cy="21" r="15.9155" fill="none" stroke="' + esc(s.color) + '" stroke-width="6" stroke-dasharray="' + pct.toFixed(2) + ' ' + (100 - pct).toFixed(2) + '" stroke-dashoffset="' + (100 - acc).toFixed(2) + '"></circle>';
+      acc += pct; return seg;
+    }).join('');
+    // The arc already carries the share, so the legend gives the figure only.
+    const legend = segs.map(function (s) {
+      return '<div class="legend-row"><span class="legend-dot" style="background:' + esc(s.color) + '"></span>' +
+        '<span class="legend-name" title="' + esc(s.name) + '">' + esc(s.name) + '</span>' +
+        '<span class="legend-val">' + esc(fmt(s, s.value)) + '</span></div>';
+    }).join('');
+    const body = '<div class="split"><div class="donut" role="img" aria-label="' + esc(title) + '">' +
+      '<svg viewBox="0 0 42 42">' + ring + '</svg>' +
+      '<div class="donut-center"><b>' + esc(fmt(segs[0], total)) + '</b><span>' + (money ? 'open amount' : 'open') + '</span></div></div>' +
+      '<div class="legend">' + legend + '</div></div>';
+    return tile({ span: span, accent: C_RATE, icon: ICON.funnel, title: title, body: body });
+  }
+
+  // ── Amount histogram (open records) ─────────────────────────────────────────
+  function distributionTile(span) {
+    const open = scopedCards().filter(function (e) { return !isClosed(e); });
+    if (!open.length) return '';
+    const cur = dominantCurrency(open);
+    const buckets = [
+      { label: '<5k', lo: 0, hi: 5000 },
+      { label: '5–10k', lo: 5000, hi: 10000 },
+      { label: '10–25k', lo: 10000, hi: 25000 },
+      { label: '25k+', lo: 25000, hi: Infinity },
+    ];
+    buckets.forEach(function (b) { b.n = 0; });
+    open.forEach(function (e) {
+      const v = Number(e.card.value) || 0;
+      for (let i = 0; i < buckets.length; i++) { if (v >= buckets[i].lo && v < buckets[i].hi) { buckets[i].n++; break; } }
+    });
+    const max = Math.max(1, Math.max.apply(null, buckets.map(function (b) { return b.n; })));
+    const body = '<div class="hist">' + buckets.map(function (b, i) {
+      const h = Math.round((b.n / max) * 118);
+      const op = 0.55 + (i / (buckets.length - 1)) * 0.45;   // bigger amounts read as stronger
+      return '<div class="hcol" title="' + b.n + ' ' + noun(b.n) + ' · ' + esc(cur + b.label) + '">' +
+        '<span class="hcol-n' + (b.n ? '' : ' zero') + '">' + b.n + '</span>' +
+        '<div class="hcol-bar" style="height:' + (b.n ? Math.max(h, 4) : 2) + 'px;opacity:' + op.toFixed(2) + '"></div>' +
+        '<span class="hcol-x">' + esc(cur + b.label) + '</span></div>';
+    }).join('') + '</div>';
+    return tile({ span: span, accent: C_DIST, icon: ICON.dist, title: 'Amount spread', meta: open.length + ' open', body: body });
+  }
+
+  // ── Categorical bars (activity type, source) ─────────────────────────────────
+  function tallyTile(id, title, field, icon, span, opts) {
+    opts = opts || {};
+    const counts = {}; let filled = 0;
+    scopedCards().forEach(function (e) {
+      const v = String(e.card[field] || '').trim(); if (!v) return; filled++; counts[v] = (counts[v] || 0) + 1;
+    });
+    const keys = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
+    if (keys.length < (opts.min || 1)) return '';
+    const max = Math.max.apply(null, keys.map(function (k) { return counts[k]; }));
+    const body = keys.map(function (k, i) {
+      const w = Math.round((counts[k] / max) * 100);
+      return '<div class="brow"><div class="brow-label" title="' + esc(k) + '">' + esc(k) + '</div>' +
+        '<div class="brow-track"><div class="brow-fill" style="width:' + w + '%;background:' + CAT[i % CAT.length] + '"></div></div>' +
+        '<div class="brow-n">' + counts[k] + '</div></div>';
+    }).join('');
+    return tile({ span: span, accent: CAT[0], icon: icon, title: title, body: body });
+  }
+
+  // ── Focus list ───────────────────────────────────────────────────────────────
+  // What to open first. Where records carry an amount that's the biggest ones,
+  // ranked with a bar. Where they don't, size means nothing — so it's the ones
+  // waiting on you: overdue first, then furthest along.
+  function topTile(span) {
+    const money = hasMoney();
+    const open = scopedCards().filter(function (e) { return !isClosed(e); });
+    if (!open.length) return '';
+
+    let rows, title, max = 1;
+    if (money) {
+      rows = open.slice().sort(function (a, b) { return (Number(b.card.value) || 0) - (Number(a.card.value) || 0); }).slice(0, 6);
+      max = Math.max(1, Number(rows[0].card.value) || 0);
+      title = 'Biggest open ' + noun(2);
+    } else {
+      const rank = function (e) {
+        const stages = e.pipeline.stages || [];
+        const at = stages.map(function (s) { return s.key; }).indexOf(e.card.stage);
+        return (e.card.overdue ? -100 : 0) - at;          // overdue first, then furthest along
+      };
+      rows = open.slice().sort(function (a, b) { return rank(a) - rank(b); }).slice(0, 6);
+      title = 'Needs you next';
+    }
+
+    const body = rows.map(function (e, i) {
+      const c = e.card, pl = e.pipeline;
+      const href = crmPath('/crm/pipeline/' + encodeURIComponent(pl.id) + '/record/' + encodeURIComponent(c.id));
+      const w = Math.round(((Number(c.value) || 0) / max) * 100);
+      // The name line is the record; underneath it, the company (sales) or the
+      // person (hiring, where the record is already named for the role).
+      const under = money ? (c.company || pl.name) : (c.contact || c.company || pl.name);
+      return '<a class="top-row" href="' + href + '">' +
+        '<span class="top-rank">' + (money ? (i + 1) : (c.overdue ? '!' : '·')) + '</span>' +
+        '<span class="top-deal"><span class="top-deal-name" title="' + esc(c.deal || 'Untitled') + '">' + (esc(c.deal) || 'Untitled') + '</span>' +
+          '<span class="top-deal-co"><span class="dir-chip-dot" style="background:' + esc(pl.color || C_OPEN) + '"></span>' + esc(under) + '</span></span>' +
+        (money
+          ? '<span class="top-bar-wrap"><span class="top-bar"><span class="top-bar-fill" style="width:' + w + '%;background:' + esc(pl.color || C_OPEN) + '"></span></span>' +
+              '<span class="top-stage">' + esc(stageLabel(pl, c.stage)) + '</span></span>' +
+            '<span class="top-val">' + esc(fmtMoney(c.value, c.currency)) + '</span>'
+          : '<span class="top-bar-wrap"><span class="top-stage" style="margin-top:0">' + esc(stageLabel(pl, c.stage)) + '</span></span>' +
+            '<span class="top-val' + (c.overdue ? ' is-late' : '') + '">' + esc(c.lastActivity || '') + '</span>') +
+      '</a>';
+    }).join('');
+    return tile({ span: span, accent: C_AVG, icon: ICON.top, title: title, body: body });
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────────
+  function render() {
+    const host = document.getElementById('d-content');
+    if (!scopedCards().length) {
+      host.innerHTML = '<div class="dash-empty">Nothing to chart yet — add records to a pipeline and they’ll show up here.</div>';
+      return;
+    }
+
+    let html = '';
+    if (isShown('kpis')) html += kpiTiles();
+
+    // Headline row: win-rate ring (narrow) beside the breakdown (wide). Whichever
+    // is present alone takes the full width.
+    const hasRate = isShown('winrate'), hasBreak = isShown('breakdown');
+    if (hasRate && hasBreak) { html += winRateTile(1) + breakdownTile(3); }
+    else if (hasRate) { html += winRateTile(4); }
+    else if (hasBreak) { html += breakdownTile(4); }
+
+    // Medium row: distribution / activity / source. An odd count would leave a
+    // half-empty row, so the last one stretches to fill it.
+    const med = [];
+    if (isShown('distribution')) med.push(distributionTile);
+    if (isShown('activity')) med.push(function (s) { return tallyTile('activity', 'Activity mix', 'activityType', ICON.activity, s, { min: 1 }); });
+    if (isShown('sources')) med.push(function (s) { return tallyTile('sources', 'By source', 'source', ICON.source, s, { min: 2 }); });
+    const medHTML = med.map(function (fn) { return fn(2); }).filter(Boolean);
+    if (medHTML.length % 2 === 1) {
+      // Re-render the last present tile at full width.
+      let lastFn = med[med.length - 1], produced = medHTML.length;
+      // Find the fn that produced the last non-empty tile.
+      for (let i = med.length - 1; i >= 0; i--) { if (med[i](2)) { lastFn = med[i]; break; } }
+      medHTML[medHTML.length - 1] = lastFn(4);
+    }
+    html += medHTML.join('');
+
+    if (isShown('top')) html += topTile(4);
+
+    html = html ? '<div class="bento">' + html + '</div>'
+                : '<div class="dash-empty">Every section is hidden. Use <b>Customize</b> to bring some back.</div>';
+    host.innerHTML = html;
+    promoteLoneTile();
+    animateBars(host);
+  }
+
+  // If a bento row ends with a single narrow tile (e.g. only the ring survived),
+  // stretch it so the grid never shows a stranded half-column.
+  function promoteLoneTile() {
+    // Handled per-group above; this catches the ring-only headline edge.
+    const tiles = document.querySelectorAll('.bento > .tile');
+    // no-op placeholder kept intentionally simple — groups already balance.
+    void tiles;
+  }
+
+  function animateBars(host) {
+    requestAnimationFrame(function () {
+      host.querySelectorAll('.frow-fill, .brow-fill, .top-bar-fill, .meter > span').forEach(function (el) {
+        const w = el.style.width; el.style.width = '0%'; requestAnimationFrame(function () { el.style.width = w; });
+      });
+      host.querySelectorAll('.hcol-bar').forEach(function (el) {
+        const h = el.style.height; el.style.height = '2px'; requestAnimationFrame(function () { el.style.height = h; });
+      });
+      host.querySelectorAll('.ring-val').forEach(function (el) {
+        const off = el.getAttribute('stroke-dashoffset'), C = el.getAttribute('stroke-dasharray');
+        el.setAttribute('stroke-dashoffset', C); requestAnimationFrame(function () { el.setAttribute('stroke-dashoffset', off); });
+      });
+    });
+  }
+
+  // ── Type tabs ─────────────────────────────────────────────────────────────────
+  function fillTabs() {
+    const host = document.getElementById('d-tabs');
+    const types = typesPresent(), active = activeType();
+    // One kind of pipeline means there's nothing to switch between.
+    host.style.display = types.length > 1 ? '' : 'none';
+    if (types.length < 2) return;
+    host.innerHTML = types.map(function (t) {
+      return '<button class="dash-tab' + (t.id === active.id ? ' is-on' : '') + '" type="button" role="tab"' +
+        ' aria-selected="' + (t.id === active.id) + '" data-type="' + esc(t.id) + '">' + esc(t.label) + '</button>';
+    }).join('');
+    host.querySelectorAll('.dash-tab').forEach(function (btn) {
+      btn.onclick = function () {
+        if (btn.dataset.type === activeType().id) return;
+        typeOverride = btn.dataset.type;
+        scopeOverride = 'all';            // a scope from the old tab means nothing here
+        savePrefs({ type: typeOverride, scope: 'all' });
+        fillTabs(); fillScope(); render(); resetAssistant();
+      };
+    });
+  }
+
+  // ── Scope selector ────────────────────────────────────────────────────────────
+  function fillScope() {
+    const sel = document.getElementById('d-scope');
+    const pls = typePipelines();
+    const label = typesPresent().length > 1 ? 'All ' + activeType().label.toLowerCase() + ' pipelines' : 'All pipelines';
+    sel.innerHTML = '<option value="all">' + esc(label) + '</option>' +
+      pls.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>'; }).join('');
+    sel.value = currentScope();
+    sel.style.display = pls.length > 1 ? '' : 'none';
+    sel.onchange = function () { scopeOverride = sel.value; render(); resetAssistant(); };
+  }
+
+  // ── Customize modal ───────────────────────────────────────────────────────────
+  function openCustomize() {
+    const wrap = document.createElement('div');
+    const hidden = prefs().hidden.slice();
+    // Only what this kind of pipeline can actually show — no toggle for a section
+    // that would render nothing.
+    wrap.innerHTML = widgetsForType().map(function (w) {
+      return '<label class="dash-toggle"><input type="checkbox" data-id="' + esc(w.id) + '"' + (hidden.indexOf(w.id) === -1 ? ' checked' : '') + '>' +
+        '<span><span class="dash-toggle-name">' + esc(w.name) + '</span><span class="dash-toggle-desc">' + esc(w.desc) + '</span></span></label>';
+    }).join('');
+    openModal({
+      title: 'Customize dashboard',
+      note: 'Choose which sections show. Your choice is saved with this workspace.',
+      body: wrap, confirmLabel: 'Save',
+      onConfirm: async function (modal) {
+        // Sections this tab can't show aren't in the modal, so carry their saved
+        // state through untouched rather than reading them back as "on".
+        const shown = widgetsForType().map(function (w) { return w.id; });
+        const next = hidden.filter(function (id) { return shown.indexOf(id) === -1; });
+        wrap.querySelectorAll('input[type=checkbox]').forEach(function (cb) { if (!cb.checked) next.push(cb.dataset.id); });
+        modal.setBusy(true); modal.setStatus('Saving…');
+        const ok = await savePrefs({ hidden: next });
+        if (!ok) {
+          window.DATA.dashboard = Object.assign({}, window.DATA.dashboard, { hidden: next });
+          modal.setStatus('Saved for this session only — data API unreachable.', true);
+          render(); setTimeout(modal.close, 900); return;
+        }
+        modal.close(); render();
+      },
+    });
+  }
+
+  // ── Copilot rail (mocked) ───────────────────────────────────────────────────
+  // A preview: it answers a fixed set of prompts from the live numbers rather than
+  // a model. The header says "Preview" and the fallback is honest about it.
+  const CHIPS = ['Summarize my pipeline', 'What needs attention?', 'Which stage holds the most?', 'Draft a nudge to my biggest one'];
+  let aiMsgs = [];
+
+  // Everything the rail can say, read once. `money` decides what "the most" means:
+  // the biggest amount on a sales board, the busiest stage on one without amounts.
+  function aiRead() {
+    const money = hasMoney();
+    const all = scopedCards(), open = all.filter(function (e) { return !isClosed(e); }), closed = all.filter(isClosed);
+    const overdue = open.filter(function (e) { return e.card.overdue; });
+    const rate = all.length ? Math.round((closed.length / all.length) * 100) : 0;
+    const top = money
+      ? (open.slice().sort(function (a, b) { return (Number(b.card.value) || 0) - (Number(a.card.value) || 0); })[0] || null)
+      : (overdue[0] || open[0] || null);
+    const byStage = {};
+    open.forEach(function (e) { const l = stageLabel(e.pipeline, e.card.stage); if (!byStage[l]) byStage[l] = { v: 0, n: 0, cur: e.card.currency || window.defaultCurrency() }; byStage[l].v += Number(e.card.value) || 0; byStage[l].n++; });
+    const weight = function (k) { return money ? byStage[k].v : byStage[k].n; };
+    let topStage = null; Object.keys(byStage).forEach(function (k) { if (!topStage || weight(k) > weight(topStage)) topStage = k; });
+    return { money: money, all: all, open: open, closed: closed, overdue: overdue, rate: rate, top: top,
+      byStage: byStage, topStage: topStage, weight: weight,
+      openMoney: moneyText(moneyByCurrency(open)) };
+  }
+  function firstName(entry) {
+    if (!entry) return 'there';
+    const list = window.contactsOf(entry.card) || [];
+    const nm = (list[0] && list[0].name) || entry.card.contact || '';
+    return (nm.split(/\s+/)[0]) || 'there';
+  }
+
+  // Returns an HTML answer for a prompt, computed from real data.
+  function aiAnswer(text) {
+    const t = text.toLowerCase(), d = aiRead();
+    if (!d.all.length) return '<p>There’s nothing in view right now — pick a pipeline with records and I’ll break it down.</p>';
+
+    if (/summ|overview|how.*doing|pipeline$|status/.test(t)) {
+      const rows = d.money
+        ? [['Open amount', d.openMoney], ['Open ' + noun(d.open.length), String(d.open.length)]]
+        : [['Active ' + noun(d.open.length), String(d.open.length)], ['Total', String(d.all.length)]];
+      rows.push([activeType().rateLabel.replace(/^./, function (ch) { return ch.toUpperCase(); }), d.rate + '%']);
+      rows.push(['Overdue', String(d.overdue.length)]);
+      const tail = !d.top ? ''
+        : d.money
+          ? 'Biggest open ' + noun(1) + ' is <b>' + esc(d.top.card.deal || 'Untitled') + '</b> at ' + esc(fmtMoney(d.top.card.value, d.top.card.currency)) + ', in ' + esc(stageLabel(d.top.pipeline, d.top.card.stage)) + '.'
+          : 'Most of the movement is in <b>' + esc(d.topStage || '') + '</b>.';
+      return '<p>Here’s the read on <b>' + esc(scopeName()) + '</b>:</p>' + aiTable(null, rows) + '<p>' + tail + '</p>';
+    }
+    if (/attention|overdue|risk|stuck follow|follow.?up|urgent/.test(t)) {
+      if (d.overdue.length) {
+        return '<p><b>' + d.overdue.length + '</b> ' + noun(d.overdue.length) + (d.overdue.length > 1 ? ' are' : ' is') + ' overdue and waiting on you:</p>' +
+          aiTable([noun(1), d.money ? 'Amount' : 'Last touch'], d.overdue.slice(0, 6).map(function (e) {
+            return [e.card.deal || e.card.company || 'Untitled',
+                    d.money ? fmtMoney(e.card.value, e.card.currency) : (e.card.lastActivity || '—')];
+          })) +
+          '<p>Clearing the oldest first usually frees up the most.</p>';
+      }
+      return '<p>Nothing’s overdue right now — nice. Your next one is <b>' + esc(d.top ? (d.top.card.deal || d.top.card.contact || '') : '') + '</b>' +
+        (d.top && d.money ? ' at ' + esc(fmtMoney(d.top.card.value, d.top.card.currency)) : '') + '.</p>';
+    }
+    if (/stuck|amount|hold|where.*sit|concentrat|stage/.test(t)) {
+      if (d.topStage) {
+        const s = d.byStage[d.topStage];
+        const stages = Object.keys(d.byStage).sort(function (a, b) { return d.weight(b) - d.weight(a); });
+        const lead = d.money
+          ? 'The most open amount is sitting in <b>' + esc(d.topStage) + '</b> — ' + esc(s.cur + s.v.toLocaleString()) + ' across ' + s.n + ' ' + noun(s.n) + '.'
+          : 'Most of your ' + noun(2) + ' are sitting in <b>' + esc(d.topStage) + '</b> — ' + s.n + ' of ' + d.open.length + '.';
+        return '<p>' + lead + '</p>' +
+          aiTable(['Stage', d.money ? 'Open amount' : 'Open'], stages.map(function (k) {
+            return d.money ? [k + ' · ' + d.byStage[k].n, d.byStage[k].cur + d.byStage[k].v.toLocaleString()]
+                           : [k, String(d.byStage[k].n)];
+          })) +
+          '<p>That’s the stage to work if you want to move the number this week.</p>';
+      }
+      return '<p>Things look evenly spread across your stages right now.</p>';
+    }
+    if (/draft|nudge|email|write|follow.?up|reach|biggest/.test(t)) {
+      if (!d.top) return '<p>No open ' + noun(1) + ' to write to at the moment.</p>';
+      const c = d.top.card, fn = firstName(d.top);
+      const draft = 'Subject: Next steps on ' + (c.deal || 'our conversation') + '\n\n' +
+        'Hi ' + fn + ',\n\nWanted to keep things moving on ' + (c.deal || 'this') + '. ' +
+        'Happy to jump on a quick call this week to work through the details — does Thursday suit?\n\nBest,\nElla';
+      return '<p>Here’s a nudge you could send to <b>' + esc(c.company || c.deal) + '</b>:</p><span class="draft">' + esc(draft) + '</span>';
+    }
+    return '<p>I’m a preview for now, so I can’t answer that freely yet — the live copilot is on the way. Try one of the suggestions below to see how it’ll feel.</p>';
+  }
+  // The only structure an answer is allowed beyond a paragraph: label left, the
+  // figure right and bold. Pass head=null for a bare two-column list.
+  function aiTable(head, rows) {
+    if (!rows.length) return '';
+    return '<table class="ai-table">' +
+      (head ? '<thead><tr><th>' + esc(head[0]) + '</th><th>' + esc(head[1]) + '</th></tr></thead>' : '') +
+      '<tbody>' + rows.map(function (r) {
+        return '<tr><td title="' + esc(r[0]) + '">' + esc(r[0]) + '</td><td><b>' + esc(r[1]) + '</b></td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+  function scopeName() {
+    const pls = scopedPipelines();
+    if (pls.length === 1) return pls[0].name;
+    return typesPresent().length > 1 ? 'all ' + activeType().label.toLowerCase() + ' pipelines' : 'all pipelines';
+  }
+
+  function renderMsgs(typing) {
+    const box = document.getElementById('ai-msgs');
+    box.innerHTML = aiMsgs.map(function (m) {
+      return '<div class="ai-msg ' + m.role + '"><div class="bubble">' + (m.role === 'me' ? '<p>' + esc(m.text) + '</p>' : m.html) + '</div></div>';
+    }).join('') + (typing ? '<div class="ai-msg bot"><div class="ai-typing"><i></i><i></i><i></i></div></div>' : '');
+    box.scrollTop = box.scrollHeight;
+  }
+  function renderChips() {
+    document.getElementById('ai-chips').innerHTML = CHIPS.map(function (c) {
+      return '<button class="ai-chip" type="button">' + esc(c) + '</button>';
+    }).join('');
+  }
+  function ask(text) {
+    text = String(text || '').trim(); if (!text) return;
+    aiMsgs.push({ role: 'me', text: text });
+    renderMsgs(true);
+    const answer = aiAnswer(text);
+    setTimeout(function () {
+      aiMsgs.push({ role: 'bot', html: answer });
+      renderMsgs(false);
+    }, 620);
+  }
+  function resetAssistant() {
+    // Greeting re-derives from the current scope, so switching pipelines refreshes it.
+    const d = aiRead();
+    aiMsgs = [{ role: 'bot', html:
+      '<p>Hi Ella — here’s a quick read on <b>' + esc(scopeName()) + '</b>.</p>' +
+      (d.all.length ? aiTable(null, (d.money ? [['Open amount', d.openMoney]] : [['Active ' + noun(d.open.length), String(d.open.length)]])
+        .concat([[activeType().rateLabel.replace(/^./, function (ch) { return ch.toUpperCase(); }), d.rate + '%'], ['Overdue', String(d.overdue.length)]])) : '') +
+      '<p>Ask me anything below, or tap a suggestion.</p>' }];
+    renderMsgs(false);
+  }
+  function wireAssistant() {
+    renderChips();
+    resetAssistant();
+    const text = document.getElementById('ai-text'), send = document.getElementById('ai-send'), form = document.getElementById('ai-form');
+    function sync() { send.disabled = !text.value.trim(); text.style.height = 'auto'; text.style.height = Math.min(text.scrollHeight, 96) + 'px'; }
+    text.addEventListener('input', sync);
+    text.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (text.value.trim()) { ask(text.value); text.value = ''; sync(); } } });
+    form.addEventListener('submit', function (e) { e.preventDefault(); if (text.value.trim()) { ask(text.value); text.value = ''; sync(); } });
+    document.getElementById('ai-chips').addEventListener('click', function (e) {
+      const chip = e.target.closest('.ai-chip'); if (chip) ask(chip.textContent);
+    });
+
+    const rail = document.getElementById('ai-rail'), toggle = document.getElementById('d-ai-toggle');
+    function setOpen(open) {
+      rail.classList.toggle('is-hidden', !open);
+      toggle.classList.toggle('is-on', open);
+      toggle.setAttribute('aria-pressed', String(open));
+    }
+    toggle.addEventListener('click', function () { setOpen(rail.classList.contains('is-hidden')); });
+    document.getElementById('ai-close').addEventListener('click', function () { setOpen(false); });
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────────
+  (async function init() {
+    let data;
+    try { data = await fetchPipelineData(); }
+    catch (e) {
+      document.getElementById('d-note').innerHTML = 'Couldn’t reach the CRM data API. <a href="' + crmPath('/crm') + '">Open Titan CRM</a>';
+      return;
+    }
+    const pipelines = data.pipelines || {};
+    rebuildPipelineNav(Object.keys(pipelines).map(function (id) { return pipelines[id]; }));
+
+    fillTabs();
+    fillScope();
+    render();
+    wireAssistant();
+    document.getElementById('d-customize').addEventListener('click', openCustomize);
+  })();
+</script>
+</body>
+</html>
