@@ -524,7 +524,7 @@
           "contact": "Emma Clarke",
           "contactEmail": "emma.clarke@northwind.co",
           "value": 20,
-          "stage": "lead",
+          "stage": "qualified",
           "lastActivity": "just now",
           "activityType": "Email received",
           "overdue": false,
