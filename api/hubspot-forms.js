@@ -8,8 +8,8 @@
 // state of this page, so it answers 200 with connected:false and lets the UI
 // render its setup steps, rather than making the page handle a 500 on the most
 // common path it will ever hit.
-const { currentPathFor, applyCors, isValidPersonaId, readJsonFile } = require('./_github');
-const { isConnected, resolveKey, listForms, DEFAULT_MAP, TARGET_FIELDS } = require('./_hubspot');
+const { applyCors, isValidPersonaId } = require('./_github');
+const { resolveKey, listForms, DEFAULT_MAP, TARGET_FIELDS } = require('./_hubspot');
 
 module.exports = async function handler(req, res) {
   applyCors(req, res);
@@ -19,23 +19,16 @@ module.exports = async function handler(req, res) {
   const base = { targetFields: TARGET_FIELDS, defaultMap: DEFAULT_MAP };
   const personaId = isValidPersonaId(req.query.persona) ? req.query.persona : 'default';
 
-  let cfg = {};
-  try {
-    const existing = await readJsonFile(currentPathFor(personaId));
-    cfg = (existing && existing.json.integrations && existing.json.integrations.hubspot) || {};
-  } catch (err) {
-    // Can't read the saved connection — treat as not connected rather than
-    // failing the page outright.
-    cfg = {};
-  }
-
-  if (!isConnected(cfg)) {
+  // Straight from the secret store — no need to read the data file at all now
+  // that the key doesn't live there.
+  const key = await resolveKey(personaId);
+  if (!key) {
     res.status(200).json(Object.assign({ connected: false, forms: [] }, base));
     return;
   }
 
   try {
-    const forms = await listForms(resolveKey(cfg));
+    const forms = await listForms(key);
     res.status(200).json(Object.assign({ connected: true, forms: forms }, base));
   } catch (err) {
     // Connected but the call failed — usually a key that's been removed in

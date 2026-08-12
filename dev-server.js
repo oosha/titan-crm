@@ -41,6 +41,14 @@ const PORT = Number(process.argv[2]) || 8000;
   } catch (e) { /* no .env is the normal case */ }
 })();
 
+// Credentials go to a local gitignored file rather than the data/ files, mirroring
+// how production keeps them out of the repo (see api/_secrets.js). Setting this
+// before api/_secrets is required is what selects the file backend; on Vercel it
+// is unset, so the KV store is used instead.
+if (!process.env.TITAN_SECRETS_FILE) {
+  process.env.TITAN_SECRETS_FILE = path.join(ROOT, '.secrets.json');
+}
+
 // ── vercel.json rewrites → regexes, matched in file order ────────────────────
 const REWRITES = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8')).rewrites.map((r) => ({
   re: new RegExp('^' + r.source.replace(/[.+*?^${}()|[\]\\]/g, '\\$&').replace(/:[a-zA-Z]+/g, '[^/]+') + '$'),
@@ -183,19 +191,41 @@ async function apiLogo(req, res, query) {
 // calls. Only the storage differs — local files here, GitHub there — so the
 // dedupe and card-building logic can't drift between the two.
 const hubspot = require('./api/_hubspot');
+const secrets = require('./api/_secrets');
 
 async function apiHubspot(pathname, req, res, query) {
   const personaId = isValidPersonaId(query.get('persona')) ? query.get('persona') : 'default';
   const rel = currentPathFor(personaId);
   const data = await readJson(rel);
+  const name = hubspot.secretName(personaId);
+
+  // /api/hubspot-key — the credential, kept out of data/ exactly as in production.
+  if (pathname === '/api/hubspot-key') {
+    if (req.method === 'GET') {
+      return json(res, 200, { hasKey: !!(await secrets.getSecret(name)), canStore: secrets.canStore() });
+    }
+    if (req.method === 'POST') {
+      const body = await readBody(req);
+      const key = body && typeof body.key === 'string' ? body.key.trim() : '';
+      if (!key) return json(res, 400, { error: 'Paste the copied text from HubSpot first.' });
+      await secrets.setSecret(name, key);
+      console.log('  hubspot key stored → ' + process.env.TITAN_SECRETS_FILE);
+      return json(res, 200, { ok: true, hasKey: true });
+    }
+    if (req.method === 'DELETE') {
+      await secrets.deleteSecret(name);
+      return json(res, 200, { ok: true, hasKey: false });
+    }
+    return json(res, 405, { error: 'Method not allowed' });
+  }
 
   if (pathname === '/api/hubspot-forms') {
     if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });
     const base = { targetFields: hubspot.TARGET_FIELDS, defaultMap: hubspot.DEFAULT_MAP };
-    const cfg = (data && data.integrations && data.integrations.hubspot) || {};
-    if (!hubspot.isConnected(cfg)) return json(res, 200, Object.assign({ connected: false, forms: [] }, base));
+    const key = await hubspot.resolveKey(personaId);
+    if (!key) return json(res, 200, Object.assign({ connected: false, forms: [] }, base));
     try {
-      const forms = await hubspot.listForms(hubspot.resolveKey(cfg));
+      const forms = await hubspot.listForms(key);
       return json(res, 200, Object.assign({ connected: true, forms: forms }, base));
     } catch (e) {
       return json(res, 200, Object.assign({ connected: true, forms: [], error: String(e.message || e) }, base));
@@ -207,12 +237,12 @@ async function apiHubspot(pathname, req, res, query) {
   if (!data) return json(res, 404, { error: 'Unknown persona: ' + personaId });
 
   const cfg = hubspot.ensureConfig(data) || {};
-  if (!hubspot.isConnected(cfg)) return json(res, 400, { error: 'Connect HubSpot first.' });
+  const key = await hubspot.resolveKey(personaId);
+  if (!key) return json(res, 400, { error: 'Connect HubSpot first.' });
   const guids = hubspot.formGuidsFor(cfg).filter(hubspot.isValidFormGuid);
   if (!guids.length) return json(res, 400, { error: 'Add a form first.' });
 
   try {
-    const key = hubspot.resolveKey(cfg);
     const submissionsByForm = {};
     for (const guid of guids) submissionsByForm[guid] = await hubspot.fetchSubmissions(key, guid, 50);
 
@@ -251,7 +281,7 @@ http.createServer(async (req, res) => {
     if (pathname === '/api/revert') return await apiRevert(req, res, url.searchParams);
     if (pathname === '/api/form') return await apiForm(req, res, url.searchParams);
     if (pathname === '/api/logo') return await apiLogo(req, res, url.searchParams);
-    if (pathname === '/api/hubspot-forms' || pathname === '/api/hubspot-sync') {
+    if (pathname === '/api/hubspot-forms' || pathname === '/api/hubspot-sync' || pathname === '/api/hubspot-key') {
       return await apiHubspot(pathname, req, res, url.searchParams);
     }
 

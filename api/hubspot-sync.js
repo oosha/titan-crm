@@ -13,7 +13,7 @@
 // by the connect page through the normal /api/data save.
 const { currentPathFor, applyCors, isValidPersonaId, readJsonFile, updateJsonFile } = require('./_github');
 const {
-  isConnected, resolveKey, isValidFormGuid, ensureConfig, formGuidsFor, fetchSubmissions, syncIntoData,
+  resolveKey, isValidFormGuid, ensureConfig, formGuidsFor, fetchSubmissions, syncIntoData,
 } = require('./_hubspot');
 
 module.exports = async function handler(req, res) {
@@ -30,13 +30,14 @@ module.exports = async function handler(req, res) {
 
     const data = existing.json;
     const cfg = ensureConfig(data) || {};
-    if (!isConnected(cfg)) { res.status(400).json({ error: 'Connect HubSpot first.' }); return; }
+
+    const key = await resolveKey(personaId);
+    if (!key) { res.status(400).json({ error: 'Connect HubSpot first.' }); return; }
 
     const guids = formGuidsFor(cfg).filter(isValidFormGuid);
     if (!guids.length) { res.status(400).json({ error: 'Add a form first.' }); return; }
 
     // One fetch per distinct form, shared by every connection pointing at it.
-    const key = resolveKey(cfg);
     const submissionsByForm = {};
     for (const guid of guids) {
       submissionsByForm[guid] = await fetchSubmissions(key, guid, 50);

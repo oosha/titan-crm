@@ -5,3 +5,6 @@ node_modules/
 .env
 .env.*
 
+
+# Local credential store for dev-server.js — never committed.
+.secrets.json

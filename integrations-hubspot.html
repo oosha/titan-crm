@@ -70,17 +70,19 @@
   let FORMS = [];          // [{ guid, name, fields[] }]
   let TARGETS = [];        // Titan card fields a question may fill
   let DEFAULTS = {};       // HubSpot field name → suggested Titan field
-  let cfg = null;          // { apiKey, connections[] }
+  let cfg = null;          // { connections[] } — the key is never held here
 
   // Mirrors ensureConfig() in api/_hubspot.js: reads either shape, always hands
   // back the v2 one, so a connection saved by the previous version still shows.
+  // The key is NOT in here — it lives in the secret store behind
+  // /api/hubspot-key, because this object is saved into a file committed to a
+  // public repo. Only the connections, which contain nothing sensitive.
   function cfgOf(data) {
     const stored = (data.integrations && data.integrations.hubspot) || {};
     if (Array.isArray(stored.connections)) {
-      return { apiKey: stored.apiKey || '', connections: stored.connections.slice() };
+      return { connections: stored.connections.slice() };
     }
     return {
-      apiKey: stored.apiKey || '',
       connections: stored.formGuid ? [{
         id: 'c1',
         formGuid: stored.formGuid,
@@ -157,7 +159,7 @@
       '<div class="int-row">' +
         '<div class="int-label">Paste from HubSpot</div>' +
         '<input class="int-text" id="int-key" type="text" autocomplete="off" spellcheck="false" ' +
-               'placeholder="Paste here" value="' + esc(cfg.apiKey || '') + '">' +
+               'placeholder="Paste here">' +
       '</div>' +
       '<div class="int-foot">' +
         '<button class="dir-btn dir-btn-primary" id="int-connect" type="button">Connect</button>' +
@@ -175,17 +177,25 @@
     if (!value) { setHint('Paste the copied text from HubSpot first.', true); return; }
     document.getElementById('int-connect').disabled = true;
     setHint('Connecting…');
-    cfg.apiKey = value;
-    try { await persistCfg(); }
-    catch (e) {
+    try {
+      // Goes to the secret store, not into the data document. Its own endpoint
+      // rather than a field on the save, so the credential never travels with
+      // the records or lands in a file bound for the repository.
+      const res = await fetch('/api/hubspot-key?persona=' + encodeURIComponent(window.PERSONA_ID), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: value }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(function () { return {}; });
+        document.getElementById('int-connect').disabled = false;
+        // A 503 means the deployment has nowhere to keep a key — nothing the
+        // person reading this can fix by retrying, so don't imply they can.
+        setHint(body.error || 'Couldn’t save just now. Check your connection and try again.', true);
+        return;
+      }
+    } catch (e) {
       document.getElementById('int-connect').disabled = false;
-      // The deployed app stores data in a GitHub repository that has secret
-      // scanning turned on, so it physically refuses to save a key. Retrying or
-      // checking your connection won't help, and saying so would send someone
-      // round in circles — this needs a person with access to the server settings.
-      setHint(/SECRET_BLOCKED/.test(String(e && e.message))
-        ? 'This Titan deployment can’t store a HubSpot key. Ask whoever set up Titan to add it to the server settings instead.'
-        : 'Couldn’t save just now. Check your connection and try again.', true);
+      setHint('Couldn’t save just now. Check your connection and try again.', true);
       return;
     }
     await load();
@@ -193,7 +203,11 @@
 
   async function disconnect() {
     if (!confirm('Disconnect HubSpot? Your connected forms will be removed. Records already in Titan stay.')) return;
-    cfg = { apiKey: '', connections: [] };
+    // Two stores, two deletes: the key, then the connections that referenced it.
+    try {
+      await fetch('/api/hubspot-key?persona=' + encodeURIComponent(window.PERSONA_ID), { method: 'DELETE' });
+    } catch (e) { /* falling through — the connections still need clearing */ }
+    cfg = { connections: [] };
     try { await persistCfg(); } catch (e) { /* re-rendering as disconnected either way */ }
     renderSetup('');
   }

@@ -33,6 +33,8 @@
 // { key, submittedAt, fields{} } shape; mapSubmissionToCard() and syncIntoData()
 // can then be reused unchanged.
 
+const secrets = require('./_secrets');
+
 // HUBSPOT_BASE_URL exists so the integration can be exercised locally against a
 // stub without a live HubSpot account. Unset in production.
 const HS_BASE = process.env.HUBSPOT_BASE_URL || 'https://api.hubapi.com';
@@ -43,15 +45,16 @@ const HS_BASE = process.env.HUBSPOT_BASE_URL || 'https://api.hubapi.com';
 const FORMS_LIST_PATH = '/marketing/v3/forms';
 const SUBMISSIONS_PATH = '/form-integrations/v1/submissions/forms/';
 
-// The key is entered in the UI and travels with the connection; HUBSPOT_TOKEN
-// stays supported as a fallback so an environment-configured deployment keeps
-// working without being reconnected by hand.
-function resolveKey(cfg) {
-  return (cfg && cfg.apiKey) || process.env.HUBSPOT_TOKEN || '';
+// The key comes from the secret store, keyed by persona, so each account can
+// connect its own HubSpot. It is deliberately NOT in the persona's data file:
+// that file is committed to a public repo, and GitHub blocks the write anyway
+// (see the header of _secrets.js).
+function secretName(personaId) {
+  return 'titan:hubspot:' + personaId;
 }
 
-function isConnected(cfg) {
-  return !!resolveKey(cfg);
+async function resolveKey(personaId) {
+  return await secrets.getSecret(secretName(personaId));
 }
 
 // A form GUID is a plain UUID. Validated before it reaches a URL, the same way
@@ -291,6 +294,13 @@ const SEEN_CAP = 500;
 function ensureConfig(data) {
   if (!data.integrations || !data.integrations.hubspot) return null;
   const cfg = data.integrations.hubspot;
+
+  // An earlier version kept the key here. It never reached the repo — GitHub's
+  // push protection rejected every such write — but it may exist in a local
+  // working copy, and leaving it would mean the next save tries and fails again.
+  // Dropped on sight; the real one lives in the secret store.
+  if ('apiKey' in cfg) delete cfg.apiKey;
+
   if (Array.isArray(cfg.connections)) return cfg;
 
   cfg.connections = cfg.formGuid ? [{
@@ -421,7 +431,7 @@ function syncIntoData(data, submissionsByForm) {
 
 module.exports = {
   resolveKey: resolveKey,
-  isConnected: isConnected,
+  secretName: secretName,
   isValidFormGuid: isValidFormGuid,
   ensureConfig: ensureConfig,
   formGuidsFor: formGuidsFor,

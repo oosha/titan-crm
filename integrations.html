@@ -60,11 +60,14 @@
     logo: 'H',
     logoBg: '#ff7a59',
     path: '/crm/integrations/hubspot',
-    // Connected once a key is stored, whether or not any form is set up yet —
-    // otherwise connecting and then getting distracted looks like it failed.
-    isConnected: function (data) {
-      const h = (data.integrations && data.integrations.hubspot) || {};
-      return !!h.apiKey;
+    // Whether a key exists is the one thing this page can't read from the data
+    // document, because credentials aren't kept there. One cheap call to the
+    // store; it never returns the key itself, only whether there is one.
+    checkConnected: async function () {
+      try {
+        const res = await fetch('/api/hubspot-key?persona=' + encodeURIComponent(window.PERSONA_ID), { cache: 'no-store' });
+        return res.ok ? !!(await res.json()).hasKey : false;
+      } catch (e) { return false; }
     },
     summarise: function (data) {
       const h = (data.integrations && data.integrations.hubspot) || {};
@@ -75,9 +78,9 @@
     },
   }];
 
-  function renderList(data) {
+  function renderList(data, connectedById) {
     document.getElementById('int-list').innerHTML = PROVIDERS.map(function (p) {
-      const on = p.isConnected(data);
+      const on = !!connectedById[p.id];
       return '<div class="int-row-card">' +
         '<div class="int-logo" style="background:' + esc(p.logoBg) + '">' + esc(p.logo) + '</div>' +
         '<div class="int-row-text">' +
@@ -107,7 +110,15 @@
     }
     const pipelines = data.pipelines || {};
     window.titanSidebar.setPipelines(Object.keys(pipelines).map(function (id) { return pipelines[id]; }));
-    renderList(data);
+
+    // Painted as "not connected" first so the shelf appears immediately, then
+    // corrected once each provider's store has answered. One provider today, but
+    // asked in parallel so adding more doesn't make the page progressively slower.
+    renderList(data, {});
+    const states = await Promise.all(PROVIDERS.map(function (p) { return p.checkConnected(); }));
+    const byId = {};
+    PROVIDERS.forEach(function (p, i) { byId[p.id] = states[i]; });
+    renderList(data, byId);
   })();
 </script>
 </body>
