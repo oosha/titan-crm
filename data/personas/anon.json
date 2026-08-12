@@ -43,7 +43,48 @@
           "label": "Hired"
         }
       ],
-      "cards": []
+      "cards": [
+        {
+          "id": 101,
+          "company": "goldman",
+          "contact": "John",
+          "initials": "J",
+          "deal": "John",
+          "value": 0,
+          "stage": "applied-0",
+          "lastActivity": "just now",
+          "activityType": "Email sent",
+          "overdue": false,
+          "createdBy": "Shylaja",
+          "noteAuthor": "Shylaja",
+          "location": "Mumbai",
+          "website": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "currency": "$",
+          "closeDate": "",
+          "source": "Referral",
+          "note": "Referral from AJ",
+          "contactEmail": "shylaja@titan.email",
+          "contactPhone": "999999999",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "contacts": [
+            {
+              "name": "John",
+              "email": "shylaja@titan.email",
+              "phone": "999999999",
+              "designation": "",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "customFieldValues": {}
+        }
+      ]
     }
   }
 }
