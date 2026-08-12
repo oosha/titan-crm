@@ -1,0 +1,92 @@
+{
+  "$schema": "./registry.schema.json",
+  "name": "Titan Design System Registry",
+  "version": "0.1.0",
+  "description": "Machine-readable index of the design system. An agent should read this before writing any UI, and update it in the same change that adds a component. Extracted from App Redesign/index_prodRedesign_interactions.html.",
+  "conventions": {
+    "idiom": "Plain CSS classes plus optional JS render modules — no build step, no framework, no TypeScript. A component is a stylesheet, and a function returning an HTML string where composition earns one. This is the same pattern titan-sidebar.js and form-render.js already use in production.",
+    "consume": "<link> the two token files, then the component stylesheet, then <script> the module if there is one. Order matters: primitives, semantics, theme, components.",
+    "classPrefix": "ds-",
+    "variantClass": ".ds-<component>--<variant>",
+    "tokensOnly": "A component stylesheet may not contain a raw hex or a raw px for anything themeable. If a value is missing, add a token to tokens/semantics.css rather than hardcoding it here.",
+    "workbench": "/design-system/index.html renders every component in every state with a live direction switcher. Screenshot it after any change."
+  },
+  "tokens": {
+    "primitives": "tokens/primitives.css",
+    "semantics": "tokens/semantics.css",
+    "themes": "themes/",
+    "rule": "Components read semantics only. Primitives are raw values; a theme remaps semantics onto them."
+  },
+  "components": [
+    {
+      "name": "Button",
+      "category": "primitives",
+      "css": "components/button.css",
+      "module": "components/button.js",
+      "render": "dsButton(opts) -> html string",
+      "class": "ds-btn",
+      "props": {
+        "label": "string — omit together with `icon` set for an icon-only button",
+        "icon": "string (inline SVG markup)",
+        "variant": "'primary' | 'secondary' | 'ghost' | 'destructive' | 'add'",
+        "size": "'sm' | 'md' | 'lg'",
+        "loading": "boolean — keeps the variant's fill and shows a spinner; not the same as disabled",
+        "disabled": "boolean",
+        "href": "string — renders an <a>; dropped when disabled or loading",
+        "newTab": "boolean",
+        "onclick": "string — inline handler name, matching this codebase's existing idiom",
+        "title": "string — also becomes aria-label on an icon-only button",
+        "type": "'button' | 'submit'",
+        "id": "string",
+        "className": "string — extra classes for layout only, never for restyling"
+      },
+      "shapeTokens": ["--btn-radius", "--btn-height", "--btn-height-sm", "--btn-height-lg", "--btn-pad-x", "--btn-weight", "--btn-font", "--btn-border-width"],
+      "states": ["default", "hover", "active", "focus-visible", "disabled", "loading"],
+      "usage": "Every clickable action. `primary` for the one main action on a surface, `secondary` for the rest, `ghost` for toolbar and icon actions, `destructive` for deletes, `add` for the full-width dashed 'add a thing' affordance from the reference.",
+      "avoid": "Do not hand-roll a button. The product currently has 82 button rules across 14 class names — that is the duplication this replaces."
+    },
+    {
+      "name": "Input",
+      "category": "primitives",
+      "css": "components/primitives.css",
+      "class": "ds-input",
+      "props": {
+        "variant": "'default' | 'invalid' (class .ds-input--invalid)",
+        "element": "input | textarea | select — the same class styles all three"
+      },
+      "shapeTokens": ["--input-radius", "--input-height", "--input-pad-x", "--input-bg", "--input-border"],
+      "states": ["default", "hover", "focus", "invalid", "disabled", "placeholder"],
+      "usage": "Any single-line or multi-line text entry, and selects. Wrap in .ds-field with .ds-field-label plus .ds-field-hint or .ds-field-error to get the labelled layout."
+    },
+    {
+      "name": "Badge",
+      "category": "primitives",
+      "css": "components/primitives.css",
+      "class": "ds-badge",
+      "props": {
+        "variant": "'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'teal' | 'green' | 'amber' | 'pink' | 'purple'",
+        "dot": "boolean (class .ds-badge--dot) — leading state dot"
+      },
+      "shapeTokens": ["--badge-radius", "--badge-pad-x", "--badge-font"],
+      "states": ["default"],
+      "usage": "Status and category labels. The semantic four (accent/success/warning/danger) carry meaning; the five colour labels are for user-assigned categories and ship as fill/ink pairs so they cannot be mismatched.",
+      "avoid": "Do not use a status variant for a category, or a category colour for a state."
+    },
+    {
+      "name": "Card",
+      "category": "layout",
+      "css": "components/primitives.css",
+      "class": "ds-card",
+      "props": {
+        "variant": "'default' | 'flat' | 'recessed' | 'interactive'"
+      },
+      "shapeTokens": ["--card-radius", "--card-pad", "--card-border", "--card-shadow"],
+      "states": ["default", "hover (interactive only)"],
+      "usage": "Any grouped region. Elevation is what separates regions in this system — reach for a card before reaching for a border. .ds-card-title and .ds-card-sub give the heading pair."
+    }
+  ],
+  "notPortedYet": {
+    "note": "Present in the reference or the live app but not yet a component. Listed so an agent knows what exists and does not reinvent it under a new name.",
+    "items": ["Modal", "Nav / sidebar item", "Tooltip", "Checkbox", "Toggle", "Avatar", "Table row", "Menu / dropdown", "Toast", "Tabs"]
+  }
+}

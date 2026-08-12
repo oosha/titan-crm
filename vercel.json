@@ -120,6 +120,14 @@
     {
       "source": "/crm/forms/",
       "destination": "/forms.html"
+    },
+    {
+      "source": "/design-system",
+      "destination": "/design-system/index.html"
+    },
+    {
+      "source": "/design-system/",
+      "destination": "/design-system/index.html"
     }
   ]
 }

@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Titan Design System Registry",
+  "description": "Shape of registry.json. Kept beside it so a validator — or an agent — can check the manifest is still well-formed after an edit.",
+  "type": "object",
+  "required": ["name", "version", "components"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": { "type": "string" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "description": { "type": "string" },
+    "conventions": { "type": "object" },
+    "tokens": { "type": "object" },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "category", "css", "class", "props", "states", "usage"],
+        "properties": {
+          "name": { "type": "string" },
+          "category": { "type": "string", "enum": ["primitives", "layout", "composite", "pattern"] },
+          "css": { "type": "string", "description": "Path to the component stylesheet." },
+          "module": { "type": "string", "description": "Optional JS render module." },
+          "render": { "type": "string", "description": "Signature of the render function, if there is one." },
+          "class": { "type": "string", "pattern": "^ds-" },
+          "props": { "type": "object", "additionalProperties": { "type": "string" } },
+          "shapeTokens": { "type": "array", "items": { "type": "string", "pattern": "^--" } },
+          "states": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "usage": { "type": "string" },
+          "avoid": { "type": "string" }
+        }
+      }
+    },
+    "notPortedYet": { "type": "object" }
+  }
+}

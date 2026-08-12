@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Titan Design System — Workbench</title>
+<!--
+  The workbench: every component, every state, on one page, with a live theme
+  switcher. Two jobs.
+
+  For a person: try a direction and see it across everything at once instead of
+  guessing from one button in isolation.
+
+  For an agent: a single URL that renders the whole system, so a change can be
+  screenshotted and compared. Every visual mistake I made building the CRM would
+  have been caught by looking at a page like this.
+
+  No build step. Open the file, or serve it with `node dev-server.js` and visit
+  /design-system/.
+-->
+<link rel="stylesheet" href="./tokens/primitives.css">
+<link rel="stylesheet" href="./tokens/semantics.css">
+<link rel="stylesheet" id="theme-link" href="./themes/default.css">
+<link rel="stylesheet" href="./components/button.css">
+<link rel="stylesheet" href="./components/primitives.css">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: var(--font-sans); font-size: var(--text-md);
+    color: var(--text-primary); background: var(--surface-page);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wb-top {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: var(--space-200);
+    padding: var(--space-150) var(--space-300);
+    background: var(--surface-primary); border-bottom: 1px solid var(--border-subtle);
+  }
+  .wb-brand { font-weight: var(--weight-bold); color: var(--text-heading); }
+  .wb-brand span { color: var(--text-muted); font-weight: var(--weight-normal); margin-left: var(--space-100); }
+  .wb-themes { margin-left: auto; display: flex; align-items: center; gap: var(--space-100); }
+  .wb-themes label { font-size: var(--text-xs); color: var(--text-muted); }
+
+  .wb-body { padding: var(--space-300); max-width: 1080px; }
+  .wb-sec { margin-bottom: var(--space-400); }
+  .wb-sec > h2 {
+    font-size: var(--text-2xs); font-weight: var(--weight-bold); letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin: 0 0 var(--space-150); padding-bottom: var(--space-075);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .wb-row { display: flex; align-items: center; gap: var(--space-150); flex-wrap: wrap; margin-bottom: var(--space-150); }
+  .wb-label { font-size: var(--text-xs); color: var(--text-muted); width: 92px; flex-shrink: 0; }
+  .wb-note { font-size: var(--text-xs); color: var(--text-muted); margin: calc(var(--space-050) * -1) 0 var(--space-150); }
+
+  /* Token swatches — reading the value straight off the page beats reading the file. */
+  .wb-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(122px, 1fr)); gap: var(--space-100); }
+  .wb-sw { border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-primary); }
+  .wb-sw i { display: block; height: 42px; }
+  .wb-sw b, .wb-sw code { display: block; padding: 0 var(--space-075); }
+  .wb-sw b { font-size: var(--text-2xs); font-weight: var(--weight-semi); color: var(--text-primary); margin-top: var(--space-075); }
+  .wb-sw code { font-size: 10px; color: var(--text-muted); padding-bottom: var(--space-075); }
+  .wb-scale { display: flex; flex-direction: column; gap: var(--space-100); }
+  .wb-scale-row { display: flex; align-items: baseline; gap: var(--space-150); }
+  .wb-scale-row code { font-size: var(--text-2xs); color: var(--text-muted); width: 84px; flex-shrink: 0; }
+  .wb-shape { display: flex; gap: var(--space-150); flex-wrap: wrap; }
+  .wb-shape div { width: 76px; height: 56px; background: var(--accent-subtle); border: 1px solid var(--blue-200); display: flex; align-items: flex-end; justify-content: center; font-size: 10px; color: var(--text-accent); padding-bottom: 3px; }
+</style>
+</head>
+<body>
+
+<div class="wb-top">
+  <div class="wb-brand">Titan Design System <span>workbench</span></div>
+  <div class="wb-themes">
+    <label for="wb-theme">Direction</label>
+    <select class="ds-input" id="wb-theme" style="width:auto; height:32px;">
+      <option value="default">Default (extracted)</option>
+      <option value="soft">Soft — round, borderless</option>
+    </select>
+  </div>
+</div>
+
+<div class="wb-body">
+
+  <section class="wb-sec">
+    <h2>Surfaces &amp; text</h2>
+    <div class="wb-swatches" id="wb-colours"></div>
+  </section>
+
+  <section class="wb-sec">
+    <h2>Type scale</h2>
+    <div class="wb-scale" id="wb-type"></div>
+  </section>
+
+  <section class="wb-sec">
+    <h2>Radius</h2>
+    <div class="wb-shape" id="wb-radius"></div>
+  </section>
+
+  <section class="wb-sec">
+    <h2>Button</h2>
+    <p class="wb-note">Shape comes from the <code>--btn-*</code> tokens — switch the direction above and every one of these changes at once.</p>
+    <div id="wb-buttons"></div>
+  </section>
+
+  <section class="wb-sec">
+    <h2>Input</h2>
+    <div class="wb-row">
+      <span class="wb-label">default</span>
+      <div style="width:240px;"><input class="ds-input" placeholder="Search contacts…"></div>
+      <div style="width:240px;"><input class="ds-input" value="Filled value"></div>
+    </div>
+    <div class="wb-row">
+      <span class="wb-label">states</span>
+      <div style="width:240px;"><input class="ds-input ds-input--invalid" value="not-an-email"></div>
+      <div style="width:240px;"><input class="ds-input" value="Disabled" disabled></div>
+    </div>
+    <div class="wb-row">
+      <span class="wb-label">field</span>
+      <div class="ds-field" style="width:300px;">
+        <label class="ds-field-label" for="wb-i1">Full name</label>
+        <input class="ds-input" id="wb-i1" placeholder="Ada Lovelace">
+        <span class="ds-field-hint">Shown on every list.</span>
+      </div>
+      <div class="ds-field" style="width:300px;">
+        <label class="ds-field-label" for="wb-i2">Email</label>
+        <input class="ds-input ds-input--invalid" id="wb-i2" value="ada@">
+        <span class="ds-field-error">That doesn’t look like an email.</span>
+      </div>
+    </div>
+    <div class="wb-row">
+      <span class="wb-label">textarea</span>
+      <div style="width:400px;"><textarea class="ds-input" placeholder="A sentence or two…"></textarea></div>
+    </div>
+  </section>
+
+  <section class="wb-sec">
+    <h2>Badge</h2>
+    <div class="wb-row">
+      <span class="wb-label">semantic</span>
+      <span class="ds-badge">Neutral</span>
+      <span class="ds-badge ds-badge--accent">Accent</span>
+      <span class="ds-badge ds-badge--success ds-badge--dot">Live</span>
+      <span class="ds-badge ds-badge--warning">Paused</span>
+      <span class="ds-badge ds-badge--danger">Overdue</span>
+    </div>
+    <div class="wb-row">
+      <span class="wb-label">labels</span>
+      <span class="ds-badge ds-badge--teal">Design</span>
+      <span class="ds-badge ds-badge--green">Finance</span>
+      <span class="ds-badge ds-badge--amber">Travel</span>
+      <span class="ds-badge ds-badge--pink">Personal</span>
+      <span class="ds-badge ds-badge--purple">Product</span>
+    </div>
+  </section>
+
+  <section class="wb-sec">
+    <h2>Card</h2>
+    <div class="wb-row" style="align-items:stretch;">
+      <div class="ds-card" style="width:260px;">
+        <div class="ds-card-title">Elevated</div>
+        <div class="ds-card-sub">Shadow separates it, not a heavy border.</div>
+      </div>
+      <div class="ds-card ds-card--flat" style="width:260px;">
+        <div class="ds-card-title">Flat</div>
+        <div class="ds-card-sub">Inside another elevated surface.</div>
+      </div>
+      <div class="ds-card ds-card--interactive" style="width:260px;">
+        <div class="ds-card-title">Interactive</div>
+        <div class="ds-card-sub">Lifts on hover.</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="./components/button.js"></script>
+<script>
+  // ── Theme switching ──────────────────────────────────────────────────────
+  // Swapping one stylesheet. Nothing re-renders, no component knows it happened.
+  document.getElementById('wb-theme').addEventListener('change', function (e) {
+    document.getElementById('theme-link').href = './themes/' + e.target.value + '.css';
+  });
+
+  // ── Token galleries, read from the live computed styles ──────────────────
+  // Generated from the stylesheet rather than hand-listed, so a token added to
+  // semantics.css shows up here without anyone remembering to document it.
+  const css = getComputedStyle(document.documentElement);
+  const val = (t) => css.getPropertyValue(t).trim();
+
+  const COLOURS = [
+    ['--surface-page', 'page'], ['--surface-primary', 'primary'], ['--surface-recessed', 'recessed'],
+    ['--surface-hover', 'hover'], ['--surface-selected', 'selected'], ['--surface-selected-strong', 'selected+'],
+    ['--text-heading', 'heading'], ['--text-primary', 'body'], ['--text-secondary', 'secondary'],
+    ['--text-muted', 'muted'], ['--text-placeholder', 'placeholder'], ['--text-disabled', 'disabled'],
+    ['--border-subtle', 'border subtle'], ['--border-default', 'border'], ['--border-strong', 'border strong'],
+    ['--accent-primary', 'accent'], ['--accent-hover', 'accent hover'], ['--accent-subtle', 'accent subtle'],
+    ['--status-success', 'success'], ['--status-warning', 'warning'], ['--status-danger', 'danger'],
+  ];
+  document.getElementById('wb-colours').innerHTML = COLOURS.map(function (c) {
+    return '<div class="wb-sw"><i style="background:' + val(c[0]) + '"></i>' +
+      '<b>' + c[1] + '</b><code>' + c[0] + '</code></div>';
+  }).join('');
+
+  const TYPE = ['--text-3xl', '--text-2xl', '--text-xl', '--text-lg', '--text-md', '--text-sm', '--text-xs', '--text-2xs'];
+  document.getElementById('wb-type').innerHTML = TYPE.map(function (t) {
+    return '<div class="wb-scale-row"><code>' + t + ' · ' + val(t) + '</code>' +
+      '<span style="font-size:' + val(t) + '">The quick brown fox</span></div>';
+  }).join('');
+
+  const RADII = ['--radius-xs', '--radius-sm', '--radius-md', '--radius-lg', '--radius-full'];
+  document.getElementById('wb-radius').innerHTML = RADII.map(function (r) {
+    return '<div style="border-radius:' + val(r) + '">' + r.replace('--radius-', '') + '</div>';
+  }).join('');
+
+  // ── Buttons: every variant × every size × every state, from the module ───
+  const ICON = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none">' +
+    '<path d="M8 3.5v9M3.5 8h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+
+  // Every variant × every size × every state. The `add` variant is full-width by
+  // design, so its row gets a column instead of being laid out inline.
+  let html = '';
+  dsButton.variants.forEach(function (v) {
+    const states = [
+      dsButton({ label: 'Default', variant: v }),
+      dsButton({ label: 'Small', variant: v, size: 'sm' }),
+      dsButton({ label: 'Large', variant: v, size: 'lg' }),
+      dsButton({ label: 'Loading', variant: v, loading: true }),
+      dsButton({ label: 'Disabled', variant: v, disabled: true }),
+    ];
+    if (v !== 'add') states.push(dsButton({ icon: ICON, variant: v, title: 'Add' }));
+    const inner = v === 'add'
+      ? '<div style="flex:1; display:grid; gap:8px;">' + states.join('') + '</div>'
+      : states.join('');
+    html += '<div class="wb-row"><span class="wb-label">' + v + '</span>' + inner + '</div>';
+  });
+  html += '<div class="wb-row"><span class="wb-label">as a link</span>' +
+    dsButton({ label: 'Opens the form', variant: 'secondary', href: '#', newTab: true }) +
+    dsButton({ label: 'Disabled link', variant: 'secondary', href: '#', disabled: true }) +
+    '</div>';
+  document.getElementById('wb-buttons').innerHTML = html;
+</script>
+</body>
+</html>

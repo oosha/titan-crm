@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inbox (367) - Mail</title>
+  <!-- STYLE STRIPPED -->
+</head>
+
+<body>
+
+  <!-- App Window -->
+  <div class="app-window">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Edge toggle button -->
+      <button class="sidebar-edge-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+
+      <!-- Header with logo -->
+      <div class="sidebar-header">
+        <div class="tab-switch">
+          <img src="assets/2f8b4195-6886-4685-9c9c-cf0d3552b789.svg" alt="mail">
+          <div class="tab-switch-arrow">
+            <img src="assets/1c88a1be-2a78-4065-86f7-8eb060dbb526.svg" alt="">
+          </div>
+        </div>
+        <div class="titan-logo">
+          <img src="assets/fa36f613-977c-444a-bef5-e1b5f5f1b340.svg" alt="Titan">
+        </div>
+      </div>
+
+      <div class="nav-scroll">
+
+        <!-- Account 1 -->
+        <div class="sidebar-line" style="margin-top:2px;"></div>
+        <div class="account-header">
+          <div class="account-chevron">
+            <img src="assets/f63230e3-4d61-49cb-95fa-34291315c8a6.svg" alt="">
+          </div>
+          <div class="account-email-id">
+            <div class="account-avatar">
+              <img class="bg" src="assets/d2c6a617-0407-4985-8c8b-740201e73dfe.svg" alt="">
+              <span>E</span>
+            </div>
+            <span class="account-email-text">ella.henderson@avontechlabs.com</span>
+          </div>
+
+        </div>
+
+        <!-- Inbox (active) -->
+        <div class="nav-item active" style="padding-right: 8px;">
+          <div class="nav-item-icon">
+            <img src="assets/f2abf784-8ff3-4cb6-8424-a3f9ea66f6c4.svg" alt="">
+          </div>
+          <span class="nav-item-label active">Inbox</span>
+
+
+
+          <span class="nav-badge">18</span>
+        </div>
+
+        <!-- Sent -->
+        <div class="nav-item">
+          <div class="nav-item-icon">
+            <img src="assets/0d418f33-c92b-4c90-a4b4-1ac227360aee.svg" alt="">
+          </div>
+          <span class="nav-item-label">Sent</span>
+        </div>
+
+        <!-- Less -->
+        <div class="nav-item">
+          <div class="nav-item-icon">
+            <img src="assets/4b052ff7-cbf2-4484-b998-cd121a2ef23d.svg" alt="" style="width:10px; height:6px;">
+          </div>
+          <span class="nav-item-label secondary">Less</span>
+        </div>
+
+        <!-- Archive -->
+        <div class="nav-item">
+          <div class="nav-item-icon">
+            <img src="assets/84f2c4f8-5ef3-4208-b5c7-3bf9845524f6.svg" alt="">
+          </div>
+          <span class="nav-item-label">Archive</span>
+        </div>
+
+        <!-- Drafts -->
+        <div class="nav-item">
+          <div class="nav-item-icon">
+            <img src="assets/4cec5be7-969f-498e-ae20-01a59018a891.svg" alt="">
+          </div>
+          <span class="nav-item-label">Drafts</span>
+        </div>
+
+        <!-- Trash -->
+        <div class="nav-item">
+          <div class="nav-item-icon">
+            <img src="assets/f277921c-e283-4da0-a13a-05595d91fb34.svg" alt="">
+          </div>
+          <span class="nav-item-label">Trash</span>
+        </div>
+
+        <!-- Spam -->
+        <div class="nav-item">
+          <div class="nav-item-icon">
+            <img src="assets/0908bd91-743b-48cc-90f4-0f6eb8205114.svg" alt="">
+          </div>
+          <span class="nav-item-label">Spam</span>
+        </div>
+
+        <!-- Scheduled -->
+        <div class="nav-item">
+          <div class="nav-item-icon">
+            <img src="assets/506c7c7c-d0e8-4f48-9b04-9e8f4878f1dd.svg" alt="">
+          </div>
+          <span class="nav-item-label">Scheduled</span>
+        </div>
+
+        <!-- Promotions -->
+        <div class="nav-item">
+          <div class="nav-item-icon">
+            <img src="assets/05911f43-7ba2-4419-a3b7-1f9c5a6f5235.svg" alt="">
+          </div>
+          <span class="nav-item-label">Promotions</span>
+        </div>
+
+        <!-- Add folder -->
+        <div class="nav-item">
+          <div class="nav-item-icon">
+            <img src="assets/ba161cbb-b127-4cdb-9d7e-68bf42124783.svg" alt="">
+          </div>
+          <span class="nav-item-label secondary">Add folder</span>
+        </div>
+
+        <div class="sidebar-line"></div>
+
+        <!-- Account 2 -->
+        <div class="account-header">
+          <div class="account-chevron">
+            <img src="assets/f63230e3-4d61-49cb-95fa-34291315c8a6.svg" alt="">
+          </div>
+          <div class="account-email-id">
+            <div class="account-avatar">
+              <img class="bg" src="assets/1ec36ae6-2aa7-47fb-8241-ad45b652e49a.svg" alt="">
+              <span>S</span>
+            </div>
+            <span class="account-email-text">support.team@avontechlabs.com</span>
+          </div>
+        </div>
+
+        <div class="nav-item">
+          <div class="nav-item-icon">
+            <img src="assets/f2abf784-8ff3-4cb6-8424-a3f9ea66f6c4.svg" alt="">
+          </div>
+          <span class="nav-item-label">Inbox</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-item-icon">
+            <img src="assets/0d418f33-c92b-4c90-a4b4-1ac227360aee.svg" alt="">
+          </div>
+          <span class="nav-item-label">Sent</span>
+        </div>
+        <!-- More -->
+        <div class="nav-item">
+          <div class="nav-item-icon">
+            <img src="assets/593acf07-7400-4313-9d10-fee2fb2b61d5.svg" alt="" style="width:10px; height:6px;">
+          </div>
+          <span class="nav-item-label secondary">More</span>
+        </div>
+
+        <div class="sidebar-line"></div>
+
+        <!-- Add account -->
+        <div class="nav-item" style="margin-top:8px;">
+          <div class="nav-item-icon">
+            <img src="assets/2f39d1e9-d033-4964-aa94-76a9a023325c.svg" alt="">
+          </div>
+          <span class="nav-item-label">Add account</span>
+        </div>
+
+      </div><!-- /nav-scroll -->
+
+      <!-- Footer -->
+      <div style="position:relative; flex-shrink:0;">
+        <div class="sidebar-footer">
+          <div class="footer-btn">
+            <div class="footer-btn-icon">
+              <img src="assets/34686e57-21d5-4bf6-82c4-1c6e474d25d3.svg" alt="">
+            </div>
+            <span>Bug</span>
+          </div>
+          <div class="footer-divider"></div>
+          <div class="footer-btn">
+            <div class="footer-btn-icon">
+              <img src="assets/03a449fb-b16b-4b26-8eec-0fa033eff13e.svg" alt="">
+            </div>
+            <span>Feature</span>
+          </div>
+          <div class="footer-divider"></div>
+          <div class="footer-btn">
+            <div class="footer-btn-icon settings-icon">
+              <img src="assets/6ea52e57-1d75-47b1-97cd-e416a5d2372d.svg" alt="">
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sidebar -->
+
+    <div class="main-area">
+
+      <!-- Top toolbar (full width) -->
+      <div class="top-toolbar">
+        <div class="compose-search">
+          <div class="compose-btn titan-split-btn" style="margin:0; flex-shrink:0;">
+            <div class="compose-main-btn split-btn-main" onclick="openComposer()">
+              <div class="btn-content-wrapper">
+                <div class="compose-icon"><img src="assets/4ef65841-a61f-4b4d-9a15-f39d8a3a4fdb.svg" alt=""></div>
+                <span>New email</span>
+              </div>
+            </div>
+            <div class="compose-dd-btn split-btn-dd" onclick="event.stopPropagation();">
+              <div class="btn-content-wrapper">
+                <img src="composer_assets/ic-caret-white.svg" alt="">
+              </div>
+            </div>
+          </div>
+          <div class="search-bar">
+            <div class="search-icon">
+              <img src="assets/31fb0942-5496-4310-8ed0-427ccce7cfe6.svg" alt=""
+                style="inset:0; width:100%; height:100%;">
+            </div>
+            <input type="text" placeholder="Search in ella@avontech.com" readonly>
+            <div class="search-divider"></div>
+            <div class="search-dropdown">
+              <img src="assets/e458459b-dce0-4c30-be8a-322441399ee5.svg" alt="">
+            </div>
+
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <div class="toolbar-icons">
+            <div class="toolbar-icon titan-action-btn" title="View details">
+              <img src="assets/ec5d8d32-261b-410c-b07c-310cd6bb915e.svg" alt="">
+            </div>
+            <div class="toolbar-icon titan-action-btn" title="Settings">
+              <img src="assets/63a156f6-89b7-4224-b2e1-f2fa32e8f03f.svg" alt="">
+            </div>
+          </div>
+          <div class="powered-by">
+            <div class="powered-by-text">
+              <img src="assets/63d9b21c-fe52-4792-bc8d-ad49805438b4.svg" alt="">
+            </div>
+            <div class="powered-by-brand">
+              <div class="titan-icon-small">
+                <img src="assets/4cbc6cb9-9816-4837-aed4-a5388b93f50d.svg" alt="">
+              </div>
+              <div class="titan-text-small">
+                <img src="assets/7c7726a7-3446-4875-a5e4-bf55b4dbe2b7.svg" alt="">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div><!-- /top-toolbar -->
+
+      <div class="content-area">
+        <!-- Middle panel -->
+        <div class="middle-panel">
+          <div class="middle-refresh-overlay"></div>
+
+          <!-- Compact inbox indicator (shown when middle panel is collapsed) -->
+          <div class="compact-list-header" onclick="toggleMiddlePanel()" title="Expand email list">
+            <div class="compact-inbox-icon-container">
+              <img src="assets/f2abf784-8ff3-4cb6-8424-a3f9ea66f6c4.svg" alt="Inbox">
+              <span class="compact-unread-badge"></span>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="tabs-row">
+            <div class="tab-group">
+              <div class="tab-item">
+                <div class="tab-item-label">Priority (25)</div>
+                <div class="tab-item-underline"></div>
+              </div>
+              <div class="tab-item">
+                <div class="tab-item-label inactive">Other (50)</div>
+              </div>
+            </div>
+            <div class="tabs-right-container">
+
+              <div class="all-mails-dropdown">
+                <span>All mails</span>
+                <div class="dd-arrow"><img src="assets/7bd47053-31b1-485b-89c1-4496be66b2fd.svg" alt=""></div>
+              </div>
+              <button class="mp-toggle-btn" onclick="toggleMiddlePanel()" title="Toggle email list">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="4" y1="4" x2="4" y2="20"></line>
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+            </div>
+            <div class="tabs-divider">
+              <img src="assets/2a9d0ebf-7f52-4d67-97ca-9f3754ce48b2.svg" alt="">
+            </div>
+          </div>
+
+          <!-- Email list -->
+          <div class="email-list">
+            <div class="refresh-overlay"></div>
+
+            <div class="email-tile">
+              <div class="email-tile-inner">
+                <div class="tile-avatar avatar-blue">SK<div class="avatar-dot"></div>
+                </div>
+                <div class="tile-icons">
+                  <div class="tile-chk">
+                    <div class="chk"><img src="assets/392bf29c-08b1-44e8-b95b-b99905e722e6.svg" alt=""></div>
+                  </div>
+                  <div class="tile-star"><img src="assets/1e1696aa-5b8d-4409-97fd-4ce5c85c5ae5.svg" alt=""></div>
+                </div>
+                <div class="tile-content">
+                  <div class="tile-top" style="display:flex; justify-content:space-between;">
+                    <div class="tile-sender">Sajal Kumar</div>
+                    <div class="tile-time">10:45 am</div>
+                  </div>
+                  <div class="tile-subject">Feedback on grammar and spell check</div>
+                  <div class="tile-preview">Looking for a change? How does working on Meatvedcdv...</div>
+
+                  <div class="tile-hover-actions">
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/7c1d5199-2bce-428f-9bff-eb73b6954e12.svg" alt=""></div>
+                    </div>
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/65a9156f-d37a-414e-bef2-e5b477cb6436.svg" alt=""></div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              <div class="tile-divider"><img src="assets/5a7cff96-86fc-4121-9127-08bc8d0621c7.svg" alt=""></div>
+            </div>
+
+            <!-- Tile 2: selected, unread -->
+            <div class="email-tile selected">
+              <div class="email-tile-inner">
+                <div class="tile-avatar avatar-orange">NR<div class="avatar-dot"></div>
+                </div>
+                <div class="tile-icons">
+                  <div class="tile-chk">
+                    <div class="chk"><img src="assets/392bf29c-08b1-44e8-b95b-b99905e722e6.svg" alt=""></div>
+                  </div>
+                  <div class="tile-dot"></div>
+                  <div class="tile-star"><img src="assets/1e1696aa-5b8d-4409-97fd-4ce5c85c5ae5.svg" alt=""></div>
+                </div>
+                <div class="tile-content">
+                  <div class="tile-top" style="display:flex; justify-content:space-between;">
+                    <div class="tile-sender bold">Ninad Raval</div>
+                    <div class="tile-time">11:20 am</div>
+                  </div>
+                  <div class="tile-subject">Project roadmap for Dashboard version</div>
+                  <div class="tile-preview">Looking for a change? How does working on Meatvedcdv...</div>
+                  <div class="tile-hover-actions">
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/7c1d5199-2bce-428f-9bff-eb73b6954e12.svg" alt=""></div>
+                    </div>
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/65a9156f-d37a-414e-bef2-e5b477cb6436.svg" alt=""></div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              <div class="tile-divider"><img src="assets/5a7cff96-86fc-4121-9127-08bc8d0621c7.svg" alt=""></div>
+            </div>
+
+            <!-- Tiles 3–7 -->
+            <div class="email-tile">
+              <div class="email-tile-inner">
+                <div class="tile-avatar avatar-green">DJ<div class="avatar-dot"></div>
+                </div>
+                <div class="tile-icons">
+                  <div class="tile-chk">
+                    <div class="chk"><img src="assets/392bf29c-08b1-44e8-b95b-b99905e722e6.svg" alt=""></div>
+                  </div>
+                  <div class="tile-dot"></div>
+                  <div class="tile-star"><img src="assets/1e1696aa-5b8d-4409-97fd-4ce5c85c5ae5.svg" alt=""></div>
+                </div>
+                <div class="tile-content">
+                  <div style="display:flex; justify-content:space-between;">
+                    <div class="tile-sender">David Jones, Ella (2)</div>
+                    <div class="tile-time">12:15 pm</div>
+                  </div>
+                  <div class="tile-subject">Flock Terms and Condition</div>
+                  <div class="tile-preview">We need to get on a meeting for the discuss our T&amp;C...</div>
+                  <div class="tile-hover-actions">
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/7c1d5199-2bce-428f-9bff-eb73b6954e12.svg" alt=""></div>
+                    </div>
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/65a9156f-d37a-414e-bef2-e5b477cb6436.svg" alt=""></div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="email-tile">
+              <div class="email-tile-inner">
+                <div class="tile-avatar avatar-pink">S<div class="avatar-dot"></div>
+                </div>
+                <div class="tile-icons">
+                  <div class="tile-chk">
+                    <div class="chk"><img src="assets/392bf29c-08b1-44e8-b95b-b99905e722e6.svg" alt=""></div>
+                  </div>
+                  <div class="tile-star"><img src="assets/1e1696aa-5b8d-4409-97fd-4ce5c85c5ae5.svg" alt=""></div>
+                </div>
+                <div class="tile-content">
+                  <div style="display:flex; justify-content:space-between;">
+                    <div class="tile-sender">Shreya</div>
+                    <div class="tile-time">1:30 pm</div>
+                  </div>
+                  <div class="tile-subject">Feedback on snooze feature</div>
+                  <div class="tile-preview">I like the design that you have made. Probably we ca...</div>
+                  <div class="tile-hover-actions">
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/7c1d5199-2bce-428f-9bff-eb73b6954e12.svg" alt=""></div>
+                    </div>
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/65a9156f-d37a-414e-bef2-e5b477cb6436.svg" alt=""></div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="email-tile">
+              <div class="email-tile-inner">
+                <div class="tile-avatar avatar-blue">SK<div class="avatar-dot"></div>
+                </div>
+                <div class="tile-icons">
+                  <div class="tile-chk">
+                    <div class="chk"><img src="assets/392bf29c-08b1-44e8-b95b-b99905e722e6.svg" alt=""></div>
+                  </div>
+                  <div class="tile-star"><img src="assets/1e1696aa-5b8d-4409-97fd-4ce5c85c5ae5.svg" alt=""></div>
+                </div>
+                <div class="tile-content">
+                  <div style="display:flex; justify-content:space-between;">
+                    <div class="tile-sender">Sajal Kumar</div>
+                    <div class="tile-time">2:45 pm</div>
+                  </div>
+                  <div class="tile-subject">Feedback on link and file tracking feature</div>
+                  <div class="tile-preview">Hi, Ella can you please review these mocks.</div>
+                  <div class="tile-hover-actions">
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/7c1d5199-2bce-428f-9bff-eb73b6954e12.svg" alt=""></div>
+                    </div>
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/65a9156f-d37a-414e-bef2-e5b477cb6436.svg" alt=""></div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="email-tile">
+              <div class="email-tile-inner">
+                <div class="tile-avatar avatar-orange">NR<div class="avatar-dot"></div>
+                </div>
+                <div class="tile-icons">
+                  <div class="tile-chk">
+                    <div class="chk"><img src="assets/392bf29c-08b1-44e8-b95b-b99905e722e6.svg" alt=""></div>
+                  </div>
+                  <div class="tile-star"><img src="assets/1e1696aa-5b8d-4409-97fd-4ce5c85c5ae5.svg" alt=""></div>
+                </div>
+                <div class="tile-content">
+                  <div style="display:flex; justify-content:space-between;">
+                    <div class="tile-sender">Ninad Raval</div>
+                    <div class="tile-time">3:10 pm</div>
+                  </div>
+                  <div class="tile-subject">Lets schedule our 1:1 sometime</div>
+                  <div class="tile-preview">Hi Ella, we should schedule a 1:1 session next week...</div>
+                  <div class="tile-hover-actions">
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/7c1d5199-2bce-428f-9bff-eb73b6954e12.svg" alt=""></div>
+                    </div>
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/65a9156f-d37a-414e-bef2-e5b477cb6436.svg" alt=""></div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="email-tile">
+              <div class="email-tile-inner">
+                <div class="tile-avatar avatar-orange">NR<div class="avatar-dot"></div>
+                </div>
+                <div class="tile-icons">
+                  <div class="tile-chk">
+                    <div class="chk"><img src="assets/392bf29c-08b1-44e8-b95b-b99905e722e6.svg" alt=""></div>
+                  </div>
+                  <div class="tile-star"><img src="assets/1e1696aa-5b8d-4409-97fd-4ce5c85c5ae5.svg" alt=""></div>
+                </div>
+                <div class="tile-content">
+                  <div style="display:flex; justify-content:space-between;">
+                    <div class="tile-sender">Ninad Raval</div>
+                    <div class="tile-time">Yesterday</div>
+                  </div>
+                  <div class="tile-subject">Lets schedule our 1:1 sometime</div>
+                  <div class="tile-preview">Hi Ella, we should schedule a 1:1 session next week...</div>
+                  <div class="tile-hover-actions">
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/7c1d5199-2bce-428f-9bff-eb73b6954e12.svg" alt=""></div>
+                    </div>
+                    <div class="tile-action-pill">
+                      <div class="icon18"><img src="assets/65a9156f-d37a-414e-bef2-e5b477cb6436.svg" alt=""></div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div><!-- /email-list -->
+        </div><!-- /middle-panel -->
+
+        <!-- Reading Pane -->
+        <div class="reading-pane">
+
+          <!-- Action bar (same level as tabs) -->
+          <div class="reading-action-bar">
+            <div class="email-action-bar">
+              <div class="action-opt">
+                <div class="action-icon"><img src="assets/eb8edec6-b9b3-4707-bc5a-78a09ff60960.svg" alt=""></div>
+                Archive
+              </div>
+              <div class="action-sep"></div>
+              <div class="action-opt">
+                <div class="action-icon"><img src="assets/39065929-c90c-4ada-8017-5b7def421216.svg" alt=""></div>
+                Delete
+              </div>
+              <div class="action-sep"></div>
+              <div class="action-opt">
+                <div class="action-icon"><img src="assets/7d1fbdab-213a-460f-816a-26f90c114a53.svg" alt=""></div>
+                Star
+              </div>
+              <div class="action-sep"></div>
+              <div class="action-opt">
+                <div class="action-icon"><img src="assets/fdfefe86-ce27-43c6-a47f-d5b8019e11c3.svg" alt=""></div>
+                Mark unread
+              </div>
+              <div class="action-sep"></div>
+              <div class="action-opt">
+                <div class="action-icon"><img src="assets/bc92cea7-677d-460d-a302-220e92593976.svg" alt=""></div>
+                Block
+              </div>
+              <div class="action-sep"></div>
+              <div class="action-opt">
+                <div class="action-icon"><img src="assets/cbf05706-4cff-4bfc-bc12-604133772db9.svg" alt=""></div>
+                Spam
+              </div>
+              <div class="action-sep"></div>
+              <div class="action-more">
+                <div class="action-more-icon"><img src="assets/495649bc-11a9-41e0-84b4-81a6600de9f6.svg" alt=""></div>
+              </div>
+            </div>
+            <div class="focus-toggle-btn" onclick="toggleFocusMode()" title="Toggle Focus Mode">
+              <svg class="focus-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path class="expand-arrows" d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+                <path class="contract-arrows" d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7" style="display: none;">
+                </path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Thread -->
+          <div class="thread-content">
+            <div class="thread-title">Project roadmap for Dashboard version 2</div>
+
+            <!-- Collapsed tile 1 -->
+            <div class="thread-tile">
+              <div class="thread-tile-inner">
+                <span class="thread-sender">David Eglasias</span>
+                <span class="thread-preview">And as such the media have been very influential in shaping
+                  societ...</span>
+                <div class="thread-meta">
+                  <span class="thread-date">Jun 3</span>
+                  <div class="thread-attach"><img src="assets/137b4a38-f7e3-4939-b28d-56d8013f7e6b.svg" alt=""></div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Email Stack -->
+            <div class="thread-stack">
+              <div class="stack-card card-5">
+                <div class="stack-card-content thread-tile-inner">
+                  <span class="thread-sender">Rachel Zane</span>
+                  <span class="thread-preview">Could you forward me the details of the Q3 deliverables?</span>
+                  <div class="thread-meta"><span class="thread-date">Jun 2</span></div>
+                </div>
+              </div>
+              <div class="stack-card card-4">
+                <div class="stack-card-content thread-tile-inner">
+                  <span class="thread-sender">Sarah Jenkins</span>
+                  <span class="thread-preview">Following up on the project roadmap and the recent updates...</span>
+                  <div class="thread-meta"><span class="thread-date">Jun 4</span></div>
+                </div>
+              </div>
+              <div class="stack-card card-3">
+                <div class="stack-card-content thread-tile-inner">
+                  <span class="thread-sender">Mike Ross</span>
+                  <span class="thread-preview">I reviewed the document. Looks solid but we need to discuss...</span>
+                  <div class="thread-meta"><span class="thread-date">Jun 6</span></div>
+                </div>
+              </div>
+              <div class="stack-card card-2">
+                <div class="stack-card-content thread-tile-inner">
+                  <span class="thread-sender">Harvey Specter</span>
+                  <span class="thread-preview">Please ensure the deliverables are ready by next Tuesday...</span>
+                  <div class="thread-meta"><span class="thread-date">Jun 8</span></div>
+                </div>
+              </div>
+              <div class="stack-card card-1">
+                <div class="stack-card-content thread-tile-inner">
+                  <span class="thread-sender">Louis Litt</span>
+                  <span class="thread-preview">Checking in on the status of the new dashboard designs.</span>
+                  <div class="thread-meta"><span class="thread-date">Jun 9</span></div>
+                </div>
+              </div>
+              <div class="stack-pill">7 older messages</div>
+            </div>
+
+
+
+            <!-- Expanded tile -->
+            <div class="expanded-tile">
+              <div class="expanded-header">
+                <div>
+                  <div class="exp-sender">Ninad Raval</div>
+                  <div class="exp-to">To: me, Sajal, Viral</div>
+                </div>
+                <div class="exp-right">
+                  <div class="exp-timestamp">Jun 12</div>
+                  <div class="exp-actions">
+                    <div class="exp-rr">
+                      <div class="exp-rr-icon"><img src="assets/9c958176-ff20-49e6-9206-7659c8943371.svg" alt=""></div>
+                      <span class="exp-rr-count">4</span>
+                    </div>
+                    <div class="exp-rr">
+                      <div class="exp-rr-icon"><img src="assets/59af9c40-b8b7-40f0-ab10-349dd5700ac4.svg" alt=""></div>
+                      <span class="exp-rr-count">4</span>
+                    </div>
+                    <div class="exp-icon">
+                      <img src="assets/f58c5077-66f8-4b70-8f2d-a29cb41ef735.svg" alt="">
+                    </div>
+                    <div class="exp-icon">
+                      <img src="assets/dc9c9a28-fbff-4efd-8cc6-22604c7cbc3d.svg" alt="">
+                    </div>
+                    <div class="exp-icon-sm">
+                      <img src="assets/1bc6572b-be7e-4809-b54f-48b57701aa6b.svg" alt="">
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="expanded-body">
+                <p>Hey,</p>
+                <p>Since the last time we met, I have been working on the V2 roadmap and wold like to catch up to
+                  discuss it. Following are the highlights of the version. Letsa catch up on Monday, 5 PM?</p>
+                <p>&zwj;</p>
+                <p>1. Introducing multiple themes</p>
+                <p>2. Improvements in accessibility</p>
+                <p>&zwj;</p>
+                <p>Thanks!</p>
+              </div>
+
+              <div class="expanded-footer-hr"></div>
+              <div class="expanded-footer">
+                <div class="reply-action">
+                  <div class="reply-action-icon"><img src="assets/dc9c9a28-fbff-4efd-8cc6-22604c7cbc3d.svg" alt="">
+                  </div>
+                  Reply
+                </div>
+                <div class="reply-action">
+                  <div class="reply-action-icon"><img src="assets/440756b2-5698-4836-ab78-62a450804283.svg" alt="">
+                  </div>
+                  Reply all
+                </div>
+                <div class="reply-action">
+                  <div class="reply-action-icon"><img src="assets/d6d0ae75-01ff-4a38-aeb6-8cee39af4b34.svg" alt="">
+                  </div>
+                  Forward
+                </div>
+                <div class="smart-write">
+                  <div class="smart-write-icon"><img src="assets/f2c4a95b-e378-4f23-b049-98f40e998543.svg" alt=""></div>
+                  Reply with AI
+                </div>
+
+              </div>
+            </div>
+
+          </div><!-- /thread-content -->
+        </div><!-- /reading-pane -->
+
+        <!-- Tasks Sidebar -->
+        <div class="tasks-panel" id="tasks-panel">
+          <!-- Expanded View (slides open/closed) -->
+          <div class="tasks-expanded-view">
+            <div class="tasks-header">
+              <div class="tasks-heading">
+                <img src="app_switcher_assets/grid_icons/tasks.svg" class="tasks-heading-icon" alt="">
+                <span class="tasks-heading-text">Tasks</span>
+              </div>
+            </div>
+
+            <div class="tasks-list-body">
+              <div class="tasks-top-row">
+                <div class="tasks-add-card">
+                  <img src="tasks_assets/ic-plus-blue.svg" alt="Add" class="add-card-icon">
+                  <span class="add-card-text">Add a task</span>
+                </div>
+                <div class="tasks-action-icons">
+                  <div class="tasks-action-icon" title="Maximize">
+                    <img src="tasks_assets/ic-maximize.svg" alt="Maximize">
+                  </div>
+                  <div class="tasks-action-icon" title="More options">
+                    <img src="tasks_assets/ic-more-vert.svg" alt="Options">
+                  </div>
+                </div>
+              </div>
+
+              <div class="tasks-category-header" style="padding-top: 16px;">
+                <span class="task-tag tag-work">Work</span>
+              </div>
+
+              <!-- Task Item 1 -->
+              <div class="task-item">
+                <div class="task-item-checkbox">
+                  <img src="tasks_assets/ic-checkbox.svg" alt="Checkbox">
+                </div>
+                <div class="task-item-content">
+                  <div class="task-item-title">Check Design System File</div>
+                  <div class="task-item-meta">
+                    <div class="task-badge">
+                      <img src="tasks_assets/ic-calendar-gray.svg" alt="" class="meta-icon">
+                      <span>Today</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Task Item 2 -->
+              <div class="task-item">
+                <div class="task-item-checkbox">
+                  <img src="tasks_assets/ic-checkbox.svg" alt="Checkbox">
+                </div>
+                <div class="task-item-content">
+                  <div class="task-item-title">Return Request (Summer Sandals)</div>
+                  <div class="task-item-meta">
+                    <div class="task-badge">
+                      <img src="tasks_assets/ic-calendar-gray.svg" alt="" class="meta-icon">
+                      <span>Today</span>
+                    </div>
+                    <div class="task-badge">
+                      <img src="tasks_assets/ic-mail-gray.svg" alt="" class="meta-icon">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Task Item 3 -->
+              <div class="task-item">
+                <div class="task-item-checkbox">
+                  <img src="tasks_assets/ic-checkbox.svg" alt="Checkbox">
+                </div>
+                <div class="task-item-content">
+                  <div class="task-item-title">Check Design System File</div>
+                  <div class="task-item-meta">
+                    <div class="task-badge">
+                      <img src="tasks_assets/ic-calendar-gray.svg" alt="" class="meta-icon">
+                      <span>Today</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tasks-category-header" style="margin-top: 16px; padding-top: 8px;">
+                <span class="task-tag tag-office">Office</span>
+              </div>
+
+              <!-- Task Item 4 -->
+              <div class="task-item">
+                <div class="task-item-checkbox">
+                  <img src="tasks_assets/ic-checkbox.svg" alt="Checkbox">
+                </div>
+                <div class="task-item-content">
+                  <div class="task-item-title">Order whiteboard markers</div>
+                  <div class="task-item-meta">
+                    <div class="task-badge">
+                      <img src="tasks_assets/ic-calendar-gray.svg" alt="" class="meta-icon">
+                      <span>Tomorrow</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Task Item 5 -->
+              <div class="task-item">
+                <div class="task-item-checkbox">
+                  <img src="tasks_assets/ic-checkbox.svg" alt="Checkbox">
+                </div>
+                <div class="task-item-content">
+                  <div class="task-item-title">Submit Q2 travel expense reports</div>
+                  <div class="task-item-meta">
+                    <div class="task-badge">
+                      <img src="tasks_assets/ic-calendar-gray.svg" alt="" class="meta-icon">
+                      <span>Jul 2</span>
+                    </div>
+                    <div class="task-badge">
+                      <img src="tasks_assets/ic-mail-gray.svg" alt="" class="meta-icon">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Compact Dock (always visible on the right) -->
+          <div class="tasks-compact-dock">
+            <div class="compact-dock-collapse-btn" title="Collapse panel">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="20" y1="4" x2="20" y2="20"></line>
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
+            <div class="compact-dock-calendar-btn" title="Calendar" data-tab="calendar">
+              <img src="app_switcher_assets/grid_icons/calendar.svg" alt="Calendar">
+            </div>
+            <div class="compact-dock-tasks-btn" title="Tasks" data-tab="tasks">
+              <img src="app_switcher_assets/grid_icons/tasks.svg" alt="Tasks">
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /content-area -->
+    </div><!-- /main-area -->
+
+  </div><!-- /app-window -->
+
+
+
+  <!-- STYLE STRIPPED -->
+
+  <div id="email-tooltip"></div>
+
+
+  <!-- App Switcher Dropdown (App Switcher - Light) -->
+  <div class="app-switcher-dropdown" id="app-switcher">
+    <!-- Combined Shape Background -->
+    <div class="app-switcher-bg">
+      <img src="app_switcher_assets/imgCombinedShape.svg" alt="">
+    </div>
+    <!-- App Switcher Content -->
+    <div class="app-switcher-content">
+
+      <!-- Top Apps Section (Mail, Calendar, Contacts) -->
+      <div class="app-switcher-section">
+        <div class="app-switcher-row">
+          <!-- Mail -->
+          <div class="app-switcher-item">
+            <div class="app-icon">
+              <img src="app_switcher_assets/grid_icons/mail.svg" alt="Mail" class="app-icon-img">
+            </div>
+            <span class="app-label">Mail</span>
+          </div>
+          <!-- Calendar -->
+          <div class="app-switcher-item">
+            <div class="app-icon">
+              <img src="app_switcher_assets/grid_icons/calendar.svg" alt="Calendar" class="app-icon-img">
+            </div>
+            <span class="app-label">Calendar</span>
+          </div>
+          <!-- Contacts -->
+          <div class="app-switcher-item">
+            <div class="app-icon">
+              <img src="app_switcher_assets/grid_icons/contacts.svg" alt="Contacts" class="app-icon-img">
+            </div>
+            <span class="app-label">Contacts</span>
+          </div>
+        </div>
+
+        <!-- Second Row of Apps (Bookings, Drive, Backup) -->
+        <div class="app-switcher-row">
+          <!-- Bookings -->
+          <div class="app-switcher-item">
+            <div class="app-icon">
+              <img src="app_switcher_assets/grid_icons/bookings.svg" alt="Bookings" class="app-icon-img">
+            </div>
+            <span class="app-label">Bookings</span>
+          </div>
+          <!-- Drive -->
+          <div class="app-switcher-item">
+            <div class="app-icon">
+              <img src="app_switcher_assets/grid_icons/drive.svg" alt="Drive" class="app-icon-img">
+            </div>
+            <span class="app-label">Drive</span>
+          </div>
+          <!-- Backup -->
+          <div class="app-switcher-item">
+            <div class="app-icon">
+              <img src="app_switcher_assets/grid_icons/backup.svg" alt="Backup" class="app-icon-img">
+            </div>
+            <span class="app-label">Backup</span>
+          </div>
+        </div>
+
+        <!-- Third Row of Apps (Tasks, Site, Admin) -->
+        <div class="app-switcher-row">
+          <!-- Tasks -->
+          <div class="app-switcher-item">
+            <div class="app-icon">
+              <img src="app_switcher_assets/grid_icons/tasks.svg" alt="Tasks" class="app-icon-img">
+            </div>
+            <span class="app-label">Tasks</span>
+          </div>
+          <!-- Site -->
+          <div class="app-switcher-item">
+            <div class="app-icon">
+              <img src="app_switcher_assets/grid_icons/site.svg" alt="Site" class="app-icon-img">
+            </div>
+            <span class="app-label">Site</span>
+          </div>
+          <!-- Admin -->
+          <div class="app-switcher-item">
+            <div class="app-icon">
+              <img src="app_switcher_assets/grid_icons/admin.svg" alt="Admin" class="app-icon-img">
+            </div>
+            <span class="app-label">Admin</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider Line -->
+      <div class="app-switcher-divider">
+        <img src="app_switcher_assets/imgLine75.svg" alt="">
+      </div>
+
+      <!-- Bottom Tools Section -->
+      <div class="app-switcher-tools">
+        <!-- Signature Designer -->
+        <div class="app-switcher-tool-item">
+          <div class="tool-icon bg-pink">
+            <img src="app_switcher_assets/imgGroup.svg" alt="">
+          </div>
+          <span class="tool-label">Signature Designer</span>
+        </div>
+        <!-- Smart Write AI -->
+        <div class="app-switcher-tool-item">
+          <div class="tool-icon bg-purple">
+            <img src="app_switcher_assets/imgGroup22777.svg" alt="">
+          </div>
+          <span class="tool-label">Smart Write AI</span>
+        </div>
+        <!-- Email Designer -->
+        <div class="app-switcher-tool-item">
+          <div class="tool-icon bg-blue">
+            <img src="app_switcher_assets/imgGroup23292.svg" alt="">
+          </div>
+          <span class="tool-label">Email Designer</span>
+        </div>
+        <!-- Invoice Builder -->
+        <div class="app-switcher-tool-item">
+          <div class="tool-icon bg-green">
+            <img src="app_switcher_assets/imgFrame1707478357.svg" alt="">
+          </div>
+          <span class="tool-label">Invoice Builder</span>
+        </div>
+      </div>
+
+      <!-- Bottom Footer Links -->
+      <div class="app-switcher-footer">
+        <!-- Know your Titan -->
+        <div class="footer-link-row">
+          <div class="footer-link-content">
+            <img src="app_switcher_assets/imgGroup22627.svg" alt="" class="footer-link-icon">
+            <span class="footer-link-text">Know your Titan</span>
+            <img src="app_switcher_assets/imgNextArrow.svg" alt="" class="footer-arrow">
+          </div>
+        </div>
+        <!-- See more @ Titan Labs -->
+        <div class="footer-link-row">
+          <div class="footer-link-content">
+            <img src="app_switcher_assets/imgG3027.svg" alt="" class="beaker-icon">
+            <span class="footer-link-text">See more @ <span class="bold">Titan Labs</span></span>
+            <img src="app_switcher_assets/imgNextArrow.svg" alt="" class="footer-arrow">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Composer Window ── -->
+  <div class="composer-window" id="composer-window">
+
+    <!-- Header -->
+    <div class="comp-header" onclick="toggleComposerMinimize()">
+      <span class="comp-title-text">New email</span>
+      <div class="comp-header-btns">
+        <button class="comp-hbtn" title="Minimize" onclick="event.stopPropagation(); toggleComposerMinimize()">
+          <img src="composer_assets/ic-minimize.svg" alt="">
+        </button>
+        <button class="comp-hbtn" title="Expand" onclick="event.stopPropagation()">
+          <img src="composer_assets/ic-expand.svg" alt="">
+        </button>
+        <button class="comp-hbtn close-btn" title="Close" onclick="event.stopPropagation(); closeComposer()">
+          <img src="composer_assets/ic-close.svg" alt="">
+        </button>
+      </div>
+    </div>
+
+    <!-- Form fields -->
+    <div class="comp-form">
+      <div class="comp-row">
+        <span class="comp-lbl comp-lbl-from">From:</span>
+        <span class="comp-from-value">ella@avontech.com</span>
+      </div>
+      <div class="comp-divider"></div>
+      <div class="comp-row">
+        <span class="comp-lbl comp-lbl-to">To:</span>
+        <input type="text" class="comp-field-input" id="comp-to-input" autocomplete="off">
+        <div class="comp-ccbcc">
+          <span>Cc</span>
+          <span>Bcc</span>
+        </div>
+      </div>
+      <div class="comp-divider"></div>
+      <div class="comp-row">
+        <span class="comp-lbl comp-lbl-subject">Subject:</span>
+        <input type="text" class="comp-field-input" autocomplete="off">
+      </div>
+      <div class="comp-divider"></div>
+      <!-- Feature chips -->
+      <div class="comp-features-row">
+        <div class="comp-feat"><span class="fic"><img src="composer_assets/ic-track.svg"
+              alt=""></span><span>Track</span></div>
+        <div class="comp-feat"><span class="fic"><img src="composer_assets/ic-design.svg"
+              alt=""></span><span>Design</span></div>
+        <div class="comp-feat"><span class="fic"><img src="composer_assets/ic-ai-write.svg" alt=""></span><span>Ai
+            Write</span></div>
+        <div class="comp-feat"><span class="fic"><img src="composer_assets/ic-templates.svg"
+              alt=""></span><span>Templates</span></div>
+        <div class="comp-feat"><span class="fic"><img src="composer_assets/ic-invoices.svg"
+              alt=""></span><span>Invoices</span></div>
+        <div class="comp-feat"><span class="fic"><img src="composer_assets/ic-groups.svg"
+              alt=""></span><span>Groups</span></div>
+      </div>
+    </div>
+
+    <!-- Content divider -->
+    <div class="comp-content-divider"></div>
+
+    <!-- Compose body -->
+    <div class="comp-body" id="comp-body" contenteditable="true" spellcheck="true"></div>
+
+    <!-- Bottom toolbar -->
+    <div class="comp-bottom">
+      <!-- Formatting bar -->
+      <div class="comp-format-bar">
+        <div class="comp-font-dd">
+          <span>Sans Serif</span>
+          <img src="composer_assets/figma-ic-triangle.svg" alt="" class="comp-dd-arrow">
+        </div>
+        <div class="comp-fmt-sep-v"></div>
+        <div class="comp-size-dd">
+          <span>14</span>
+          <img src="composer_assets/figma-ic-triangle.svg" alt="" class="comp-dd-arrow">
+        </div>
+        <div class="comp-fmt-sep-v"></div>
+        <button class="comp-fmt-btn" title="Bold"><img src="composer_assets/figma-ic-bold.svg" alt=""></button>
+        <button class="comp-fmt-btn" title="Italic"><img src="composer_assets/figma-ic-italic.svg" alt=""></button>
+        <button class="comp-fmt-btn" title="Underline"><img src="composer_assets/figma-ic-underline.svg"
+            alt=""></button>
+        <button class="comp-fmt-btn" title="Text color"><img src="composer_assets/figma-ic-colors.svg" alt=""></button>
+        <button class="comp-fmt-btn comp-fmt-align" title="Alignment"><img src="composer_assets/figma-ic-align.svg"
+            alt=""><img src="composer_assets/figma-ic-caret-dd.svg" alt="" class="comp-mini-caret"></button>
+        <button class="comp-fmt-btn comp-fmt-align" title="Lists"><img src="composer_assets/figma-ic-list.svg"
+            alt=""><img src="composer_assets/figma-ic-caret-dd.svg" alt="" class="comp-mini-caret"></button>
+        <button class="comp-fmt-btn comp-fmt-align" title="Indent"><img src="composer_assets/figma-ic-indent.svg"
+            alt=""><img src="composer_assets/figma-ic-caret-dd.svg" alt="" class="comp-mini-caret"></button>
+        <button class="comp-fmt-btn comp-fmt-link" title="Link"><img src="composer_assets/figma-ic-more.svg"
+            alt=""></button>
+        <button class="comp-fmt-btn comp-fmt-moredots" title="More"><img src="composer_assets/figma-ic-link.svg"
+            alt=""></button>
+      </div>
+      <!-- Divider between format and send bars -->
+      <div class="comp-bar-divider"></div>
+      <!-- Send bar -->
+      <div class="comp-send-bar">
+        <button class="comp-send-btn titan-split-btn">
+          <span class="comp-send-main split-btn-main">
+            <span class="btn-content-wrapper">Send</span>
+          </span>
+          <span class="comp-send-dd-btn split-btn-dd">
+            <span class="btn-content-wrapper">
+              <img src="composer_assets/ic-caret-white.svg" alt="">
+            </span>
+          </span>
+        </button>
+        <button class="comp-campaign-btn titan-action-btn action-btn-campaign" title="Campaign">
+          <svg class="ci-campaign" preserveAspectRatio="none" width="100%" height="100%" overflow="visible"
+            style="display: block;" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g id="megaphone-icon-original 8">
+              <path id="Union"
+                d="M7.7712 2.4634C7.96265 2.4144 8.16444 2.42141 8.35225 2.48294C8.54 2.5445 8.70645 2.65828 8.83175 2.81106C11.4809 6.03543 14.7746 6.70206 14.8181 6.71047L17.3689 7.18801C18.1804 7.34094 18.8984 7.80935 19.3649 8.49075C19.8315 9.17228 20.0082 10.0118 19.8571 10.8238C19.7172 11.5649 19.3132 12.2305 18.7204 12.6968C18.1275 13.1631 17.3858 13.3985 16.6325 13.3599L15.3112 16.2398C15.2419 16.3908 15.1376 16.5232 15.0065 16.6255C14.8753 16.7278 14.7209 16.7972 14.5573 16.8277C14.3938 16.858 14.2253 16.8486 14.0661 16.8003C13.907 16.752 13.7614 16.6665 13.6423 16.5503L13.029 15.9517C12.9065 15.8324 12.8149 15.684 12.7634 15.521C12.712 15.3581 12.7015 15.185 12.7331 15.0171L13.153 12.7779C12.0792 12.7026 9.47517 12.7292 6.6794 14.3032C6.46759 14.4239 6.21987 14.4658 5.98018 14.4214C5.83017 14.393 5.68804 14.3319 5.56417 14.2427C5.40277 14.1285 5.27752 13.9701 5.20382 13.7866C5.13017 13.6033 5.11162 13.4026 5.14913 13.2085L7.0085 3.27786C7.04499 3.08367 7.13612 2.9035 7.2712 2.7593C7.4063 2.61521 7.57984 2.51241 7.7712 2.4634ZM3.65401 10.0796C4.0246 9.9477 4.43342 10.1308 4.58175 10.4947C4.73032 10.8586 4.5662 11.275 4.20967 11.44L2.21163 12.3628L2.14425 12.3833C1.76275 12.5178 1.34456 12.3174 1.20967 11.9361C1.07549 11.5549 1.27582 11.137 1.65694 11.0025L3.65401 10.0796ZM1.68135 6.88235L1.68526 6.88137L4.34053 7.36282C4.68293 7.40969 4.94684 7.68828 4.97432 8.03274C5.00181 8.37735 4.78625 8.69373 4.45577 8.79446C4.35609 8.82436 4.25052 8.83332 4.14717 8.81887L1.4919 8.33743C1.09011 8.2852 0.806859 7.91696 0.859089 7.51516C0.91133 7.11339 1.27983 6.83004 1.68135 6.88235ZM2.51046 3.76809C2.75623 3.44422 3.21764 3.381 3.54171 3.62649L5.04561 4.99368C5.35721 5.24989 5.40482 5.70978 5.15206 6.02395C5.06262 6.14274 4.93823 6.231 4.79659 6.27688C4.57162 6.34557 4.32655 6.30119 4.13936 6.15872L2.65108 4.79934C2.32753 4.55337 2.2646 4.09183 2.51046 3.76809Z"
+                fill="#888888" />
+            </g>
+          </svg>
+        </button>
+        <div class="comp-vert-sep"></div>
+        <div class="comp-send-icons">
+          <button class="comp-icon-btn titan-action-btn action-btn-reminder" title="Reminder">
+            <svg class="ci-reminder" preserveAspectRatio="none" width="100%" height="100%" overflow="visible"
+              style="display: block;" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="Icon/Composer/Bottom action/reminder">
+                <path id="Vector" fill-rule="evenodd" clip-rule="evenodd"
+                  d="M12.58 8.24C12.9 8.56 12.9 9.078 12.58 9.397L10.397 11.58C10.077 11.9 9.559 11.9 9.24 11.58C8.92 11.26 8.92 10.742 9.24 10.422L11.422 8.24C11.742 7.92 12.26 7.92 12.58 8.24ZM12.728 11.013C13.805 10.293 15.071 9.91 16.366 9.91C18.102 9.91 19.768 10.6 20.996 11.827C22.224 13.055 22.913 14.721 22.913 16.457C22.913 17.752 22.529 19.018 21.81 20.095C21.09 21.172 20.068 22.011 18.872 22.506C17.675 23.002 16.359 23.131 15.089 22.879C13.819 22.626 12.652 22.003 11.736 21.087C10.821 20.171 10.196 19.005 9.944 17.735C9.692 16.465 9.821 15.148 10.317 13.951C10.812 12.755 11.652 11.733 12.728 11.013ZM16.763 13.911C16.763 13.509 16.43 13.183 16.019 13.183C15.608 13.183 15.275 13.509 15.275 13.911V16.821C15.275 17.223 15.608 17.548 16.019 17.548H19.987C20.397 17.548 20.731 17.223 20.731 16.821C20.731 16.419 20.398 16.093 19.987 16.093H16.763V13.911ZM20.153 9.397C19.833 9.077 19.833 8.559 20.153 8.24C20.472 7.92 20.99 7.92 21.31 8.24L23.492 10.422C23.812 10.742 23.812 11.26 23.492 11.58C23.172 11.9 22.654 11.9 22.335 11.58L20.153 9.397Z"
+                  fill="#888888" />
+              </g>
+            </svg>
+          </button>
+          <button class="comp-icon-btn titan-action-btn action-btn-text" title="Text styling">
+            <svg class="ci-text" preserveAspectRatio="none" width="100%" height="100%" overflow="visible"
+              style="display: block;" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="Group">
+                <path id="Subtract"
+                  d="M13 0C14.1046 0 15 0.89543 15 2V13C15 14.1046 14.1046 15 13 15H2C0.89543 15 0 14.1046 0 13V2C0 0.89543 0.89543 0 2 0H13ZM6.44727 3.21484L3.47168 11.7861H5.26953L5.92969 9.74316H8.94141L9.58984 11.7861H11.5322L8.55664 3.21484H6.44727ZM7.39062 4.99707H7.49805L8.56055 8.3584H6.31543L7.39062 4.99609V4.99707Z"
+                  fill="#888888" />
+              </g>
+            </svg>
+          </button>
+          <button class="comp-icon-btn titan-action-btn action-btn-attach" title="Attachment">
+            <svg class="ci-attach" preserveAspectRatio="none" width="100%" height="100%" overflow="visible"
+              style="display: block;" viewBox="0 0 14.5457 15.5514" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="Attach">
+                <path id="Vector"
+                  d="M14.2692 7.65739C14.1022 7.51539 13.8862 7.44339 13.6672 7.45539C13.4472 7.46739 13.2412 7.56439 13.0912 7.72439C11.5622 9.52939 9.88923 11.2064 8.08823 12.7384C6.17523 14.2284 4.17423 14.2614 2.72823 12.8164C1.28323 11.3714 1.32823 9.33639 2.82823 7.45739C4.34023 5.56839 6.05423 3.85339 7.94423 2.34339C8.40423 1.91739 9.00423 1.67339 9.63023 1.65939C10.2572 1.64539 10.8672 1.86039 11.3462 2.26539C11.7782 2.72839 12.0132 3.34139 12.0012 3.97439C11.9882 4.60739 11.7292 5.21039 11.2802 5.65639C9.89123 7.43139 8.29323 9.03339 6.52023 10.4264C6.18723 10.6594 5.54323 10.9934 5.06423 10.5144C4.89823 10.3014 4.81523 10.0344 4.83223 9.76439C4.84823 9.49439 4.96223 9.23939 5.15323 9.04739C6.32423 7.62239 7.63523 6.31739 9.06723 5.15539C9.23323 5.01139 9.33723 4.80839 9.35723 4.58839C9.37723 4.36939 9.31323 4.15139 9.17823 3.97739C9.03323 3.81139 8.83023 3.70739 8.61123 3.68739C8.39223 3.66739 8.17423 3.73139 8.00023 3.86639C6.46223 5.13239 5.05523 6.54639 3.79723 8.09139C3.36823 8.59839 3.14123 9.24539 3.15723 9.90939C3.17323 10.5734 3.43323 11.2084 3.88623 11.6934C4.36623 12.1554 5.00323 12.4214 5.67023 12.4374C6.33623 12.4544 6.98523 12.2204 7.48823 11.7824C9.38423 10.2904 11.0872 8.56839 12.5582 6.65639C13.2592 5.89639 13.6432 4.89739 13.6302 3.86439C13.6182 2.83039 13.2102 1.84039 12.4912 1.09739C11.7352 0.405391 10.7512 0.0153904 9.72723 0.000390363C8.70223 -0.0136096 7.70723 0.34939 6.93223 1.02039C4.91923 2.61539 3.09223 4.43039 1.48423 6.43439C-0.505771 8.99139 -0.505771 11.9494 1.55123 13.9844C2.02123 14.4744 2.58523 14.8674 3.21023 15.1364C3.83423 15.4064 4.50723 15.5464 5.18723 15.5514C6.62523 15.5064 8.00623 14.9814 9.11223 14.0614C10.9872 12.4584 12.7342 10.7114 14.3372 8.83639C14.4822 8.66939 14.5572 8.45339 14.5442 8.23339C14.5312 8.01339 14.4342 7.80639 14.2702 7.65739H14.2692Z"
+                  fill="#888888" />
+              </g>
+            </svg>
+          </button>
+          <button class="comp-icon-btn titan-action-btn action-btn-drive" title="Drive">
+            <svg class="ci-drive" preserveAspectRatio="none" width="100%" height="100%" overflow="visible"
+              style="display: block;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M19.7406 12.7857L17.0311 5.84963C16.9333 5.59873 16.7642 5.38364 16.5458 5.23218C16.3273 5.08071 16.0696 4.99984 15.8057 5H8.19403C7.65399 5 7.16865 5.336 6.9687 5.84963L4.25914 12.7857C4.01314 13.4163 3.94044 14.1039 4.04894 14.7737L4.55308 17.8704C4.60427 18.186 4.76317 18.4727 5.00148 18.6796C5.23979 18.8864 5.54205 19 5.85446 19H18.1445C18.7896 19 19.3399 18.5222 19.4458 17.8704L19.95 14.7737C20.0601 14.104 19.9876 13.4161 19.7406 12.7857ZM17.9462 16.5894C17.9164 16.7741 17.8235 16.9419 17.684 17.0629C17.5446 17.1839 17.3677 17.2502 17.1849 17.25H6.81489C6.6321 17.2502 6.45518 17.1839 6.31572 17.0629C6.17626 16.9419 6.08334 16.7741 6.05355 16.5894L5.74166 14.6705C5.72301 14.5572 5.72872 14.4412 5.75841 14.3304C5.7881 14.2196 5.84104 14.1168 5.91353 14.0292C5.98603 13.9415 6.07634 13.8711 6.17815 13.8229C6.27997 13.7747 6.39083 13.7498 6.50301 13.75H17.4976C17.9744 13.75 18.3376 14.1884 18.259 14.6705L17.9462 16.5894Z"
+                fill="var(--fill-0, #888888)" />
+            </svg>
+          </button>
+          <button class="comp-icon-btn titan-action-btn action-btn-image" title="Image">
+            <svg class="ci-image" preserveAspectRatio="none" width="100%" height="100%" overflow="visible"
+              style="display: block;" viewBox="0 0 16.0004 13.713" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="Group">
+                <g id="Vector">
+                  <path
+                    d="M15.9991 6.319C15.9991 4.834 15.9991 2.582 14.6851 1.303C13.3701 0.023 10.3761 0 8.60508 0H7.39408C5.62208 0 2.66308 0 1.31408 1.303C-0.0339215 2.605 7.84092e-05 4.833 7.84092e-05 6.319V7.382C7.84092e-05 8.879 7.85591e-05 11.13 1.31408 12.41C2.62808 13.69 4.86808 13.713 6.85708 13.713H8.67408C10.4441 13.713 13.3941 13.713 14.7421 12.422C16.0901 11.13 15.9991 8.879 15.9991 7.382V6.319ZM2.90308 6.548C2.38108 6.968 1.88908 7.422 1.42808 7.908L1.23408 8.113V6.343C1.23408 5.063 1.23408 3.108 2.18308 2.171C3.13108 1.234 5.24508 1.234 6.85708 1.234H8.53708C10.0451 1.234 12.8331 1.234 13.8501 2.171C14.8671 3.108 14.7991 5.062 14.7991 6.342V6.685C14.1491 5.989 13.4491 5.34 12.7081 4.742C12.4531 4.542 12.1401 4.433 11.8161 4.433C11.4931 4.433 11.1791 4.543 10.9251 4.743C10.2051 5.328 9.52108 5.957 8.87908 6.628C8.39908 7.108 7.90808 7.599 7.47408 7.999C7.03908 8.399 6.75408 8.468 6.33108 8.113C6.16008 7.965 5.94208 7.748 5.70208 7.519C5.37808 7.173 5.03008 6.849 4.66208 6.548C4.41608 6.338 4.10508 6.222 3.78208 6.216C3.46008 6.226 3.15208 6.342 2.90308 6.548Z"
+                    fill="#888888" />
+                  <path
+                    d="M6.41008 5.759C7.08008 5.759 7.62208 5.217 7.62208 4.548C7.62208 3.878 7.08008 3.337 6.41108 3.337C5.74108 3.337 5.19908 3.879 5.19908 4.547C5.19908 5.217 5.74208 5.759 6.41108 5.759H6.41008Z"
+                    fill="#888888" />
+                </g>
+              </g>
+            </svg>
+          </button>
+          <button class="comp-icon-btn titan-action-btn action-btn-emoji" title="Emoji">
+            <svg class="ci-emoji" preserveAspectRatio="none" width="100%" height="100%" overflow="visible"
+              style="display: block;" viewBox="0 0 15 15.0002" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="Group">
+                <path id="Vector"
+                  d="M7.49996 0C6.01696 0 4.56696 0.44 3.33296 1.264C2.09996 2.088 1.13996 3.259 0.570963 4.63C0.00296331 6 -0.145037 7.508 0.143963 8.963C0.433963 10.418 1.14796 11.754 2.19696 12.803C3.24596 13.853 4.58196 14.567 6.03696 14.856C7.49196 15.146 8.99996 14.996 10.37 14.429C11.74 13.861 12.912 12.9 13.736 11.667C14.56 10.433 15 8.983 15 7.5C15 5.51 14.21 3.603 12.803 2.197C11.397 0.79 9.48996 0 7.49996 0ZM3.74996 6.536C3.75996 6.337 3.82896 6.146 3.94696 5.986C4.06496 5.826 4.22696 5.703 4.41396 5.634C4.60096 5.565 4.80396 5.553 4.99696 5.598C5.19096 5.643 5.36696 5.744 5.50396 5.888C5.64096 6.033 5.73396 6.214 5.76796 6.41C5.80296 6.605 5.77996 6.807 5.70196 6.99C5.62396 7.173 5.49296 7.329 5.32696 7.439C5.16096 7.549 4.96696 7.607 4.76696 7.607C4.62996 7.607 4.49296 7.579 4.36596 7.525C4.23796 7.47 4.12396 7.391 4.02796 7.29C3.93296 7.19 3.85896 7.071 3.81196 6.942C3.76396 6.812 3.74196 6.674 3.74996 6.536V6.536ZM9.71796 9.996C9.49796 10.396 9.17796 10.732 8.78896 10.971C8.39996 11.21 7.95596 11.343 7.49996 11.357C7.03996 11.345 6.59196 11.214 6.19996 10.975C5.80696 10.736 5.48296 10.399 5.25996 9.996C5.22496 9.931 5.20196 9.859 5.19396 9.785C5.18596 9.711 5.19196 9.635 5.21396 9.565C5.23396 9.492 5.26896 9.425 5.31596 9.367C5.36196 9.309 5.41996 9.261 5.48596 9.225C5.54996 9.187 5.62096 9.163 5.69596 9.153C5.76996 9.143 5.84496 9.149 5.91596 9.169C5.98896 9.189 6.05596 9.223 6.11396 9.269C6.17296 9.316 6.22096 9.374 6.25696 9.439C6.38296 9.663 6.56296 9.851 6.77996 9.988C6.99696 10.124 7.24396 10.205 7.49996 10.221C7.74896 10.199 7.98796 10.116 8.19696 9.979C8.40696 9.843 8.57896 9.658 8.69996 9.439C8.73596 9.374 8.78396 9.316 8.84296 9.269C8.90096 9.223 8.96796 9.189 9.03996 9.169C9.11196 9.149 9.187 9.143 9.261 9.153C9.33596 9.163 9.40696 9.187 9.47196 9.225C9.53896 9.259 9.59896 9.306 9.64796 9.363C9.69596 9.421 9.73296 9.487 9.75596 9.559C9.77896 9.631 9.78796 9.707 9.78096 9.782C9.77396 9.857 9.75296 9.93 9.71796 9.996V9.996ZM10.232 7.554C10.033 7.554 9.83896 7.494 9.67196 7.385C9.50696 7.275 9.37596 7.12 9.29796 6.937C9.21996 6.754 9.19696 6.552 9.23196 6.356C9.26696 6.16 9.35896 5.979 9.49596 5.835C9.63296 5.69 9.80896 5.589 10.003 5.545C10.197 5.499 10.399 5.512 10.586 5.581C10.773 5.65 10.935 5.771 11.053 5.932C11.171 6.092 11.239 6.283 11.25 6.482C11.257 6.62 11.236 6.758 11.188 6.888C11.141 7.018 11.067 7.136 10.972 7.237C10.876 7.337 10.762 7.417 10.634 7.471C10.507 7.526 10.37 7.554 10.232 7.554V7.554Z"
+                  fill="#888888" />
+              </g>
+            </svg>
+          </button>
+          <button class="comp-icon-btn titan-action-btn action-btn-signature" title="Signature">
+            <svg class="ci-signature" preserveAspectRatio="none" width="100%" height="100%" overflow="visible"
+              style="display: block;" viewBox="0 0 19.4306 13.006" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="Group">
+                <path id="Vector"
+                  d="M19.3692 9.71963C19.4272 9.54103 19.4444 9.35173 19.4196 9.16563C19.3948 8.97953 19.3286 8.80133 19.2259 8.64413C19.1232 8.48693 18.9866 8.35483 18.8261 8.25733C18.6656 8.15983 18.4853 8.09963 18.2985 8.08093C17.3116 8.08093 16.8088 9.10513 16.4364 9.76613L16.0733 10.2969C16.0081 10.3713 15.8835 10.5959 15.8423 10.6387C15.7539 10.5006 15.6967 10.3449 15.6747 10.1825C15.5812 9.84243 15.5066 9.49733 15.4513 9.14903C15.4028 8.83543 15.3375 8.52463 15.2557 8.21793C15.1878 8.01343 15.0782 7.82513 14.934 7.66493C14.7898 7.50463 14.6141 7.37593 14.4178 7.28693C14.2241 7.19023 14.0105 7.13983 13.794 7.13983C13.5775 7.13983 13.3639 7.19023 13.1702 7.28693C12.5499 7.69123 11.9616 8.14253 11.4105 8.63693L11.3174 8.72073C9.96083 9.88453 9.43583 10.3757 9.06363 10.4932C8.69133 10.6108 8.46103 10.5373 8.24933 10.4426C7.97383 10.2696 7.73693 10.0416 7.55351 9.77283L7.80493 9.64253C7.99183 9.54583 8.17223 9.43693 8.34493 9.31663C10.207 7.96653 12.0691 5.48063 11.9295 3.23677C11.9057 2.69638 11.7662 2.16738 11.5205 1.68552C11.2747 1.20365 10.9284 0.780138 10.5049 0.443588C10.3426 0.304898 10.1519 0.203238 9.94633 0.145648C9.67333 0.0817783 9.39653 0.0351384 9.11773 0.00598839C8.59283 -0.0238116 8.06763 0.0578481 7.57654 0.245608C7.08548 0.433358 6.63975 0.722948 6.26865 1.09533C4.76032 2.49192 4.08065 5.18273 4.09927 7.22173C4.1369 7.68763 4.20219 8.15083 4.29479 8.60903L3.23338 9.03733C1.29677 9.79143 1.70925 9.69783 1.20647 9.86533C0.86776 9.94183 0.31523 10.3637 0.12921 10.6569C0.04444 10.8109 0 10.9839 0 11.1597C0 11.3355 0.04444 11.5084 0.12921 11.6625C0.26589 11.8852 0.45561 12.0707 0.68144 12.2023C0.90727 12.3339 1.16217 12.4075 1.42338 12.4166C1.59632 12.4411 2.02977 12.2268 2.20271 12.2023C2.20271 12.2023 4.02478 11.4394 5.3562 10.8994C6.09969 11.8882 7.07534 12.5611 7.66235 12.8209C8.24933 13.0806 9.09633 13.0265 9.60013 12.9038C10.1038 12.7812 10.9168 12.4079 12.2205 11.4301C12.3322 11.3463 12.6022 11.0856 12.9002 10.8156L13.1795 10.5642C13.384 11.2282 13.7522 11.8301 14.2502 12.3146C14.755 12.7173 15.3836 12.8449 16.0267 12.9038H16.1291C16.5139 12.9038 16.9017 12.7635 17.2511 12.6124C17.6005 12.4613 17.9978 12.0928 18.2337 11.7941C18.2776 11.7474 18.318 11.6976 18.3548 11.6451C18.8622 10.9999 19.1386 10.5074 19.3692 9.71963ZM9.41563 3.05987C9.41563 4.25163 8.35423 5.85303 7.26488 6.78413L6.8459 7.12863V6.68173C6.86355 5.27203 7.35184 3.90877 8.23323 2.80848C8.29013 2.75001 8.35253 2.69702 8.41943 2.6502C8.58123 2.52037 8.78013 2.44537 8.98733 2.43606C9.03273 2.42114 9.08163 2.42114 9.12703 2.43606C9.22483 2.50632 9.30283 2.60069 9.35343 2.70999C9.40393 2.8193 9.42543 2.93983 9.41563 3.05987Z"
+                  fill="#888888" />
+              </g>
+            </svg>
+          </button>
+          <button class="comp-icon-btn titan-action-btn action-btn-bookings" title="Bookings">
+            <svg class="ci-bookings" preserveAspectRatio="none" width="100%" height="100%" overflow="visible"
+              style="display: block;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="Bookings icon">
+                <path id="Exclude"
+                  d="M15.333 4.5C15.7932 4.5 16.1669 4.81828 16.167 5.21094V6.375H18.0547C18.8528 6.37525 19.4997 7.0222 19.5 7.82031V18.0547C19.4997 18.8528 18.8528 19.4997 18.0547 19.5H5.94531C5.1472 19.4997 4.50025 18.8528 4.5 18.0547V7.82031C4.50025 7.0222 5.1472 6.37525 5.94531 6.375H7.83301V5.21094C7.83312 4.81828 8.20682 4.5 8.66699 4.5C9.12701 4.50015 9.49989 4.81837 9.5 5.21094V6.375H14.5V5.21094C14.5001 4.81837 14.873 4.50015 15.333 4.5ZM15.1025 10.3125C14.7158 10.019 14.1583 10.0867 13.8574 10.4639L11.3525 13.6064L10.0664 12.4219C9.71041 12.0939 9.149 12.109 8.8125 12.4561C8.47604 12.8034 8.49237 13.3516 8.84863 13.6797L10.8438 15.5186C11.2243 15.8691 11.8319 15.824 12.1533 15.4209L15.2578 11.5264C15.5586 11.1491 15.4892 10.6059 15.1025 10.3125Z"
+                  fill="#888888" />
+              </g>
+            </svg>
+          </button>
+          <button class="comp-icon-btn titan-action-btn action-btn-html" title="HTML">
+            <svg class="ci-html" preserveAspectRatio="none" width="100%" height="100%" overflow="visible"
+              style="display: block;" viewBox="0 0 16.5 12.5011" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g id="HTML">
+                <path id="Vector"
+                  d="M0.468512 5.65263L3.41995 2.28116C3.71858 1.94919 4.18972 1.94919 4.48107 2.28116C4.77241 2.61314 4.77241 3.1494 4.48107 3.48138L2.05291 6.24822L4.48107 9.02402C4.77241 9.35599 4.77241 9.89226 4.48107 10.2242C4.33149 10.3947 4.14491 10.4713 3.9505 10.4713C3.76392 10.4713 3.56951 10.3947 3.41993 10.2242L0.4685 6.85277C0.177159 6.52139 0.177171 5.9846 0.468512 5.65263ZM6.73002 12.2511C6.65549 12.2511 6.57314 12.2428 6.49861 12.2084C6.1025 12.0635 5.89351 11.5783 6.02799 11.1358L9.05401 0.833825C9.18847 0.382472 9.60698 0.144327 10.0031 0.29756C10.3914 0.442465 10.6009 0.927658 10.4737 1.3701L7.44047 11.6721C7.3352 12.0296 7.04376 12.2511 6.73002 12.2511ZM12.5427 10.4713C12.3561 10.4713 12.1617 10.3947 12.0194 10.2242C11.7208 9.89226 11.7208 9.35599 12.0194 9.02402L14.4476 6.24822L12.0194 3.48138C11.7208 3.1494 11.7208 2.61314 12.0194 2.28116C12.3108 1.94919 12.7814 1.94919 13.0727 2.28116L16.0315 5.65263C16.3228 5.9846 16.3228 6.52087 16.0315 6.85285L13.0727 10.2243C12.9237 10.3948 12.7371 10.4713 12.5427 10.4713Z"
+                  fill="#888888" stroke="#888888" stroke-width="0.5" />
+              </g>
+            </svg>
+          </button>
+        </div>
+        <button class="comp-delete-btn" title="Discard draft" onclick="closeComposer()">
+          <img src="composer_assets/figma-ic-delete.svg" alt="">
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /composer-window -->
+
+  <!-- STYLE STRIPPED -->
+
+  <!-- SCRIPT STRIPPED -->
+</body>
+
+</html>

@@ -266,6 +266,20 @@
     }
 
     /* ── Top Toolbar (full width above middle + reading pane) ── */
+    /* The board's title row. Lives here rather than in a style attribute because
+       applyEmptyBoardState() toggles header.style.display, and setting that back to ''
+       wipes any inline display — which is why the title and its actions used to stack. */
+    #board-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    /* Keeps the actions hard right, on the same line when there is room and on their
+       own right-aligned line when there isn't. */
+    #board-header > .board-actions { margin-left: auto; }
+
     .top-toolbar {
       height: 64px;
       border-bottom: 1px solid #dedede;
@@ -2849,55 +2863,16 @@
 
     <div class="main-area">
 
-      <!-- Top toolbar (full width) -->
-      <div class="top-toolbar">
-        <div class="compose-search">
-          <div class="compose-btn titan-split-btn" style="margin:0; flex-shrink:0;">
-            <div class="compose-main-btn split-btn-main" onclick="openNewPipeline()">
-              <div class="btn-content-wrapper">
-                <span style="font-weight:700; margin-right:4px;">+</span>
-                <span>New pipeline</span>
-              </div>
-            </div>
-          </div>
-          <div class="search-bar">
-            <div class="search-icon">
-              <img src="/assets/31fb0942-5496-4310-8ed0-427ccce7cfe6.svg" alt=""
-                style="inset:0; width:100%; height:100%;">
-            </div>
-            <input type="text" placeholder="Search contacts, companies, deals..." readonly>
-            <div class="search-divider"></div>
-            <div class="search-dropdown">
-              <img src="/assets/e458459b-dce0-4c30-be8a-322441399ee5.svg" alt="">
-            </div>
-
-          </div>
-        </div>
-        <div class="toolbar-right">
-          <div class="toolbar-icons"></div>
-          <div class="powered-by">
-            <div class="powered-by-text">
-              <img src="/assets/63d9b21c-fe52-4792-bc8d-ad49805438b4.svg" alt="">
-            </div>
-            <div class="powered-by-brand">
-              <div class="titan-icon-small">
-                <img src="/assets/4cbc6cb9-9816-4837-aed4-a5388b93f50d.svg" alt="">
-              </div>
-              <div class="titan-text-small">
-                <img src="/assets/7c7726a7-3446-4875-a5e4-bf55b4dbe2b7.svg" alt="">
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div><!-- /top-toolbar -->
+      <!-- The top toolbar (New pipeline + a readonly search stub + branding) used to
+           sit here. Removed: "New pipeline" is in the sidebar, the search field never
+           worked, and 64px of chrome above a kanban is 64px the board doesn't get. -->
 
       <div class="content-area" style="display:block; overflow:auto; padding:20px 24px;">
-        <div id="board-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+        <div id="board-header">
           <div style="font-size:19px; font-weight:700; color:#1a1a1a;">
             <span id="pipeline-name-heading">Neo partnerships</span> <span id="pipeline-total" style="font-size:13.5px; font-weight:500; color:#888; margin-left:8px;"></span>
           </div>
-          <div style="display:flex; align-items:center; gap:10px;">
+          <div class="board-actions" style="display:flex; align-items:center; gap:10px;">
             <!-- The pipeline's intake form, on the pipeline. It was reachable only from
                  the row's three-dot menu, which is not where you look for it while
                  staring at the board. The label reflects whether one exists yet. -->
@@ -4738,7 +4713,10 @@
       const header = document.getElementById('board-header');
       const board = document.getElementById('kanban-board');
       const prompt = document.getElementById('board-empty-state');
-      if (header) header.style.display = empty ? 'none' : '';
+      // 'flex', not '': '' removes the declaration and the #board-header rule's
+      // display would still apply — but being explicit here means a future inline
+      // style can't be silently dropped by this line again.
+      if (header) header.style.display = empty ? 'none' : 'flex';
       if (board) board.style.display = empty ? 'none' : '';
       if (prompt) prompt.style.display = empty ? '' : 'none';
       if (empty) {

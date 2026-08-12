@@ -1,0 +1,76 @@
+/* Input, Badge and Card — the rest of the starter set. Grouped in one stylesheet
+   because they are small and always wanted together; a component earns its own
+   file when it earns its own JS module (see button.css / button.js).
+
+   Every value here is a semantic or component token. If you find yourself typing a
+   hex or a px into this file, the token is missing — add it to semantics.css. */
+
+/* ── Input ──────────────────────────────────────────────────────────────────── */
+.ds-input {
+  appearance: none; margin: 0; font: inherit;
+  display: block; width: 100%;
+  height: var(--input-height); padding: 0 var(--input-pad-x);
+  background: var(--input-bg); color: var(--text-primary);
+  border: 1px solid var(--input-border); border-radius: var(--input-radius);
+  font-size: var(--text-md); outline: none;
+  transition: var(--motion-hover), box-shadow var(--dur-base) var(--ease-standard);
+}
+.ds-input::placeholder { color: var(--text-placeholder); }
+.ds-input:hover:not(:disabled):not(:focus) { border-color: var(--border-default); }
+.ds-input:focus { border-color: var(--border-focus); box-shadow: var(--focus-ring); }
+.ds-input:disabled { background: var(--surface-disabled); color: var(--text-disabled); cursor: default; }
+.ds-input--invalid { border-color: var(--status-danger); }
+.ds-input--invalid:focus { box-shadow: var(--focus-ring-danger); }
+
+textarea.ds-input { height: auto; min-height: 96px; padding: var(--space-100) var(--input-pad-x); line-height: 1.5; resize: vertical; }
+select.ds-input { padding-right: var(--space-300); cursor: pointer; }
+
+.ds-field { display: grid; gap: var(--space-075); }
+.ds-field-label { font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-primary); }
+.ds-field-hint { font-size: var(--text-xs); color: var(--text-muted); }
+.ds-field-error { font-size: var(--text-xs); color: var(--status-danger); }
+
+/* ── Badge ──────────────────────────────────────────────────────────────────
+   Borderless and padded, per the guidelines: a tag is a fill with ink on it, not
+   an outlined pill. */
+.ds-badge {
+  display: inline-flex; align-items: center; gap: var(--space-050);
+  padding: 3px var(--badge-pad-x); border-radius: var(--badge-radius);
+  font-size: var(--badge-font); font-weight: var(--weight-semi);
+  letter-spacing: 0.02em; white-space: nowrap;
+  background: var(--gray-050); color: var(--text-secondary);
+}
+.ds-badge--accent  { background: var(--accent-subtle); color: var(--text-accent); }
+.ds-badge--success { background: var(--status-success-subtle); color: var(--green-600); }
+.ds-badge--warning { background: var(--status-warning-subtle); color: var(--label-amber-fg); }
+.ds-badge--danger  { background: var(--status-danger-subtle); color: var(--status-danger); }
+/* Category labels come as fill/ink pairs so they can never be mismatched. */
+.ds-badge--teal   { background: var(--label-teal-bg);   color: var(--label-teal-fg); }
+.ds-badge--green  { background: var(--label-green-bg);  color: var(--label-green-fg); }
+.ds-badge--amber  { background: var(--label-amber-bg);  color: var(--label-amber-fg); }
+.ds-badge--pink   { background: var(--label-pink-bg);   color: var(--label-pink-fg); }
+.ds-badge--purple { background: var(--label-purple-bg); color: var(--label-purple-fg); }
+
+.ds-badge--dot::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; flex-shrink: 0;
+}
+
+/* ── Card ───────────────────────────────────────────────────────────────────
+   Elevation, not borders, is what separates regions here — the border is a
+   hairline that stops the card dissolving on a white page, and it goes away in a
+   direction that leans harder on shadow. */
+.ds-card {
+  background: var(--surface-primary);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
+  box-shadow: var(--card-shadow);
+}
+.ds-card--flat { box-shadow: none; }
+.ds-card--recessed { background: var(--surface-recessed); box-shadow: none; }
+.ds-card--interactive { cursor: pointer; transition: var(--motion-hover), box-shadow var(--dur-base) var(--ease-standard); }
+.ds-card--interactive:hover { border-color: var(--border-default); box-shadow: var(--elevation-menu); }
+
+.ds-card-title { font-size: var(--text-lg); font-weight: var(--weight-semi); color: var(--text-heading); }
+.ds-card-sub { font-size: var(--text-sm); color: var(--text-muted); margin-top: var(--space-050); }

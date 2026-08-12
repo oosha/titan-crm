@@ -52,6 +52,29 @@ Cross-page deep links, all of which must survive a cold load: `?u=<persona>` eve
 directory pages, and `?intent=new-pipeline|settings` tells `crm.html` to open a modal that
 only it owns.
 
+## Design system
+
+**Before writing any UI, read [`design-system/DESIGN-SYSTEM.md`](design-system/DESIGN-SYSTEM.md)
+and [`design-system/registry.json`](design-system/registry.json).** The registry lists
+every component, its props and its states; the doc has the rules. `design-system/index.html`
+is a workbench that renders the whole system with a live theme switcher — open it, and
+screenshot it after any visual change.
+
+Three things it exists to stop:
+
+- **Reinventing controls.** The live product has 82 button rules across 14 class names.
+  Use `ds-btn` (or add a variant to it); don't write the fifteenth.
+- **Hardcoding values.** Components read semantic tokens (`--text-primary`), which map to
+  primitives (`--gray-700`). A hex inside a component file means a token is missing.
+- **Forking to explore.** A design direction is a file in `design-system/themes/` that
+  redefines semantics only. Component *shape* is tokenised too (`--btn-radius`,
+  `--btn-height`, …), so "try a different button everywhere" is a value change, not a
+  refactor.
+
+Extracted from `App Redesign/index_prodRedesign_interactions.html`, which remains the
+visual ground truth. The shipped CRM is not migrated yet: `semantics.css` ends with a
+bridge block aliasing the old `--dir-*` names, so pages can move over one at a time.
+
 ## The sidebar is a component
 
 `titan-sidebar.js` owns the CRM nav for **every** page — markup, account switcher,

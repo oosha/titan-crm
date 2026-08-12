@@ -1,0 +1,85 @@
+/* Button — every variant and state, reading only semantic tokens.
+   Its shape comes from the --btn-* component tokens, so a design direction can
+   restyle every button in the product without this file changing. */
+.ds-btn {
+  /* reset */
+  appearance: none; margin: 0; border: var(--btn-border-width) solid transparent;
+  font: inherit; text-decoration: none; cursor: pointer;
+
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-075);
+  height: var(--btn-height); padding: 0 var(--btn-pad-x);
+  border-radius: var(--btn-radius);
+  font-size: var(--btn-font); font-weight: var(--btn-weight); line-height: 1;
+  white-space: nowrap; flex-shrink: 0; position: relative;
+  transition: var(--motion-hover), var(--motion-press);
+}
+.ds-btn:active:not(:disabled) { transform: scale(var(--press-scale)); }
+.ds-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ds-btn:disabled, .ds-btn[aria-disabled="true"] { cursor: default; }
+
+/* ── Variants ─────────────────────────────────────────────────────────────── */
+.ds-btn--primary {
+  background: var(--accent-primary); color: var(--text-on-accent);
+  border-color: var(--accent-primary);
+}
+.ds-btn--primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+.ds-btn--secondary {
+  background: var(--surface-primary); color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+.ds-btn--secondary:hover:not(:disabled) { border-color: var(--border-accent); color: var(--text-accent); }
+
+.ds-btn--ghost { background: transparent; color: var(--text-secondary); }
+.ds-btn--ghost:hover:not(:disabled) { background: var(--surface-hover); color: var(--text-primary); }
+
+.ds-btn--destructive {
+  background: var(--status-danger); color: var(--text-on-accent);
+  border-color: var(--status-danger);
+}
+.ds-btn--destructive:hover:not(:disabled) { filter: brightness(0.94); }
+
+/* The reference's dashed "add" affordance — a full-width invitation, not a button
+   pretending to be small. */
+.ds-btn--add {
+  background: var(--accent-subtle); color: var(--text-accent);
+  border: 1px dashed var(--blue-200); width: 100%;
+}
+.ds-btn--add:hover:not(:disabled) { background: var(--accent-muted); border-color: var(--accent-primary); }
+
+/* ── Sizes ────────────────────────────────────────────────────────────────── */
+.ds-btn--sm { height: var(--btn-height-sm); padding: 0 var(--space-100); font-size: var(--text-xs); }
+.ds-btn--lg { height: var(--btn-height-lg); padding: 0 var(--space-200); font-size: var(--text-md); }
+
+/* Square icon-only button: matches the height of the row it sits in, which is the
+   geometry rule the guidelines call out (32px icon beside a 32px card). */
+.ds-btn--icon { width: var(--btn-height); padding: 0; }
+.ds-btn--icon.ds-btn--sm { width: var(--btn-height-sm); }
+.ds-btn--icon.ds-btn--lg { width: var(--btn-height-lg); }
+
+/* ── States ───────────────────────────────────────────────────────────────── */
+/* Loading is excluded: it keeps its variant's colour so it reads as busy, not dead. */
+.ds-btn:disabled:not(.ds-btn--loading),
+.ds-btn[aria-disabled="true"]:not(.ds-btn--loading) {
+  background: var(--surface-disabled); color: var(--text-disabled);
+  border-color: var(--border-subtle); box-shadow: none; transform: none;
+}
+.ds-btn--primary:disabled, .ds-btn--destructive:disabled { opacity: 0.5; }
+
+/* Loading keeps the button's width so the row doesn't jump, and hides the label
+   rather than replacing it. */
+.ds-btn--loading { color: transparent !important; pointer-events: none; }
+.ds-btn--loading::after {
+  content: ''; position: absolute; width: 13px; height: 13px; border-radius: 50%;
+  border: 2px solid currentColor; border-top-color: transparent;
+  color: var(--text-on-accent);
+  animation: ds-spin 0.6s linear infinite;
+}
+.ds-btn--secondary.ds-btn--loading::after,
+.ds-btn--ghost.ds-btn--loading::after,
+.ds-btn--add.ds-btn--loading::after { color: var(--text-secondary); }
+@keyframes ds-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .ds-btn { transition: none; }
+  .ds-btn--loading::after { animation-duration: 1.6s; }
+}

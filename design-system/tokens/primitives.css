@@ -1,0 +1,127 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   TIER 1 — PRIMITIVES: raw values, no intent.
+   ─────────────────────────────────────────────────────────────────────────────
+   Nothing in the product should reference a primitive directly. Components read
+   semantics (tier 2); semantics point at these. That indirection is the whole
+   point: a design direction changes which primitive a semantic maps to, and the
+   product follows without a single component being edited.
+
+   Extracted from App Redesign/index_prodRedesign_interactions.html — 194 colour
+   uses, 69 distinct values. The 32 near-duplicate greys in that file (#dedede,
+   #dddddd, #dcdcdc all doing the same job; #f0f0f0, #f1f3f4, #f4f4f7, #f4f5f8 all
+   doing another) are collapsed here into one ramp. Where a value was used heavily
+   it kept its exact hex — #333 (30 uses) and #888 (18 uses) are the body and muted
+   text of the reference, so they are ramp steps rather than being rounded away.
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* ── Neutral ramp ─────────────────────────────────────────────────────────
+     white → near-black. Steps are named by lightness so a reader can guess:
+     25–100 are surfaces, 150–300 are lines, 400–500 is quiet text, 600–900 is
+     loud text and dark chrome. */
+  --gray-000: #ffffff;
+  --gray-025: #f9f9fa;   /* reading-pane / recessed surface (6 uses) */
+  --gray-050: #f4f5f8;   /* neutral hover fill (guidelines' "hover grey") */
+  --gray-100: #f0f0f0;   /* pressed / stronger hover */
+  --gray-150: #e8eaed;   /* the reference's --border-color */
+  --gray-200: #dedede;   /* stronger line */
+  --gray-300: #c1c1c1;   /* disabled edge */
+  --gray-400: #999999;   /* placeholder */
+  --gray-450: #888888;   /* muted text (18 uses) */
+  --gray-500: #666666;   /* secondary text */
+  --gray-600: #555555;   /* the reference's --btn-hover-fill */
+  --gray-700: #333333;   /* body text (30 uses) */
+  --gray-800: #2a2a2a;
+  --gray-900: #1c1c1c;   /* headings, dark chrome */
+
+  /* ── Blue: the product accent ────────────────────────────────────────────
+     #2170f4 is the reference's action colour. #1a73e8 also appeared once and is
+     the same intent — one accent, not two. */
+  --blue-050: #eff6ff;   /* selected row */
+  --blue-100: #e0ecfc;   /* selected row, stronger */
+  --blue-200: #bfdbfe;   /* dashed "add" affordance border */
+  --blue-300: #60a5fa;
+  --blue-600: #2170f4;   /* accent */
+  --blue-700: #1b5fd0;   /* accent, pressed */
+
+  /* ── Status ──────────────────────────────────────────────────────────────
+     Reserved for meaning, never for decoration or "another series colour". */
+  --green-600: #34a853;
+  --green-050: #e6faf2;
+  --amber-600: #ffa000;
+  --amber-050: #ffe0b2;
+  --red-600:   #d93025;
+  --red-050:   #ffe5ed;
+
+  /* ── Label palette ───────────────────────────────────────────────────────
+     The reference tags categories with a light fill + dark ink pair. Kept as
+     pairs because that is how they are used; splitting them invites a mismatch. */
+  --label-teal-bg:   #cbeff4;  --label-teal-fg:   #1d4d54;
+  --label-green-bg:  #dcedc8;  --label-green-fg:  #435534;
+  --label-amber-bg:  #ffe0b2;  --label-amber-fg:  #7d4e24;
+  --label-pink-bg:   #ffccd2;  --label-pink-fg:   #7c3e44;
+  --label-purple-bg: #e1bee7;  --label-purple-fg: #5e3e66;
+
+  /* ── Radius ──────────────────────────────────────────────────────────────
+     6px is the reference's "unified squircle" for every active highlight and
+     hover fill; 4px dominates by count (25 uses) on smaller inner elements. */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 999px;
+
+  /* ── Type ────────────────────────────────────────────────────────────────
+     Nine sizes in the reference, 14px carrying 35 of 70 uses. */
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --text-2xs: 11px;
+  --text-xs:  12px;
+  --text-sm:  13px;
+  --text-md:  14px;   /* base */
+  --text-lg:  15px;
+  --text-xl:  16px;
+  --text-2xl: 18px;
+  --text-3xl: 24px;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semi:   600;
+  --weight-bold:   700;
+
+  /* ── Space ───────────────────────────────────────────────────────────────
+     A 2px-based scale. The reference's 67 distinct padding/gap strings reduce to
+     these once the one-off compound values are expressed as pairs. */
+  --space-025: 2px;
+  --space-050: 4px;
+  --space-075: 6px;
+  --space-100: 8px;
+  --space-150: 12px;
+  --space-200: 16px;
+  --space-300: 24px;
+  --space-400: 32px;
+
+  /* ── Elevation ───────────────────────────────────────────────────────────
+     The reference separates regions with shadow instead of borders — this is the
+     token the guidelines call out by name. */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.01);
+  --shadow-menu: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-modal: 0 4px 20px rgba(0, 0, 0, 0.25);
+  --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  /* A softer, wider card lift — used by the "soft" direction. Lives here rather
+     than in the theme, because a theme may remap tokens but not invent values. */
+  --shadow-card-soft: 0 8px 28px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.02);
+  --ring-accent: 0 0 0 3px rgba(33, 112, 244, 0.15);
+  --ring-danger: 0 0 0 3px rgba(217, 48, 37, 0.15);
+
+  /* ── Motion ──────────────────────────────────────────────────────────────
+     Three durations and three curves cover all 45 transition strings in the
+     reference. The spring curve is the one its pop-in animations use. */
+  --dur-fast: 0.1s;
+  --dur-base: 0.15s;
+  --dur-slow: 0.25s;
+  --ease-standard: ease;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-decel: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Pressed-state scale — the reference applies this to every clickable thing. */
+  --press-scale: 0.97;
+}

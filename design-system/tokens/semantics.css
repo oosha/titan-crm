@@ -1,0 +1,134 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   TIER 2 — SEMANTICS: what a value is *for*.
+   ─────────────────────────────────────────────────────────────────────────────
+   Components read only these. A design direction is a file that redefines some of
+   these on top of the same primitives — see ../themes/. That is why "try a
+   different button and see it across the whole product" costs one file and not a
+   refactor.
+
+   Naming: --<role>-<thing>-<qualifier>.
+     surface / text / border / accent / status  = what it paints
+     Anything component-specific lives in the § component block at the bottom, so
+     a button's shape can be explored without touching global colour.
+
+   Bridging the live app: the shipped CRM uses --dir-* (crm-directory.css) and
+   hardcoded values. Those names are aliased at the end of this file, so a page can
+   be moved onto the system by pointing its --dir-* at these and deleting its own
+   definitions — no markup change, no big-bang migration.
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* ── Surfaces ────────────────────────────────────────────────────────────── */
+  --surface-page:      var(--gray-025);  /* the plane everything sits on */
+  --surface-primary:   var(--gray-000);  /* cards, panels, menus */
+  --surface-recessed:  var(--gray-025);  /* reading pane, wells */
+  --surface-hover:     var(--gray-050);  /* neutral hover fill */
+  --surface-pressed:   var(--gray-100);
+  --surface-selected:  var(--blue-050);  /* current row / tab */
+  --surface-selected-strong: var(--blue-100);
+  --surface-disabled:  var(--gray-025);
+  --surface-inverse:   var(--gray-900);  /* dark chrome, tooltips */
+
+  /* ── Text ───────────────────────────────────────────────────────────────── */
+  --text-primary:   var(--gray-700);
+  --text-heading:   var(--gray-900);
+  --text-secondary: var(--gray-500);
+  --text-muted:     var(--gray-450);
+  --text-placeholder: var(--gray-400);
+  --text-disabled:  var(--gray-300);
+  --text-accent:    var(--blue-600);
+  --text-on-accent: var(--gray-000);
+  --text-on-inverse: var(--gray-000);
+
+  /* ── Borders ────────────────────────────────────────────────────────────────
+     Used sparingly by design: the reference separates regions with elevation, so
+     a border here is a real edge, not a habit. */
+  --border-subtle:  var(--gray-150);
+  --border-default: var(--gray-200);
+  --border-strong:  var(--gray-300);
+  --border-accent:  var(--blue-600);
+  --border-focus:   var(--blue-600);
+
+  /* ── Accent ─────────────────────────────────────────────────────────────── */
+  --accent-primary: var(--blue-600);
+  --accent-hover:   var(--blue-700);
+  --accent-subtle:  var(--blue-050);
+  --accent-muted:   var(--blue-100);
+  /* Overlays for states *on top of* an accent fill, so a filled button doesn't
+     need a second hardcoded blue. */
+  --overlay-hover-on-accent:  rgba(255, 255, 255, 0.12);
+  --overlay-active-on-accent: rgba(0, 0, 0, 0.15);
+
+  /* ── Status ─────────────────────────────────────────────────────────────── */
+  --status-success: var(--green-600);
+  --status-success-subtle: var(--green-050);
+  --status-warning: var(--amber-600);
+  --status-warning-subtle: var(--amber-050);
+  --status-danger:  var(--red-600);
+  --status-danger-subtle: var(--red-050);
+
+  /* ── Elevation & focus ──────────────────────────────────────────────────── */
+  --elevation-card:  var(--shadow-card);
+  --elevation-menu:  var(--shadow-menu);
+  --elevation-modal: var(--shadow-modal);
+  --focus-ring:      var(--ring-accent);
+  --focus-ring-danger: var(--ring-danger);
+
+  /* ── Shape & rhythm ─────────────────────────────────────────────────────── */
+  --radius-control:   var(--radius-md);  /* buttons, inputs, chips */
+  --radius-container: var(--radius-lg);  /* cards, panels, modals */
+  --radius-inner:     var(--radius-sm);  /* things inside a control */
+
+  /* ── Motion ─────────────────────────────────────────────────────────────── */
+  --motion-hover: background var(--dur-base) var(--ease-standard),
+                  border-color var(--dur-base) var(--ease-standard),
+                  color var(--dur-base) var(--ease-standard);
+  --motion-press: transform var(--dur-fast) var(--ease-standard);
+  --motion-enter: opacity var(--dur-slow) var(--ease-decel),
+                  transform var(--dur-slow) var(--ease-spring);
+
+  /* ═══ Component tokens ═══════════════════════════════════════════════════
+     A component's *shape* lives here, apart from global colour, so a direction
+     can restyle every button in the product by changing these six values —
+     without touching a component file or any markup. This is the lever the
+     workbench's theme switcher pulls. */
+  --btn-radius:  var(--radius-control);
+  --btn-height:  32px;
+  --btn-height-sm: 26px;
+  --btn-height-lg: 40px;
+  --btn-pad-x:   14px;
+  --btn-weight:  var(--weight-semi);
+  --btn-font:    var(--text-sm);
+  --btn-border-width: 1px;
+
+  --input-radius: var(--radius-control);
+  --input-height: 34px;
+  --input-pad-x:  11px;
+  --input-bg:     var(--surface-primary);
+  --input-border: var(--border-subtle);
+
+  --card-radius:  var(--radius-container);
+  --card-pad:     var(--space-200);
+  --card-border:  var(--border-subtle);
+  --card-shadow:  var(--elevation-card);
+
+  --badge-radius: var(--radius-sm);
+  --badge-pad-x:  var(--space-075);
+  --badge-font:   var(--text-2xs);
+
+  /* ═══ Bridge to the shipped app ══════════════════════════════════════════
+     crm-directory.css defines these itself today. A page adopts the system by
+     dropping its own definitions and inheriting these — nothing else changes,
+     because the markup already says var(--dir-*). Delete this block once no page
+     defines --dir-* locally any more. */
+  --dir-ink:     var(--text-heading);
+  --dir-body:    var(--text-primary);
+  --dir-muted:   var(--text-muted);
+  --dir-faint:   var(--text-disabled);
+  --dir-line:    var(--border-subtle);
+  --dir-hair:    var(--gray-050);
+  --dir-surface: var(--surface-primary);
+  --dir-canvas:  var(--surface-page);
+  --dir-tint:    var(--gray-025);
+  --dir-accent:  var(--accent-primary);
+  --dir-accent-soft: var(--accent-subtle);
+}

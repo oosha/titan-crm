@@ -292,6 +292,12 @@ body {
   flex: 1;
 }
 
+/* An inset container, not a full-bleed band: the row's fill stops short of both
+   edges and is rounded, so a selected item reads as a held object rather than a
+   stripe across the panel. Matches the redesign's mail sidebar
+   (App Redesign/index_prodRedesign_interactions.html) — margin 1px 8px, radius 6px,
+   which is the same 6px squircle the redesign guidelines use for every active
+   highlight and hover fill. */
 .nav-item {
   display: flex;
   align-items: center;
@@ -301,10 +307,15 @@ body {
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
+  margin: 1px 8px;
+  border-radius: 6px;
 }
 
 .nav-item.active {
   background: #333333;
+}
+.nav-item:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .nav-item-icon {
