@@ -1,4 +1,4 @@
 {
   "pipelines": {},
-  "probe": "write-path timing"
+  "probe": "second write"
 }
