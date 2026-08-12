@@ -119,19 +119,44 @@ async function updateJsonFile(relativePath, mutate, message, attempts) {
   throw new Error('Could not write ' + relativePath + ' after ' + tries + ' attempts (too much concurrent activity)');
 }
 
-// Creates or updates a file. Retries once on a sha conflict (409) in case
-// another request wrote to it between our read and write.
+// Creates or updates a file, re-reading the sha and retrying on a 409.
+//
+// The retry is BOUNDED, and that bound is the whole point. This used to recurse
+// with no counter: every attempt passed a freshly-read sha, so `knownSha` stayed
+// truthy and a 409 that kept recurring recursed forever. The request never
+// returned — it span until the serverless function was killed, which is what a
+// hung "Saving…" in the UI actually was. Two concurrent writers made it worse
+// than a hang: each one's retry invalidated the other's sha, so they livelocked
+// and neither ever finished.
+//
+// Note this still resolves a conflict by overwriting — see writeJsonFileStrict
+// above for why that is survivable here and not for concurrent writers. Anything
+// doing read-modify-write on a shared file should use updateJsonFile instead.
+const WRITE_ATTEMPTS = 4;
+
 async function writeJsonFile(relativePath, dataObj, message, knownSha) {
   const content = Buffer.from(JSON.stringify(dataObj, null, 2) + '\n', 'utf8').toString('base64');
-  const body = { message: message, content: content, branch: BRANCH };
-  if (knownSha) body.sha = knownSha;
-  const res = await ghRequest(relativePath, { method: 'PUT', body: JSON.stringify(body) });
-  if (res.status === 409 && knownSha) {
-    const latest = await readJsonFile(relativePath);
-    return writeJsonFile(relativePath, dataObj, message, latest ? latest.sha : undefined);
+  let sha = knownSha;
+
+  for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt++) {
+    const body = { message: message, content: content, branch: BRANCH };
+    if (sha) body.sha = sha;
+    const res = await ghRequest(relativePath, { method: 'PUT', body: JSON.stringify(body) });
+
+    if (res.status === 409 || res.status === 422) {
+      // Staggered so two writers retrying in lockstep don't collide forever.
+      await new Promise(function (r) { setTimeout(r, 150 * (attempt + 1)); });
+      const latest = await readJsonFile(relativePath);
+      sha = latest ? latest.sha : undefined;
+      continue;
+    }
+    if (!res.ok) throw new Error('GitHub write failed (' + res.status + '): ' + (await res.text()));
+    return res.json();
   }
-  if (!res.ok) throw new Error('GitHub write failed (' + res.status + '): ' + (await res.text()));
-  return res.json();
+  // Fails loudly and quickly rather than spinning: the caller can report
+  // something useful instead of the request hanging until it is killed.
+  throw new Error('Could not save ' + relativePath + ' after ' + WRITE_ATTEMPTS +
+                  ' attempts — too much concurrent activity. Try again.');
 }
 
 module.exports = {

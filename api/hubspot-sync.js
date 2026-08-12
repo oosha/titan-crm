@@ -11,7 +11,7 @@
 //
 // Config comes from the persona's own data blob (integrations.hubspot), written
 // by the connect page through the normal /api/data save.
-const { currentPathFor, applyCors, isValidPersonaId, readJsonFile, writeJsonFile } = require('./_github');
+const { currentPathFor, applyCors, isValidPersonaId, readJsonFile, updateJsonFile } = require('./_github');
 const {
   isConnected, resolveKey, isValidFormGuid, ensureConfig, formGuidsFor, fetchSubmissions, syncIntoData,
 } = require('./_hubspot');
@@ -42,16 +42,22 @@ module.exports = async function handler(req, res) {
       submissionsByForm[guid] = await fetchSubmissions(key, guid, 50);
     }
 
-    const result = syncIntoData(data, submissionsByForm);
-
-    // The whole point: no records, no commit.
-    if (result.changed) {
-      await writeJsonFile(
-        currentPath, data,
-        'HubSpot sync: ' + result.added + ' new ' + (result.added === 1 ? 'record' : 'records'),
-        existing.sha
-      );
-    }
+    // updateJsonFile, not writeJsonFile: this is a read-modify-write on a file the
+    // public intake form also appends to (api/form.js). writeJsonFile resolves a
+    // conflict by overwriting, which would silently delete a form submission that
+    // landed between our read and our write. Here the whole read-modify-write is
+    // redone against the fresher document instead, so the two merge.
+    //
+    // syncIntoData() mutates the document it is given and is re-run per attempt,
+    // which is what makes that safe — dedupe is recomputed against whatever `seen`
+    // the fresh copy carries, so a retry can't double-import.
+    let result = null;
+    await updateJsonFile(currentPath, function (doc) {
+      result = syncIntoData(doc, submissionsByForm);
+      // No records, no commit. This is load-bearing: every open tab polls this
+      // endpoint every 60s, and writes here are commits to the repo.
+      return result.changed ? result : false;
+    }, 'HubSpot sync');
 
     res.status(200).json(result);
   } catch (err) {
