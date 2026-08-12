@@ -483,6 +483,47 @@
   // the note in api/_hubspot.js. That is what makes a 60s poll safe here: writes
   // are GitHub commits, and a "last checked" stamp on every pass would commit to
   // the repo once a minute from every open tab.
+  // ── The browser-held HubSpot key ───────────────────────────────────────────
+  // A TEMPORARY fallback, and a deliberate exception to the rule in CLAUDE.md
+  // that sessionStorage carries nothing but couriered page state.
+  //
+  // The key belongs in a secret store on the server — see api/_secrets.js. That
+  // needs one environment variable set on the deployment, and until whoever owns
+  // the Vercel project does it, there is nowhere server-side to put a key: the
+  // data files are committed to a public repo and GitHub rejects credentials
+  // outright. So the key stays in the tab instead and rides along on a request
+  // header.
+  //
+  // What that costs, stated plainly: it is re-entered every session, it is gone
+  // when the tab closes, and any script running on the page can read it. It is
+  // here so production is demoable in the meantime, not because it is right.
+  //
+  // Retiring it is automatic, not a chore: resolveKey() on the server checks the
+  // store first, so once a store exists the stored key wins and this stops being
+  // consulted. Deleting this block is then pure cleanup.
+  //
+  // sessionStorage rather than localStorage on purpose — per tab, and cleared on
+  // close, so a shared or forgotten browser doesn't keep it around.
+  window.titanHubspotKey = {
+    name: function () { return 'titan-hubspot-key:' + window.PERSONA_ID; },
+    get: function () {
+      try { return sessionStorage.getItem(this.name()) || ''; } catch (e) { return ''; }
+    },
+    set: function (v) {
+      try { sessionStorage.setItem(this.name(), v); } catch (e) {}
+    },
+    clear: function () {
+      try { sessionStorage.removeItem(this.name()); } catch (e) {}
+    },
+    // Attaches the key to a request only when there is one to attach.
+    headers: function (base) {
+      var h = base || {};
+      var k = this.get();
+      if (k) h['X-HubSpot-Key'] = k;
+      return h;
+    },
+  };
+
   var WATCH_MS = 60000;
   var watchTimer = null;
 
@@ -502,7 +543,10 @@
     // stale tab someone left open is pure waste.
     if (document.visibilityState === 'hidden') return;
     try {
-      var res = await fetch('/api/hubspot-sync?persona=' + encodeURIComponent(window.PERSONA_ID), { method: 'POST' });
+      var res = await fetch('/api/hubspot-sync?persona=' + encodeURIComponent(window.PERSONA_ID), {
+        method: 'POST',
+        headers: window.titanHubspotKey.headers(),
+      });
       // 400 here means "not connected" or "no forms yet" — the normal state for
       // most installs. Stop asking for the rest of this page's life rather than
       // making the same pointless request every minute.

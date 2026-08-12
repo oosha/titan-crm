@@ -9,7 +9,7 @@
 // render its setup steps, rather than making the page handle a 500 on the most
 // common path it will ever hit.
 const { applyCors, isValidPersonaId } = require('./_github');
-const { resolveKey, listForms, DEFAULT_MAP, TARGET_FIELDS } = require('./_hubspot');
+const { resolveKey, sessionKeyFrom, listForms, DEFAULT_MAP, TARGET_FIELDS } = require('./_hubspot');
 
 module.exports = async function handler(req, res) {
   applyCors(req, res);
@@ -21,7 +21,7 @@ module.exports = async function handler(req, res) {
 
   // Straight from the secret store — no need to read the data file at all now
   // that the key doesn't live there.
-  const key = await resolveKey(personaId);
+  const key = await resolveKey(personaId, sessionKeyFrom(req));
   if (!key) {
     res.status(200).json(Object.assign({ connected: false, forms: [] }, base));
     return;

@@ -53,8 +53,23 @@ function secretName(personaId) {
   return 'titan:hubspot:' + personaId;
 }
 
-async function resolveKey(personaId) {
-  return await secrets.getSecret(secretName(personaId));
+// sessionKey is the browser-held fallback (see the note in titan-sidebar.js):
+// when this deployment has no secret store configured, the page keeps the key in
+// sessionStorage and sends it on the X-HubSpot-Key header instead.
+//
+// The store is checked FIRST, deliberately. The moment a real store exists, the
+// stored key wins and the browser-held one stops mattering, so the temporary
+// path retires itself rather than needing to be found and torn out.
+async function resolveKey(personaId, sessionKey) {
+  const stored = await secrets.getSecret(secretName(personaId));
+  return stored || (typeof sessionKey === 'string' ? sessionKey.trim() : '') || '';
+}
+
+// The header is used rather than a query parameter so the key never lands in a
+// URL, where it would end up in browser history and server access logs.
+function sessionKeyFrom(req) {
+  const raw = req && req.headers && req.headers['x-hubspot-key'];
+  return typeof raw === 'string' ? raw.trim() : '';
 }
 
 // A form GUID is a plain UUID. Validated before it reaches a URL, the same way
@@ -431,6 +446,7 @@ function syncIntoData(data, submissionsByForm) {
 
 module.exports = {
   resolveKey: resolveKey,
+  sessionKeyFrom: sessionKeyFrom,
   secretName: secretName,
   isValidFormGuid: isValidFormGuid,
   ensureConfig: ensureConfig,

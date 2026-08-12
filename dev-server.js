@@ -222,7 +222,7 @@ async function apiHubspot(pathname, req, res, query) {
   if (pathname === '/api/hubspot-forms') {
     if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });
     const base = { targetFields: hubspot.TARGET_FIELDS, defaultMap: hubspot.DEFAULT_MAP };
-    const key = await hubspot.resolveKey(personaId);
+    const key = await hubspot.resolveKey(personaId, hubspot.sessionKeyFrom(req));
     if (!key) return json(res, 200, Object.assign({ connected: false, forms: [] }, base));
     try {
       const forms = await hubspot.listForms(key);
@@ -237,7 +237,7 @@ async function apiHubspot(pathname, req, res, query) {
   if (!data) return json(res, 404, { error: 'Unknown persona: ' + personaId });
 
   const cfg = hubspot.ensureConfig(data) || {};
-  const key = await hubspot.resolveKey(personaId);
+  const key = await hubspot.resolveKey(personaId, hubspot.sessionKeyFrom(req));
   if (!key) return json(res, 400, { error: 'Connect HubSpot first.' });
   const guids = hubspot.formGuidsFor(cfg).filter(hubspot.isValidFormGuid);
   if (!guids.length) return json(res, 400, { error: 'Add a form first.' });

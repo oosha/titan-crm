@@ -13,7 +13,7 @@
 // by the connect page through the normal /api/data save.
 const { currentPathFor, applyCors, isValidPersonaId, readJsonFile, updateJsonFile } = require('./_github');
 const {
-  resolveKey, isValidFormGuid, ensureConfig, formGuidsFor, fetchSubmissions, syncIntoData,
+  resolveKey, sessionKeyFrom, isValidFormGuid, ensureConfig, formGuidsFor, fetchSubmissions, syncIntoData,
 } = require('./_hubspot');
 
 module.exports = async function handler(req, res) {
@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
     const data = existing.json;
     const cfg = ensureConfig(data) || {};
 
-    const key = await resolveKey(personaId);
+    const key = await resolveKey(personaId, sessionKeyFrom(req));
     if (!key) { res.status(400).json({ error: 'Connect HubSpot first.' }); return; }
 
     const guids = formGuidsFor(cfg).filter(isValidFormGuid);

@@ -64,6 +64,9 @@
     // document, because credentials aren't kept there. One cheap call to the
     // store; it never returns the key itself, only whether there is one.
     checkConnected: async function () {
+      // A key held in this tab counts as connected too — see the note in
+      // titan-sidebar.js for why that fallback exists.
+      if (window.titanHubspotKey && window.titanHubspotKey.get()) return true;
       try {
         const res = await fetch('/api/hubspot-key?persona=' + encodeURIComponent(window.PERSONA_ID), { cache: 'no-store' });
         return res.ok ? !!(await res.json()).hasKey : false;

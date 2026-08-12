@@ -185,13 +185,20 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: value }),
       });
-      if (!res.ok) {
+
+      if (res.status === 503) {
+        // No store on this deployment yet. Keep the key in the tab instead and
+        // send it on each request. Try the server first every time, so the day a
+        // store is configured this branch simply stops being reached.
+        window.titanHubspotKey.set(value);
+      } else if (!res.ok) {
         const body = await res.json().catch(function () { return {}; });
         document.getElementById('int-connect').disabled = false;
-        // A 503 means the deployment has nowhere to keep a key — nothing the
-        // person reading this can fix by retrying, so don't imply they can.
         setHint(body.error || 'Couldn’t save just now. Check your connection and try again.', true);
         return;
+      } else {
+        // Stored properly — drop any tab-held copy so there is one source of truth.
+        window.titanHubspotKey.clear();
       }
     } catch (e) {
       document.getElementById('int-connect').disabled = false;
@@ -204,6 +211,7 @@
   async function disconnect() {
     if (!confirm('Disconnect HubSpot? Your connected forms will be removed. Records already in Titan stay.')) return;
     // Two stores, two deletes: the key, then the connections that referenced it.
+    window.titanHubspotKey.clear();
     try {
       await fetch('/api/hubspot-key?persona=' + encodeURIComponent(window.PERSONA_ID), { method: 'DELETE' });
     } catch (e) { /* falling through — the connections still need clearing */ }
@@ -236,7 +244,15 @@
       '</div>' +
       '<div class="int-note">Titan checks for new submissions on its own while you have it ' +
       'open, so records appear without you doing anything. ' +
-      '<button class="int-linkbtn is-danger" id="int-disconnect" type="button">Disconnect HubSpot</button></div>';
+      '<button class="int-linkbtn is-danger" id="int-disconnect" type="button">Disconnect HubSpot</button></div>' +
+      // Only when the key is living in the tab. Saying nothing would let someone
+      // set this up, close the browser and reasonably expect it to still be
+      // connected tomorrow.
+      (window.titanHubspotKey.get()
+        ? '<div class="int-note" style="color:#8a5a00;">This connection lasts until you close ' +
+          'the browser — this Titan hasn’t been set up to remember it yet. Your forms and ' +
+          'settings below are saved; only the HubSpot key needs re-entering next time.</div>'
+        : '');
 
     document.getElementById('int-add').addEventListener('click', function () { openConnectionModal(null); });
     document.getElementById('int-disconnect').addEventListener('click', disconnect);
@@ -426,7 +442,8 @@
   async function load() {
     let info;
     try {
-      const res = await fetch('/api/hubspot-forms?persona=' + encodeURIComponent(window.PERSONA_ID), { cache: 'no-store' });
+      const res = await fetch('/api/hubspot-forms?persona=' + encodeURIComponent(window.PERSONA_ID),
+        { cache: 'no-store', headers: window.titanHubspotKey.headers() });
       info = await res.json();
     } catch (e) {
       renderSetup('Couldn’t reach HubSpot just now. Check your internet connection and try again.');
