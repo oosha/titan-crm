@@ -779,7 +779,7 @@
       "type": "sales",
       "intakeForm": {
         "token": "default.660m012h4a",
-        "enabled": false,
+        "enabled": true,
         "heading": "Get in touch about Tee orders",
         "blurb": "",
         "logoUrl": "",
