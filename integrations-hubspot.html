@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HubSpot Forms — Titan CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Persona loader: ?u=<id> scopes which persona's connections are read and
+     saved, and loads personas/<id>.js for the account identity in the sidebar. -->
+<script>
+  (function () {
+    var raw = new URLSearchParams(location.search).get('u');
+    var u = (raw && /^[a-z0-9_-]{1,32}$/.test(raw)) ? raw.toLowerCase() : null;
+    if (u) document.write('<' + 'script src="/personas/' + u + '.js"><' + '/script>');
+  })();
+</script>
+<link rel="stylesheet" href="/titan-sidebar.css">
+<link rel="stylesheet" href="/crm-directory.css">
+<link rel="stylesheet" href="/integrations.css">
+</head>
+<body data-subpage="integrations" data-sidebar-data="page">
+
+<div class="app-window">
+  <!-- The sidebar is one component: titan-sidebar.js renders it and owns its
+       markup, rows and active state. Do not hand-maintain nav markup here. -->
+  <div id="sidebar-mount"></div>
+
+  <div class="main-area">
+    <div class="subpage-top">
+      <span class="subpage-back" onclick="location.href=crmPath('/crm/integrations')">
+        <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Integrations
+      </span>
+      <span class="subpage-title">HubSpot Forms</span>
+    </div>
+
+    <div class="subpage-body">
+      <div class="int-wrap">
+        <div class="int-card">
+          <div class="int-head">
+            <div class="int-logo">H</div>
+            <div>
+              <div class="int-title">HubSpot Forms</div>
+              <div class="int-sub">Turn form submissions into records automatically</div>
+            </div>
+            <span class="int-status off" id="int-status">Checking…</span>
+          </div>
+          <div id="int-body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/titan-sidebar.js"></script>
+<script src="/crm-directory.js"></script>
+<script>
+  // Copy here is written for someone who has never set up an integration and
+  // doesn't know what an API is. Two rules that are easy to undo by accident:
+  //
+  //   1. Describe the buttons they will literally see in HubSpot ("click Create
+  //      service key"), never the concept behind them. Concepts are what make a
+  //      setup page feel like it isn't for you.
+  //   2. Say what to do next, not what went wrong. Every error string here is an
+  //      instruction, including the ones from the server in _hubspot.js.
+  //
+  // The steps use HubSpot Service Keys (Development → Keys → Service keys).
+  // HubSpot now steers people away from legacy private apps when they try to
+  // create one, and a service key is fewer clicks besides.
+
+  let FORMS = [];          // [{ guid, name, fields[] }]
+  let TARGETS = [];        // Titan card fields a question may fill
+  let DEFAULTS = {};       // HubSpot field name → suggested Titan field
+  let cfg = null;          // { apiKey, connections[] }
+
+  // Mirrors ensureConfig() in api/_hubspot.js: reads either shape, always hands
+  // back the v2 one, so a connection saved by the previous version still shows.
+  function cfgOf(data) {
+    const stored = (data.integrations && data.integrations.hubspot) || {};
+    if (Array.isArray(stored.connections)) {
+      return { apiKey: stored.apiKey || '', connections: stored.connections.slice() };
+    }
+    return {
+      apiKey: stored.apiKey || '',
+      connections: stored.formGuid ? [{
+        id: 'c1',
+        formGuid: stored.formGuid,
+        formName: stored.formName || 'HubSpot form',
+        pipelineId: stored.pipelineId || '',
+        stage: stored.stage || '',
+        map: stored.map || {},
+        seen: Array.isArray(stored.seen) ? stored.seen : [],
+        lastSyncedAt: stored.lastSyncedAt || 0,
+      }] : [],
+    };
+  }
+
+  function pipelinesList() {
+    const p = (window.DATA && window.DATA.pipelines) || {};
+    return Object.keys(p).map(function (id) { return p[id]; });
+  }
+  function pipelineById(id) {
+    return (window.DATA && window.DATA.pipelines && window.DATA.pipelines[id]) || null;
+  }
+  function stagesFor(id) {
+    const p = pipelineById(id);
+    return (p && p.stages) || [];
+  }
+  function stageLabel(pipelineId, key) {
+    const s = stagesFor(pipelineId).filter(function (x) { return x.key === key; })[0];
+    return s ? (s.label || s.key) : '';
+  }
+  function formByGuid(guid) {
+    return FORMS.filter(function (f) { return f.guid === guid; })[0] || null;
+  }
+
+  function ago(ts) {
+    if (!ts) return null;
+    const secs = Math.round((Date.now() - ts) / 1000);
+    if (secs < 60) return 'just now';
+    if (secs < 3600) return Math.floor(secs / 60) + ' minutes ago';
+    if (secs < 86400) return Math.floor(secs / 3600) + ' hours ago';
+    return Math.floor(secs / 86400) + ' days ago';
+  }
+
+  // saveData() POSTs window.DATA wholesale, so the config has to be attached first.
+  async function persistCfg() {
+    window.DATA.integrations = window.DATA.integrations || {};
+    window.DATA.integrations.hubspot = cfg;
+    await saveData();
+  }
+
+  function setHint(msg, isError) {
+    const hint = document.getElementById('int-hint');
+    if (!hint) return;
+    hint.textContent = msg || '';
+    hint.classList.toggle('is-error', !!isError);
+  }
+
+  // ── Setup ──────────────────────────────────────────────────────────────────
+  function renderSetup(problem) {
+    document.getElementById('int-status').className = 'int-status off';
+    document.getElementById('int-status').textContent = 'Not connected';
+    document.getElementById('int-body').innerHTML =
+      (problem ? '<div class="int-alert">' + esc(problem) + '</div>' : '') +
+      '<p class="int-lede">When someone fills in your HubSpot form, Titan can add them here ' +
+      'as a record automatically — so nobody has to copy details across by hand.</p>' +
+      '<p class="int-lede">To link the two, HubSpot needs to give Titan permission. ' +
+      'It takes about a minute:</p>' +
+      '<ol class="int-steps">' +
+        '<li>Open HubSpot. In the left-hand menu, click <strong>Development</strong>, then <strong>Keys</strong>.</li>' +
+        '<li>Open <strong>Service keys</strong> and click <strong>Create service key</strong>.</li>' +
+        '<li>Give it any name — “Titan” is fine.</li>' +
+        '<li>Click <strong>Add new scope</strong>, search for <strong>forms</strong>, and tick it.</li>' +
+        '<li>Click <strong>Create</strong>, then copy the key HubSpot shows you.</li>' +
+        '<li>Paste it below.</li>' +
+      '</ol>' +
+      '<div class="int-row">' +
+        '<div class="int-label">Paste from HubSpot</div>' +
+        '<input class="int-text" id="int-key" type="text" autocomplete="off" spellcheck="false" ' +
+               'placeholder="Paste here" value="' + esc(cfg.apiKey || '') + '">' +
+      '</div>' +
+      '<div class="int-foot">' +
+        '<button class="dir-btn dir-btn-primary" id="int-connect" type="button">Connect</button>' +
+        '<span class="int-hint" id="int-hint"></span>' +
+      '</div>';
+
+    const input = document.getElementById('int-key');
+    document.getElementById('int-connect').addEventListener('click', connect);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') connect(); });
+    input.focus();
+  }
+
+  async function connect() {
+    const value = document.getElementById('int-key').value.trim();
+    if (!value) { setHint('Paste the copied text from HubSpot first.', true); return; }
+    document.getElementById('int-connect').disabled = true;
+    setHint('Connecting…');
+    cfg.apiKey = value;
+    try { await persistCfg(); }
+    catch (e) {
+      document.getElementById('int-connect').disabled = false;
+      setHint('Couldn’t save just now. Check your connection and try again.', true);
+      return;
+    }
+    await load();
+  }
+
+  async function disconnect() {
+    if (!confirm('Disconnect HubSpot? Your connected forms will be removed. Records already in Titan stay.')) return;
+    cfg = { apiKey: '', connections: [] };
+    try { await persistCfg(); } catch (e) { /* re-rendering as disconnected either way */ }
+    renderSetup('');
+  }
+
+  // ── Connected ──────────────────────────────────────────────────────────────
+  function renderConnected() {
+    document.getElementById('int-status').className = 'int-status on';
+    document.getElementById('int-status').textContent = 'Connected';
+
+    const last = cfg.connections.reduce(function (acc, c) {
+      return Math.max(acc, c.lastSyncedAt || 0);
+    }, 0);
+
+    document.getElementById('int-body').innerHTML =
+      '<div class="int-row">' +
+        '<div class="int-label">Connected forms</div>' +
+        (cfg.connections.length ? cfg.connections.map(connectionHTML).join('')
+          : '<div class="int-empty">No forms yet. Add one and its submissions will start ' +
+            'arriving here as records.</div>') +
+      '</div>' +
+      '<div class="int-foot">' +
+        '<button class="dir-btn dir-btn-primary" id="int-add" type="button">Add a form</button>' +
+        '<span class="int-hint" id="int-hint">' +
+          (last ? 'Last brought in ' + esc(ago(last)) : '') +
+        '</span>' +
+      '</div>' +
+      '<div class="int-note">Titan checks for new submissions on its own while you have it ' +
+      'open, so records appear without you doing anything. ' +
+      '<button class="int-linkbtn is-danger" id="int-disconnect" type="button">Disconnect HubSpot</button></div>';
+
+    document.getElementById('int-add').addEventListener('click', function () { openConnectionModal(null); });
+    document.getElementById('int-disconnect').addEventListener('click', disconnect);
+
+    document.querySelectorAll('[data-edit]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        openConnectionModal(cfg.connections.filter(function (c) { return c.id === b.dataset.edit; })[0]);
+      });
+    });
+    document.querySelectorAll('[data-remove]').forEach(function (b) {
+      b.addEventListener('click', function () { removeConnection(b.dataset.remove); });
+    });
+  }
+
+  function connectionHTML(conn) {
+    const pipeline = pipelineById(conn.pipelineId);
+    // A form deleted in HubSpot, or a pipeline deleted in Titan, both leave a
+    // connection that can't run. Say so on the row rather than letting it look fine.
+    const missingForm = FORMS.length && !formByGuid(conn.formGuid);
+    const warn = !pipeline
+      ? 'The pipeline this fed has been deleted — edit this to pick another.'
+      : (missingForm ? 'This form no longer exists in HubSpot.' : '');
+
+    return '<div class="int-conn">' +
+      '<div class="int-conn-text">' +
+        '<div class="int-conn-form">' + esc(conn.formName || 'Untitled form') + '</div>' +
+        (warn
+          ? '<div class="int-conn-warn">' + esc(warn) + '</div>'
+          : '<div class="int-conn-dest">' + esc(pipeline.name) +
+            '<span class="int-arrow">·</span>' + esc(stageLabel(conn.pipelineId, conn.stage) || 'first stage') +
+            '</div>') +
+      '</div>' +
+      '<div class="int-conn-actions">' +
+        '<button class="dir-btn" type="button" data-edit="' + esc(conn.id) + '">Edit</button>' +
+        '<button class="dir-btn" type="button" data-remove="' + esc(conn.id) + '">Remove</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  async function removeConnection(id) {
+    const conn = cfg.connections.filter(function (c) { return c.id === id; })[0];
+    if (!conn) return;
+    if (!confirm('Remove “' + (conn.formName || 'this form') + '”? Records already in Titan stay where they are.')) return;
+    cfg.connections = cfg.connections.filter(function (c) { return c.id !== id; });
+    renderConnected();
+    setHint('Saving…');
+    try { await persistCfg(); setHint('Removed.'); }
+    catch (e) { setHint('Couldn’t save just now. Check your connection and try again.', true); }
+  }
+
+  // ── Add / edit one connection ──────────────────────────────────────────────
+  // A modal rather than another page: it's a handful of choices, and openModal()
+  // is already the pattern the Contacts field editor uses.
+  function openConnectionModal(existing) {
+    const isNew = !existing;
+    // Worked on as a copy so Cancel genuinely cancels.
+    const draft = existing
+      ? Object.assign({}, existing, { map: Object.assign({}, existing.map || {}) })
+      : {
+          id: 'c' + Date.now().toString(36),
+          formGuid: '', formName: '', pipelineId: '', stage: '', map: {}, seen: [], lastSyncedAt: 0,
+        };
+
+    const body = document.createElement('div');
+
+    function render() {
+      const pipes = pipelinesList();
+      if (!draft.pipelineId && pipes.length) draft.pipelineId = pipes[0].id;
+      const stages = stagesFor(draft.pipelineId);
+      if (!draft.stage && stages.length) draft.stage = stages[0].key;
+
+      body.innerHTML =
+        '<div class="int-row" style="margin-top:0;">' +
+          '<div class="int-label">Which form should Titan watch?</div>' +
+          '<select class="int-select" id="m-form">' +
+            '<option value="">Choose a form…</option>' +
+            FORMS.map(function (f) {
+              return '<option value="' + esc(f.guid) + '"' + (f.guid === draft.formGuid ? ' selected' : '') + '>' +
+                esc(f.name) + '</option>';
+            }).join('') +
+          '</select>' +
+        '</div>' +
+        '<div class="int-row int-two">' +
+          '<div>' +
+            '<div class="int-label">Add new records to</div>' +
+            '<select class="int-select" id="m-pipeline">' +
+              pipes.map(function (p) {
+                return '<option value="' + esc(p.id) + '"' + (p.id === draft.pipelineId ? ' selected' : '') + '>' +
+                  esc(p.name) + '</option>';
+              }).join('') +
+            '</select>' +
+          '</div>' +
+          '<div>' +
+            '<div class="int-label">Starting them in</div>' +
+            '<select class="int-select" id="m-stage">' +
+              stages.map(function (s) {
+                return '<option value="' + esc(s.key) + '"' + (s.key === draft.stage ? ' selected' : '') + '>' +
+                  esc(s.label || s.key) + '</option>';
+              }).join('') +
+            '</select>' +
+          '</div>' +
+        '</div>' +
+        '<div class="int-row" id="m-map"></div>';
+
+      body.querySelector('#m-form').addEventListener('change', function (e) {
+        draft.formGuid = e.target.value;
+        const f = formByGuid(draft.formGuid);
+        draft.formName = f ? f.name : '';
+        draft.map = {};              // different form, different questions
+        renderMap();
+      });
+      body.querySelector('#m-pipeline').addEventListener('change', function (e) {
+        draft.pipelineId = e.target.value;
+        draft.stage = '';
+        render();
+      });
+      body.querySelector('#m-stage').addEventListener('change', function (e) { draft.stage = e.target.value; });
+      renderMap();
+    }
+
+    function renderMap() {
+      const wrap = body.querySelector('#m-map');
+      const form = formByGuid(draft.formGuid);
+      if (!form) { wrap.innerHTML = ''; return; }
+      wrap.innerHTML =
+        '<div class="int-label" style="margin-bottom:10px;">Where should each answer go?</div>' +
+        '<div class="int-map-head"><div>Question on your form</div><div>Saved in Titan as</div></div>' +
+        form.fields.map(function (name) {
+          const current = draft.map[name] !== undefined ? draft.map[name] : (DEFAULTS[name] || '');
+          return '<div class="int-map-row">' +
+            '<div class="int-map-from" title="' + esc(name) + '">' + esc(name) + '</div>' +
+            '<select class="int-select int-map-to" data-hs="' + esc(name) + '">' +
+              TARGETS.map(function (t) {
+                return '<option value="' + esc(t.key) + '"' + (t.key === current ? ' selected' : '') + '>' +
+                  esc(t.label) + '</option>';
+              }).join('') +
+            '</select>' +
+          '</div>';
+        }).join('') +
+        '<div class="int-note">We’ve filled these in with our best guess — change any that look ' +
+        'wrong. If first name and last name both go to <strong>Contact name</strong>, they’re ' +
+        'joined into one. Anything set to <strong>Don’t import</strong> is left behind in HubSpot.</div>';
+    }
+
+    render();
+
+    openModal({
+      title: isNew ? 'Add a form' : 'Edit form',
+      note: 'Submissions to this form will be added to the pipeline you choose. ' +
+            'You can connect the same form to more than one pipeline.',
+      body: body,
+      confirmLabel: isNew ? 'Add form' : 'Save changes',
+      onConfirm: async function (modal) {
+        if (!draft.formGuid) { modal.setStatus('Choose a form first.', true); return; }
+        body.querySelectorAll('.int-map-to').forEach(function (sel) { draft.map[sel.dataset.hs] = sel.value; });
+
+        // Only meaningful for a NEW connection on a form already connected
+        // elsewhere: it starts with no history, so existing submissions import
+        // into the new pipeline too. That's the point of allowing it, but it's
+        // worth being explicit rather than surprising.
+        const dupe = isNew && cfg.connections.some(function (c) { return c.formGuid === draft.formGuid; });
+
+        modal.setBusy(true);
+        modal.setStatus('Saving…');
+        if (isNew) cfg.connections.push(draft);
+        else cfg.connections = cfg.connections.map(function (c) { return c.id === draft.id ? draft : c; });
+
+        try {
+          await persistCfg();
+          modal.close();
+          renderConnected();
+          if (dupe) {
+            setHint('Added. This form already fed another pipeline — its past submissions will be brought into this one too.');
+          }
+        } catch (e) {
+          // Roll the in-memory list back so the screen matches what's stored.
+          if (isNew) cfg.connections = cfg.connections.filter(function (c) { return c.id !== draft.id; });
+          modal.setBusy(false);
+          modal.setStatus('Couldn’t save just now. Check your connection and try again.', true);
+        }
+      },
+    });
+  }
+
+  // Shared by first paint and by reconnecting, so there's one path into either
+  // state rather than two that can drift.
+  async function load() {
+    let info;
+    try {
+      const res = await fetch('/api/hubspot-forms?persona=' + encodeURIComponent(window.PERSONA_ID), { cache: 'no-store' });
+      info = await res.json();
+    } catch (e) {
+      renderSetup('Couldn’t reach HubSpot just now. Check your internet connection and try again.');
+      return;
+    }
+
+    TARGETS = info.targetFields || [];
+    DEFAULTS = info.defaultMap || {};
+    FORMS = info.forms || [];
+
+    if (!info.connected) { renderSetup(''); return; }
+    // Connected but the call failed — usually a key that's since been removed in
+    // HubSpot. Show what to do about that, not the setup steps already followed.
+    if (info.error) { renderSetup(info.error); return; }
+    renderConnected();
+    if (!FORMS.length) {
+      setHint('This HubSpot account doesn’t have any forms yet. Create one in HubSpot, then reload.', true);
+    }
+  }
+
+  (async function init() {
+    let data;
+    try { data = await fetchPipelineData(); }
+    catch (e) {
+      document.getElementById('int-body').innerHTML =
+        '<div class="dir-empty">Couldn’t load your CRM data. ' +
+        '<a class="dir-link" href="' + crmPath('/crm') + '">Open Titan CRM</a></div>';
+      document.getElementById('int-status').textContent = 'Unavailable';
+      return;
+    }
+    const pipelines = data.pipelines || {};
+    window.titanSidebar.setPipelines(Object.keys(pipelines).map(function (id) { return pipelines[id]; }));
+    cfg = cfgOf(data);
+    await load();
+  })();
+</script>
+</body>
+</html>

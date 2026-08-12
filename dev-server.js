@@ -29,6 +29,18 @@ const F = require('./api/_form');
 const ROOT = __dirname;
 const PORT = Number(process.argv[2]) || 8000;
 
+// A local .env so HUBSPOT_TOKEN can be set without exporting it into the shell.
+// .gitignore covers .env — the token must never be committed, since this repo is
+// public and is also its own database.
+(function loadEnv() {
+  try {
+    fs.readFileSync(path.join(ROOT, '.env'), 'utf8').split('\n').forEach((line) => {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i);
+      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+    });
+  } catch (e) { /* no .env is the normal case */ }
+})();
+
 // ── vercel.json rewrites → regexes, matched in file order ────────────────────
 const REWRITES = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8')).rewrites.map((r) => ({
   re: new RegExp('^' + r.source.replace(/[.+*?^${}()|[\]\\]/g, '\\$&').replace(/:[a-zA-Z]+/g, '[^/]+') + '$'),
@@ -165,6 +177,58 @@ async function apiLogo(req, res, query) {
   } catch (e) { res.writeHead(404).end(); }
 }
 
+// ── /api/hubspot-forms and /api/hubspot-sync ─────────────────────────────────
+// Unlike apiLogo above, this does NOT re-implement the endpoint: it requires the
+// real api/_hubspot.js and calls the same syncIntoData() the deployed function
+// calls. Only the storage differs — local files here, GitHub there — so the
+// dedupe and card-building logic can't drift between the two.
+const hubspot = require('./api/_hubspot');
+
+async function apiHubspot(pathname, req, res, query) {
+  const personaId = isValidPersonaId(query.get('persona')) ? query.get('persona') : 'default';
+  const rel = currentPathFor(personaId);
+  const data = await readJson(rel);
+
+  if (pathname === '/api/hubspot-forms') {
+    if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });
+    const base = { targetFields: hubspot.TARGET_FIELDS, defaultMap: hubspot.DEFAULT_MAP };
+    const cfg = (data && data.integrations && data.integrations.hubspot) || {};
+    if (!hubspot.isConnected(cfg)) return json(res, 200, Object.assign({ connected: false, forms: [] }, base));
+    try {
+      const forms = await hubspot.listForms(hubspot.resolveKey(cfg));
+      return json(res, 200, Object.assign({ connected: true, forms: forms }, base));
+    } catch (e) {
+      return json(res, 200, Object.assign({ connected: true, forms: [], error: String(e.message || e) }, base));
+    }
+  }
+
+  // /api/hubspot-sync
+  if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
+  if (!data) return json(res, 404, { error: 'Unknown persona: ' + personaId });
+
+  const cfg = hubspot.ensureConfig(data) || {};
+  if (!hubspot.isConnected(cfg)) return json(res, 400, { error: 'Connect HubSpot first.' });
+  const guids = hubspot.formGuidsFor(cfg).filter(hubspot.isValidFormGuid);
+  if (!guids.length) return json(res, 400, { error: 'Add a form first.' });
+
+  try {
+    const key = hubspot.resolveKey(cfg);
+    const submissionsByForm = {};
+    for (const guid of guids) submissionsByForm[guid] = await hubspot.fetchSubmissions(key, guid, 50);
+
+    const result = hubspot.syncIntoData(data, submissionsByForm);
+    // Mirrors api/hubspot-sync.js: no records, no write. Locally that keeps the
+    // working tree clean under a 60s poll; deployed it avoids a commit a minute.
+    if (result.changed) {
+      await writeJson(rel, data);
+      console.log('  hubspot sync → ' + result.added + ' added');
+    }
+    return json(res, 200, result);
+  } catch (e) {
+    return json(res, e && e.isSyncError ? 400 : 500, { error: String(e.message || e) });
+  }
+}
+
 // ── static ───────────────────────────────────────────────────────────────────
 function serveStatic(res, pathname) {
   const abs = path.join(ROOT, decodeURIComponent(pathname));
@@ -187,6 +251,9 @@ http.createServer(async (req, res) => {
     if (pathname === '/api/revert') return await apiRevert(req, res, url.searchParams);
     if (pathname === '/api/form') return await apiForm(req, res, url.searchParams);
     if (pathname === '/api/logo') return await apiLogo(req, res, url.searchParams);
+    if (pathname === '/api/hubspot-forms' || pathname === '/api/hubspot-sync') {
+      return await apiHubspot(pathname, req, res, url.searchParams);
+    }
 
     if (pathname === '/') return void (serveStatic(res, '/index.html'));
 

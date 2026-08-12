@@ -471,3 +471,23 @@ select {
   background-position: right 13px center !important;
   padding-right: 34px !important;
 }
+
+/* ── Form-submission toast ───────────────────────────────────────────────────
+   Created by checkForSubmissions() in titan-sidebar.js, which runs on every CRM
+   page. It lives in this stylesheet rather than integrations.css because that
+   one is only loaded by the two integrations pages, and the toast has to be
+   styled wherever it appears — most often on the board. */
+.int-toast {
+  position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 12px);
+  display: flex; align-items: center; gap: 12px;
+  background: #14161a; color: #fff; font-size: 13px;
+  padding: 11px 16px; border-radius: 999px;
+  box-shadow: 0 6px 24px rgba(20, 22, 26, .28);
+  opacity: 0; transition: opacity .18s ease, transform .18s ease;
+  z-index: 9999;
+}
+.int-toast.is-open { opacity: 1; transform: translate(-50%, 0); }
+.int-toast button {
+  background: none; border: 0; padding: 0; font: inherit; font-weight: 600;
+  color: #7aa7ff; cursor: pointer;
+}

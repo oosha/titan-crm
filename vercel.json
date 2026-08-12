@@ -34,6 +34,22 @@
       "destination": "/companies.html"
     },
     {
+      "source": "/crm/integrations/hubspot",
+      "destination": "/integrations-hubspot.html"
+    },
+    {
+      "source": "/crm/integrations/hubspot/",
+      "destination": "/integrations-hubspot.html"
+    },
+    {
+      "source": "/crm/integrations",
+      "destination": "/integrations.html"
+    },
+    {
+      "source": "/crm/integrations/",
+      "destination": "/integrations.html"
+    },
+    {
       "source": "/crm/pipeline/:id/setting",
       "destination": "/pipeline-settings.html"
     },

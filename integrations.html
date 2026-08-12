@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Integrations — Titan CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Persona loader: ?u=<id> scopes which persona's connections are read, and
+     loads personas/<id>.js for the account identity in the sidebar. -->
+<script>
+  (function () {
+    var raw = new URLSearchParams(location.search).get('u');
+    var u = (raw && /^[a-z0-9_-]{1,32}$/.test(raw)) ? raw.toLowerCase() : null;
+    if (u) document.write('<' + 'script src="/personas/' + u + '.js"><' + '/script>');
+  })();
+</script>
+<link rel="stylesheet" href="/titan-sidebar.css">
+<link rel="stylesheet" href="/crm-directory.css">
+<link rel="stylesheet" href="/integrations.css">
+</head>
+<body data-subpage="integrations" data-sidebar-data="page">
+
+<div class="app-window">
+  <!-- The sidebar is one component: titan-sidebar.js renders it and owns its
+       markup, rows and active state. Do not hand-maintain nav markup here. -->
+  <div id="sidebar-mount"></div>
+
+  <div class="main-area">
+    <div class="subpage-top">
+      <span class="subpage-back" onclick="location.href=crmPath('/crm')">
+        <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </span>
+      <span class="subpage-title">Integrations</span>
+    </div>
+
+    <div class="subpage-body">
+      <div class="int-wrap">
+        <p class="int-intro">Connect the tools you already use, so information arrives in
+          Titan without anyone retyping it.</p>
+        <div id="int-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/titan-sidebar.js"></script>
+<script src="/crm-directory.js"></script>
+<script>
+  // The shelf. One row per provider, each linking to its own page — the detail
+  // page owns setup and settings so this stays scannable, and so someone can see
+  // what Titan connects to without first being shown a configuration screen.
+  //
+  // Status is read from the persona's saved data only. No provider is contacted
+  // from here: this page should paint instantly and never fail because a third
+  // party is slow or a key has been revoked.
+  const PROVIDERS = [{
+    id: 'hubspot',
+    name: 'HubSpot Forms',
+    blurb: 'Turn form submissions into records automatically',
+    logo: 'H',
+    logoBg: '#ff7a59',
+    path: '/crm/integrations/hubspot',
+    // Connected once a key is stored, whether or not any form is set up yet —
+    // otherwise connecting and then getting distracted looks like it failed.
+    isConnected: function (data) {
+      const h = (data.integrations && data.integrations.hubspot) || {};
+      return !!h.apiKey;
+    },
+    summarise: function (data) {
+      const h = (data.integrations && data.integrations.hubspot) || {};
+      // Reads both shapes: v1 stored a single connection inline, v2 uses connections[].
+      const n = Array.isArray(h.connections) ? h.connections.length : (h.formGuid ? 1 : 0);
+      if (!n) return 'Connected — no forms set up yet';
+      return n === 1 ? '1 form connected' : n + ' forms connected';
+    },
+  }];
+
+  function renderList(data) {
+    document.getElementById('int-list').innerHTML = PROVIDERS.map(function (p) {
+      const on = p.isConnected(data);
+      return '<div class="int-row-card">' +
+        '<div class="int-logo" style="background:' + esc(p.logoBg) + '">' + esc(p.logo) + '</div>' +
+        '<div class="int-row-text">' +
+          '<div class="int-row-name">' + esc(p.name) + '</div>' +
+          '<div class="int-row-blurb">' + esc(on ? p.summarise(data) : p.blurb) + '</div>' +
+        '</div>' +
+        '<span class="int-status ' + (on ? 'on' : 'off') + '">' + (on ? 'Connected' : 'Not connected') + '</span>' +
+        '<button class="dir-btn ' + (on ? '' : 'dir-btn-primary') + '" type="button" data-path="' + esc(p.path) + '">' +
+          (on ? 'Manage' : 'Connect') +
+        '</button>' +
+      '</div>';
+    }).join('');
+
+    document.querySelectorAll('#int-list [data-path]').forEach(function (btn) {
+      btn.addEventListener('click', function () { location.href = crmPath(btn.dataset.path); });
+    });
+  }
+
+  (async function init() {
+    let data;
+    try { data = await fetchPipelineData(); }
+    catch (e) {
+      document.getElementById('int-list').innerHTML =
+        '<div class="dir-empty">Couldn’t load your data. ' +
+        '<a class="dir-link" href="' + crmPath('/crm') + '">Open Titan CRM</a></div>';
+      return;
+    }
+    const pipelines = data.pipelines || {};
+    window.titanSidebar.setPipelines(Object.keys(pipelines).map(function (id) { return pipelines[id]; }));
+    renderList(data);
+  })();
+</script>
+</body>
+</html>

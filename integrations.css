@@ -1,0 +1,107 @@
+/* Shared by the integrations index and each provider's detail page.
+   Only what crm-directory.css doesn't already give us — buttons, inputs, modals
+   and empty states all come from there. */
+
+.int-wrap { max-width: 720px; padding: 22px; }
+
+.int-intro {
+  font-size: 13.5px; line-height: 1.6; color: #6b7280; margin: 0 0 18px;
+}
+
+/* ── Index: one row per provider ─────────────────────────────────────────── */
+.int-row-card {
+  display: flex; align-items: center; gap: 14px;
+  background: #fff; border: 1px solid var(--dir-border, #e4e6ea); border-radius: 10px;
+  padding: 16px 18px; margin-bottom: 12px;
+}
+.int-row-text { min-width: 0; flex: 1; }
+.int-row-name { font-size: 14.5px; font-weight: 600; }
+.int-row-blurb {
+  font-size: 12.5px; color: #6b7280; margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ── Detail page ─────────────────────────────────────────────────────────── */
+.int-card {
+  background: #fff; border: 1px solid var(--dir-border, #e4e6ea); border-radius: 10px;
+  padding: 20px; margin-bottom: 18px;
+}
+.int-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.int-title { font-size: 15px; font-weight: 600; }
+.int-sub { font-size: 12.5px; color: #6b7280; }
+
+.int-logo {
+  width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+  display: grid; place-items: center; background: #ff7a59; color: #fff;
+  font-weight: 700; font-size: 15px;
+}
+
+.int-status {
+  margin-left: auto; font-size: 12px; font-weight: 600;
+  padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+}
+.int-status.on { background: #e7f6ec; color: #1f7a42; }
+.int-status.off { background: #f1f2f4; color: #6b7280; }
+
+.int-row { margin-top: 16px; }
+.int-label { font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 6px; }
+.int-select, .int-text {
+  width: 100%; padding: 8px 10px; font: inherit; font-size: 13px;
+  border: 1px solid var(--dir-border, #e4e6ea); border-radius: 7px; background: #fff;
+}
+.int-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.int-foot { display: flex; align-items: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+.int-hint { font-size: 12px; color: #6b7280; }
+.int-hint.is-error { color: #b42318; }
+
+/* ── Setup instructions ──────────────────────────────────────────────────── */
+.int-lede { font-size: 13.5px; line-height: 1.6; color: #374151; margin: 0 0 4px; }
+.int-steps { font-size: 13.5px; line-height: 1.75; color: #374151; margin: 14px 0 0; padding-left: 20px; }
+.int-steps li { margin-bottom: 2px; }
+.int-steps strong { font-weight: 600; color: #111827; }
+.int-note { font-size: 12px; color: #6b7280; line-height: 1.6; margin-top: 14px; }
+.int-alert {
+  font-size: 13px; line-height: 1.6; color: #b42318; background: #fef3f2;
+  border: 1px solid #fda29b; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px;
+}
+
+/* ── Connected forms list ────────────────────────────────────────────────── */
+.int-conn {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--dir-border, #e4e6ea); border-radius: 8px;
+  padding: 12px 14px; margin-bottom: 10px;
+}
+.int-conn-text { min-width: 0; flex: 1; }
+.int-conn-form { font-size: 13.5px; font-weight: 600; }
+.int-conn-dest { font-size: 12.5px; color: #6b7280; margin-top: 2px; }
+.int-conn-dest .int-arrow { color: #9ca3af; margin: 0 4px; }
+.int-conn-warn { font-size: 12.5px; color: #b42318; margin-top: 2px; }
+.int-conn-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.int-empty {
+  border: 1px dashed var(--dir-border, #e4e6ea); border-radius: 8px;
+  padding: 22px; text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 12px;
+}
+
+.int-linkbtn {
+  background: none; border: 0; padding: 0; font: inherit; font-size: 12px;
+  color: #2170f4; cursor: pointer; text-decoration: underline;
+}
+.int-linkbtn.is-danger { color: #b42318; }
+
+/* ── Field mapping (inside the add/edit modal) ───────────────────────────── */
+.int-map-head {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase;
+  letter-spacing: .04em; margin-bottom: 8px;
+}
+.int-map-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; align-items: center; }
+.int-map-from {
+  font-size: 13px; padding: 8px 10px; background: #f7f8f9; border-radius: 7px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* The auto-check toast is NOT here: titan-sidebar.js renders it on every CRM
+   page, but this stylesheet is only loaded by the two integrations pages. Its
+   styles live in titan-sidebar.css alongside the script that creates it. */

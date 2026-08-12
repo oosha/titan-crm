@@ -76,6 +76,7 @@
     if (segs[1] === 'companies') return { kind: 'companies' };
     if (segs[1] === 'forms') return { kind: 'forms' };
     if (segs[1] === 'pipeline' && segs[2] && segs[3] === 'form') return { kind: 'forms' };
+    if (segs[1] === 'integrations') return { kind: 'integrations' };
     if (segs[1] === 'pipeline' && segs[2]) return { kind: 'pipeline', id: decodeURIComponent(segs[2]) };
     return { kind: 'board' };
   }
@@ -131,7 +132,7 @@
     contacts: '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4.5" r="2.5" stroke="#fff" stroke-width="1.3"/><path d="M2.5 12.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="#fff" stroke-width="1.3"/></svg>',
     companies: '<svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="11" stroke="#fff" stroke-width="1.3"/><path d="M6 7V3h8v4" stroke="#fff" stroke-width="1.3"/></svg>',
     forms: '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2.5" y="1.5" width="9" height="11" rx="1.5" stroke="#fff" stroke-width="1.3"/><path d="M5 5h4M5 7.5h4M5 10h2.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg>',
-    kebab: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3.5" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="12.5" r="1.3" fill="currentColor"/></svg>',
+    integrations: '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5.5 8.5L3.8 10.2a2.4 2.4 0 003.4 3.4l1.7-1.7M8.5 5.5l1.7-1.7a2.4 2.4 0 10-3.4-3.4L5.1 2.1" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/><path d="M5.3 8.7l3.4-3.4" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg>',    kebab: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3.5" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="12.5" r="1.3" fill="currentColor"/></svg>',
   };
   function pipelineGlyph(colour) {
     return '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="' + (colour || '#2170f4') + '"/></svg>';
@@ -194,6 +195,10 @@
         '<div class="nav-item' + on('forms') + '" onclick="titanSidebarGo(\'/crm/forms\')">' +
           '<div class="nav-item-icon">' + ICON.forms + '</div>' +
           '<span class="nav-item-label' + on('forms') + '">Forms</span>' +
+        '</div>' +
+        '<div class="nav-item' + on('integrations') + '" onclick="titanSidebarGo(\'/crm/integrations\')">' +
+          '<div class="nav-item-icon">' + ICON.integrations + '</div>' +
+          '<span class="nav-item-label' + on('integrations') + '">Integrations</span>' +
         '</div>' +
       '</div>' +
 
@@ -464,7 +469,75 @@
 
     // A page that fetches /api/data for its own content supplies the list itself.
     if (document.body.dataset.sidebarData !== 'page') selfFetch();
+
+    startFormWatch();
   };
+
+  // ── Watching for new form submissions ──────────────────────────────────────
+  // Lives here because titan-sidebar.js is the only script loaded on every CRM
+  // page, so submissions keep arriving while someone is on the board rather than
+  // only while the integrations page happens to be open. (index.html/mail loads
+  // no shared scripts and is the mocked half, so it stays out of this.)
+  //
+  // /api/hubspot-sync deliberately does not write when nothing new arrived — see
+  // the note in api/_hubspot.js. That is what makes a 60s poll safe here: writes
+  // are GitHub commits, and a "last checked" stamp on every pass would commit to
+  // the repo once a minute from every open tab.
+  var WATCH_MS = 60000;
+  var watchTimer = null;
+
+  function startFormWatch() {
+    if (watchTimer) return;
+    checkForSubmissions();                                  // catch up on load
+    watchTimer = setInterval(checkForSubmissions, WATCH_MS);
+  }
+
+  function stopFormWatch() {
+    clearInterval(watchTimer);
+    watchTimer = null;
+  }
+
+  async function checkForSubmissions() {
+    // A background tab has nobody to show results to, and polling from every
+    // stale tab someone left open is pure waste.
+    if (document.visibilityState === 'hidden') return;
+    try {
+      var res = await fetch('/api/hubspot-sync?persona=' + encodeURIComponent(window.PERSONA_ID), { method: 'POST' });
+      // 400 here means "not connected" or "no forms yet" — the normal state for
+      // most installs. Stop asking for the rest of this page's life rather than
+      // making the same pointless request every minute.
+      if (res.status === 400) { stopFormWatch(); return; }
+      if (!res.ok) return;                                  // transient; try again next tick
+      var body = await res.json();
+      if (body.added) showImportToast(body.added);
+    } catch (e) {
+      // Offline or the API is down. Silent by design: this runs unprompted in the
+      // background, so it must never interrupt someone who didn't ask for it.
+    }
+  }
+
+  // The board renders from data fetched at load, so newly imported records won't
+  // be on screen. Offering a refresh is honest about that; silently doing nothing
+  // would make the feature look broken.
+  function showImportToast(n) {
+    var existing = document.getElementById('int-toast');
+    if (existing) existing.remove();
+
+    var el = document.createElement('div');
+    el.className = 'int-toast';
+    el.id = 'int-toast';
+    el.setAttribute('role', 'status');
+    el.innerHTML = '<span>' + n + ' new ' + (n === 1 ? 'record' : 'records') + ' from your forms</span>' +
+                   '<button type="button">Refresh</button>';
+    document.body.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('is-open'); });
+
+    el.querySelector('button').addEventListener('click', function () { location.reload(); });
+    setTimeout(function () {
+      el.classList.remove('is-open');
+      setTimeout(function () { el.remove(); }, 200);
+    }, 12000);
+  }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', window.mountTitanSidebar);
