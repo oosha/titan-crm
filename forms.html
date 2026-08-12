@@ -14,13 +14,14 @@
 </script>
 <link rel="stylesheet" href="/titan-sidebar.css">
 <link rel="stylesheet" href="/crm-directory.css">
+<link rel="stylesheet" href="/form.css">
+<link rel="stylesheet" href="/form-builder.css">
 <style>
   /* Each pipeline is a folder tab; the card hanging off it is that pipeline's form.
      The tab carries the pipeline name so "which pipeline?" is answered before you
      read anything about the form — a form belongs to a pipeline, and the tab says so
      structurally rather than in a line of sub-text. */
   .fl-wrap { padding: 20px 22px 60px; max-width: 880px; }
-  .fl-lead { font-size: 13.5px; color: var(--dir-muted); margin: 0 0 22px; line-height: 1.55; }
 
   .fl-group { margin-bottom: 18px; }
   .fl-tab {
@@ -30,10 +31,13 @@
        parked next to a box. `top: 1px` overlaps the card's top hairline. */
     top: 1px; margin-left: 0; padding: 10px 16px 12px;
     font-size: 13.5px; font-weight: 650; color: var(--dir-ink);
-    background: var(--dir-surface); border: 1px solid var(--dir-line); border-bottom: none;
-    border-radius: 11px 11px 0 0; max-width: 100%;
+    /* Tinted in the pipeline's own colour rather than left white: the tab is the
+       label for everything under it, and a white tab on a white card was a shape you
+       had to look for. --tab-tint is set per group from pl.color. */
+    background: var(--tab-tint, var(--dir-hair)); border: 1px solid var(--tab-line, var(--dir-line));
+    border-bottom: none; border-radius: 11px 11px 0 0; max-width: 100%;
   }
-  .fl-tab-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+  .fl-tab-glyph { flex-shrink: 0; display: block; }
   .fl-tab-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .fl-card {
@@ -83,10 +87,6 @@
     </div>
 
     <div class="fl-wrap">
-      <p class="fl-lead">
-        A form is a public link that files straight into one pipeline. Anyone with the
-        link can submit; nobody with the link can see your records.
-      </p>
       <div id="fl-live"></div>
       <div class="dir-note" id="fl-note"></div>
     </div>
@@ -95,6 +95,8 @@
 
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
+<script src="/form-render.js"></script>
+<script src="/form-builder.js"></script>
 <script>
   const esc = window.esc;
 
@@ -105,6 +107,13 @@
     return (pl.cards || []).filter(function (c) {
       return c.createdBy === 'Form' || c.source === label;
     }).length;
+  }
+
+  // The same mark the sidebar uses for a pipeline row, so a tab and its nav entry are
+  // recognisably the same thing. A generic coloured square said "some category".
+  function pipelineGlyph(colour) {
+    return '<svg class="fl-tab-glyph" width="13" height="13" viewBox="0 0 14 14" fill="none">' +
+      '<path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="' + esc(colour || '#2170f4') + '"/></svg>';
   }
 
   const ICON_FORM = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none">' +
@@ -122,19 +131,20 @@
   function groupHTML(pl) {
     const f = pl.intakeForm && pl.intakeForm.token ? pl.intakeForm : null;
     const colour = pl.color || '#2170f4';
-    const editHref = crmPath('/crm/pipeline/' + encodeURIComponent(pl.id) + '/form');
 
-    const tab = '<div class="fl-tab">' +
-      '<span class="fl-tab-dot" style="background:' + esc(colour) + '"></span>' +
+    // color-mix keeps one source of truth for the tint: the pipeline's colour.
+    const tint = 'style="--tab-tint: color-mix(in srgb, ' + esc(colour) + ' 12%, #fff);' +
+      ' --tab-line: color-mix(in srgb, ' + esc(colour) + ' 26%, var(--dir-line));"';
+    const tab = '<div class="fl-tab" ' + tint + '>' +
+      pipelineGlyph(colour) +
       '<span class="fl-tab-name">' + esc(pl.name) + '</span></div>';
 
     if (!f) {
       return '<div class="fl-group">' + tab +
         '<div class="fl-card">' +
           '<span class="fl-icon" style="background:var(--dir-hair); color:var(--dir-faint);">' + ICON_FORM + '</span>' +
-          '<div class="fl-main"><div class="fl-name" style="color:var(--dir-muted); font-weight:600;">No form yet</div>' +
-            '<div class="fl-meta">One link would let people file themselves straight in.</div></div>' +
-          '<div class="fl-actions"><a class="fl-btn" href="' + esc(editHref) + '">Set up a form</a></div>' +
+          '<div class="fl-main"><div class="fl-name" style="color:var(--dir-muted); font-weight:600;">No form yet</div></div>' +
+          '<div class="fl-actions"><button class="fl-btn" onclick="editForm(\'' + esc(pl.id) + '\')">Set up a form</button></div>' +
         '</div></div>';
     }
 
@@ -154,9 +164,29 @@
         '<div class="fl-actions">' +
           '<button class="fl-btn icon" title="Copy link" onclick="copyLink(this, \'' + esc(f.token) + '\')">' + ICON_COPY + '</button>' +
           '<a class="fl-btn icon" title="Open the form" href="' + esc(formUrlFor(f.token)) + '" target="_blank" rel="noopener">' + ICON_OPEN + '</a>' +
-          '<a class="fl-btn" href="' + esc(editHref) + '">Edit</a>' +
+          '<button class="fl-btn primary" onclick="editForm(\'' + esc(pl.id) + '\')">Edit</button>' +
         '</div>' +
       '</div></div>';
+  }
+
+  // Editing happens over this page — the list is the context you want back when you
+  // are done, and bouncing to a separate document loses it.
+  let PIPELINES = {};
+  function editForm(pipelineId) {
+    const pl = PIPELINES[pipelineId];
+    if (!pl) return;
+    window.titanFormBuilder.open({
+      pipeline: pl,
+      form: pl.intakeForm || null,
+      personaId: window.PERSONA_ID,
+      title: 'Form — ' + pl.name,
+      onSave: async function (form, pipeline) {
+        window.DATA.pipelines[pipelineId].intakeForm = form;
+        window.DATA.pipelines[pipelineId].customFieldDefs = pipeline.customFieldDefs || [];
+        await window.saveData();
+        render(window.DATA.pipelines);
+      },
+    });
   }
 
   function copyLink(btn, token) {
@@ -179,13 +209,22 @@
     const list = Object.keys(pipelines).map(function (id) { return pipelines[id]; });
     window.titanSidebar.setPipelines(list);
 
-    // Forms first, then the pipelines that could have one — one list, so a pipeline
-    // reads the same whether or not it has a form yet.
+    render(pipelines);
+  })();
+
+  // Forms first, then the pipelines that could have one — one list, so a pipeline
+  // reads the same whether or not it has a form yet. Called again after a save so
+  // the row reflects the edit without a reload.
+  function render(pipelines) {
+    PIPELINES = pipelines;
+    const list = Object.keys(pipelines).map(function (id) { return pipelines[id]; });
     const withForm = list.filter(function (pl) { return pl.intakeForm && pl.intakeForm.token; });
     const without = list.filter(function (pl) { return !(pl.intakeForm && pl.intakeForm.token); });
     document.getElementById('fl-live').innerHTML =
       withForm.concat(without).map(groupHTML).join('') ||
       '<div class="fl-empty">No pipelines yet.</div>';
+  }
+  (function noop() {
   })();
 </script>
 </body>

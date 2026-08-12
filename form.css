@@ -3,21 +3,15 @@
    of the CRM's own classes when both are on one page (the builder). */
 .tf-sheet { width: 100%; max-width: 560px; }
 
-.tf-brand {
-  position: relative; height: 108px; border-radius: 16px 16px 0 0; overflow: hidden;
-  background: linear-gradient(135deg, #2170f4, #7a6ba3);
-  display: flex; align-items: center; justify-content: center;
-}
-.tf-brand img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.tf-mark {
-  color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.14em;
-  text-transform: uppercase; opacity: 0.9;
-}
-.tf-brand.has-img .tf-mark { display: none; }
+/* A logo sits inside the card above the heading, at its own size. No banner: a
+   gradient band across the top of every form was decoration that pushed the actual
+   question below the fold. */
+.tf-logo { margin-bottom: 20px; }
+.tf-logo img { max-height: 44px; max-width: 200px; display: block; }
 
 .tf-card {
-  background: #fff; border: 1px solid #e8eaed; border-top: none;
-  border-radius: 0 0 16px 16px; padding: 28px 30px 30px;
+  background: #fff; border: 1px solid #e8eaed;
+  border-radius: 16px; padding: 30px 30px 32px;
   box-shadow: 0 1px 2px rgba(16,24,40,0.04), 0 8px 24px rgba(16,24,40,0.05);
 }
 .tf-card h1 {

@@ -34,16 +34,13 @@
       '<label for="' + esc(id) + '">' + esc(f.label || f.key) + req + '</label>' + control + '</div>';
   }
 
-  // The banner: the form's own image, or a preset gradient mark so an unbranded
-  // form still looks finished. A broken image URL falls back to the mark rather
-  // than leaving a blank band.
-  window.titanFormBrandHTML = function (def) {
-    if (def.logoUrl) {
-      return '<div class="tf-brand has-img">' +
-        '<img src="' + esc(def.logoUrl) + '" alt="" onerror="this.parentNode.classList.remove(\'has-img\'); this.remove();">' +
-        '<span class="tf-mark">Titan</span></div>';
-    }
-    return '<div class="tf-brand"><span class="tf-mark">Titan</span></div>';
+  // A logo if there is one, and nothing otherwise. There used to be a gradient
+  // banner across the top whether or not the form was branded — a big block of
+  // colour that said nothing, on a page whose whole job is two fields and a button.
+  window.titanFormLogoHTML = function (def) {
+    if (!def.logoUrl) return '';
+    return '<div class="tf-logo"><img src="' + esc(def.logoUrl) + '" alt=""' +
+      ' onerror="this.parentNode.remove()"></div>';
   };
 
   // The card body. `inert: true` renders controls the reader can see but not use —
@@ -51,7 +48,8 @@
   window.titanFormBodyHTML = function (def, opts) {
     const fields = (def.fields || []).map(function (f) { return fieldHTML(f, opts); }).join('');
     const heading = def.heading || 'Untitled form';
-    return '<h1>' + esc(heading) + '</h1>' +
+    return window.titanFormLogoHTML(def) +
+      '<h1>' + esc(heading) + '</h1>' +
       (def.blurb ? '<div class="tf-blurb">' + esc(def.blurb) + '</div>' : '') +
       '<div class="tf-rule"></div>' +
       (fields || '<div class="tf-empty">No fields yet.</div>') +

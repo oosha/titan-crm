@@ -37,6 +37,9 @@ Multi-page app. Routes are rewrites in `vercel.json`; each route is its own docu
 | `/crm/pipeline/:id/setting` | `pipeline-settings.html` | Stages, fields |
 | `/crm/pipeline/:id/record-setting` | `opportunity-settings.html` | |
 | `/crm/contacts`, `/crm/companies` | `contacts.html`, `companies.html` | Directory pages |
+| `/crm/forms` | `forms.html` | One row per pipeline: its intake form, or the offer of one |
+| `/crm/pipeline/:id/form` | `form-settings.html` | Deep link to one form's editor |
+| `/f/:token` | `form.html` | **Public.** The intake form itself — no auth, no sidebar |
 
 `index.html` and `crm.html` are monoliths with inline CSS and JS; the newer pages are
 thin shells over shared scripts (`crm-directory.js`, `titan-sidebar.js`) that fetch their
@@ -78,10 +81,81 @@ it from forking again:
    helper. `crmPath()` means *different things* in `crm.html` and `crm-directory.js`, and
    the shared markup calling it sent the board to `/crm/pipeline/%2Fcrm%2Fdashboard`.
 
+The nav is: Dashboard · New pipeline · the pipeline rows (each with saved filter views and
+a three-dot menu) · Contacts · Companies · Forms.
+
 `crm.html` still defines its own `switchPipeline`, `openNewPipeline`, `toggleSettingsModal`,
 `togglePipelineNavMenu`, `pipelineNavMenuAction` and account handlers — it loads the
 component in `<head>`, so its later definitions win. That overlap is deliberate but it is
 a contract: rename one of those and the board's sidebar breaks.
+
+## Intake forms
+
+A pipeline can carry a public form. Someone fills it in at `/f/<token>` and the
+submission arrives as a card in that pipeline's first stage.
+
+The form lives **on its pipeline**, beside `customFieldDefs`:
+
+```
+pipelines[<id>].intakeForm = {
+  token, enabled, heading, logoUrl, recordTitle, sourceLabel,
+  submitLabel, thanks, blurb,
+  fields: [ { key, label, type, required, target, placeholder } ]
+}
+```
+
+`target` says where a value lands on the card (`name`, `email`, `phone`, `designation`,
+`company`, `location`, `linkedin`, `note`, or `custom` — for `custom`, `key` must match a
+`customFieldDefs` key or the record page can't render it). **`name` and `email` are locked
+and cannot be removed**: email is what `contactKey()` deduplicates contacts on, and name is
+what every list renders. The token is `<persona>.<random>` — the prefix tells the server
+which data file to write without trusting a query param, and rotating it revokes a shared
+link.
+
+### The public surface is deliberately narrow
+
+**`form.html` must never call `/api/data`.** That endpoint returns every record for a
+persona and accepts the whole document back. The public page talks only to `api/form.js`:
+
+- `GET /api/form?token=` → `{ heading, logoUrl, fields }` and nothing else. A disabled
+  form 404s exactly like a missing one, so switching a link off doesn't announce that it
+  once existed.
+- `POST /api/form?token=` → takes only `{ values }`. The server looks the form up by
+  token, validates against the **stored** field list (unknown keys dropped, honeypot
+  rejected), and **builds the card itself** — the client never names a pipeline, a stage,
+  an amount or a record id.
+
+Writes go through `updateJsonFile()` in `api/_github.js`, which redoes the whole
+read-append-write on a sha conflict so two simultaneous submissions merge. Do **not** reuse
+`writeJsonFile()` here — see the note in that file.
+
+`api/_form.js` holds the model (targets, validation, card construction) and is required by
+both `api/form.js` and `dev-server.js`, so what validates locally is what validates in
+production. **`dev-server.js` hardcodes its API routes** — a new `api/*.js` works on Vercel
+and 404s locally until it's added there too.
+
+### The builder is one module, opened from four places
+
+`form-builder.js` (+ `form-builder.css`) is the editor. `titanFormBuilder.open({…})` puts
+it in a modal; `.mount(host, {…})` renders it inline. It never saves — `onSave(form,
+pipeline)` hands the objects back and the caller decides what that means:
+
+| Where | How it saves |
+|---|---|
+| Board header **Form** button / pipeline three-dot menu | `schedulePersist()` |
+| `/crm/forms` **Edit** | `saveData()`, then re-render the row |
+| New-pipeline modal, step 2 "Lead form" | held in memory, attached in `npCreate()` so pipeline and form land in one write |
+| `/crm/pipeline/:id/form` | `saveData()` |
+
+`form-render.js` (+ `form.css`) draws the form's actual markup and is shared by the public
+page and the builder's preview. Keep it that way: a preview that drifts from the real form
+is worse than no preview. New forms start **paused**, and their default fields come from the
+pipeline's `type` (hiring asks for a portfolio link and why the role; sales for company and
+what they need).
+
+A logo is stored as a **data URI on the form**, downscaled to 320px and capped at 60KB.
+That cap is not cosmetic: the whole document is POSTed on every save and every save is a
+commit, so a full-size logo would be re-committed on every unrelated CRM edit.
 
 ## Where data actually lives
 
@@ -131,7 +205,10 @@ a record (`t3` → record #6 in `neo` is hardcoded; persona threads use
 
 ## API
 
-- `api/data.js` — `GET`/`POST` a persona's pipeline data
+- `api/data.js` — `GET`/`POST` a persona's pipeline data (whole document; see the
+  warning at the end of this file)
+- `api/form.js` — the **public** intake-form endpoint. `GET` returns one form's definition,
+  `POST` appends one card. Never returns records. Backed by `api/_form.js`.
 - `api/revert.js` — reset `default` to seed; full, or per-pipeline via `{pipelineIds}`
 - `api/logo.js` — proxies DuckDuckGo favicons. It MD5-matches their "no icon"
   placeholder so unknown domains return a real 404 and the initial-letter fallback
@@ -160,12 +237,16 @@ records and is served through the API. Adding one is documented in `api/_github.
   dashboard: { type, scope, hidden[] },   // dashboard prefs, persisted like the rest
   pipelines: { <id>: { id, name, entity, plural, color, type,
                        stages[], cards[], hiddenFields[],
-                       customFieldDefs[], contactsEnabled, team } } }
+                       customFieldDefs[], contactsEnabled, team,
+                       intakeForm } } }        // see § Intake forms
 ```
 
 `type` is `'sales'` or `'hiring'` (see `PIPELINE_TYPES` in `crm-directory.js`). It decides
 whether records carry money, what the completion rate is called ("win rate" / "hire rate"),
-and which tab of the dashboard a pipeline appears under. Anything without one is `'sales'`.
+which dashboard tab a pipeline appears under, and which preset fields a new form gets.
+Anything without one is `'sales'` — and pipelines created before `NP_PIPELINE_TYPE` existed
+have no `type`, so a hiring board built from the Candidates template can still be showing
+money columns. Check for it before trusting the field.
 
 Cards carry both a `contacts[]` array and legacy flat `contact*` fields. Normalize with
 `contactsOf()` in `crm-directory.js` rather than reading either directly. Values for

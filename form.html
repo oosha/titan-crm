@@ -33,7 +33,6 @@
 <body>
 
 <div class="tf-sheet">
-  <div id="f-brand"></div>
   <div class="tf-card" id="f-card"><div class="loading">Loading form…</div></div>
   <div class="foot">Powered by Titan CRM</div>
 </div>
@@ -51,7 +50,6 @@
   let DEF = null;
 
   function fail(msg) {
-    document.getElementById('f-brand').innerHTML = window.titanFormBrandHTML({});
     document.getElementById('f-card').innerHTML =
       '<div class="tf-state"><h2>This form isn’t available</h2><p>' + esc(msg) + '</p></div>';
   }
@@ -69,7 +67,6 @@
 
   function render(def) {
     DEF = def;
-    document.getElementById('f-brand').innerHTML = window.titanFormBrandHTML(def);
     document.getElementById('f-card').innerHTML =
       '<form id="f-form" novalidate>' +
         '<div id="f-err" class="tf-err" style="display:none"></div>' +

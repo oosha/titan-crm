@@ -35,6 +35,10 @@
        the pre-fix margin). Loaded before the page styles so page-specific rules
        can still override. -->
   <link rel="stylesheet" href="/titan-sidebar.css">
+  <link rel="stylesheet" href="/form.css">
+  <link rel="stylesheet" href="/form-builder.css">
+  <script src="/form-render.js"></script>
+  <script src="/form-builder.js"></script>
   <script src="/titan-sidebar.js"></script>
   <style>
     .persona-cloak .app-window { visibility: hidden; }
@@ -2496,14 +2500,33 @@
       color: #2170f4; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
     }
     .np-chev-add:hover { border-color: #2170f4; background: #f5f9ff; }
-    .np-form-offer { display: flex; gap: 15px; align-items: flex-start; padding: 6px 0 2px; }
-    .np-form-mark {
-      width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
-      background: #e8f0fe; color: #2170f4;
-      display: inline-flex; align-items: center; justify-content: center;
+    .np-optional {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase;
+      color: #9aa1a9; background: #f2f4f6; border-radius: 5px; padding: 2px 7px; margin-left: 8px;
+      vertical-align: middle;
     }
-    .np-form-title { font-size: 15px; font-weight: 700; color: #222; }
-    .np-form-copy { font-size: 13.5px; color: #6b7280; line-height: 1.55; margin-top: 6px; }
+    /* Mirrors the Forms tab's row so the same thing looks the same in both places. */
+    .np-form-slot {
+      display: grid; grid-template-columns: 42px minmax(0,1fr) auto; gap: 14px; align-items: center;
+      border: 1px solid #e8eaed; border-radius: 13px; padding: 14px 16px; margin-top: 10px;
+    }
+    .np-slot-icon {
+      width: 42px; height: 42px; border-radius: 11px; display: inline-flex;
+      align-items: center; justify-content: center; flex-shrink: 0;
+      background: #f2f4f6; color: #b3b7bd;
+    }
+    .np-slot-icon.is-set { background: #e8f0fe; color: #2170f4; }
+    .np-slot-name { font-size: 14px; font-weight: 650; color: #222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .np-slot-name.is-empty { color: #9aa1a9; font-weight: 600; }
+    .np-slot-meta { font-size: 12.5px; color: #8b9096; margin-top: 3px; }
+    .np-slot-meta .on { color: #1e8e3e; font-weight: 650; }
+    .np-slot-meta .off { color: #8b9096; font-weight: 650; }
+    .np-slot-btn {
+      height: 36px; padding: 0 14px; border: 1px solid #e8eaed; border-radius: 10px;
+      background: #fff; font: inherit; font-size: 13px; font-weight: 600; color: #333;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .np-slot-btn:hover { border-color: #2170f4; color: #2170f4; }
 
     .np-footer {
       padding: 13px 18px; border-top: 1px solid #eee; display: flex;
@@ -2875,6 +2898,18 @@
             <span id="pipeline-name-heading">Neo partnerships</span> <span id="pipeline-total" style="font-size:13.5px; font-weight:500; color:#888; margin-left:8px;"></span>
           </div>
           <div style="display:flex; align-items:center; gap:10px;">
+            <!-- The pipeline's intake form, on the pipeline. It was reachable only from
+                 the row's three-dot menu, which is not where you look for it while
+                 staring at the board. The label reflects whether one exists yet. -->
+            <div id="board-form-btn" title="Intake form" style="display:flex; align-items:center; gap:7px; height:34px; padding:0 12px; border-radius:7px; background:#f4f4f7; color:#555; font-size:13px; font-weight:600; cursor:pointer;" onclick="openPipelineForm()">
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+                <rect x="4.5" y="3" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M8 2.5h4a1 1 0 011 1V4a1 1 0 01-1 1H8a1 1 0 01-1-1V3.5a1 1 0 011-1z" fill="currentColor"/>
+                <path d="M7.5 8.5h5M7.5 11h5M7.5 13.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+              <span id="board-form-dot" style="display:none; width:7px; height:7px; border-radius:50%; flex-shrink:0;"></span>
+              <span id="board-form-label">Form</span>
+            </div>
             <div title="Add team" style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:7px; background:#f4f4f7; color:#555; cursor:pointer;" onclick="openAddTeamModal(currentPipelineId)">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="6.2" cy="5.5" r="2.8" stroke="currentColor" stroke-width="1.3"/><path d="M1.5 13.2c0-2.4 2.1-4.2 4.7-4.2s4.7 1.8 4.7 4.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M12 3.2v4.6M14.3 5.5H9.7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
             </div>
@@ -3235,43 +3270,15 @@
           <div class="np-label">Stages</div>
           <div class="np-help">Click a stage to rename it. These are the columns on your board.</div>
           <div class="np-chev-chain" id="np-stages"></div>
+
+          <div style="height:26px;"></div>
+
+          <div class="np-label">Lead form <span class="np-optional">optional</span></div>
+          <div class="np-form-slot" id="np-form-slot"></div>
         </div>
         <div class="np-footer">
           <div class="np-btn-secondary" onclick="npBack()">Back</div>
           <div class="np-btn-primary" onclick="npCreate()">Create pipeline</div>
-        </div>
-      </div>
-
-      <!-- Step 3, shown only after the pipeline exists. A form is optional, so it is
-           offered rather than required: "Not now" leaves a perfectly good pipeline,
-           and the same setup is always reachable later from the pipeline's own menu
-           or the Forms tab. -->
-      <div class="np-step" id="np-step-3">
-        <div class="np-header">
-          <span class="np-title">Pipeline created</span>
-          <span class="np-close" onclick="npFinish()">&times;</span>
-        </div>
-        <div class="np-body">
-          <div class="np-form-offer">
-            <div class="np-form-mark">
-              <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-                <rect x="4.5" y="3" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.4"/>
-                <path d="M8 2.5h4a1 1 0 011 1V4a1 1 0 01-1 1H8a1 1 0 01-1-1V3.5a1 1 0 011-1z" fill="currentColor"/>
-                <path d="M7.5 8.5h5M7.5 11h5M7.5 13.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <div>
-              <div class="np-form-title">Want a form for <span id="np-form-pl"></span>?</div>
-              <div class="np-form-copy">
-                A public link anyone can fill in — each submission arrives as a record in
-                your first stage. Nobody with the link can see what's already in here.
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="np-footer">
-          <div class="np-btn-secondary" onclick="npFinish()">Not now</div>
-          <div class="np-btn-primary" onclick="npGoToForm()">Set up a form</div>
         </div>
       </div>
 
@@ -4733,6 +4740,7 @@
       // Switching here doesn't navigate, so the component can't read the new current
       // pipeline off the URL — tell it, and let it mark the row.
       window.titanSidebar.setActivePipeline(id);
+      updateBoardFormBtn();
 
       closeCardActionMenu();
       renderBoard();
@@ -4785,9 +4793,9 @@
         location.href = crmPath(pipelineKey, kind === 'pipeline-setting' ? '/setting' : '/record-setting');
         return;
       }
-      // The form editor is a page like the settings pages, and it reads the pipeline
-      // from /api/data itself, so it needs no sessionStorage handoff.
-      if (kind === 'form') { location.href = crmPath(pipelineKey, '/form'); return; }
+      // Editing happens over the board rather than on a separate page — the board is
+      // the context you want back afterwards.
+      if (kind === 'form') { openPipelineForm(pipelineKey); return; }
       if (kind === 'delete-pipeline') { deletePipeline(pipelineKey); return; }
       if (kind === 'add-team') { openAddTeamModal(pipelineKey); return; }
       alert('Prototype only: "Add filter view" for ' + (pl.name || pipelineKey) + ' is not wired up yet.');
@@ -4906,6 +4914,54 @@
 
     // Add opportunity needs every pipeline's cards (for cross-pipeline contact
     // autocomplete), not just the current one, so all of PIPELINES is handed off.
+    // The intake form for a pipeline, in the shared builder. Saving writes the whole
+    // document the same way every other editor here does.
+    function openPipelineForm(pipelineKey) {
+      const key = pipelineKey || currentPipelineId;
+      const pl = PIPELINES[key];
+      if (!pl) return;
+      window.titanFormBuilder.open({
+        pipeline: pl,
+        form: pl.intakeForm || null,
+        personaId: window.PERSONA_ID,
+        title: 'Form — ' + pl.name,
+        onSave: function (form, pipeline) {
+          pl.intakeForm = form;
+          if (pipeline && pipeline.customFieldDefs) pl.customFieldDefs = pipeline.customFieldDefs;
+          schedulePersist();
+          updateBoardFormBtn();
+        },
+      });
+    }
+
+    // Three states, said as plainly as possible. "Live" was jargon for something a
+    // coloured dot shows better, and once a form has submissions the count is the more
+    // useful thing to put in the label — it is why you would look at the button at all.
+    function updateBoardFormBtn() {
+      const label = document.getElementById('board-form-label');
+      const dot = document.getElementById('board-form-dot');
+      const btn = document.getElementById('board-form-btn');
+      if (!label || !btn) return;
+      const pl = PIPELINES[currentPipelineId] || {};
+      const f = pl.intakeForm;
+
+      if (!f) {
+        dot.style.display = 'none';
+        label.textContent = 'Add form';
+        btn.title = 'Set up a form that files into this pipeline';
+        return;
+      }
+      const n = (pl.cards || []).filter(function (c) {
+        return c.createdBy === 'Form' || c.source === (f.sourceLabel || 'Form');
+      }).length;
+      dot.style.display = '';
+      dot.style.background = f.enabled ? '#1e8e3e' : '#b3b7bd';
+      label.textContent = f.enabled ? (n ? 'Form · ' + n : 'Form') : 'Form · paused';
+      btn.title = f.enabled
+        ? 'Accepting responses' + (n ? ' — ' + n + (n === 1 ? ' submission' : ' submissions') : '')
+        : 'This form is not accepting responses';
+    }
+
     function openAddOpportunityPage() {
       sessionStorage.setItem('titan-crm-add-opportunity-source', JSON.stringify({
         pipelineKey: currentPipelineId, pipelines: PIPELINES, currencySymbol: CURRENCY_SYMBOL,
@@ -5768,6 +5824,10 @@
     else bootCrm();
 
     // ── New Pipeline flow (§4.1 Create · §4.2 Templates · §4.3 Stage customization) ──
+    // Which kind of pipeline each template produces. Only hiring has no money on its
+    // records; everything else behaves like sales. See PIPELINE_TYPES in crm-directory.js.
+    const NP_PIPELINE_TYPE = { sales: 'sales', projects: 'sales', orders: 'sales', candidates: 'hiring', other: 'sales' };
+
     const NP_TEMPLATES = {
       sales:      { name: 'My Sales Pipeline', entity: 'Opportunity', plural: 'opportunities', title: 'Set up your sales pipeline',
                     stages: [{ name: 'Lead' }, { name: 'Qualified' }, { name: 'Demo Scheduled' }, { name: 'Proposal Sent' }, { name: 'Negotiation' }, { name: 'Closed', wonLost: true }] },
@@ -5799,6 +5859,7 @@
     }
 
     function openNewPipeline() {
+      npForm = null; npFormPipeline = null;   // a fresh flow starts with no form
       npState.type = 'sales';   // default selection so Continue is always actionable
       npRenderRadios();
       npShowStep(1);
@@ -5810,21 +5871,59 @@
     function npShowStep(n) {
       document.getElementById('np-step-1').classList.toggle('active', n === 1);
       document.getElementById('np-step-2').classList.toggle('active', n === 2);
-      document.getElementById('np-step-3').classList.toggle('active', n === 3);
       document.getElementById('np-modal').classList.toggle('np-step2-open', n === 2);
     }
 
-    // Set by npCreate so step 3 knows which pipeline it is offering a form for.
-    let npCreatedId = null;
-    let npCreatedName = '';
-    function npFinish() {
-      closeNewPipeline();
-      npToast('“' + npCreatedName + '” is ready — you can add a form any time from its menu.', true);
+    // The form being drafted alongside the pipeline. It is held here until
+    // npCreate() writes both together — the pipeline does not exist yet, so there is
+    // nothing to save it onto.
+    let npForm = null;
+    let npFormPipeline = null;     // carries customFieldDefs the builder adds
+
+    function npRenderFormSlot() {
+      const slot = document.getElementById('np-form-slot');
+      if (!slot) return;
+      if (!npForm) {
+        slot.innerHTML =
+          '<span class="np-slot-icon">' + NP_FORM_ICON + '</span>' +
+          '<div><div class="np-slot-name is-empty">No form yet</div></div>' +
+          '<button type="button" class="np-slot-btn" onclick="npEditForm()">Set up a form</button>';
+        return;
+      }
+      slot.innerHTML =
+        '<span class="np-slot-icon is-set">' + NP_FORM_ICON + '</span>' +
+        '<div><div class="np-slot-name">' + window.titanFormEsc(npForm.heading || 'Untitled form') + '</div>' +
+          '<div class="np-slot-meta"><span class="' + (npForm.enabled ? 'on">Active' : 'off">Paused') + '</span>' +
+            ' · ' + npForm.fields.length + ' fields</div></div>' +
+        '<button type="button" class="np-slot-btn" onclick="npEditForm()">Edit</button>';
     }
-    function npGoToForm() {
-      // The form editor is a page, not a modal, and the pipeline is already saved, so
-      // this is a plain navigation rather than another handoff through sessionStorage.
-      location.href = crmPath(npCreatedId, '/form');
+
+    const NP_FORM_ICON = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none">' +
+      '<rect x="4.5" y="3" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.4"/>' +
+      '<path d="M8 2.5h4a1 1 0 011 1V4a1 1 0 01-1 1H8a1 1 0 01-1-1V3.5a1 1 0 011-1z" fill="currentColor"/>' +
+      '<path d="M7.5 8.5h5M7.5 11h5M7.5 13.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+
+    // Opens the shared builder over this modal. Nothing is written here — the form
+    // comes back into npForm and is saved with the pipeline.
+    function npEditForm() {
+      const name = (document.getElementById('np-name').value || '').trim() || 'this pipeline';
+      window.titanFormBuilder.open({
+        pipeline: npFormPipeline || {
+          name: name,
+          type: NP_PIPELINE_TYPE[npState.type] || 'sales',
+          stages: (npState.stages || []).map(function (st, i) { return { key: slugify(st.name, i), label: st.name }; }),
+          customFieldDefs: [],
+        },
+        form: npForm,
+        personaId: window.PERSONA_ID,
+        title: 'Form — ' + name,
+        saveLabel: 'Done',
+        onSave: function (form, pipeline) {
+          npForm = form;
+          npFormPipeline = pipeline;
+          npRenderFormSlot();
+        },
+      });
     }
     function npBack() { npShowStep(1); }
 
@@ -5844,6 +5943,7 @@
       // Deep copy so edits don't mutate the template.
       npState.stages = tpl.stages.map(function (s) { return { name: s.name, wonLost: !!s.wonLost }; });
       document.getElementById('np-step2-title').textContent = tpl.title;
+      npRenderFormSlot();
       document.getElementById('np-name').value = tpl.name;
       npRenderColors();
       npRenderStages();
@@ -5992,21 +6092,27 @@
       const id = 'p' + (++pipelineSeq);
       PIPELINES[id] = {
         id: id, name: name, entity: entity, plural: npState.plural, color: npState.color,
+        type: NP_PIPELINE_TYPE[npState.type] || 'sales',
         stages: clean.map(function (s, i) { return { key: slugify(s.name, i), label: s.name }; }),
         cards: [],
       };
+      // Attach the drafted form before the persist below, so pipeline and form land in
+      // the same write rather than the form needing a second save.
+      if (npForm) {
+        PIPELINES[id].intakeForm = npForm;
+        if (npFormPipeline && npFormPipeline.customFieldDefs) {
+          PIPELINES[id].customFieldDefs = npFormPipeline.customFieldDefs;
+        }
+      }
+
       npAddSidebarPipeline();
       switchPipeline(id);
       // Persist the new pipeline — without this it lives only in memory + the sidebar
       // DOM and is gone on the next load (switchPipeline doesn't save on its own).
       schedulePersist();
 
-      // Don't close yet — offer the form while the pipeline is fresh in mind. The
-      // pipeline is already created and persisted, so either exit from here is safe.
-      npCreatedId = id;
-      npCreatedName = name;
-      document.getElementById('np-form-pl').textContent = name;
-      npShowStep(3);
+      closeNewPipeline();
+      npToast('“' + name + '” created' + (npForm ? ' with its form.' : ' — link an email to add your first ' + entity.toLowerCase() + '.'), true);
     }
 
     // Re-renders the rows from PIPELINES rather than hand-building a single row —

@@ -15,76 +15,24 @@
 <link rel="stylesheet" href="/titan-sidebar.css">
 <link rel="stylesheet" href="/crm-directory.css">
 <link rel="stylesheet" href="/form.css">
+<link rel="stylesheet" href="/form-builder.css">
 <script src="/form-render.js"></script>
 <style>
-  /* The builder: fields on the left, the real form on the right. The preview is
-     drawn by form-render.js — the same module the public page uses — so what you
-     see here cannot drift from what a candidate gets. */
-  .fs-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 600px); gap: 22px; padding: 20px 22px 60px; align-items: start; }
-  @media (max-width: 1180px) { .fs-wrap { grid-template-columns: 1fr; } }
-
-  .fs-card { background: var(--dir-surface); border: 1px solid var(--dir-line); border-radius: 14px; padding: 17px 18px; margin-bottom: 14px; }
-  .fs-card-title { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dir-muted); margin-bottom: 14px; }
-  .fs-row { display: grid; gap: 6px; margin-bottom: 14px; }
-  .fs-row:last-child { margin-bottom: 0; }
-  .fs-row label { font-size: 12.5px; font-weight: 600; color: var(--dir-ink); }
-  .fs-row .hint { font-size: 11.5px; color: var(--dir-muted); font-weight: 400; }
-  .fs-input, .fs-select {
-    width: 100%; font: inherit; font-size: 13.5px; color: var(--dir-ink);
-    padding: 9px 11px; border: 1px solid var(--dir-line); border-radius: 9px;
-    background: var(--dir-surface); outline: none;
-  }
-  .fs-input:focus, .fs-select:focus { border-color: var(--dir-accent); box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
-
-  /* Field rows: drag handle, label, type, required, remove. */
-  .fs-field { display: grid; grid-template-columns: 18px minmax(0,1fr) 122px auto auto; gap: 9px; align-items: center; padding: 8px 0; }
-  .fs-field + .fs-field { border-top: 1px solid var(--dir-hair); }
-  .fs-grip { color: var(--dir-faint); cursor: grab; text-align: center; font-size: 13px; line-height: 1; user-select: none; }
-  .fs-field.is-locked .fs-grip { visibility: hidden; cursor: default; }
-  .fs-req { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--dir-body); white-space: nowrap; }
-  .fs-req input { width: 14px; height: 14px; accent-color: var(--dir-accent); }
-  .fs-del {
-    border: none; background: transparent; color: var(--dir-faint); cursor: pointer;
-    width: 26px; height: 26px; border-radius: 7px; font-size: 15px; line-height: 1;
-  }
-  .fs-del:hover { background: #fdecec; color: #c0392b; }
-  .fs-field.is-locked .fs-del { visibility: hidden; }
-  .fs-lock { font-size: 10.5px; color: var(--dir-muted); background: var(--dir-hair); border-radius: 5px; padding: 2px 6px; white-space: nowrap; }
-  .fs-drag-over { box-shadow: inset 0 2px 0 var(--dir-accent); }
-
-  .fs-add { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-  .fs-add .fs-select { width: auto; min-width: 168px; }
-  .fs-ghost {
-    height: 36px; padding: 0 13px; border: 1px solid var(--dir-line); border-radius: 9px;
-    background: var(--dir-surface); font: inherit; font-size: 13px; font-weight: 600;
-    color: var(--dir-body); cursor: pointer;
-  }
-  .fs-ghost:hover { border-color: var(--dir-accent); color: var(--dir-accent); }
-
-  /* Live link + enable switch */
-  .fs-link { display: flex; gap: 8px; align-items: center; }
-  .fs-link code {
-    flex: 1; min-width: 0; font-size: 12.5px; background: var(--dir-canvas); border: 1px solid var(--dir-line);
-    border-radius: 8px; padding: 9px 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dir-body);
-  }
-  .fs-toggle { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--dir-body); }
-  .fs-toggle input { width: 16px; height: 16px; accent-color: var(--dir-accent); }
-  .fs-note { font-size: 12px; color: var(--dir-muted); margin-top: 10px; line-height: 1.5; }
-
-  .fs-save {
+  /* The deep-link route for one pipeline's form. The editor itself is
+     form-builder.js, mounted inline here and opened as a modal from the Forms tab and
+     the new-pipeline flow — one editor, three ways in. */
+  .fp-wrap { padding: 18px 20px 60px; }
+  .fp-save {
     margin-left: auto; height: 34px; padding: 0 15px; border: 1px solid var(--dir-accent);
     border-radius: 9px; background: var(--dir-accent); color: #fff;
     font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
   }
-  .fs-save:hover:not(:disabled) { background: #1b5fd0; }
-  .fs-save:disabled { opacity: 0.6; cursor: default; }
-
-  .fs-preview-head { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dir-muted); margin-bottom: 12px; }
-  .fs-preview { position: sticky; top: 20px; }
-  .fs-preview .tf-sheet { max-width: 100%; }
+  .fp-save:hover:not(:disabled) { background: #1b5fd0; }
+  .fp-save:disabled { opacity: 0.6; cursor: default; }
+  .fp-err { font-size: 12.5px; color: #c0392b; margin-right: 12px; }
 </style>
 </head>
-<body class="subpage-body" data-subpage="form-settings">
+<body class="subpage-body" data-subpage="form-settings" data-sidebar-data="page">
 
 <div class="app-window">
   <!-- The sidebar is one component: titan-sidebar.js renders it. -->
@@ -92,333 +40,70 @@
 
   <div class="main-area">
     <div class="subpage-top">
-      <span class="subpage-back" onclick="goBack()">
+      <span class="subpage-back" onclick="location.href=crmPath('/crm/forms')">
         <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Back
       </span>
-      <span class="subpage-title" id="fs-title">Form setup</span>
-      <button class="fs-save" id="fs-save" onclick="saveForm()">Save form</button>
+      <span class="subpage-title" id="fp-title">Form setup</span>
+      <span class="fp-err" id="fp-err"></span>
+      <button class="fp-save" id="fp-save">Save form</button>
     </div>
 
-    <div class="fs-wrap">
-      <div>
-        <div class="fs-card">
-          <div class="fs-card-title">The form</div>
-          <div class="fs-row">
-            <label>Heading</label>
-            <input class="fs-input" id="fs-heading" placeholder="Apply — Senior Frontend Engineer">
-          </div>
-          <div class="fs-row">
-            <label>Intro <span class="hint">optional, sits under the heading</span></label>
-            <input class="fs-input" id="fs-blurb" placeholder="We reply to everyone within a week.">
-          </div>
-          <div class="fs-row">
-            <label>Banner image URL <span class="hint">leave empty for the preset</span></label>
-            <input class="fs-input" id="fs-logo" placeholder="https://…/banner.png">
-          </div>
-          <div class="fs-row">
-            <label>Submit button</label>
-            <input class="fs-input" id="fs-submit-label" placeholder="Submit">
-          </div>
-          <div class="fs-row">
-            <label>Thank-you message</label>
-            <input class="fs-input" id="fs-thanks" placeholder="Thanks — we have your details.">
-          </div>
-        </div>
-
-        <div class="fs-card">
-          <div class="fs-card-title">Fields</div>
-          <div id="fs-fields"></div>
-          <div class="fs-add">
-            <select class="fs-select" id="fs-add-type"></select>
-            <button class="fs-ghost" onclick="addField()">+ Add field</button>
-          </div>
-          <div class="fs-note" id="fs-locked-note"></div>
-        </div>
-
-        <div class="fs-card">
-          <div class="fs-card-title">The record it creates</div>
-          <div class="fs-row">
-            <label>Title on every record <span class="hint">the submitter never types this</span></label>
-            <input class="fs-input" id="fs-record-title" placeholder="Senior Frontend Engineer">
-          </div>
-          <div class="fs-row">
-            <label>Source label <span class="hint">shows on the dashboard's By source chart</span></label>
-            <input class="fs-input" id="fs-source" placeholder="Careers page">
-          </div>
-          <div class="fs-note" id="fs-lands-note"></div>
-        </div>
-
-        <div class="fs-card">
-          <div class="fs-card-title">Live link</div>
-          <div class="fs-link">
-            <code id="fs-url">—</code>
-            <button class="fs-ghost" onclick="copyLink()" id="fs-copy">Copy</button>
-          </div>
-          <label class="fs-toggle" style="margin-top:12px;">
-            <input type="checkbox" id="fs-enabled"> Accepting responses
-          </label>
-          <div class="fs-note">Switching this off makes the link look like it never existed — nothing is deleted, and turning it back on restores the same URL.</div>
-        </div>
-      </div>
-
-      <div class="fs-preview">
-        <div class="fs-preview-head">Preview</div>
-        <div class="tf-sheet">
-          <div id="fs-brand"></div>
-          <div class="tf-card" id="fs-body"></div>
-        </div>
-      </div>
-    </div>
+    <div class="fp-wrap"><div id="fp-host"></div></div>
   </div>
 </div>
 
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
+<script src="/form-builder.js"></script>
 <script>
-  // /crm/pipeline/<id>/form — the form belongs to its pipeline, same as its stages
-  // and custom fields, so it is edited from the same place and saved into the same
-  // document.
   const SEGS = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
   const PIPELINE_ID = SEGS[1] === 'pipeline' && SEGS[2] ? decodeURIComponent(SEGS[2]) : '';
-  const esc = window.esc;
-
-  let pipeline = null;
-  let form = null;
-  let dirty = false;
-
-  function goBack() { location.href = crmPath('/crm/forms'); }
-
-  // Which card field a value lands on. Mirrors TARGETS in api/_form.js — the server
-  // is the one that enforces it; this list is what the builder offers.
-  const TARGETS = [
-    { target: 'name',        label: 'Full name',   type: 'text',     locked: true },
-    { target: 'email',       label: 'Email',       type: 'email',    locked: true },
-    { target: 'phone',       label: 'Phone',       type: 'tel' },
-    { target: 'designation', label: 'Job title',   type: 'text' },
-    { target: 'company',     label: 'Company',     type: 'text' },
-    { target: 'location',    label: 'Location',    type: 'text' },
-    { target: 'linkedin',    label: 'LinkedIn',    type: 'url' },
-    { target: 'note',        label: 'Message',     type: 'textarea' },
-  ];
-  const TYPES = ['text', 'email', 'tel', 'url', 'textarea', 'select'];
-
-  function defaultForm() {
-    return {
-      token: window.PERSONA_ID + '.' + newTokenSuffix(),
-      enabled: false,
-      heading: '',
-      blurb: '',
-      logoUrl: '',
-      submitLabel: 'Submit',
-      thanks: 'Thanks — we have your details and will be in touch.',
-      recordTitle: '',
-      sourceLabel: 'Form',
-      fields: [
-        { key: 'name', label: 'Full name', type: 'text', target: 'name', required: true },
-        { key: 'email', label: 'Email', type: 'email', target: 'email', required: true },
-      ],
-    };
-  }
-  function newTokenSuffix() {
-    const bytes = new Uint8Array(6);
-    crypto.getRandomValues(bytes);
-    return Array.from(bytes).map(function (b) { return b.toString(36).padStart(2, '0'); }).join('').slice(0, 10);
-  }
-
-  function isLocked(f) { return f.target === 'name' || f.target === 'email'; }
-
-  function formUrl() {
-    return location.origin + '/f/' + encodeURIComponent(form.token);
-  }
-
-  // ── Rendering ──────────────────────────────────────────────────────────────
-  function renderFields() {
-    const host = document.getElementById('fs-fields');
-    host.innerHTML = form.fields.map(function (f, i) {
-      const locked = isLocked(f);
-      return '<div class="fs-field' + (locked ? ' is-locked' : '') + '" data-i="' + i + '"' +
-          (locked ? '' : ' draggable="true"') + '>' +
-        '<span class="fs-grip">⋮⋮</span>' +
-        '<input class="fs-input" value="' + esc(f.label || '') + '" oninput="setLabel(' + i + ', this.value)" placeholder="Label">' +
-        (locked
-          ? '<span class="fs-lock">' + esc(f.target === 'name' ? 'Name' : 'Email') + '</span>'
-          : '<select class="fs-select" onchange="setType(' + i + ', this.value)">' +
-              TYPES.map(function (t) { return '<option value="' + t + '"' + (f.type === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') +
-            '</select>') +
-        '<label class="fs-req"><input type="checkbox"' + (f.required || locked ? ' checked' : '') +
-          (locked ? ' disabled' : '') + ' onchange="setRequired(' + i + ', this.checked)"> required</label>' +
-        '<button class="fs-del" onclick="removeField(' + i + ')" title="Remove field">×</button>' +
-      '</div>';
-    }).join('');
-    wireDrag(host);
-  }
-
-  function renderPreview() {
-    document.getElementById('fs-brand').innerHTML = window.titanFormBrandHTML(form);
-    document.getElementById('fs-body').innerHTML = window.titanFormBodyHTML(form, { inert: true, idPrefix: 'pv-' });
-  }
-
-  function renderMeta() {
-    document.getElementById('fs-url').textContent = formUrl();
-    document.getElementById('fs-enabled').checked = !!form.enabled;
-    const pl = pipeline || {};
-    const stage = (pl.stages || [])[0];
-    document.getElementById('fs-lands-note').textContent =
-      'Every submission lands in ' + (pl.name || 'this pipeline') + ' at "' + ((stage && stage.label) || 'the first stage') +
-      '", with no amount. The stage is never asked for.';
-    document.getElementById('fs-locked-note').textContent =
-      'Name and email can\'t be removed: email is how contacts are matched across records, and name is what every list shows.';
-  }
-
-  function renderAll() { renderFields(); renderPreview(); renderMeta(); }
-  function touch() { dirty = true; renderPreview(); }
-
-  // ── Editing ────────────────────────────────────────────────────────────────
-  function setLabel(i, v) { form.fields[i].label = v; touch(); }
-  function setType(i, v) { form.fields[i].type = v; touch(); if (v === 'select') renderFields(); }
-  function setRequired(i, on) { form.fields[i].required = !!on; touch(); }
-  function removeField(i) {
-    if (isLocked(form.fields[i])) return;
-    form.fields.splice(i, 1); dirty = true; renderFields(); renderPreview();
-  }
-
-  function addField() {
-    const choice = document.getElementById('fs-add-type').value;
-    const used = form.fields.map(function (f) { return f.target; });
-
-    if (choice.indexOf('custom:') === 0) {
-      const key = choice.slice(7);
-      const def = (pipeline.customFieldDefs || []).filter(function (d) { return d.key === key; })[0];
-      form.fields.push({ key: key, label: (def && def.name) || key, type: (def && def.type) || 'text', target: 'custom' });
-    } else if (choice === 'new-custom') {
-      const name = prompt('Name this field. It becomes a custom field on the pipeline, so it shows on the record too.');
-      if (!name || !name.trim()) return;
-      if (!Array.isArray(pipeline.customFieldDefs)) pipeline.customFieldDefs = [];
-      const taken = pipeline.customFieldDefs.map(function (d) { return d.key; });
-      let n = 1; while (taken.indexOf('cf' + n) !== -1) n++;
-      const key = 'cf' + n;
-      pipeline.customFieldDefs.push({ key: key, name: name.trim(), type: 'text' });
-      form.fields.push({ key: key, label: name.trim(), type: 'text', target: 'custom' });
-    } else {
-      if (used.indexOf(choice) !== -1) { alert('That field is already on the form.'); return; }
-      const t = TARGETS.filter(function (x) { return x.target === choice; })[0];
-      form.fields.push({ key: choice, label: t.label, type: t.type, target: choice, required: false });
-    }
-    dirty = true; renderFields(); renderPreview(); renderAddOptions();
-  }
-
-  function renderAddOptions() {
-    const used = form.fields.map(function (f) { return f.key; });
-    const opts = TARGETS
-      .filter(function (t) { return !t.locked && used.indexOf(t.target) === -1; })
-      .map(function (t) { return '<option value="' + t.target + '">' + esc(t.label) + '</option>'; });
-    (pipeline.customFieldDefs || []).forEach(function (d) {
-      if (used.indexOf(d.key) === -1) opts.push('<option value="custom:' + esc(d.key) + '">' + esc(d.name) + ' (custom)</option>');
-    });
-    opts.push('<option value="new-custom">New custom field…</option>');
-    document.getElementById('fs-add-type').innerHTML = opts.join('');
-  }
-
-  // Reorder by dragging. The two locked fields stay at the top — a form that opens
-  // with "LinkedIn" before "Full name" reads as broken.
-  function wireDrag(host) {
-    let from = null;
-    host.querySelectorAll('.fs-field[draggable]').forEach(function (row) {
-      row.addEventListener('dragstart', function () { from = Number(row.dataset.i); row.style.opacity = '0.4'; });
-      row.addEventListener('dragend', function () { row.style.opacity = ''; host.querySelectorAll('.fs-field').forEach(function (r) { r.classList.remove('fs-drag-over'); }); });
-      row.addEventListener('dragover', function (e) { e.preventDefault(); row.classList.add('fs-drag-over'); });
-      row.addEventListener('dragleave', function () { row.classList.remove('fs-drag-over'); });
-      row.addEventListener('drop', function (e) {
-        e.preventDefault();
-        const to = Number(row.dataset.i);
-        if (from == null || from === to) return;
-        const moved = form.fields.splice(from, 1)[0];
-        form.fields.splice(to, 0, moved);
-        // Locked pair back to the front, in a fixed order.
-        const locked = form.fields.filter(isLocked).sort(function (a, b) { return a.target === 'name' ? -1 : 1; });
-        const rest = form.fields.filter(function (f) { return !isLocked(f); });
-        form.fields = locked.concat(rest);
-        dirty = true; renderFields(); renderPreview();
-      });
-    });
-  }
-
-  // ── Reading the inputs back ────────────────────────────────────────────────
-  function bindMetaInputs() {
-    const map = {
-      'fs-heading': 'heading', 'fs-blurb': 'blurb', 'fs-logo': 'logoUrl',
-      'fs-submit-label': 'submitLabel', 'fs-thanks': 'thanks',
-      'fs-record-title': 'recordTitle', 'fs-source': 'sourceLabel',
-    };
-    Object.keys(map).forEach(function (id) {
-      const el = document.getElementById(id);
-      el.value = form[map[id]] || '';
-      el.addEventListener('input', function () { form[map[id]] = el.value; touch(); });
-    });
-    document.getElementById('fs-enabled').addEventListener('change', function (e) {
-      form.enabled = e.target.checked; dirty = true;
-    });
-  }
-
-  function copyLink() {
-    const btn = document.getElementById('fs-copy');
-    navigator.clipboard.writeText(formUrl()).then(function () {
-      btn.textContent = 'Copied';
-      setTimeout(function () { btn.textContent = 'Copy'; }, 1400);
-    }).catch(function () { btn.textContent = 'Copy failed'; });
-  }
-
-  // ── Saving ─────────────────────────────────────────────────────────────────
-  // Writes through the app's own /api/data path (the whole document), which is what
-  // every other editor here does. The public endpoint is append-only and never
-  // touches the form definition.
-  async function saveForm() {
-    const btn = document.getElementById('fs-save');
-    if (!form.heading.trim()) { alert('Give the form a heading — it\'s the first thing a reader sees.'); return; }
-    if (!form.recordTitle.trim()) form.recordTitle = pipeline.name || 'New enquiry';
-    btn.disabled = true; btn.textContent = 'Saving…';
-    try {
-      window.DATA.pipelines[PIPELINE_ID].intakeForm = form;
-      window.DATA.pipelines[PIPELINE_ID].customFieldDefs = pipeline.customFieldDefs || [];
-      await window.saveData();
-      dirty = false;
-      btn.textContent = 'Saved';
-      setTimeout(function () { btn.disabled = false; btn.textContent = 'Save form'; }, 1200);
-    } catch (e) {
-      btn.disabled = false; btn.textContent = 'Save form';
-      alert('Couldn\'t save: ' + ((e && e.message) || e));
-    }
-  }
-
-  window.addEventListener('beforeunload', function (e) {
-    if (dirty) { e.preventDefault(); e.returnValue = ''; }
-  });
+  let builder = null;
 
   (async function init() {
-    try {
-      await fetchPipelineData();
-    } catch (e) {
-      document.getElementById('fs-body').innerHTML = '<div class="tf-state"><p>Couldn\'t reach the CRM data API.</p></div>';
+    try { await fetchPipelineData(); }
+    catch (e) {
+      document.getElementById('fp-host').innerHTML =
+        '<div class="dash-empty">Couldn’t reach the CRM data API.</div>';
       return;
     }
     const pipelines = window.DATA.pipelines || {};
     window.titanSidebar.setPipelines(Object.keys(pipelines).map(function (id) { return pipelines[id]; }));
 
-    pipeline = pipelines[PIPELINE_ID];
+    const pipeline = pipelines[PIPELINE_ID];
     if (!pipeline) {
-      document.getElementById('fs-body').innerHTML =
-        '<div class="tf-state"><h2>No such pipeline</h2><p>It may have been deleted.</p></div>';
+      document.getElementById('fp-host').innerHTML =
+        '<div class="dash-empty">No such pipeline — it may have been deleted.</div>';
+      document.getElementById('fp-save').style.display = 'none';
       return;
     }
-    document.getElementById('fs-title').textContent = 'Form setup — ' + pipeline.name;
-    form = pipeline.intakeForm ? JSON.parse(JSON.stringify(pipeline.intakeForm)) : defaultForm();
-    if (!form.recordTitle) form.recordTitle = pipeline.name || '';
-    if (!form.heading) form.heading = 'Get in touch about ' + (pipeline.name || 'this');
+    document.getElementById('fp-title').textContent = 'Form — ' + pipeline.name;
 
-    bindMetaInputs();
-    renderAddOptions();
-    renderAll();
+    builder = window.titanFormBuilder.mount(document.getElementById('fp-host'), {
+      pipeline: pipeline,
+      form: pipeline.intakeForm || null,
+      personaId: window.PERSONA_ID,
+    });
+
+    document.getElementById('fp-save').addEventListener('click', async function () {
+      const btn = document.getElementById('fp-save');
+      const err = document.getElementById('fp-err');
+      const out = builder.collect();
+      if (out.error) { err.textContent = out.error; return; }
+      err.textContent = '';
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        window.DATA.pipelines[PIPELINE_ID].intakeForm = out.form;
+        window.DATA.pipelines[PIPELINE_ID].customFieldDefs = out.pipeline.customFieldDefs || [];
+        await window.saveData();
+        btn.textContent = 'Saved';
+        setTimeout(function () { btn.disabled = false; btn.textContent = 'Save form'; }, 1200);
+      } catch (e) {
+        btn.disabled = false; btn.textContent = 'Save form';
+        err.textContent = 'Couldn’t save: ' + ((e && e.message) || e);
+      }
+    });
   })();
 </script>
 </body>

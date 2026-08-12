@@ -1,0 +1,143 @@
+/* The form builder — the same editor whether it is a modal over the board, a modal
+   over the Forms tab, or mounted inline on /crm/pipeline/:id/form. Prefixed fb- so it
+   can sit on top of any of those pages without colliding.
+
+   It relies on the --dir-* tokens from crm-directory.css, with fallbacks so it also
+   works on a page that only loads titan-sidebar.css. */
+.fb-overlay {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(16, 24, 40, 0.45);
+  display: flex; align-items: center; justify-content: center; padding: 26px 20px;
+  animation: fb-fade 140ms ease;
+}
+@keyframes fb-fade { from { opacity: 0; } to { opacity: 1; } }
+body.fb-locked { overflow: hidden; }
+
+.fb-modal {
+  background: var(--dir-canvas, #f7f8fa); border-radius: 16px;
+  width: 100%; max-width: 1120px; max-height: 100%;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 24px 64px rgba(16, 24, 40, 0.28);
+}
+.fb-head {
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  padding: 15px 18px; background: #fff; border-bottom: 1px solid var(--dir-line, #e8eaed);
+}
+.fb-title { font-size: 15px; font-weight: 700; color: var(--dir-ink, #1a1a1a); flex: 1; }
+.fb-close {
+  border: none; background: transparent; color: var(--dir-muted, #8b9096);
+  font-size: 22px; line-height: 1; cursor: pointer; width: 30px; height: 30px; border-radius: 8px;
+}
+.fb-close:hover { background: var(--dir-hair, #f2f4f6); color: var(--dir-ink, #1a1a1a); }
+
+.fb-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 18px; }
+
+.fb-foot {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  padding: 13px 18px; background: #fff; border-top: 1px solid var(--dir-line, #e8eaed);
+}
+.fb-err { flex: 1; font-size: 12.5px; color: #c0392b; }
+.fb-primary {
+  height: 36px; padding: 0 16px; border: 1px solid var(--dir-accent, #2170f4); border-radius: 10px;
+  background: var(--dir-accent, #2170f4); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.fb-primary:hover:not(:disabled) { background: #1b5fd0; }
+.fb-primary:disabled { opacity: 0.6; cursor: default; }
+
+/* ── The editor ─────────────────────────────────────────────────────────────── */
+.fb-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); gap: 18px; align-items: start; }
+@media (max-width: 1000px) { .fb-cols { grid-template-columns: 1fr; } }
+
+.fb-card {
+  background: var(--dir-surface, #fff); border: 1px solid var(--dir-line, #e8eaed);
+  border-radius: 13px; padding: 15px 16px; margin-bottom: 12px;
+}
+.fb-card:last-child { margin-bottom: 0; }
+.fb-card-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--dir-muted, #8b9096); margin-bottom: 13px;
+}
+.fb-row { display: grid; gap: 6px; margin-bottom: 13px; }
+.fb-row:last-child { margin-bottom: 0; }
+.fb-row label { font-size: 12.5px; font-weight: 600; color: var(--dir-ink, #1a1a1a); }
+.fb-row .hint { font-size: 11.5px; color: var(--dir-muted, #8b9096); font-weight: 400; }
+.fb-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .fb-two { grid-template-columns: 1fr; } }
+
+.fb-input, .fb-select {
+  width: 100%; font: inherit; font-size: 13.5px; color: var(--dir-ink, #1a1a1a);
+  padding: 9px 11px; border: 1px solid var(--dir-line, #e8eaed); border-radius: 9px;
+  background: var(--dir-surface, #fff); outline: none;
+}
+.fb-input:focus, .fb-select:focus { border-color: var(--dir-accent, #2170f4); box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+
+.fb-field { display: grid; grid-template-columns: 18px minmax(0,1fr) 116px auto auto; gap: 9px; align-items: center; padding: 8px 0; }
+.fb-field + .fb-field { border-top: 1px solid var(--dir-hair, #f2f4f6); }
+.fb-grip { color: var(--dir-faint, #b3b7bd); cursor: grab; text-align: center; font-size: 13px; user-select: none; }
+.fb-field.is-locked .fb-grip { visibility: hidden; cursor: default; }
+.fb-lock {
+  font-size: 10.5px; color: var(--dir-muted, #8b9096); background: var(--dir-hair, #f2f4f6);
+  border-radius: 5px; padding: 3px 7px; white-space: nowrap; text-align: center;
+}
+.fb-req { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--dir-body, #333); white-space: nowrap; }
+.fb-req input { width: 14px; height: 14px; accent-color: var(--dir-accent, #2170f4); }
+.fb-del {
+  border: none; background: transparent; color: var(--dir-faint, #b3b7bd); cursor: pointer;
+  width: 26px; height: 26px; border-radius: 7px; font-size: 15px; line-height: 1;
+}
+.fb-del:hover { background: #fdecec; color: #c0392b; }
+.fb-field.is-locked .fb-del { visibility: hidden; }
+.fb-drag-over { box-shadow: inset 0 2px 0 var(--dir-accent, #2170f4); }
+
+/* A full-width add row rather than a button tucked beside a picker: it is the one
+   action in this card, so it reads as the next thing to do. */
+.fb-add-btn {
+  width: 100%; margin-top: 14px; height: 40px;
+  border: 1px dashed #c9d6ea; border-radius: 10px;
+  background: transparent; font: inherit; font-size: 13px; font-weight: 600;
+  color: var(--dir-accent, #2170f4); cursor: pointer;
+}
+.fb-add-btn:hover {
+  border-color: var(--dir-accent, #2170f4); color: var(--dir-accent, #2170f4);
+  background: rgba(33,112,244,0.04);
+}
+
+.fb-ghost {
+  height: 36px; padding: 0 13px; border: 1px solid var(--dir-line, #e8eaed); border-radius: 9px;
+  background: var(--dir-surface, #fff); font: inherit; font-size: 13px; font-weight: 600;
+  color: var(--dir-body, #333); cursor: pointer;
+}
+.fb-ghost:hover { border-color: var(--dir-accent, #2170f4); color: var(--dir-accent, #2170f4); }
+.fb-note { font-size: 12px; color: var(--dir-muted, #8b9096); margin-top: 10px; line-height: 1.5; }
+
+/* Logo: a small preview beside its two actions. Uploading is the only branding
+   control — the form has one image and one title, and that is the whole of it. */
+.fb-logo-row { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+.fb-logo-prev {
+  width: 96px; height: 52px; border-radius: 10px; flex-shrink: 0;
+  border: 1px solid var(--dir-line, #e8eaed); background: var(--dir-canvas, #f7f8fa);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.fb-logo-prev img { max-width: 84px; max-height: 40px; display: block; }
+.fb-logo-prev.is-empty span { font-size: 11.5px; color: var(--dir-faint, #b3b7bd); }
+.fb-logo-acts { display: flex; align-items: center; gap: 10px; }
+.fb-link-btn {
+  border: none; background: transparent; padding: 0; cursor: pointer;
+  font: inherit; font-size: 12.5px; color: var(--dir-muted, #8b9096); text-decoration: underline;
+}
+.fb-link-btn:hover { color: #c0392b; }
+
+.fb-big { font-size: 14.5px; padding: 11px 13px; }
+
+.fb-toggle {
+  display: flex; align-items: center; gap: 9px; font-size: 13px;
+  color: var(--dir-body, #333); padding: 2px 4px 4px;
+}
+.fb-toggle input { width: 16px; height: 16px; accent-color: var(--dir-accent, #2170f4); }
+
+.fb-preview { position: sticky; top: 0; }
+.fb-preview-head {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--dir-muted, #8b9096); margin-bottom: 11px;
+}
+.fb-preview .tf-sheet { max-width: 100%; }
