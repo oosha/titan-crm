@@ -138,12 +138,20 @@ async function writeJsonFile(relativePath, dataObj, message, knownSha) {
   const content = Buffer.from(JSON.stringify(dataObj, null, 2) + '\n', 'utf8').toString('base64');
   let sha = knownSha;
 
+  let lastStatus = 0;
+  let lastBody = '';
+
   for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt++) {
     const body = { message: message, content: content, branch: BRANCH };
     if (sha) body.sha = sha;
     const res = await ghRequest(relativePath, { method: 'PUT', body: JSON.stringify(body) });
 
     if (res.status === 409 || res.status === 422) {
+      // Kept so the final error can say what GitHub actually objected to. Without
+      // this the retry loop swallows the reason and every distinct failure looks
+      // identical to plain contention.
+      lastStatus = res.status;
+      lastBody = (await res.text()).slice(0, 300);
       // Staggered so two writers retrying in lockstep don't collide forever.
       await new Promise(function (r) { setTimeout(r, 150 * (attempt + 1)); });
       const latest = await readJsonFile(relativePath);
@@ -156,7 +164,7 @@ async function writeJsonFile(relativePath, dataObj, message, knownSha) {
   // Fails loudly and quickly rather than spinning: the caller can report
   // something useful instead of the request hanging until it is killed.
   throw new Error('Could not save ' + relativePath + ' after ' + WRITE_ATTEMPTS +
-                  ' attempts — too much concurrent activity. Try again.');
+                  ' attempts. Last response from GitHub was ' + lastStatus + ': ' + lastBody);
 }
 
 module.exports = {
