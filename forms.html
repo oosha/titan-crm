@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forms — Titan CRM</title>
+<!-- Persona loader: ?u=<id> scopes the /api/data fetch and loads personas/<id>.js. -->
+<script>
+  (function () {
+    var raw = new URLSearchParams(location.search).get('u');
+    var u = (raw && /^[a-z0-9_-]{1,32}$/.test(raw)) ? raw.toLowerCase() : null;
+    if (u) document.write('<' + 'script src="/personas/' + u + '.js"><' + '/script>');
+  })();
+</script>
+<link rel="stylesheet" href="/titan-sidebar.css">
+<link rel="stylesheet" href="/crm-directory.css">
+<style>
+  /* Each pipeline is a folder tab; the card hanging off it is that pipeline's form.
+     The tab carries the pipeline name so "which pipeline?" is answered before you
+     read anything about the form — a form belongs to a pipeline, and the tab says so
+     structurally rather than in a line of sub-text. */
+  .fl-wrap { padding: 20px 22px 60px; max-width: 880px; }
+  .fl-lead { font-size: 13.5px; color: var(--dir-muted); margin: 0 0 22px; line-height: 1.55; }
+
+  .fl-group { margin-bottom: 18px; }
+  .fl-tab {
+    display: inline-flex; align-items: center; gap: 9px; position: relative;
+    /* Sits flush on the card: the tab's left border continues the card's, and its
+       bottom border is dropped so the two read as one shape rather than a label
+       parked next to a box. `top: 1px` overlaps the card's top hairline. */
+    top: 1px; margin-left: 0; padding: 10px 16px 12px;
+    font-size: 13.5px; font-weight: 650; color: var(--dir-ink);
+    background: var(--dir-surface); border: 1px solid var(--dir-line); border-bottom: none;
+    border-radius: 11px 11px 0 0; max-width: 100%;
+  }
+  .fl-tab-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+  .fl-tab-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .fl-card {
+    background: var(--dir-surface); border: 1px solid var(--dir-line);
+    border-radius: 0 13px 13px 13px; padding: 16px 17px;
+    display: grid; grid-template-columns: 42px minmax(0,1fr) auto; gap: 14px; align-items: center;
+  }
+  .fl-icon {
+    width: 42px; height: 42px; border-radius: 11px; display: inline-flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .fl-main { min-width: 0; }
+  .fl-name { font-size: 14.5px; font-weight: 650; color: var(--dir-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fl-meta { font-size: 12.5px; color: var(--dir-muted); margin-top: 3px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .fl-meta b { color: var(--dir-body); font-weight: 650; }
+  .fl-sep { color: var(--dir-faint); }
+  .fl-state { font-weight: 650; }
+  .fl-state.on { color: #1e8e3e; }
+  .fl-state.off { color: var(--dir-muted); }
+
+  .fl-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+  .fl-btn {
+    height: 36px; padding: 0 14px; border: 1px solid var(--dir-line); border-radius: 10px;
+    background: var(--dir-surface); font: inherit; font-size: 13px; font-weight: 600;
+    color: var(--dir-body); cursor: pointer; text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .fl-btn:hover { border-color: var(--dir-accent); color: var(--dir-accent); }
+  .fl-btn.icon { width: 36px; padding: 0; }
+  .fl-btn.icon.is-done { border-color: #1e8e3e; color: #1e8e3e; }
+  .fl-empty { font-size: 13.5px; color: var(--dir-muted); padding: 4px 0 10px; }
+</style>
+</head>
+<body class="subpage-body" data-subpage="forms" data-sidebar-data="page">
+
+<div class="app-window">
+  <!-- The sidebar is one component: titan-sidebar.js renders it. -->
+  <div id="sidebar-mount"></div>
+
+  <div class="main-area">
+    <div class="subpage-top">
+      <span class="subpage-back" onclick="location.href=crmPath('/crm')">
+        <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </span>
+      <span class="subpage-title">Forms</span>
+    </div>
+
+    <div class="fl-wrap">
+      <p class="fl-lead">
+        A form is a public link that files straight into one pipeline. Anyone with the
+        link can submit; nobody with the link can see your records.
+      </p>
+      <div id="fl-live"></div>
+      <div class="dir-note" id="fl-note"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/titan-sidebar.js"></script>
+<script src="/crm-directory.js"></script>
+<script>
+  const esc = window.esc;
+
+  function formUrlFor(token) { return location.origin + '/f/' + encodeURIComponent(token); }
+
+  function submissionsFor(pl, form) {
+    const label = (form && form.sourceLabel) || 'Form';
+    return (pl.cards || []).filter(function (c) {
+      return c.createdBy === 'Form' || c.source === label;
+    }).length;
+  }
+
+  const ICON_FORM = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none">' +
+    '<rect x="4.5" y="3" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.4"/>' +
+    '<path d="M8 2.5h4a1 1 0 011 1V4a1 1 0 01-1 1H8a1 1 0 01-1-1V3.5a1 1 0 011-1z" fill="currentColor"/>' +
+    '<path d="M7.5 8.5h5M7.5 11h5M7.5 13.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
+  const ICON_OPEN = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none">' +
+    '<path d="M6 3.5h6.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="M12.5 3.5L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  const ICON_COPY = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none">' +
+    '<rect x="5.5" y="5.5" width="8" height="8" rx="1.6" stroke="currentColor" stroke-width="1.4"/>' +
+    '<path d="M10.5 3.2A1.7 1.7 0 008.8 2.5H4.2A1.7 1.7 0 002.5 4.2v4.6c0 .7.4 1.3 1 1.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+
+  // A pipeline and its form: the tab names the pipeline, the card is the form.
+  function groupHTML(pl) {
+    const f = pl.intakeForm && pl.intakeForm.token ? pl.intakeForm : null;
+    const colour = pl.color || '#2170f4';
+    const editHref = crmPath('/crm/pipeline/' + encodeURIComponent(pl.id) + '/form');
+
+    const tab = '<div class="fl-tab">' +
+      '<span class="fl-tab-dot" style="background:' + esc(colour) + '"></span>' +
+      '<span class="fl-tab-name">' + esc(pl.name) + '</span></div>';
+
+    if (!f) {
+      return '<div class="fl-group">' + tab +
+        '<div class="fl-card">' +
+          '<span class="fl-icon" style="background:var(--dir-hair); color:var(--dir-faint);">' + ICON_FORM + '</span>' +
+          '<div class="fl-main"><div class="fl-name" style="color:var(--dir-muted); font-weight:600;">No form yet</div>' +
+            '<div class="fl-meta">One link would let people file themselves straight in.</div></div>' +
+          '<div class="fl-actions"><a class="fl-btn" href="' + esc(editHref) + '">Set up a form</a></div>' +
+        '</div></div>';
+    }
+
+    const n = submissionsFor(pl, f);
+    return '<div class="fl-group">' + tab +
+      '<div class="fl-card">' +
+        '<span class="fl-icon" style="background:' + esc(colour) + '18; color:' + esc(colour) + ';">' + ICON_FORM + '</span>' +
+        '<div class="fl-main">' +
+          '<div class="fl-name">' + esc(f.heading || 'Untitled form') + '</div>' +
+          '<div class="fl-meta">' +
+            '<span class="fl-state ' + (f.enabled ? 'on">Active' : 'off">Paused') + '</span>' +
+            '<span class="fl-sep">·</span>' +
+            (n ? '<span><b>' + n + '</b> ' + (n === 1 ? 'submission' : 'submissions') + '</span>'
+               : '<span>No submissions yet</span>') +
+          '</div>' +
+        '</div>' +
+        '<div class="fl-actions">' +
+          '<button class="fl-btn icon" title="Copy link" onclick="copyLink(this, \'' + esc(f.token) + '\')">' + ICON_COPY + '</button>' +
+          '<a class="fl-btn icon" title="Open the form" href="' + esc(formUrlFor(f.token)) + '" target="_blank" rel="noopener">' + ICON_OPEN + '</a>' +
+          '<a class="fl-btn" href="' + esc(editHref) + '">Edit</a>' +
+        '</div>' +
+      '</div></div>';
+  }
+
+  function copyLink(btn, token) {
+    navigator.clipboard.writeText(formUrlFor(token)).then(function () {
+      btn.classList.add('is-done');
+      btn.title = 'Copied';
+      setTimeout(function () { btn.classList.remove('is-done'); btn.title = 'Copy link'; }, 1400);
+    }).catch(function () { btn.title = 'Copy failed'; });
+  }
+
+  (async function init() {
+    let data;
+    try { data = await fetchPipelineData(); }
+    catch (e) {
+      document.getElementById('fl-note').innerHTML =
+        'Couldn’t reach the CRM data API. <a href="' + crmPath('/crm') + '">Open Titan CRM</a>';
+      return;
+    }
+    const pipelines = data.pipelines || {};
+    const list = Object.keys(pipelines).map(function (id) { return pipelines[id]; });
+    window.titanSidebar.setPipelines(list);
+
+    // Forms first, then the pipelines that could have one — one list, so a pipeline
+    // reads the same whether or not it has a form yet.
+    const withForm = list.filter(function (pl) { return pl.intakeForm && pl.intakeForm.token; });
+    const without = list.filter(function (pl) { return !(pl.intakeForm && pl.intakeForm.token); });
+    document.getElementById('fl-live').innerHTML =
+      withForm.concat(without).map(groupHTML).join('') ||
+      '<div class="fl-empty">No pipelines yet.</div>';
+  })();
+</script>
+</body>
+</html>

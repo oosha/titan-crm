@@ -1,25 +1,109 @@
 {
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/mail", "destination": "/index.html" },
-    { "source": "/mail/", "destination": "/index.html" },
-    { "source": "/crm/dashboard", "destination": "/dashboard.html" },
-    { "source": "/crm/dashboard/", "destination": "/dashboard.html" },
-    { "source": "/crm/contacts", "destination": "/contacts.html" },
-    { "source": "/crm/contacts/", "destination": "/contacts.html" },
-    { "source": "/crm/companies", "destination": "/companies.html" },
-    { "source": "/crm/companies/", "destination": "/companies.html" },
-    { "source": "/crm/pipeline/:id/setting", "destination": "/pipeline-settings.html" },
-    { "source": "/crm/pipeline/:id/setting/", "destination": "/pipeline-settings.html" },
-    { "source": "/crm/pipeline/:id/record-setting", "destination": "/opportunity-settings.html" },
-    { "source": "/crm/pipeline/:id/record-setting/", "destination": "/opportunity-settings.html" },
-    { "source": "/crm/pipeline/:id/record/new", "destination": "/add-opportunity.html" },
-    { "source": "/crm/pipeline/:id/record/new/", "destination": "/add-opportunity.html" },
-    { "source": "/crm/pipeline/:id/record/:recordId", "destination": "/opportunity-view.html" },
-    { "source": "/crm/pipeline/:id/record/:recordId/", "destination": "/opportunity-view.html" },
-    { "source": "/crm/pipeline/:id", "destination": "/crm.html" },
-    { "source": "/crm/pipeline/:id/", "destination": "/crm.html" },
-    { "source": "/crm", "destination": "/crm.html" },
-    { "source": "/crm/", "destination": "/crm.html" }
+    {
+      "source": "/mail",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/mail/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/crm/dashboard",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/crm/dashboard/",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/crm/contacts",
+      "destination": "/contacts.html"
+    },
+    {
+      "source": "/crm/contacts/",
+      "destination": "/contacts.html"
+    },
+    {
+      "source": "/crm/companies",
+      "destination": "/companies.html"
+    },
+    {
+      "source": "/crm/companies/",
+      "destination": "/companies.html"
+    },
+    {
+      "source": "/crm/pipeline/:id/setting",
+      "destination": "/pipeline-settings.html"
+    },
+    {
+      "source": "/crm/pipeline/:id/setting/",
+      "destination": "/pipeline-settings.html"
+    },
+    {
+      "source": "/crm/pipeline/:id/record-setting",
+      "destination": "/opportunity-settings.html"
+    },
+    {
+      "source": "/crm/pipeline/:id/record-setting/",
+      "destination": "/opportunity-settings.html"
+    },
+    {
+      "source": "/crm/pipeline/:id/record/new",
+      "destination": "/add-opportunity.html"
+    },
+    {
+      "source": "/crm/pipeline/:id/record/new/",
+      "destination": "/add-opportunity.html"
+    },
+    {
+      "source": "/crm/pipeline/:id/record/:recordId",
+      "destination": "/opportunity-view.html"
+    },
+    {
+      "source": "/crm/pipeline/:id/record/:recordId/",
+      "destination": "/opportunity-view.html"
+    },
+    {
+      "source": "/crm/pipeline/:id/form",
+      "destination": "/form-settings.html"
+    },
+    {
+      "source": "/crm/pipeline/:id/form/",
+      "destination": "/form-settings.html"
+    },
+    {
+      "source": "/crm/pipeline/:id",
+      "destination": "/crm.html"
+    },
+    {
+      "source": "/crm/pipeline/:id/",
+      "destination": "/crm.html"
+    },
+    {
+      "source": "/crm",
+      "destination": "/crm.html"
+    },
+    {
+      "source": "/crm/",
+      "destination": "/crm.html"
+    },
+    {
+      "source": "/f/:token",
+      "destination": "/form.html"
+    },
+    {
+      "source": "/f/:token/",
+      "destination": "/form.html"
+    },
+    {
+      "source": "/crm/forms",
+      "destination": "/forms.html"
+    },
+    {
+      "source": "/crm/forms/",
+      "destination": "/forms.html"
+    }
   ]
 }

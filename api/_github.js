@@ -83,6 +83,42 @@ async function readJsonFile(relativePath) {
   return { sha: body.sha, json: JSON.parse(content) };
 }
 
+// Creates or updates a file, reporting a sha conflict instead of resolving it.
+// Returns { ok: true } or { ok: false, conflict: true }.
+//
+// writeJsonFile() below "resolves" a 409 by re-reading the sha and writing the
+// same object again — which silently discards whatever the other writer put
+// there. That is survivable for the app (one person editing their own board) and
+// NOT survivable for anything concurrent, like a public form. Callers that must
+// not lose a write use this and redo their own read-modify-write on a conflict,
+// so the second writer merges onto the first instead of overwriting it.
+async function writeJsonFileStrict(relativePath, dataObj, message, knownSha) {
+  const content = Buffer.from(JSON.stringify(dataObj, null, 2) + '\n', 'utf8').toString('base64');
+  const body = { message: message, content: content, branch: BRANCH };
+  if (knownSha) body.sha = knownSha;
+  const res = await ghRequest(relativePath, { method: 'PUT', body: JSON.stringify(body) });
+  if (res.status === 409 || res.status === 422) return { ok: false, conflict: true };
+  if (!res.ok) throw new Error('GitHub write failed (' + res.status + '): ' + (await res.text()));
+  return { ok: true };
+}
+
+// Read → modify → write, retried whole so a concurrent write is merged onto
+// rather than clobbered. `mutate(doc)` is called with the freshest document each
+// attempt and may return false to abort without writing.
+async function updateJsonFile(relativePath, mutate, message, attempts) {
+  const tries = attempts || 4;
+  for (let i = 0; i < tries; i++) {
+    const existing = await readJsonFile(relativePath);
+    if (!existing) throw new Error('No such data file: ' + relativePath);
+    const result = mutate(existing.json);
+    if (result === false) return { ok: false, aborted: true };
+    const wrote = await writeJsonFileStrict(relativePath, existing.json, message, existing.sha);
+    if (wrote.ok) return { ok: true, json: existing.json, result: result };
+    // Someone else wrote first — loop and re-apply on top of their version.
+  }
+  throw new Error('Could not write ' + relativePath + ' after ' + tries + ' attempts (too much concurrent activity)');
+}
+
 // Creates or updates a file. Retries once on a sha conflict (409) in case
 // another request wrote to it between our read and write.
 async function writeJsonFile(relativePath, dataObj, message, knownSha) {
@@ -105,4 +141,6 @@ module.exports = {
   isValidPersonaId: isValidPersonaId,
   readJsonFile: readJsonFile,
   writeJsonFile: writeJsonFile,
+  writeJsonFileStrict: writeJsonFileStrict,
+  updateJsonFile: updateJsonFile,
 };

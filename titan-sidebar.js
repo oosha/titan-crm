@@ -74,6 +74,8 @@
     if (segs[1] === 'dashboard') return { kind: 'dashboard' };
     if (segs[1] === 'contacts') return { kind: 'contacts' };
     if (segs[1] === 'companies') return { kind: 'companies' };
+    if (segs[1] === 'forms') return { kind: 'forms' };
+    if (segs[1] === 'pipeline' && segs[2] && segs[3] === 'form') return { kind: 'forms' };
     if (segs[1] === 'pipeline' && segs[2]) return { kind: 'pipeline', id: decodeURIComponent(segs[2]) };
     return { kind: 'board' };
   }
@@ -128,6 +130,7 @@
     dashboard: '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="1.5" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/></svg>',
     contacts: '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4.5" r="2.5" stroke="#fff" stroke-width="1.3"/><path d="M2.5 12.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="#fff" stroke-width="1.3"/></svg>',
     companies: '<svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="11" stroke="#fff" stroke-width="1.3"/><path d="M6 7V3h8v4" stroke="#fff" stroke-width="1.3"/></svg>',
+    forms: '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2.5" y="1.5" width="9" height="11" rx="1.5" stroke="#fff" stroke-width="1.3"/><path d="M5 5h4M5 7.5h4M5 10h2.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg>',
     kebab: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3.5" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="12.5" r="1.3" fill="currentColor"/></svg>',
   };
   function pipelineGlyph(colour) {
@@ -188,6 +191,10 @@
           '<div class="nav-item-icon">' + ICON.companies + '</div>' +
           '<span class="nav-item-label' + on('companies') + '">Companies</span>' +
         '</div>' +
+        '<div class="nav-item' + on('forms') + '" onclick="titanSidebarGo(\'/crm/forms\')">' +
+          '<div class="nav-item-icon">' + ICON.forms + '</div>' +
+          '<span class="nav-item-label' + on('forms') + '">Forms</span>' +
+        '</div>' +
       '</div>' +
 
       '<div style="position:relative; flex-shrink:0;">' +
@@ -213,6 +220,7 @@
     return '<div class="pipeline-nav-menu" id="pipeline-nav-menu">' +
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'add-team\')">Add team</div>' +
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'filter\')">Add filter view</div>' +
+      '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'form\')">Form</div>' +
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'pipeline-setting\')">Pipeline setting</div>' +
       '<div class="pipeline-nav-menu-item" data-action="entity-setting" onclick="pipelineNavMenuAction(\'entity-setting\')">Opportunity setting</div>' +
       '<div class="pipeline-nav-menu-sep"></div>' +
@@ -411,6 +419,7 @@
     var base = '/crm/pipeline/' + encodeURIComponent(pipelineKey);
     if (kind === 'pipeline-setting') { location.href = base + '/setting' + location.search; return; }
     if (kind === 'entity-setting') { location.href = base + '/record-setting' + location.search; return; }
+    if (kind === 'form') { location.href = base + '/form' + location.search; return; }
     if (kind === 'filter') { alert('Prototype only: "Add filter view" is not wired up yet.'); return; }
     if (kind === 'add-team') { alert('Prototype only: "Add team" is not wired up yet.'); return; }
     // Deleting needs the board's confirm-and-repersist path, which lives in crm.html.

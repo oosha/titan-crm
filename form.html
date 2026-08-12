@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Form — Titan</title>
+<!--
+  The public face of an intake form: /f/<token>.
+
+  This page is deliberately alone. It loads no sidebar, no crm-directory.js and no
+  persona script, and it never calls /api/data — that endpoint returns every record
+  for a persona. All it knows is what GET /api/form?token= chooses to tell it, and
+  all it can do is POST a flat map of values back. Someone with the link can fill in
+  the form and nothing else.
+
+  Its markup comes from form-render.js, the same module the builder previews with.
+-->
+<link rel="stylesheet" href="/form.css">
+<script src="/form-render.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #f7f8fa; color: #333;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex; justify-content: center; padding: 40px 20px 72px;
+  }
+  .foot { text-align: center; font-size: 12px; color: #b3b7bd; margin-top: 18px; }
+  .loading { color: #8b9096; font-size: 14px; text-align: center; padding: 24px 0; }
+</style>
+</head>
+<body>
+
+<div class="tf-sheet">
+  <div id="f-brand"></div>
+  <div class="tf-card" id="f-card"><div class="loading">Loading form…</div></div>
+  <div class="foot">Powered by Titan CRM</div>
+</div>
+
+<script>
+  // /f/<token> — the token is the last path segment so the URL stays clean.
+  // ?token= still works for a quick local poke.
+  const TOKEN = (function () {
+    const q = new URLSearchParams(location.search).get('token');
+    if (q) return q;
+    const segs = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
+    return segs[0] === 'f' && segs[1] ? decodeURIComponent(segs[1]) : '';
+  })();
+  const esc = window.titanFormEsc;
+  let DEF = null;
+
+  function fail(msg) {
+    document.getElementById('f-brand').innerHTML = window.titanFormBrandHTML({});
+    document.getElementById('f-card').innerHTML =
+      '<div class="tf-state"><h2>This form isn’t available</h2><p>' + esc(msg) + '</p></div>';
+  }
+
+  function showError(msg, key) {
+    const box = document.getElementById('f-err');
+    box.textContent = msg; box.style.display = '';
+    document.querySelectorAll('.tf-field').forEach(function (el) { el.classList.remove('is-bad'); });
+    if (key) {
+      const f = document.querySelector('.tf-field[data-key="' + key + '"]');
+      if (f) { f.classList.add('is-bad'); const i = f.querySelector('input,textarea,select'); if (i) i.focus(); }
+    }
+    box.scrollIntoView({ block: 'nearest' });
+  }
+
+  function render(def) {
+    DEF = def;
+    document.getElementById('f-brand').innerHTML = window.titanFormBrandHTML(def);
+    document.getElementById('f-card').innerHTML =
+      '<form id="f-form" novalidate>' +
+        '<div id="f-err" class="tf-err" style="display:none"></div>' +
+        window.titanFormBodyHTML(def, {}) +
+        '<div class="tf-hp"><label for="fld-hp">Leave this empty</label>' +
+          '<input id="fld-hp" name="hp" tabindex="-1" autocomplete="off"></div>' +
+      '</form>';
+    document.getElementById('f-form').addEventListener('submit', submit);
+  }
+
+  async function submit(evt) {
+    evt.preventDefault();
+    const btn = document.querySelector('.tf-submit');
+    const values = {};
+    DEF.fields.forEach(function (f) {
+      const el = document.querySelector('[name="' + f.key + '"]');
+      values[f.key] = el ? el.value : '';
+    });
+
+    // Checked here for an immediate in-place message; the server checks again,
+    // since this page can be bypassed entirely.
+    const missing = DEF.fields.filter(function (f) { return f.required && !String(values[f.key] || '').trim(); })[0];
+    if (missing) { showError('Please fill in ' + (missing.label || missing.key) + '.', missing.key); return; }
+
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const res = await fetch('/api/form?token=' + encodeURIComponent(TOKEN), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: values, hp: (document.getElementById('fld-hp') || {}).value || '' }),
+      });
+      const out = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(out.error || 'Something went wrong. Please try again.');
+      document.getElementById('f-card').innerHTML =
+        '<div class="tf-state">' +
+          '<div class="tf-tick"><svg width="22" height="22" viewBox="0 0 24 24" fill="none">' +
+            '<path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
+          '<h2>Submitted</h2><p>' + esc(out.thanks || DEF.thanks || 'Thanks — we have your details.') + '</p>' +
+        '</div>';
+    } catch (e) {
+      btn.disabled = false; btn.textContent = DEF.submitLabel || 'Submit';
+      showError(String((e && e.message) || e));
+    }
+  }
+
+  (async function init() {
+    if (!TOKEN) { fail('That link is missing its form code.'); return; }
+    try {
+      const res = await fetch('/api/form?token=' + encodeURIComponent(TOKEN), { cache: 'no-store' });
+      const out = await res.json().catch(function () { return {}; });
+      if (!res.ok) { fail(out.error || 'The link may have expired.'); return; }
+      document.title = (out.heading ? out.heading + ' — ' : '') + 'Titan';
+      render(out);
+    } catch (e) {
+      fail('Couldn’t load the form. Check your connection and try again.');
+    }
+  })();
+</script>
+</body>
+</html>

@@ -2496,6 +2496,15 @@
       color: #2170f4; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
     }
     .np-chev-add:hover { border-color: #2170f4; background: #f5f9ff; }
+    .np-form-offer { display: flex; gap: 15px; align-items: flex-start; padding: 6px 0 2px; }
+    .np-form-mark {
+      width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+      background: #e8f0fe; color: #2170f4;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .np-form-title { font-size: 15px; font-weight: 700; color: #222; }
+    .np-form-copy { font-size: 13.5px; color: #6b7280; line-height: 1.55; margin-top: 6px; }
+
     .np-footer {
       padding: 13px 18px; border-top: 1px solid #eee; display: flex;
       align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0;
@@ -3230,6 +3239,39 @@
         <div class="np-footer">
           <div class="np-btn-secondary" onclick="npBack()">Back</div>
           <div class="np-btn-primary" onclick="npCreate()">Create pipeline</div>
+        </div>
+      </div>
+
+      <!-- Step 3, shown only after the pipeline exists. A form is optional, so it is
+           offered rather than required: "Not now" leaves a perfectly good pipeline,
+           and the same setup is always reachable later from the pipeline's own menu
+           or the Forms tab. -->
+      <div class="np-step" id="np-step-3">
+        <div class="np-header">
+          <span class="np-title">Pipeline created</span>
+          <span class="np-close" onclick="npFinish()">&times;</span>
+        </div>
+        <div class="np-body">
+          <div class="np-form-offer">
+            <div class="np-form-mark">
+              <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
+                <rect x="4.5" y="3" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M8 2.5h4a1 1 0 011 1V4a1 1 0 01-1 1H8a1 1 0 01-1-1V3.5a1 1 0 011-1z" fill="currentColor"/>
+                <path d="M7.5 8.5h5M7.5 11h5M7.5 13.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <div class="np-form-title">Want a form for <span id="np-form-pl"></span>?</div>
+              <div class="np-form-copy">
+                A public link anyone can fill in — each submission arrives as a record in
+                your first stage. Nobody with the link can see what's already in here.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="np-footer">
+          <div class="np-btn-secondary" onclick="npFinish()">Not now</div>
+          <div class="np-btn-primary" onclick="npGoToForm()">Set up a form</div>
         </div>
       </div>
 
@@ -4743,6 +4785,9 @@
         location.href = crmPath(pipelineKey, kind === 'pipeline-setting' ? '/setting' : '/record-setting');
         return;
       }
+      // The form editor is a page like the settings pages, and it reads the pipeline
+      // from /api/data itself, so it needs no sessionStorage handoff.
+      if (kind === 'form') { location.href = crmPath(pipelineKey, '/form'); return; }
       if (kind === 'delete-pipeline') { deletePipeline(pipelineKey); return; }
       if (kind === 'add-team') { openAddTeamModal(pipelineKey); return; }
       alert('Prototype only: "Add filter view" for ' + (pl.name || pipelineKey) + ' is not wired up yet.');
@@ -5765,7 +5810,21 @@
     function npShowStep(n) {
       document.getElementById('np-step-1').classList.toggle('active', n === 1);
       document.getElementById('np-step-2').classList.toggle('active', n === 2);
+      document.getElementById('np-step-3').classList.toggle('active', n === 3);
       document.getElementById('np-modal').classList.toggle('np-step2-open', n === 2);
+    }
+
+    // Set by npCreate so step 3 knows which pipeline it is offering a form for.
+    let npCreatedId = null;
+    let npCreatedName = '';
+    function npFinish() {
+      closeNewPipeline();
+      npToast('“' + npCreatedName + '” is ready — you can add a form any time from its menu.', true);
+    }
+    function npGoToForm() {
+      // The form editor is a page, not a modal, and the pipeline is already saved, so
+      // this is a plain navigation rather than another handoff through sessionStorage.
+      location.href = crmPath(npCreatedId, '/form');
     }
     function npBack() { npShowStep(1); }
 
@@ -5942,8 +6001,12 @@
       // DOM and is gone on the next load (switchPipeline doesn't save on its own).
       schedulePersist();
 
-      closeNewPipeline();
-      npToast('“' + name + '” created — link an email to add your first ' + entity.toLowerCase() + '.', true);
+      // Don't close yet — offer the form while the pipeline is fresh in mind. The
+      // pipeline is already created and persisted, so either exit from here is safe.
+      npCreatedId = id;
+      npCreatedName = name;
+      document.getElementById('np-form-pl').textContent = name;
+      npShowStep(3);
     }
 
     // Re-renders the rows from PIPELINES rather than hand-building a single row —

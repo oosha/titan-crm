@@ -22,6 +22,9 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
+// The intake-form rules come from the same module the deployed function uses, so
+// what validates here is exactly what validates in production.
+const F = require('./api/_form');
 
 const ROOT = __dirname;
 const PORT = Number(process.argv[2]) || 8000;
@@ -117,6 +120,35 @@ async function apiRevert(req, res, query) {
   json(res, 200, { ok: true, data: next });
 }
 
+// ── /api/form (mirrors api/form.js against the local data files) ─────────────
+async function apiForm(req, res, query) {
+  const token = query.get('token') || '';
+  const personaId = F.personaFromToken(token);
+  if (!personaId || !isValidPersonaId(personaId)) return json(res, 404, { error: 'Unknown form.' });
+
+  const file = currentPathFor(personaId);
+  const doc = await readJson(file);
+  const hit = doc && F.findFormByToken(doc, token);
+  if (!hit || !hit.form.enabled) return json(res, 404, { error: 'This form is not accepting responses.' });
+
+  if (req.method === 'GET') return json(res, 200, F.publicForm(hit.form, hit.pipeline));
+
+  if (req.method === 'POST') {
+    const body = await readBody(req);
+    if (!body) return json(res, 400, { error: 'Malformed body.' });
+    const checked = F.validateSubmission(hit.form, body);
+    if (checked.error) return json(res, 400, { error: checked.error });
+
+    const card = F.buildCard(doc, hit.pipeline, hit.form, checked.values);
+    if (!Array.isArray(hit.pipeline.cards)) hit.pipeline.cards = [];
+    hit.pipeline.cards.push(card);
+    await writeJson(file, doc);
+    console.log('  form submission → ' + file + ' (card #' + card.id + ' in ' + hit.pipelineId + ')');
+    return json(res, 200, { ok: true, thanks: hit.form.thanks || '' });
+  }
+  json(res, 405, { error: 'Method not allowed' });
+}
+
 // ── /api/logo (mirrors api/logo.js, including the placeholder rejection) ─────
 const PLACEHOLDER_MD5 = 'ab1fb25b83d4b333ea661a84bd298b2e';
 async function apiLogo(req, res, query) {
@@ -153,6 +185,7 @@ http.createServer(async (req, res) => {
   try {
     if (pathname === '/api/data') return await apiData(req, res, url.searchParams);
     if (pathname === '/api/revert') return await apiRevert(req, res, url.searchParams);
+    if (pathname === '/api/form') return await apiForm(req, res, url.searchParams);
     if (pathname === '/api/logo') return await apiLogo(req, res, url.searchParams);
 
     if (pathname === '/') return void (serveStatic(res, '/index.html'));

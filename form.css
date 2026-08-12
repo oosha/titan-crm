@@ -1,0 +1,66 @@
+/* The intake form's look, shared by the public page and the builder's preview so
+   the preview can't drift from the real thing. Prefixed tf- to stay out of the way
+   of the CRM's own classes when both are on one page (the builder). */
+.tf-sheet { width: 100%; max-width: 560px; }
+
+.tf-brand {
+  position: relative; height: 108px; border-radius: 16px 16px 0 0; overflow: hidden;
+  background: linear-gradient(135deg, #2170f4, #7a6ba3);
+  display: flex; align-items: center; justify-content: center;
+}
+.tf-brand img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tf-mark {
+  color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; opacity: 0.9;
+}
+.tf-brand.has-img .tf-mark { display: none; }
+
+.tf-card {
+  background: #fff; border: 1px solid #e8eaed; border-top: none;
+  border-radius: 0 0 16px 16px; padding: 28px 30px 30px;
+  box-shadow: 0 1px 2px rgba(16,24,40,0.04), 0 8px 24px rgba(16,24,40,0.05);
+}
+.tf-card h1 {
+  font-size: 22px; line-height: 1.3; font-weight: 700; color: #1a1a1a;
+  margin: 0; letter-spacing: -0.01em;
+}
+.tf-blurb { font-size: 14px; line-height: 1.55; color: #8b9096; margin: 9px 0 0; }
+.tf-rule { height: 1px; background: #f2f4f6; margin: 24px 0; }
+.tf-empty { font-size: 13.5px; color: #b3b7bd; padding: 8px 0 20px; }
+
+.tf-field { margin-bottom: 18px; }
+.tf-field label { display: block; font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 7px; }
+.tf-field .req { color: #2170f4; margin-left: 2px; }
+.tf-field input, .tf-field textarea, .tf-field select {
+  width: 100%; font: inherit; font-size: 14px; color: #1a1a1a;
+  padding: 11px 13px; border: 1px solid #e8eaed; border-radius: 10px;
+  background: #fff; outline: none; transition: border-color 120ms, box-shadow 120ms;
+}
+.tf-field textarea { min-height: 104px; resize: vertical; line-height: 1.5; }
+.tf-field input:focus, .tf-field textarea:focus, .tf-field select:focus {
+  border-color: #2170f4; box-shadow: 0 0 0 3px rgba(33,112,244,0.12);
+}
+.tf-field input:disabled, .tf-field textarea:disabled, .tf-field select:disabled {
+  background: #fcfcfd; color: #9aa1a9; cursor: default;
+}
+.tf-field.is-bad input, .tf-field.is-bad textarea, .tf-field.is-bad select { border-color: #c0392b; }
+
+.tf-submit {
+  width: 100%; height: 46px; border: none; border-radius: 11px;
+  background: #2170f4; color: #fff; font: inherit; font-size: 15px; font-weight: 600;
+  cursor: pointer; margin-top: 6px;
+}
+.tf-submit:hover:not(:disabled) { background: #1b5fd0; }
+.tf-submit:disabled { opacity: 0.6; cursor: default; }
+
+/* Spam trap: a real field to a bot, unreachable to a person or a screen reader. */
+.tf-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+.tf-err { font-size: 13px; color: #c0392b; background: #fdecec; border-radius: 9px; padding: 10px 12px; margin-bottom: 16px; }
+.tf-state { text-align: center; padding: 26px 4px 8px; }
+.tf-state .tf-tick {
+  width: 46px; height: 46px; border-radius: 50%; background: #e9f7ef; color: #1e8e3e;
+  display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px;
+}
+.tf-state h2 { font-size: 18px; color: #1a1a1a; margin: 0 0 7px; }
+.tf-state p { font-size: 14px; color: #8b9096; margin: 0; line-height: 1.55; }
