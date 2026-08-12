@@ -80,6 +80,17 @@ it from forking again:
 5. The component calls its own `titanSidebarGo()` for navigation — never a page-defined
    helper. `crmPath()` means *different things* in `crm.html` and `crm-directory.js`, and
    the shared markup calling it sent the board to `/crm/pipeline/%2Fcrm%2Fdashboard`.
+6. **A page script must not grab a sidebar element at parse time.** The component
+   renders on `DOMContentLoaded`, which is *after* an inline `<script>` runs, so
+   `document.querySelector('.tab-switch')` finds nothing and any guard clause silently
+   swallows the feature — that is exactly how crm.html's app switcher stopped opening.
+   Bind by delegation on `document` instead; it also survives the sidebar re-rendering,
+   which it does whenever the pipeline list changes.
+
+The app switcher in the sidebar header is the component's markup, but its dropdown is
+not: `crm.html` and `index.html` each ship the full `#app-switcher` panel and bind it
+themselves. On every other CRM page the component falls back to navigating to `/mail`,
+so the control is never inert.
 
 The nav is: Dashboard · New pipeline · the pipeline rows (each with saved filter views and
 a three-dot menu) · Contacts · Companies · Forms.
