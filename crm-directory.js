@@ -122,7 +122,15 @@
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(window.DATA),
     });
-    if (!res.ok) throw new Error('Save failed (' + res.status + ')');
+    // Carries the server's own message through. Callers can then tell apart the
+    // failures a person can act on (a rejected credential, say) from a generic
+    // outage — without it every save error reads the same and sends people off
+    // checking their wifi.
+    if (!res.ok) {
+      var detail = '';
+      try { detail = (await res.json()).error || ''; } catch (e) {}
+      throw new Error('Save failed (' + res.status + ')' + (detail ? ': ' + detail : ''));
+    }
   };
 
   // ── Contact field schema ───────────────────────────────────────────────────

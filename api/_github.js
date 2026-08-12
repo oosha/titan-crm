@@ -152,6 +152,18 @@ async function writeJsonFile(relativePath, dataObj, message, knownSha) {
       // identical to plain contention.
       lastStatus = res.status;
       lastBody = (await res.text()).slice(0, 300);
+
+      // Push protection, not contention. GitHub rejects the commit because the
+      // content contains something it recognises as a credential — and since this
+      // repo IS the database, that means a credential can never be stored in the
+      // data files at all. Retrying cannot help, so fail immediately with the one
+      // thing the caller needs to know. (Do not try to smuggle the value past this
+      // check; it exists to stop credentials being published.)
+      if (/secret[ _]scanning|Secret detected/i.test(lastBody)) {
+        throw new Error('SECRET_BLOCKED: GitHub refused to save this because it contains ' +
+          'something it recognises as a credential. Credentials cannot be stored in this ' +
+          'repository — set it as a server environment variable instead.');
+      }
       // Staggered so two writers retrying in lockstep don't collide forever.
       await new Promise(function (r) { setTimeout(r, 150 * (attempt + 1)); });
       const latest = await readJsonFile(relativePath);

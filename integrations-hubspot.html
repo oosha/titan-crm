@@ -179,7 +179,13 @@
     try { await persistCfg(); }
     catch (e) {
       document.getElementById('int-connect').disabled = false;
-      setHint('Couldn’t save just now. Check your connection and try again.', true);
+      // The deployed app stores data in a GitHub repository that has secret
+      // scanning turned on, so it physically refuses to save a key. Retrying or
+      // checking your connection won't help, and saying so would send someone
+      // round in circles — this needs a person with access to the server settings.
+      setHint(/SECRET_BLOCKED/.test(String(e && e.message))
+        ? 'This Titan deployment can’t store a HubSpot key. Ask whoever set up Titan to add it to the server settings instead.'
+        : 'Couldn’t save just now. Check your connection and try again.', true);
       return;
     }
     await load();
