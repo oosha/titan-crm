@@ -6151,6 +6151,17 @@
         if (!res.ok) return;
         REAL_DATA = await res.json();
         REAL_PIPELINES = REAL_DATA.pipelines || {};
+        // A persona with no pipelines yet (?u=anon) must not show the static demo's
+        // pipeline chrome: the markup hardcodes a "Neo partnerships" label on Ryan
+        // Walker's thread pointing at pipeline neo / record 6, and the picker offers
+        // mock pipelines — none of which exist here. rebuildDefaultPipelineData reads
+        // REAL_PIPELINES, so despite the name it works for any persona: given an empty
+        // map it clears PIPELINES and the picker and adds nothing back.
+        if (!Object.keys(REAL_PIPELINES).length) {
+          rebuildDefaultPipelineData();
+          clearAllThreadLinks();
+          return;
+        }
         if (window.PERSONA_ID === 'default') {
           rebuildDefaultPipelineData();
           applyAllThreadLinks();
@@ -6217,6 +6228,16 @@
 
     // Re-render every already-linked tile/header's pipeline label once real pipeline
     // names/colors/stages are in, so nothing's still showing stale mock data.
+    // Drops every thread↔record tie and the labels already painted from the static
+    // markup. Used when the persona has no pipelines at all, so no thread can be
+    // linked to one — a label there would open a record that isn't there.
+    function clearAllThreadLinks() {
+      Object.keys(THREAD_LINKS).forEach(function (k) { delete THREAD_LINKS[k]; });
+      document.querySelectorAll('.tile-preview-row, .thread-sticky-header').forEach(function (host) {
+        renderPipelineLabel(host, null);
+      });
+    }
+
     function applyAllThreadLinks() {
       Object.keys(THREAD_LINKS).forEach(function (threadId) {
         const link = THREAD_LINKS[threadId];

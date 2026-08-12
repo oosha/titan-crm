@@ -2893,7 +2893,7 @@
       </div><!-- /top-toolbar -->
 
       <div class="content-area" style="display:block; overflow:auto; padding:20px 24px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+        <div id="board-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
           <div style="font-size:19px; font-weight:700; color:#1a1a1a;">
             <span id="pipeline-name-heading">Neo partnerships</span> <span id="pipeline-total" style="font-size:13.5px; font-weight:500; color:#888; margin-left:8px;"></span>
           </div>
@@ -2928,6 +2928,24 @@
         </div>
 
         <div class="kanban-board" id="kanban-board" style="padding-right:24px;"></div>
+
+        <!-- Shown instead of the board when this persona has no pipelines yet
+             (see applyEmptyBoardState). The whole header row is hidden alongside it —
+             "Add opportunity", the intake-form button and the pipeline name all read as
+             belonging to a pipeline that doesn't exist. -->
+        <div id="board-empty-state" style="display:none; max-width:420px; margin:78px auto 0; text-align:center;">
+          <div style="width:52px; height:52px; margin:0 auto 18px; border-radius:14px; background:#f2f4f7; display:flex; align-items:center; justify-content:center;">
+            <svg width="26" height="26" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="#9aa1a9"/></svg>
+          </div>
+          <div style="font-size:17px; font-weight:700; color:#1a1a1a;">No pipelines yet</div>
+          <div style="font-size:13.5px; color:#888; line-height:1.6; margin-top:8px;">
+            A pipeline is where your opportunities, projects or candidates live.
+            Create one to start tracking deals alongside your inbox.
+          </div>
+          <div style="display:inline-flex; align-items:center; gap:6px; margin-top:20px; background:#2170f4; color:#fff; font-size:13px; font-weight:600; padding:9px 16px; border-radius:6px; cursor:pointer;" onclick="openNewPipeline()">
+            <span style="font-weight:700;">+</span> New pipeline
+          </div>
+        </div>
       </div><!-- /content-area -->
     </div><!-- /main-area -->
 
@@ -4711,6 +4729,28 @@
       if (location.pathname + location.search !== url) history.replaceState(null, '', url);
     }
 
+    // With no pipelines there is nothing for the board chrome to describe, so swap the
+    // whole header + board for a single "create your first one" prompt. Called after
+    // any change to the set of pipelines, not just at load — creating the first one or
+    // deleting the last one both cross this boundary.
+    function applyEmptyBoardState() {
+      const empty = !Object.keys(PIPELINES).length;
+      const header = document.getElementById('board-header');
+      const board = document.getElementById('kanban-board');
+      const prompt = document.getElementById('board-empty-state');
+      if (header) header.style.display = empty ? 'none' : '';
+      if (board) board.style.display = empty ? 'none' : '';
+      if (prompt) prompt.style.display = empty ? '' : 'none';
+      if (empty) {
+        currentPipelineId = null;
+        updateCrmUrl(null, null);
+        // The static <title> names a pipeline, and applyPersona() only overwrites it for
+        // personas that ship a personas/<id>.js — otherwise the tab reads "Neo
+        // partnerships" on a board that has none.
+        document.title = 'CRM';
+      }
+    }
+
     function switchPipeline(id) {
       const p = PIPELINES[id];
       if (!p) return;
@@ -5784,7 +5824,11 @@
         catch (e) { console.error('titan-crm: API unreachable, using built-in sample data.', e); }
 
         LOADED_DATA = data;
-        if (data && data.pipelines && Object.keys(data.pipelines).length) {
+        // A successful fetch wins even when it carries zero pipelines — that's a real
+        // state (a persona that hasn't built one yet, e.g. ?u=anon), not a failure.
+        // Testing .length here too would send it down the offline path below and show
+        // the built-in Neo board as if it were that persona's own data.
+        if (data && data.pipelines) {
           for (var k in PIPELINES) delete PIPELINES[k];
           Object.keys(data.pipelines).forEach(function (id) { PIPELINES[id] = data.pipelines[id]; });
           currentPipelineId = (data.currentPipelineId && PIPELINES[data.currentPipelineId]) ? data.currentPipelineId : Object.keys(PIPELINES)[0];
@@ -5795,6 +5839,9 @@
 
         applyPendingPipelineSettingsCommit();
         rebuildPipelineNav(Object.keys(PIPELINES).map(function (id) { return PIPELINES[id]; }));
+        applyEmptyBoardState();
+        // switchPipeline() no-ops on an undefined id, so with no pipelines the board
+        // simply stays as the empty state applied above.
         switchPipeline(currentPipelineId);
         openFromRoute();
 
@@ -6101,6 +6148,8 @@
       }
 
       npAddSidebarPipeline();
+      // Leaves the "no pipelines yet" state when this is the first one.
+      applyEmptyBoardState();
       switchPipeline(id);
       // Persist the new pipeline — without this it lives only in memory + the sidebar
       // DOM and is gone on the next load (switchPipeline doesn't save on its own).
