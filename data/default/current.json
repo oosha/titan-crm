@@ -776,7 +776,67 @@
         }
       ],
       "contactsEnabled": true,
-      "type": "sales"
+      "type": "sales",
+      "intakeForm": {
+        "token": "default.660m012h4a",
+        "enabled": false,
+        "heading": "Get in touch about Tee orders",
+        "blurb": "",
+        "logoUrl": "",
+        "submitLabel": "Submit",
+        "thanks": "Thanks — we have your details and will be in touch.",
+        "recordTitle": "Tee orders",
+        "sourceLabel": "Form",
+        "fields": [
+          {
+            "key": "name",
+            "label": "Full name",
+            "type": "text",
+            "target": "name",
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "Email",
+            "type": "email",
+            "target": "email",
+            "required": true
+          },
+          {
+            "key": "company",
+            "label": "Company",
+            "type": "text",
+            "target": "company"
+          },
+          {
+            "key": "phone",
+            "label": "Phone",
+            "type": "tel",
+            "target": "phone"
+          },
+          {
+            "key": "note",
+            "label": "What do you need?",
+            "type": "textarea",
+            "target": "note",
+            "placeholder": "A sentence or two about what you’re after"
+          },
+          {
+            "key": "designation",
+            "label": "Job title",
+            "type": "text",
+            "target": "designation",
+            "required": false
+          },
+          {
+            "key": "location",
+            "label": "Location",
+            "type": "text",
+            "target": "location",
+            "required": false
+          }
+        ]
+      }
     },
     "p2": {
       "id": "p2",
