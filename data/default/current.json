@@ -581,7 +581,7 @@
       "type": "sales",
       "intakeForm": {
         "token": "default.281o51736o",
-        "enabled": false,
+        "enabled": true,
         "heading": "Get in touch about Neo partnerships",
         "blurb": "",
         "logoUrl": "",
