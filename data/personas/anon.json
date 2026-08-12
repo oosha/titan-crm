@@ -1,5 +1,49 @@
 {
-  "currentPipelineId": null,
-  "pipelineSeq": 0,
-  "pipelines": {}
+  "currentPipelineId": "p1",
+  "pipelineSeq": 1,
+  "pipelines": {
+    "p1": {
+      "id": "p1",
+      "name": "Hiring Pipeline",
+      "entity": "Candidate",
+      "plural": "candidates",
+      "color": "#ab5f74",
+      "type": "hiring",
+      "stages": [
+        {
+          "key": "applied-0",
+          "label": "Applied"
+        },
+        {
+          "key": "screen-1",
+          "label": "Screen"
+        },
+        {
+          "key": "hm-screening-2",
+          "label": "HM Screening"
+        },
+        {
+          "key": "round-1-3",
+          "label": "Round 1"
+        },
+        {
+          "key": "round-2-4",
+          "label": "Round 2"
+        },
+        {
+          "key": "final-round-5",
+          "label": "Final Round"
+        },
+        {
+          "key": "offer-6",
+          "label": "Offer"
+        },
+        {
+          "key": "hired-7",
+          "label": "Hired"
+        }
+      ],
+      "cards": []
+    }
+  }
 }
