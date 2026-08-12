@@ -4386,33 +4386,25 @@
     }
 
     // ── App Switcher ─────────────────────────────────────────────────────
+    // Bound by delegation rather than by grabbing .tab-switch up front: the sidebar is
+    // rendered by titan-sidebar.js on DOMContentLoaded, which is after this script runs,
+    // so a direct querySelector found nothing and the switcher silently did nothing.
+    // Delegation also survives the sidebar re-rendering.
     (function initAppSwitcher() {
-      const tabSwitchBtn = document.querySelector('.tab-switch');
       const appSwitcher = document.getElementById('app-switcher');
-
-      if (!tabSwitchBtn || !appSwitcher) return;
-
-      tabSwitchBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (appSwitcher.classList.contains('open')) {
-          closeAppSwitcher();
-        } else {
-          openAppSwitcher();
-        }
-      });
+      if (!appSwitcher) return;
+      const tab = function () { return document.querySelector('.tab-switch'); };
 
       function openAppSwitcher() {
-        tabSwitchBtn.classList.add('active');
+        const t = tab(); if (t) t.classList.add('active');
         appSwitcher.style.display = 'block';
-        // Trigger reflow
-        appSwitcher.offsetHeight;
+        appSwitcher.offsetHeight;                    // reflow, so the transition runs
         appSwitcher.classList.add('open');
       }
 
       function closeAppSwitcher() {
-        tabSwitchBtn.classList.remove('active');
+        const t = tab(); if (t) t.classList.remove('active');
         appSwitcher.classList.remove('open');
-        // Wait for transition to end before setting display none
         const onTransitionEnd = (e) => {
           if (e.propertyName === 'opacity' && !appSwitcher.classList.contains('open')) {
             appSwitcher.style.display = 'none';
@@ -4422,11 +4414,14 @@
         appSwitcher.addEventListener('transitionend', onTransitionEnd);
       }
 
-      // Close dropdown when clicking outside
       document.addEventListener('click', (e) => {
-        if (appSwitcher.classList.contains('open') && !appSwitcher.contains(e.target) && !tabSwitchBtn.contains(e.target)) {
-          closeAppSwitcher();
+        const onTab = e.target.closest && e.target.closest('.tab-switch');
+        if (onTab) {
+          e.stopPropagation();
+          if (appSwitcher.classList.contains('open')) closeAppSwitcher(); else openAppSwitcher();
+          return;
         }
+        if (appSwitcher.classList.contains('open') && !appSwitcher.contains(e.target)) closeAppSwitcher();
       });
     })();
 

@@ -336,6 +336,17 @@
   }
 
   // ── Handlers ───────────────────────────────────────────────────────────────
+  // The app switcher in the sidebar header. crm.html and index.html each ship the full
+  // app-switcher dropdown and bind it themselves; every other CRM page shows the same
+  // control with nothing behind it, which read as broken. Here it falls back to what a
+  // person actually wants from it — going back to the mailbox.
+  document.addEventListener('click', function (e) {
+    const onTab = e.target.closest && e.target.closest('.tab-switch');
+    if (!onTab) return;
+    if (document.getElementById('app-switcher')) return;   // the page owns it
+    window.titanSidebarGo('/mail');
+  });
+
   window.toggleAccountMenu = function (evt) {
     if (evt) evt.stopPropagation();
     var header = document.getElementById('account-header');
