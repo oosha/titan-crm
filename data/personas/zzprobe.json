@@ -1,4 +1,1403 @@
 {
-  "pipelines": {},
-  "probe": "second write"
+  "currentPipelineId": "p3",
+  "pipelineSeq": 3,
+  "pipelines": {
+    "neo": {
+      "id": "neo",
+      "name": "Neo partnerships",
+      "entity": "Opportunity",
+      "plural": "opportunities",
+      "color": "#7a6ba3",
+      "stages": [
+        {
+          "key": "lead",
+          "label": "Lead",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "qualified",
+          "label": "Qualified",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "demo",
+          "label": "Demo Scheduled",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "proposal",
+          "label": "Proposal Sent",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "negotiation",
+          "label": "Negotiation",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "closed",
+          "label": "Closed",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        }
+      ],
+      "cards": [
+        {
+          "id": 1,
+          "company": "BrightPath Co",
+          "contact": "Olivia Bennett",
+          "initials": "OB",
+          "deal": "BrightPath Pro plan",
+          "value": 3000,
+          "stage": "proposal",
+          "lastActivity": "2d ago",
+          "activityType": "Email sent",
+          "overdue": false,
+          "upcomingActivities": [],
+          "note": "Bright team wants to review internally first and come back",
+          "noteDate": "5 Aug",
+          "currency": "$",
+          "location": "",
+          "website": "brightpath.com",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "contacts": [
+            {
+              "name": "Olivia Bennett",
+              "email": "olivia.bennett@brightpathco.com",
+              "designation": "Head of Operations",
+              "phone": "+1 (212) 555-0142",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactEmail": "olivia.bennett@brightpathco.com",
+          "contactPhone": "+1 (212) 555-0142",
+          "contactDesignation": "Head of Operations",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
+        },
+        {
+          "id": 2,
+          "company": "Lumen Retail",
+          "contact": "Marcus Webb",
+          "initials": "MW",
+          "deal": "Lumen CD only",
+          "value": 5400,
+          "stage": "lead",
+          "lastActivity": "1d ago",
+          "activityType": "Email received",
+          "overdue": false,
+          "nextActivity": {
+            "type": "followup",
+            "date": "12 Feb"
+          },
+          "contactEmail": "marcus.webb@lumenretail.com",
+          "contactPhone": "+1 (312) 555-0187",
+          "contactDesignation": "IT Director",
+          "website": "lumenretail.com"
+        },
+        {
+          "id": 3,
+          "company": "Northfield Group",
+          "contact": "Grace Turner",
+          "initials": "GT",
+          "deal": "Northfield Site freemium",
+          "value": 7200,
+          "stage": "qualified",
+          "lastActivity": "3d ago",
+          "activityType": "Phone call",
+          "overdue": false,
+          "contactEmail": "grace.turner@northfieldgroup.com",
+          "contactPhone": "+1 (503) 555-0119",
+          "contactDesignation": "Growth Lead",
+          "website": "northfieldgroup.com"
+        },
+        {
+          "id": 4,
+          "company": "Coastal Supply",
+          "contact": "Ethan Price",
+          "initials": "EP",
+          "deal": "Coastal migration from Google",
+          "value": 2950,
+          "stage": "qualified",
+          "lastActivity": "6d ago",
+          "activityType": "Email received",
+          "overdue": true,
+          "contactEmail": "ethan.price@coastalsupply.com",
+          "contactPhone": "+1 (619) 555-0163",
+          "contactDesignation": "VP Engineering",
+          "website": "coastalsupply.com"
+        },
+        {
+          "id": 5,
+          "company": "Union Analytics",
+          "contact": "Sophie Hart",
+          "initials": "SH",
+          "deal": "Union Enterprise plan",
+          "value": 12000,
+          "stage": "demo",
+          "lastActivity": "4h ago",
+          "activityType": "Meeting",
+          "overdue": false,
+          "nextActivity": {
+            "type": "task",
+            "name": "Send proposal",
+            "date": "5 Mar"
+          },
+          "contactEmail": "sophie.hart@unionanalytics.com",
+          "contactPhone": "+1 (206) 555-0128",
+          "contactDesignation": "Head of Data",
+          "website": "unionadvisory.com"
+        },
+        {
+          "id": 6,
+          "company": "Meridian Labs",
+          "contact": "Ryan Walker",
+          "initials": "RW",
+          "deal": "Meridian AI site",
+          "value": 18000,
+          "stage": "demo",
+          "lastActivity": "8d ago",
+          "activityType": "Email sent",
+          "overdue": false,
+          "currency": "$",
+          "website": "meridiandatalabs.com",
+          "companyLinkedin": "linkedin.com/company/meridianlabs",
+          "instagram": "instagram.com/meridianlabs",
+          "location": "San Jose, US",
+          "closeDate": "",
+          "source": "",
+          "note": "We'll need to figure a new approach for this opportunity soon, they may opt for Acme instead!",
+          "noteDate": "5 Aug",
+          "contacts": [
+            {
+              "name": "Ryan Walker",
+              "designation": "VP, Product",
+              "email": "ryan.walker@meridianlabs.com",
+              "phone": "+1 (415) 555-0134",
+              "linkedin": "linkedin.com/in/ryanwalker"
+            },
+            {
+              "name": "Jason Miller",
+              "email": "jason.miller@meridianlabs.com",
+              "linkedin": "linkedin.com/in/jasonmiller"
+            },
+            {
+              "name": "Owen Price",
+              "email": "owen.price@meridianlabs.com",
+              "linkedin": "linkedin.com/in/owenprice"
+            }
+          ],
+          "upcomingActivities": [
+            {
+              "type": "email",
+              "text": "Follow-up on proposal",
+              "date": "Thu",
+              "author": "Usha"
+            },
+            {
+              "type": "meeting",
+              "text": "Proposal follow-up questions",
+              "date": "Jul 30, 3:00 PM",
+              "attendees": [
+                {
+                  "name": "Usha",
+                  "email": "usha@titan.email"
+                },
+                {
+                  "name": "Ryan Walker",
+                  "email": "ryan.walker@meridianlabs.com"
+                }
+              ],
+              "zoomLink": "https://zoom.us/j/8891234567",
+              "agenda": "Answer Ryan's open questions on the proposal before he takes it to his team."
+            },
+            {
+              "type": "task",
+              "text": "Send updated proposal deck",
+              "overdue": true
+            },
+            {
+              "type": "task",
+              "text": "Schedule follow-up call",
+              "date": "Mon, 5pm"
+            }
+          ],
+          "recentActivities": [
+            {
+              "type": "note",
+              "text": "AI capabilities are not clear to them yet and need a walkthrough",
+              "date": "5 Aug",
+              "author": "Usha"
+            },
+            {
+              "type": "note",
+              "text": "From Ryan: They are still figuring out priorities internally.",
+              "date": "5 Aug"
+            },
+            {
+              "type": "email",
+              "text": "Project roadmap for Dashboard v2",
+              "snippet": "Ryan confirmed the Jun 12 timeline and asked about multi-theme support.",
+              "date": "Jun 12",
+              "author": "Jason",
+              "recipients": [
+                {
+                  "name": "Ryan Walker",
+                  "email": "ryan.walker@meridianlabs.com"
+                },
+                {
+                  "name": "Jason Miller",
+                  "email": "jason.miller@meridianlabs.com"
+                }
+              ],
+              "body": "Hi team,\n\nRyan confirmed the Jun 12 timeline on our end and asked whether the dashboard will support multi-theme support out of the box, or if that needs to be scoped separately.\n\nCan we get a quick answer back to him before EOD?\n\nThanks,\nJason"
+            },
+            {
+              "type": "meeting",
+              "text": "Design review call with Ryan Walker",
+              "snippet": "Walk through the v2 mockups and align on theming approach.",
+              "date": "Jun 10",
+              "attendees": [
+                {
+                  "name": "Usha",
+                  "email": "usha@titan.email"
+                },
+                {
+                  "name": "Ryan Walker",
+                  "email": "ryan.walker@meridianlabs.com"
+                },
+                {
+                  "name": "Jason Miller",
+                  "email": "jason.miller@meridianlabs.com"
+                }
+              ],
+              "zoomLink": "https://zoom.us/j/8827761045",
+              "agenda": "Walk through the v2 mockups, align on theming approach, confirm rollout timeline for the pilot.",
+              "time": "2:00 PM"
+            },
+            {
+              "type": "phone",
+              "text": "Intro call with Ryan",
+              "snippet": "First call - walked through Titan's plans and pricing tiers.",
+              "date": "Jun 8"
+            },
+            {
+              "type": "task",
+              "text": "Send updated proposal deck",
+              "snippetLink": "Project roadmap for Dashboard v2",
+              "date": "Jun 7"
+            }
+          ],
+          "files": [
+            {
+              "name": "dashboard_v2_proposal.pdf",
+              "size": "102 KB",
+              "direction": "sent"
+            },
+            {
+              "name": "theming_requirements.docx",
+              "size": "48 KB",
+              "direction": "received"
+            },
+            {
+              "name": "mockups_v2_final.zip",
+              "size": "3.4 MB",
+              "direction": "sent"
+            }
+          ],
+          "customFieldValues": {
+            "cf1": "High"
+          },
+          "contactEmail": "ryan.walker@meridianlabs.com",
+          "contactPhone": "+1 (415) 555-0134",
+          "contactDesignation": "VP, Product",
+          "contactLinkedin": "linkedin.com/in/ryanwalker",
+          "noteAuthor": "John",
+          "noteHistory": [
+            {
+              "text": "AI capabilities are not clear to them yet and need a walkthrough",
+              "author": "Usha",
+              "date": "5 Aug"
+            },
+            {
+              "text": "From Ryan: They are still figuring out priorities internally.",
+              "author": "Usha",
+              "date": "5 Aug"
+            }
+          ],
+          "status": "In progress",
+          "autoLinkActivity": true
+        },
+        {
+          "id": 7,
+          "company": "Fairview Logistics",
+          "contact": "Noah Bennett",
+          "initials": "NB",
+          "deal": "Fairview seat expansion",
+          "value": 6500,
+          "stage": "proposal",
+          "lastActivity": "2d ago",
+          "activityType": "Phone call",
+          "overdue": false,
+          "nextActivity": {
+            "type": "meeting",
+            "date": "2 Mar"
+          },
+          "contactEmail": "noah.bennett@fairviewlogistics.com",
+          "contactPhone": "+1 (773) 555-0155",
+          "contactDesignation": "Operations Director",
+          "website": "fairviewlogistics.com"
+        },
+        {
+          "id": 8,
+          "company": "Delta Freight",
+          "contact": "Chloe Sanders",
+          "initials": "CS",
+          "deal": "Delta annual renewal",
+          "value": 22000,
+          "stage": "negotiation",
+          "lastActivity": "5d ago",
+          "activityType": "Meeting",
+          "overdue": false,
+          "contactEmail": "chloe.sanders@deltafreight.com",
+          "contactPhone": "+1 (720) 555-0174",
+          "contactDesignation": "Procurement Manager",
+          "website": "deltafreightsystems.com"
+        },
+        {
+          "id": 9,
+          "company": "Vantage Group",
+          "contact": "Liam Carter",
+          "initials": "LC",
+          "deal": "Vantage Business plan",
+          "value": 9800,
+          "stage": "closed",
+          "won": true,
+          "lastActivity": "1d ago",
+          "activityType": "Email sent",
+          "overdue": false,
+          "noteHistory": [],
+          "upcomingActivities": [],
+          "status": "Won",
+          "currency": "$",
+          "location": "",
+          "website": "vantagegroup.com",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "contacts": [
+            {
+              "name": "Liam Carter",
+              "email": "liam.carter@vantagegroup.com",
+              "designation": "CEO",
+              "phone": "+1 (646) 555-0139",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactEmail": "liam.carter@vantagegroup.com",
+          "contactPhone": "+1 (646) 555-0139",
+          "contactDesignation": "CEO",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
+        },
+        {
+          "id": 103,
+          "company": "FirstCry",
+          "contact": "Pearson",
+          "initials": "P",
+          "deal": "FirstCry on premise",
+          "value": 0,
+          "stage": "lead",
+          "lastActivity": "just now",
+          "activityType": "Email sent",
+          "overdue": false,
+          "createdBy": "John",
+          "noteAuthor": "Ishant",
+          "location": "",
+          "website": "firstcry.com",
+          "companyLinkedin": "",
+          "instagram": "",
+          "currency": "$",
+          "closeDate": "",
+          "source": "",
+          "note": "FirstCry team has a an internal quarterly meet, and need to wait for that.",
+          "contactEmail": "pearson@firstcry.com",
+          "contactPhone": "+971 55 567 7788",
+          "contactDesignation": "Buying Manager",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "contacts": [
+            {
+              "name": "Pearson",
+              "email": "pearson@firstcry.com",
+              "phone": "+971 55 567 7788",
+              "designation": "Buying Manager",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "customFieldValues": {},
+          "noteHistory": [],
+          "upcomingActivities": [],
+          "recentActivities": [
+            {
+              "type": "note",
+              "text": "FirstCry team has a an internal quarterly meet, and need to wait for that.",
+              "author": "Ishant",
+              "date": "7 Aug"
+            }
+          ],
+          "noteDate": "7 Aug",
+          "autoLinkActivity": true
+        },
+        {
+          "id": 104,
+          "deal": "Enterprise Plan Enquiry",
+          "company": "Northwind",
+          "contact": "Emma Clarke",
+          "contactEmail": "emma.clarke@northwind.co",
+          "value": 20,
+          "stage": "qualified",
+          "lastActivity": "just now",
+          "activityType": "Email received",
+          "overdue": false,
+          "noteHistory": [],
+          "upcomingActivities": [],
+          "currency": "$",
+          "location": "",
+          "website": "northwindgroup.com",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "autoLinkActivity": true,
+          "contacts": [
+            {
+              "name": "Emma Clarke",
+              "email": "emma.clarke@northwind.co",
+              "designation": "",
+              "phone": "09034401875",
+              "department": "",
+              "location": "",
+              "linkedin": "linkedin.com/in/clark-emma"
+            }
+          ],
+          "contactPhone": "09034401875",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "linkedin.com/in/clark-emma",
+          "customFieldValues": {},
+          "recentActivities": [
+            {
+              "type": "note",
+              "text": "some note",
+              "author": "Usha",
+              "date": "7 Aug"
+            }
+          ],
+          "note": "some note",
+          "noteDate": "7 Aug",
+          "noteAuthor": "Usha"
+        },
+        {
+          "id": 209,
+          "deal": "Neo partnerships",
+          "stage": "lead",
+          "company": "Lemon Tree",
+          "contact": "Jenny Waters",
+          "initials": "JW",
+          "contactEmail": "jenny.w@lemontree.com",
+          "contactPhone": "+1 242 4546 2353",
+          "contactDesignation": "VP partnerships",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "contacts": [
+            {
+              "name": "Jenny Waters",
+              "email": "jenny.w@lemontree.com",
+              "phone": "+1 242 4546 2353",
+              "designation": "VP partnerships",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "value": 0,
+          "currency": "$",
+          "source": "Form",
+          "note": "Need the AI Site generation of Neo for our clients",
+          "noteAuthor": "Jenny Waters",
+          "noteDate": "",
+          "lastActivity": "just now",
+          "activityType": "Form submission",
+          "overdue": false,
+          "createdBy": "Form",
+          "customFieldValues": {}
+        }
+      ],
+      "hiddenFields": [],
+      "customFieldDefs": [
+        {
+          "key": "cf1",
+          "name": "Renewal Risk",
+          "type": "text"
+        }
+      ],
+      "contactsEnabled": true,
+      "team": [],
+      "type": "sales",
+      "intakeForm": {
+        "token": "default.281o51736o",
+        "enabled": true,
+        "heading": "Get in touch about Neo partnerships",
+        "blurb": "",
+        "logoUrl": "",
+        "submitLabel": "Submit",
+        "thanks": "Thanks — we have your details and will be in touch.",
+        "recordTitle": "Neo partnerships",
+        "sourceLabel": "Form",
+        "fields": [
+          {
+            "key": "name",
+            "label": "Full name",
+            "type": "text",
+            "target": "name",
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "Email",
+            "type": "email",
+            "target": "email",
+            "required": true
+          },
+          {
+            "key": "company",
+            "label": "Company",
+            "type": "text",
+            "target": "company"
+          },
+          {
+            "key": "phone",
+            "label": "Phone",
+            "type": "tel",
+            "target": "phone"
+          },
+          {
+            "key": "note",
+            "label": "What do you need?",
+            "type": "textarea",
+            "target": "note",
+            "placeholder": "A sentence or two about what you’re after"
+          },
+          {
+            "key": "designation",
+            "label": "Job title",
+            "type": "text",
+            "target": "designation",
+            "required": false
+          }
+        ]
+      }
+    },
+    "p1": {
+      "id": "p1",
+      "name": "Tee orders",
+      "entity": "Order",
+      "plural": "orders",
+      "color": "#b5813f",
+      "stages": [
+        {
+          "key": "received-0",
+          "label": "Received",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "processing-1",
+          "label": "Processing",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "shipped-2",
+          "label": "Shipped",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "delivered-3",
+          "label": "Delivered",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "closed-4",
+          "label": "Closed",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        }
+      ],
+      "cards": [
+        {
+          "id": 101,
+          "company": "FirstCry",
+          "contact": "Leela Shankar",
+          "initials": "L",
+          "deal": "Baby wear for FirstCry",
+          "value": 12000,
+          "stage": "processing-1",
+          "lastActivity": "just now",
+          "activityType": "Email sent",
+          "overdue": false,
+          "location": "Dubai, UAE",
+          "website": "firstcry.com",
+          "companyLinkedin": "linkedin.com/company/firstcry",
+          "instagram": "instagram.com/firstcry",
+          "currency": "$",
+          "closeDate": "",
+          "source": "Direct",
+          "note": "",
+          "contactEmail": "leela.s@firstcry.com",
+          "contactPhone": "+97155566666",
+          "contactDesignation": "Head Buyer",
+          "contactDepartment": "Merchandising",
+          "contactLocation": "Abu Dhabi, UAE",
+          "contactLinkedin": "linkedin.com/leela-1241234",
+          "contacts": [
+            {
+              "name": "Leela Shankar",
+              "email": "leela.s@firstcry.com",
+              "phone": "+97155566666",
+              "designation": "Head Buyer",
+              "department": "Merchandising",
+              "location": "Abu Dhabi, UAE",
+              "linkedin": "linkedin.com/leela-1241234"
+            }
+          ],
+          "customFieldValues": {},
+          "upcomingActivities": []
+        },
+        {
+          "id": 102,
+          "deal": "Emma's coffee",
+          "company": "Northwind",
+          "contact": "Emma Clarke",
+          "contactEmail": "emma.clarke@northwind.co",
+          "value": 0,
+          "stage": "received-0",
+          "lastActivity": "just now",
+          "activityType": "Email received",
+          "overdue": false,
+          "contactPhone": "+1 (415) 555-0198",
+          "contactDesignation": "Purchasing Lead",
+          "website": "northwindgroup.com"
+        }
+      ],
+      "hiddenFields": [],
+      "customFieldDefs": [
+        {
+          "key": "cf1",
+          "name": "Delivery timeline",
+          "type": "number"
+        }
+      ],
+      "contactsEnabled": true,
+      "type": "sales",
+      "intakeForm": {
+        "token": "default.660m012h4a",
+        "enabled": true,
+        "heading": "Get in touch about Tee orders",
+        "blurb": "",
+        "logoUrl": "",
+        "submitLabel": "Submit",
+        "thanks": "Thanks — we have your details and will be in touch.",
+        "recordTitle": "Tee orders",
+        "sourceLabel": "Form",
+        "fields": [
+          {
+            "key": "name",
+            "label": "Full name",
+            "type": "text",
+            "target": "name",
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "Email",
+            "type": "email",
+            "target": "email",
+            "required": true
+          },
+          {
+            "key": "company",
+            "label": "Company",
+            "type": "text",
+            "target": "company"
+          },
+          {
+            "key": "phone",
+            "label": "Phone",
+            "type": "tel",
+            "target": "phone"
+          },
+          {
+            "key": "note",
+            "label": "What do you need?",
+            "type": "textarea",
+            "target": "note",
+            "placeholder": "A sentence or two about what you’re after"
+          },
+          {
+            "key": "designation",
+            "label": "Job title",
+            "type": "text",
+            "target": "designation",
+            "required": false
+          },
+          {
+            "key": "location",
+            "label": "Location",
+            "type": "text",
+            "target": "location",
+            "required": false
+          }
+        ]
+      }
+    },
+    "p2": {
+      "id": "p2",
+      "name": "Engineering hiring",
+      "type": "hiring",
+      "entity": "Candidate",
+      "plural": "candidates",
+      "color": "#2e9e7b",
+      "contactsEnabled": true,
+      "hiddenFields": [
+        "company-linkedin",
+        "instagram",
+        "close-date"
+      ],
+      "customFieldDefs": [
+        {
+          "key": "cf1",
+          "name": "Years of experience",
+          "type": "number"
+        }
+      ],
+      "stages": [
+        {
+          "key": "applied",
+          "label": "Applied",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "screen",
+          "label": "Screening",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "interview",
+          "label": "Interviewing",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "offer",
+          "label": "Offer out",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        },
+        {
+          "key": "hired",
+          "label": "Hired",
+          "description": "",
+          "tasks": [],
+          "emailSequence": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
+        }
+      ],
+      "cards": [
+        {
+          "initials": "P",
+          "value": 0,
+          "overdue": false,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "Strong on design systems. Panel wants one more round on architecture.",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 8
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Priya Raghavan",
+              "email": "priya.raghavan@gmail.com",
+              "phone": "+91 98450 11234",
+              "designation": "Frontend Lead at Zeta Labs",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 201,
+          "contact": "Priya Raghavan",
+          "company": "Zeta Labs",
+          "website": "zeta.com",
+          "deal": "Senior Frontend Engineer",
+          "stage": "interview",
+          "lastActivity": "1d ago",
+          "activityType": "Interview held",
+          "source": "Referral",
+          "contactEmail": "priya.raghavan@gmail.com",
+          "contactPhone": "+91 98450 11234",
+          "contactDesignation": "Frontend Lead at Zeta Labs",
+          "noteDate": "9 Aug",
+          "noteAuthor": "Usha"
+        },
+        {
+          "initials": "D",
+          "value": 0,
+          "overdue": true,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "Offer out since Tuesday, no reply yet. Chase before Friday.",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 11
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Daniel Osei",
+              "email": "d.osei@outlook.com",
+              "phone": "+44 7700 900412",
+              "designation": "Staff Engineer at Northfield",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 202,
+          "contact": "Daniel Osei",
+          "company": "Northfield",
+          "website": "northfield.com",
+          "deal": "Senior Frontend Engineer",
+          "stage": "offer",
+          "lastActivity": "3d ago",
+          "activityType": "Offer sent",
+          "source": "LinkedIn",
+          "contactEmail": "d.osei@outlook.com",
+          "contactPhone": "+44 7700 900412",
+          "contactDesignation": "Staff Engineer at Northfield",
+          "noteDate": "8 Aug",
+          "noteAuthor": "Usha"
+        },
+        {
+          "initials": "M",
+          "value": 0,
+          "overdue": false,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 6
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Mei Tanaka",
+              "email": "mei.tanaka@proton.me",
+              "phone": "+81 90 1234 5678",
+              "designation": "Senior Designer at Brightpath",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 203,
+          "contact": "Mei Tanaka",
+          "company": "Brightpath Co",
+          "website": "brightpath.com",
+          "deal": "Product Designer",
+          "stage": "screen",
+          "lastActivity": "2d ago",
+          "activityType": "Call made",
+          "source": "Careers page",
+          "contactEmail": "mei.tanaka@proton.me",
+          "contactPhone": "+81 90 1234 5678",
+          "contactDesignation": "Senior Designer at Brightpath"
+        },
+        {
+          "initials": "A",
+          "value": 0,
+          "overdue": false,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 4
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Arun Mehta",
+              "email": "arun.mehta91@gmail.com",
+              "phone": "+91 99000 45120",
+              "designation": "Backend Engineer at Delta Retail",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 204,
+          "contact": "Arun Mehta",
+          "company": "Delta Retail",
+          "website": "delta.com",
+          "deal": "Backend Engineer",
+          "stage": "applied",
+          "lastActivity": "5d ago",
+          "activityType": "Application received",
+          "source": "Job board",
+          "contactEmail": "arun.mehta91@gmail.com",
+          "contactPhone": "+91 99000 45120",
+          "contactDesignation": "Backend Engineer at Delta Retail"
+        },
+        {
+          "initials": "S",
+          "value": 0,
+          "overdue": true,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "Waiting on portfolio walkthrough feedback from the panel.",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 9
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Sofia Marino",
+              "email": "sofia@velastudio.co",
+              "phone": "+39 340 555 0198",
+              "designation": "Design Lead at Vela Studio",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 205,
+          "contact": "Sofia Marino",
+          "company": "Vela Studio",
+          "website": "vela.com",
+          "deal": "Product Designer",
+          "stage": "interview",
+          "lastActivity": "4d ago",
+          "activityType": "Interview held",
+          "source": "Referral",
+          "contactEmail": "sofia@velastudio.co",
+          "contactPhone": "+39 340 555 0198",
+          "contactDesignation": "Design Lead at Vela Studio",
+          "noteDate": "7 Aug",
+          "noteAuthor": "Ishant"
+        },
+        {
+          "initials": "T",
+          "value": 0,
+          "overdue": false,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 5
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Tomas Weber",
+              "email": "tomas.weber@mail.de",
+              "phone": "+49 151 2345 6789",
+              "designation": "Engineer at Kestrel",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 206,
+          "contact": "Tomas Weber",
+          "company": "Kestrel",
+          "website": "kestrel.com",
+          "deal": "Backend Engineer",
+          "stage": "screen",
+          "lastActivity": "yesterday",
+          "activityType": "Email sent",
+          "source": "LinkedIn",
+          "contactEmail": "tomas.weber@mail.de",
+          "contactPhone": "+49 151 2345 6789",
+          "contactDesignation": "Engineer at Kestrel"
+        },
+        {
+          "initials": "G",
+          "value": 0,
+          "overdue": false,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 7
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Grace Aturo",
+              "email": "grace.aturo@gmail.com",
+              "phone": "+254 712 345 678",
+              "designation": "Frontend Engineer at Loop Health",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 207,
+          "contact": "Grace Aturo",
+          "company": "Loop Health",
+          "website": "loophealth.com",
+          "deal": "Senior Frontend Engineer",
+          "stage": "applied",
+          "lastActivity": "6d ago",
+          "activityType": "Application received",
+          "source": "Job board",
+          "contactEmail": "grace.aturo@gmail.com",
+          "contactPhone": "+254 712 345 678",
+          "contactDesignation": "Frontend Engineer at Loop Health"
+        },
+        {
+          "initials": "H",
+          "value": 0,
+          "overdue": false,
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "note": "Starts on the 1st. Laptop and accounts requested.",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {
+            "cf1": 10
+          },
+          "upcomingActivities": [],
+          "contacts": [
+            {
+              "name": "Henrik Lund",
+              "email": "henrik.lund@icloud.com",
+              "phone": "+47 400 12 345",
+              "designation": "Engineer at Sable",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "id": 208,
+          "contact": "Henrik Lund",
+          "company": "Sable",
+          "website": "sable.com",
+          "deal": "Backend Engineer",
+          "stage": "hired",
+          "lastActivity": "1w ago",
+          "activityType": "Offer accepted",
+          "source": "Referral",
+          "contactEmail": "henrik.lund@icloud.com",
+          "contactPhone": "+47 400 12 345",
+          "contactDesignation": "Engineer at Sable",
+          "noteDate": "4 Aug",
+          "noteAuthor": "Usha"
+        }
+      ]
+    },
+    "p3": {
+      "id": "p3",
+      "name": "Hiring Pipeline",
+      "entity": "Candidate",
+      "plural": "candidates",
+      "color": "#5e8a4e",
+      "type": "hiring",
+      "stages": [
+        {
+          "key": "applied-0",
+          "label": "Applied"
+        },
+        {
+          "key": "screen-1",
+          "label": "Screen"
+        },
+        {
+          "key": "interview-2",
+          "label": "Interview"
+        },
+        {
+          "key": "final-round-3",
+          "label": "Final Round"
+        },
+        {
+          "key": "offer-4",
+          "label": "Offer"
+        },
+        {
+          "key": "hired-5",
+          "label": "Hired"
+        }
+      ],
+      "cards": [],
+      "intakeForm": {
+        "token": "default.14613r5u6a",
+        "enabled": true,
+        "heading": "Apply — Hiring Pipeline",
+        "blurb": "",
+        "logoUrl": "",
+        "submitLabel": "Send application",
+        "thanks": "Thanks — your application is in. We’ll be in touch.",
+        "recordTitle": "Hiring Pipeline",
+        "sourceLabel": "Form",
+        "fields": [
+          {
+            "key": "name",
+            "label": "Full name",
+            "type": "text",
+            "target": "name",
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "Email",
+            "type": "email",
+            "target": "email",
+            "required": true
+          },
+          {
+            "key": "phone",
+            "label": "Phone",
+            "type": "tel",
+            "target": "phone"
+          },
+          {
+            "key": "linkedin",
+            "label": "LinkedIn or portfolio",
+            "type": "url",
+            "target": "linkedin"
+          },
+          {
+            "key": "note",
+            "label": "Why this role?",
+            "type": "textarea",
+            "target": "note",
+            "placeholder": "A few lines is plenty"
+          },
+          {
+            "key": "designation",
+            "label": "Job title",
+            "type": "text",
+            "target": "designation",
+            "required": false
+          },
+          {
+            "key": "company",
+            "label": "Company",
+            "type": "text",
+            "target": "company",
+            "required": false
+          }
+        ]
+      },
+      "customFieldDefs": []
+    }
+  },
+  "dashboard": {
+    "hidden": [
+      "top"
+    ],
+    "type": "sales",
+    "scope": "all"
+  },
+  "probe": "size test"
 }
