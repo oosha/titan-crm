@@ -246,8 +246,8 @@
           "deal": "Meridian AI site",
           "value": 18000,
           "stage": "demo",
-          "lastActivity": "8d ago",
-          "activityType": "Email sent",
+          "lastActivity": "just now",
+          "activityType": "Note added",
           "overdue": false,
           "currency": "$",
           "website": "meridiandatalabs.com",
@@ -256,8 +256,8 @@
           "location": "San Jose, US",
           "closeDate": "",
           "source": "",
-          "note": "We'll need to figure a new approach for this opportunity soon, they may opt for Acme instead!",
-          "noteDate": "5 Aug",
+          "note": "They're ready to move to the next phase as long as we give concrete integration timelines.",
+          "noteDate": "",
           "contacts": [
             {
               "name": "Ryan Walker",
