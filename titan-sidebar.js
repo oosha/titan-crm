@@ -223,7 +223,7 @@
   // of it, so the same row offered different actions depending on where you were.
   function navMenuHtml() {
     return '<div class="pipeline-nav-menu" id="pipeline-nav-menu">' +
-      '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'add-records\')">Add records automatically</div>' +
+      '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'add-records\')">Sources</div>' +
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'add-team\')">Add team</div>' +
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'filter\')">Add filter view</div>' +
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'form\')">Form</div>' +
