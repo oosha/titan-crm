@@ -800,6 +800,18 @@
           "hubspotSubmissionKey": "c:aa85bb2d-2810-42ce-aece-62554b63a0e4",
           "noteHistory": [],
           "autoLinkActivity": true
+        },
+        {
+          "id": 214,
+          "deal": "Emma Clarke",
+          "company": "Northwind",
+          "contact": "Emma Clarke",
+          "contactEmail": "emma.clarke@northwind.co",
+          "value": 0,
+          "stage": "lead",
+          "lastActivity": "just now",
+          "activityType": "Email received",
+          "overdue": false
         }
       ],
       "hiddenFields": [],
