@@ -1,5 +1,5 @@
 {
-  "currentPipelineId": "p5",
+  "currentPipelineId": "neo",
   "pipelineSeq": 5,
   "pipelines": {
     "neo": {
@@ -185,7 +185,37 @@
           "contactEmail": "ethan.price@coastalsupply.com",
           "contactPhone": "+1 (619) 555-0163",
           "contactDesignation": "VP Engineering",
-          "website": "coastalsupply.com"
+          "website": "coastalsupply.com",
+          "noteHistory": [],
+          "upcomingActivities": [
+            {
+              "type": "task",
+              "text": "Follow-up overdue",
+              "overdue": true
+            }
+          ],
+          "currency": "$",
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "autoLinkActivity": true,
+          "contacts": [
+            {
+              "name": "Ethan Price",
+              "email": "ethan.price@coastalsupply.com",
+              "designation": "VP Engineering",
+              "phone": "+1 (619) 555-0163",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
         },
         {
           "id": 5,
