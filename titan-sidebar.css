@@ -33,6 +33,11 @@ body {
   flex-direction: column;
   flex-shrink: 0;
   overflow: visible;
+  /* Declare the ink once, here. Every dsIcon inside the sidebar paints with currentColor,
+     so without this they inherit the page's dark text into dark chrome and disappear — the
+     account chevron did exactly that. Setting it at the root fixes the ones nobody has
+     noticed yet, instead of patching each spot as it turns up. */
+  color: var(--sidebar-icon, rgba(255, 255, 255, 0.86));
 }
 
 .sidebar-header {
