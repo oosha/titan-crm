@@ -6,20 +6,18 @@
    are. Inspecting a row must never cost you your place in the list — so the
    detail panel opens beside the table and pushes it, rather than covering it. */
 
-:root {
-  --dir-ink: #1a1a1a;
-  --dir-body: #333;
-  --dir-muted: #9a9fa7;
-  --dir-faint: #b3b7bd;
-  --dir-line: #e8eaed;
-  --dir-hair: #f2f4f6;
-  --dir-surface: #fff;
-  --dir-canvas: #f7f8fa;
-  --dir-tint: #fbfcfd;
-  --dir-accent: #2170f4;
-  --dir-accent-soft: #e8f0fe;
-  --dir-panel-w: 384px;
-}
+/* The --dir-* tokens used to be defined here, with their own hex values. They now
+   come from the design system: design-system/tokens.css maps each one onto a semantic
+   token in its bridge block, so this file's 116 var(--dir-…) references are driven by
+   one palette shared with the workbench and every future component.
+
+   A page must therefore link design-system/tokens.css before this file. Every page
+   that loads crm-directory.css does.
+
+   Adopting the shared palette moved a few values, deliberately: --dir-muted went
+   #9a9fa7 → #888888 (darker, more contrast), --dir-faint #b3b7bd → #c1c1c1,
+   --dir-accent-soft #e8f0fe → #eff6ff, and the near-white surfaces converged on
+   #f9f9fa. To change any of them now, edit tokens/primitives.css — not this file. */
 
 .subpage-body { background: var(--dir-canvas); color: var(--dir-body); }
 

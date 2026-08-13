@@ -314,6 +314,8 @@ body {
 .nav-item.active {
   background: #333333;
 }
+/* Full-strength ink on the current row. */
+.nav-item.active .nav-item-icon { color: var(--sidebar-icon-active, #fff); }
 .nav-item:hover:not(.active) {
   background: rgba(255, 255, 255, 0.05);
 }
@@ -324,6 +326,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Module icons draw with currentColor, so the sidebar declares its own ink once
+     instead of every icon hardcoding #fff the way the hand-drawn ones did. Slightly
+     softer than the label, so a glyph doesn't out-shout the word beside it. */
+  color: var(--sidebar-icon, rgba(255, 255, 255, 0.86));
   flex-shrink: 0;
 }
 

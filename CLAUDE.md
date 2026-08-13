@@ -56,9 +56,27 @@ only it owns.
 
 **Before writing any UI, read [`design-system/DESIGN-SYSTEM.md`](design-system/DESIGN-SYSTEM.md)
 and [`design-system/registry.json`](design-system/registry.json).** The registry lists
-every component, its props and its states; the doc has the rules. `design-system/index.html`
-is a workbench that renders the whole system with a live theme switcher — open it, and
-screenshot it after any visual change.
+every component, its props and its states; the doc has the rules.
+
+`design-system/index.html` is the workbench: **http://localhost:8000/design-system/**,
+five hash-routed views — `#overview` (the coverage ledger), `#foundations`, `#icons`,
+`#components`, `#directions`. Screenshot the relevant one after any visual change. It
+reads the registry and `dsIcon` rather than restating them, so a component you add without
+registering, or a state you skip, shows up as a hole in the page.
+
+**Scope is the CRM and its modules — `index.html` is deliberately out.** The mailbox is the
+mocked half; it keeps its own chrome and is excluded from both measurement scripts (and from
+`personas/`). Don't migrate mail markup to `ds-*` and don't count it as coverage.
+
+A page links the system with exactly two stylesheets — `/design-system/tokens.css` and
+`/design-system/components.css`. Never link a file under `components/` directly; that drift is
+how the record screen ended up using `.ds-input` on a page where the rules weren't loaded.
+
+`node design-system/measure-adoption.js` reports how many call sites actually go through the
+system; `measure-inventory.js` reports how much duplication each block still carries. Both
+take `--write` to update `registry.json`, which is where the workbench's numbers come from.
+Run them before and after any migration — the delta is the only evidence that anything moved.
+Adoption ignores `ds-` classes on a page that doesn't link the CSS, and names them as inert.
 
 Three things it exists to stop:
 

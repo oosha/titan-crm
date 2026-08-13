@@ -106,7 +106,7 @@
         '<div class="account-menu-email">' + esc(email) + '</div>' +
         '<div class="account-menu-sub">' + esc(brand) + '</div>' +
       '</div>' +
-      '<svg class="account-menu-check" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      '<span class="account-menu-check">' + ico('check', 14) + '</span>' +
     '</div>';
   }
 
@@ -122,20 +122,39 @@
       '<div class="account-menu-add" onclick="event.stopPropagation(); closeAccountMenu(); ' +
         'alert(\'Prototype only: adding an account is not wired up yet.\');">' +
         '<span class="account-menu-add-icon">' +
-          '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' +
+          ico('plus', 12) +
         '</span>Add another account</div>';
   }
 
   // ── Icons ──────────────────────────────────────────────────────────────────
+  // Nav glyphs, from the icon module. White ink comes from the sidebar's own colour, so
+  // these no longer hardcode #fff the way the hand-drawn versions did.
+  function ico(name, size) {
+    return window.dsIcon ? window.dsIcon(name, { size: size || 15 }) : '';
+  }
   var ICON = {
-    dashboard: '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="1.5" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="1.5" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/><rect x="8" y="8" width="4.5" height="4.5" rx="1" stroke="#fff" stroke-width="1.3"/></svg>',
-    contacts: '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4.5" r="2.5" stroke="#fff" stroke-width="1.3"/><path d="M2.5 12.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="#fff" stroke-width="1.3"/></svg>',
-    companies: '<svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="11" stroke="#fff" stroke-width="1.3"/><path d="M6 7V3h8v4" stroke="#fff" stroke-width="1.3"/></svg>',
-    forms: '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2.5" y="1.5" width="9" height="11" rx="1.5" stroke="#fff" stroke-width="1.3"/><path d="M5 5h4M5 7.5h4M5 10h2.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg>',
-    integrations: '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5.5 8.5L3.8 10.2a2.4 2.4 0 003.4 3.4l1.7-1.7M8.5 5.5l1.7-1.7a2.4 2.4 0 10-3.4-3.4L5.1 2.1" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/><path d="M5.3 8.7l3.4-3.4" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg>',    kebab: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3.5" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="12.5" r="1.3" fill="currentColor"/></svg>',
+    get dashboard() { return ico('dashboard'); },
+    get contacts() { return ico('contacts'); },
+    get companies() { return ico('companies'); },
+    get forms() { return ico('forms'); },
+    get integrations() { return ico('integrations'); },
+    get kebab() { return ico('menu', 14); },
   };
+
+  // The pipeline chevron is a Titan shape, not a Phosphor one, so it is registered with
+  // the icon module rather than drawn here: one definition, swappable in one place. It
+  // keeps its own 14-unit grid, and takes the pipeline's colour through `currentColor`
+  // on a wrapper rather than a baked-in fill.
+  if (window.dsIcon && !window.dsIcon.hasPipeline) {
+    window.dsIcon.register('pipeline', '<path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="currentColor"/>', '0 0 14 14');
+    window.dsIcon.hasPipeline = true;
+  }
+
   function pipelineGlyph(colour) {
-    return '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="' + (colour || '#2170f4') + '"/></svg>';
+    return '<span style="color:' + (colour || '#2170f4') + '; display:inline-flex;">' +
+      (window.dsIcon ? window.dsIcon('pipeline', { size: 13 })
+                     : '<svg width="13" height="13" viewBox="0 0 14 14"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="currentColor"/></svg>') +
+      '</span>';
   }
 
   // ── The shell ──────────────────────────────────────────────────────────────
@@ -164,7 +183,7 @@
           '</div>' +
           '<span class="account-email-text" id="account-active-email">' + esc(acc.email) + '</span>' +
           '<div class="account-chevron">' +
-            '<svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="#bdbdbd" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+            ico('expand', 11) +
           '</div>' +
           '<div class="account-menu" id="account-menu">' + accountMenuHtml(acc) + '</div>' +
         '</div>' +

@@ -436,7 +436,7 @@
           (head.role ? '<div class="dir-panel-role">' + head.role + '</div>' : '') +
         '</div>' +
         '<button class="dir-panel-close" type="button" aria-label="Close details">' +
-          '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>' +
+          '<span data-ds-icon="close" data-size="13"></span>' +
         '</button>' +
       '</div>' +
       '<div class="dir-panel-body">' + bodyHTML + '</div>';
