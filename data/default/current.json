@@ -759,7 +759,7 @@
         },
         {
           "id": 213,
-          "company": "",
+          "company": "Folo",
           "contact": "Gary Johnson",
           "initials": "G",
           "deal": "Neo Leads submission",
@@ -797,7 +797,9 @@
           "contactLocation": "",
           "contactLinkedin": "",
           "customFieldValues": {},
-          "hubspotSubmissionKey": "c:aa85bb2d-2810-42ce-aece-62554b63a0e4"
+          "hubspotSubmissionKey": "c:aa85bb2d-2810-42ce-aece-62554b63a0e4",
+          "noteHistory": [],
+          "autoLinkActivity": true
         }
       ],
       "hiddenFields": [],
