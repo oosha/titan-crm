@@ -6075,9 +6075,7 @@
       const form = (PIPELINES[npCreatedId] || {}).intakeForm;
       card.classList.toggle('configured', !!form);
       if (!form) return; // desc already set to the default pitch by npShowDone
-      document.getElementById('np-source-form-desc').textContent =
-        (form.heading || 'Untitled form') + ' · ' + (form.enabled ? 'Active' : 'Paused') +
-        ' · ' + (form.fields || []).length + ' fields';
+      document.getElementById('np-source-form-desc').textContent = form.heading || 'Untitled form';
     }
 
     function npBack() { npShowStep(1); }
