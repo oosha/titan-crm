@@ -259,6 +259,51 @@ async function apiHubspot(pathname, req, res, query) {
   }
 }
 
+// ── /api/assistant and /api/assistant-apply ──────────────────────────────────
+// Requires the real api/_assistant.js, so the tool loop, the field allowlist and
+// the never-write-without-confirmation rule are identical here and in production.
+// Only the storage differs: local files rather than GitHub.
+const assistant = require('./api/_assistant');
+
+async function apiAssistant(pathname, req, res, query) {
+  if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
+  const personaId = isValidPersonaId(query.get('persona')) ? query.get('persona') : 'default';
+  const rel = currentPathFor(personaId);
+  const data = await readJson(rel);
+  if (!data) return json(res, 404, { error: 'Unknown persona: ' + personaId });
+
+  const body = await readBody(req);
+  if (!body) return json(res, 400, { error: 'Malformed body.' });
+
+  try {
+    if (pathname === '/api/assistant') {
+      if (!assistant.isConfigured()) {
+        return json(res, 503, {
+          error: 'The assistant isn’t switched on for this Titan yet. Ask whoever set it up to add it.',
+        });
+      }
+      const messages = (Array.isArray(body.messages) ? body.messages : [])
+        .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
+        .map((m) => ({ role: m.role, content: m.content.slice(0, 6000) }))
+        .slice(-40);
+      if (!messages.length || messages[messages.length - 1].role !== 'user') {
+        return json(res, 400, { error: 'Nothing to answer.' });
+      }
+      const out = await assistant.converse(data, messages, typeof body.account === 'string' ? body.account : '');
+      return json(res, 200, out);
+    }
+
+    // /api/assistant-apply
+    if (!body.action) return json(res, 400, { error: 'No change to apply.' });
+    const applied = assistant.applyAction(data, body.action);
+    await writeJson(rel, data);
+    console.log('  assistant applied → ' + applied.summary + ' on ' + applied.recordName);
+    return json(res, 200, { ok: true, applied: applied });
+  } catch (e) {
+    return json(res, e && e.isUserError ? 400 : 500, { error: String(e.message || e) });
+  }
+}
+
 // ── static ───────────────────────────────────────────────────────────────────
 function serveStatic(res, pathname) {
   const abs = path.join(ROOT, decodeURIComponent(pathname));
@@ -283,6 +328,9 @@ http.createServer(async (req, res) => {
     if (pathname === '/api/logo') return await apiLogo(req, res, url.searchParams);
     if (pathname === '/api/hubspot-forms' || pathname === '/api/hubspot-sync' || pathname === '/api/hubspot-key') {
       return await apiHubspot(pathname, req, res, url.searchParams);
+    }
+    if (pathname === '/api/assistant' || pathname === '/api/assistant-apply') {
+      return await apiAssistant(pathname, req, res, url.searchParams);
     }
 
     if (pathname === '/') return void (serveStatic(res, '/index.html'));
