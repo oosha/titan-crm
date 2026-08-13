@@ -49,6 +49,7 @@
   --green-050: #e6faf2;
   --amber-600: #ffa000;
   --amber-050: #ffe0b2;
+  --red-200:   #f3caca;   /* destructive outline edge */
   --red-600:   #d93025;
   --red-050:   #ffe5ed;
 
@@ -68,6 +69,7 @@
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
+  --radius-xl: 12px;      /* no shipped surface uses this yet; the "soft" direction does */
   --radius-full: 999px;
 
   /* ── Type ────────────────────────────────────────────────────────────────
@@ -94,6 +96,7 @@
   --space-050: 4px;
   --space-075: 6px;
   --space-100: 8px;
+  --space-125: 10px;
   --space-150: 12px;
   --space-200: 16px;
   --space-300: 24px;
@@ -102,6 +105,9 @@
   /* ── Elevation ───────────────────────────────────────────────────────────
      The reference separates regions with shadow instead of borders — this is the
      token the guidelines call out by name. */
+  /* A tile you can pick up sits 1px off its lane, not 4px off the page — the kanban
+     card's lift is deliberately tighter than a panel's. */
+  --shadow-raise: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.01);
   --shadow-menu: 0 4px 12px rgba(0, 0, 0, 0.15);
   --shadow-modal: 0 4px 20px rgba(0, 0, 0, 0.25);
@@ -109,6 +115,7 @@
   /* A softer, wider card lift — used by the "soft" direction. Lives here rather
      than in the theme, because a theme may remap tokens but not invent values. */
   --shadow-card-soft: 0 8px 28px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.02);
+  --ring-neutral: 0 0 0 3px rgba(0, 0, 0, 0.12);   /* focus/hover ring on a neutral control */
   --ring-accent: 0 0 0 3px rgba(33, 112, 244, 0.15);
   --ring-danger: 0 0 0 3px rgba(217, 48, 37, 0.15);
 

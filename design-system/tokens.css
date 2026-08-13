@@ -1,0 +1,18 @@
+/* The design system's single entry point for tokens.
+   ─────────────────────────────────────────────────────────────────────────────
+   A page links this one file and gets both tiers plus the bridge to the app's
+   older --dir-* names. Linking the parts individually also works, but this keeps a
+   page's <head> from having to know the system's internal file layout — and means
+   adding a tier later is a change here, not in every page.
+
+   Order matters and is fixed here: primitives, then semantics (which reference
+   them). A design direction goes AFTER this file, in the page:
+
+     <link rel="stylesheet" href="/design-system/tokens.css">
+     <link rel="stylesheet" href="/design-system/themes/soft.css">   <!-- optional -->
+     <link rel="stylesheet" href="/crm-directory.css">               <!-- page styles -->
+
+   Components are not imported here on purpose: a page should pull only the
+   components it uses. */
+@import url('./tokens/primitives.css');
+@import url('./tokens/semantics.css');

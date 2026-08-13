@@ -1,0 +1,71 @@
+/* Stage chevron and segmented control — the two things the pipeline board needed that the
+   starter set didn't have.
+
+   Both were found by auditing /crm/pipeline/:id, and both already existed as forks:
+
+   Stage chevron — the arrow-shaped stage header. The clip-path polygon appears four times
+   across the product with three different taper values, and .np-chev in crm.html and
+   pipeline-settings.html are byte-identical. Only the *shape* lives here: the fill is
+   derived from the pipeline's own colour at runtime (shadeFor/darken), so it is data and
+   stays inline, the same reason the kanban stage ink is not a token.
+
+   Segmented control — the kanban/list view toggle. Not Tabs: tabs switch a page's content
+   region and sit on a baseline, a segmented control picks a mode and sits in a track. */
+
+/* ── Stage chevron ──────────────────────────────────────────────────────────── */
+.ds-stage {
+  position: relative;
+  padding: var(--stage-pad-y) var(--stage-pad-x);
+  /* Notched on the left, pointed on the right, so a row of these reads as a flow.
+     --stage-taper is how much of the width the point eats. */
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--stage-taper)) 0,
+    100% 50%,
+    calc(100% - var(--stage-taper)) 100%,
+    0 100%,
+    var(--stage-taper) 50%
+  );
+}
+/* The first stage has nothing flowing into it, so it gets a flat left edge and a rounded
+   outer corner; the last has nothing flowing out. Both read wrong with a stray point.
+   Explicit modifiers rather than :first-child, because the ends are a property of the
+   *stage's position in the flow*, not of the element's position in its parent — on the board
+   each header is the first child of its own column, so :first-child matched all six. */
+.ds-stage--first {
+  clip-path: polygon(0 0, calc(100% - var(--stage-taper)) 0, 100% 50%, calc(100% - var(--stage-taper)) 100%, 0 100%);
+  border-radius: var(--stage-radius) 0 0 0;
+}
+.ds-stage--last {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, var(--stage-taper) 50%);
+  border-radius: 0 var(--stage-radius) 0 0;
+}
+.ds-stage--first.ds-stage--last {
+  clip-path: none;
+  border-radius: var(--stage-radius) var(--stage-radius) 0 0;
+}
+/* Compact: the stage editor's chip row, where the taper has to be steeper to read at all. */
+.ds-stage--sm { --stage-taper: var(--stage-taper-sm); padding: var(--space-100) var(--space-150); }
+
+/* ── Segmented control ──────────────────────────────────────────────────────── */
+.ds-segmented {
+  display: inline-flex; gap: var(--space-050);
+  height: var(--seg-height); box-sizing: border-box;
+  padding: 3px; border-radius: var(--seg-radius);
+  background: var(--seg-track-bg);
+}
+.ds-segmented > * {
+  appearance: none; border: none; font: inherit; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-075);
+  height: 100%; padding: 0 var(--space-125);
+  border-radius: var(--seg-item-radius);
+  background: transparent; color: var(--text-secondary);
+  transition: var(--motion-hover);
+}
+.ds-segmented > *:hover:not([aria-pressed="true"]) { color: var(--text-primary); }
+/* aria-pressed carries the state, so the selected item is announced and not just painted. */
+.ds-segmented > [aria-pressed="true"] {
+  background: var(--seg-item-bg-on); color: var(--text-accent);
+  box-shadow: var(--elevation-raise);
+}
+.ds-segmented > *:focus-visible { outline: none; box-shadow: var(--focus-ring); }

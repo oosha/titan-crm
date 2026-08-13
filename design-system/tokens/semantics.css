@@ -21,6 +21,9 @@
   --surface-page:      var(--gray-025);  /* the plane everything sits on */
   --surface-primary:   var(--gray-000);  /* cards, panels, menus */
   --surface-recessed:  var(--gray-025);  /* reading pane, wells */
+  /* One step below recessed. --surface-recessed equals --surface-page, so a lane that
+     must read as cut *into* the page needs its own step: the kanban column body. */
+  --surface-sunken:    var(--gray-050);  /* kanban lane, tracks */
   --surface-hover:     var(--gray-050);  /* neutral hover fill */
   --surface-pressed:   var(--gray-100);
   --surface-selected:  var(--blue-050);  /* current row / tab */
@@ -42,11 +45,16 @@
   /* ── Borders ────────────────────────────────────────────────────────────────
      Used sparingly by design: the reference separates regions with elevation, so
      a border here is a real edge, not a habit. */
+  /* Lighter than subtle: a separator *inside* a list, where a real edge would be too loud.
+     The bridge's --dir-hair was already doing this job without a semantic to point at. */
+  --border-hairline: var(--gray-050);
   --border-subtle:  var(--gray-150);
   --border-default: var(--gray-200);
   --border-strong:  var(--gray-300);
   --border-accent:  var(--blue-600);
   --border-focus:   var(--blue-600);
+  /* A destructive outline needs an edge that reads as danger without shouting like a fill. */
+  --border-danger:  var(--red-200);
 
   /* ── Accent ─────────────────────────────────────────────────────────────── */
   --accent-primary: var(--blue-600);
@@ -67,6 +75,7 @@
   --status-danger-subtle: var(--red-050);
 
   /* ── Elevation & focus ──────────────────────────────────────────────────── */
+  --elevation-raise: var(--shadow-raise);  /* draggable tiles */
   --elevation-card:  var(--shadow-card);
   --elevation-menu:  var(--shadow-menu);
   --elevation-modal: var(--shadow-modal);
@@ -102,14 +111,70 @@
 
   --input-radius: var(--radius-control);
   --input-height: 34px;
+  /* Edit-in-place fields sit in a text flow, so they are shorter than a boxed field. */
+  --input-inline-height: 26px;
   --input-pad-x:  11px;
   --input-bg:     var(--surface-primary);
   --input-border: var(--border-subtle);
 
   --card-radius:  var(--radius-container);
   --card-pad:     var(--space-200);
+  /* A page section panel is roomier and rounder than a tile — see .ds-card--section. */
+  --card-section-radius: var(--radius-xl);
+  --card-section-pad:    var(--space-300);
   --card-border:  var(--border-subtle);
   --card-shadow:  var(--elevation-card);
+
+  /* The kanban card is not a --card-*: it is tighter (4px, not 8px), lifts 1px rather
+     than 4px, and sits in a lane rather than on the page. It gets its own shape tokens
+     so a direction can restyle the board — pointing it at --card-* instead would make
+     every board tile look like a panel. Stage-header colour is deliberately absent:
+     renderBoard() derives it from the pipeline's own colour, so it is data, not theme. */
+  --kanban-card-radius: var(--radius-md);
+  --kanban-card-bg:     var(--surface-primary);
+  --kanban-card-shadow: var(--elevation-raise);
+  --kanban-card-pad:    var(--space-150);
+  --kanban-lane-bg:     var(--surface-sunken);
+  --kanban-lane-radius: var(--radius-container);
+  --kanban-lane-pad:    var(--space-100);
+  --kanban-col-width:   240px;
+  --kanban-col-gap:     var(--space-150);
+  --kanban-card-gap:    var(--space-150);
+  --kanban-avatar-size: 20px;
+  --kanban-avatar-font: 9px;   /* --text-2xs is 11px, too tall inside a 20px circle */
+  /* The little company mark beside a record's company name. Its own tokens because it is
+     not an avatar (square, contains a logo image) and appears on the board, the record
+     screen and both directory pages. */
+  --logo-size:   16px;
+  --logo-radius: var(--radius-sm);   /* one step inside the card's own corner */
+  --logo-font:   9px;
+  --kanban-status-size: 18px;
+
+  /* Layout: the width of a directory page's detail panel. Not a colour, but it is a
+     shared decision, and leaving it out of the bridge broke those panels. */
+  --panel-width: 384px;
+
+  /* No checkbox component exists yet, but its two shape decisions are the same everywhere,
+     so they belong here rather than being re-picked per page. */
+  --checkbox-size:   16px;
+  --checkbox-accent: var(--accent-primary);
+
+  /* Stage chevron — shape only. Its fill is derived from the pipeline colour at runtime,
+     so it stays inline; see components/board.css. */
+  --stage-taper:     3%;
+  --stage-taper-sm:  8%;
+  --stage-pad-x:     var(--space-200);
+  --stage-pad-y:     var(--space-150);
+  --stage-radius:    var(--radius-container);
+
+  /* Segmented control (view toggle) — a mode picker in a track, not tabs. */
+  /* Matches the button height: a toolbar's controls must share one height, or the shorter
+     ones centre inside the taller row and nothing sits on a common baseline. */
+  --seg-height:       var(--btn-height);
+  --seg-radius:       var(--radius-control);
+  --seg-item-radius:  var(--radius-sm);
+  --seg-track-bg:     var(--surface-hover);
+  --seg-item-bg-on:   var(--surface-primary);
 
   --badge-radius: var(--radius-sm);
   --badge-pad-x:  var(--space-075);
@@ -131,4 +196,5 @@
   --dir-tint:    var(--gray-025);
   --dir-accent:  var(--accent-primary);
   --dir-accent-soft: var(--accent-subtle);
+  --dir-panel-w: var(--panel-width);
 }

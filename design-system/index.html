@@ -3,242 +3,1070 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Titan Design System — Workbench</title>
+<title>Titan Design System</title>
 <!--
-  The workbench: every component, every state, on one page, with a live theme
-  switcher. Two jobs.
+  The workbench — an instrument for the system, not a gallery of it.
 
-  For a person: try a direction and see it across everything at once instead of
-  guessing from one button in isolation.
+  Two readers. A person, who needs to see what exists, try a direction across everything
+  at once, and know what is still hand-rolled. And an agent, which needs one URL that
+  renders the whole system so a change can be screenshotted and compared.
 
-  For an agent: a single URL that renders the whole system, so a change can be
-  screenshotted and compared. Every visual mistake I made building the CRM would
-  have been caught by looking at a page like this.
+  Three things about how it is built, because they are deliberate:
 
-  No build step. Open the file, or serve it with `node dev-server.js` and visit
-  /design-system/.
+  1. It is rendered in its own system. Every colour, radius, space and shadow here is a
+     token from tokens.css — including the dark rail, which is the product's real sidebar
+     colour. Switching direction restyles the tool itself. If the system is wrong, this
+     page looks wrong first.
+  2. Monospace is structural. Every identifier, count and token name is mono, because the
+     content is code. It is not a texture.
+  3. The overview is a ledger, not a card grid. Each block carries the duplication it
+     would absorb, sorted by it, because that number is the priority — a grid of cards
+     would flatten the one piece of information that matters.
+
+  No build step. `node dev-server.js` then /design-system/.
 -->
 <link rel="stylesheet" href="./tokens/primitives.css">
 <link rel="stylesheet" href="./tokens/semantics.css">
 <link rel="stylesheet" id="theme-link" href="./themes/default.css">
-<link rel="stylesheet" href="./components/button.css">
-<link rel="stylesheet" href="./components/primitives.css">
+<!-- The same single entry point every page uses, so the workbench cannot be showing a
+     component the product has no way to load. -->
+<link rel="stylesheet" href="./components.css">
 <style>
+  /* ── Workbench chrome ──────────────────────────────────────────────────────
+     wb- prefixed so it can never be mistaken for a component, and built only from
+     tokens so a direction change moves it too. */
+  :root {
+    --wb-rail-w: 216px;
+    --wb-rail-bg: var(--gray-900);
+    --wb-rail-ink: rgba(255, 255, 255, 0.62);
+    --wb-rail-ink-strong: #fff;
+    --wb-rail-line: rgba(255, 255, 255, 0.09);
+    --wb-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+    --wb-measure: 1080px;
+  }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
-    margin: 0; font-family: var(--font-sans); font-size: var(--text-md);
+    margin: 0; display: flex; min-height: 100vh;
+    font-family: var(--font-sans); font-size: var(--text-md);
     color: var(--text-primary); background: var(--surface-page);
     -webkit-font-smoothing: antialiased;
   }
-  .wb-top {
-    position: sticky; top: 0; z-index: 10;
-    display: flex; align-items: center; gap: var(--space-200);
-    padding: var(--space-150) var(--space-300);
-    background: var(--surface-primary); border-bottom: 1px solid var(--border-subtle);
-  }
-  .wb-brand { font-weight: var(--weight-bold); color: var(--text-heading); }
-  .wb-brand span { color: var(--text-muted); font-weight: var(--weight-normal); margin-left: var(--space-100); }
-  .wb-themes { margin-left: auto; display: flex; align-items: center; gap: var(--space-100); }
-  .wb-themes label { font-size: var(--text-xs); color: var(--text-muted); }
 
-  .wb-body { padding: var(--space-300); max-width: 1080px; }
-  .wb-sec { margin-bottom: var(--space-400); }
-  .wb-sec > h2 {
-    font-size: var(--text-2xs); font-weight: var(--weight-bold); letter-spacing: 0.06em;
+  /* ── Rail ─────────────────────────────────────────────────────────────────
+     The product's own sidebar, borrowed on purpose: the workbench should read as
+     part of Titan rather than as a separate site about Titan. */
+  .wb-rail {
+    position: fixed; inset: 0 auto 0 0; width: var(--wb-rail-w);
+    background: var(--wb-rail-bg); display: flex; flex-direction: column;
+    padding: var(--space-200) 0; z-index: 5;
+  }
+  .wb-mark {
+    display: flex; align-items: baseline; gap: var(--space-075);
+    padding: 0 var(--space-200) var(--space-300);
+    color: var(--wb-rail-ink-strong);
+  }
+  .wb-mark b { font-size: var(--text-lg); font-weight: var(--weight-bold); letter-spacing: -0.015em; }
+  .wb-mark span {
+    font-family: var(--wb-mono); font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--wb-rail-ink);
+  }
+
+  .wb-nav { display: flex; flex-direction: column; gap: 1px; padding: 0 var(--space-100); }
+  .wb-nav a {
+    display: flex; align-items: center; gap: var(--space-100);
+    padding: 9px var(--space-100); border-radius: var(--radius-md);
+    color: var(--wb-rail-ink); text-decoration: none;
+    font-size: var(--text-sm); font-weight: var(--weight-medium);
+    transition: background var(--dur-base) var(--ease-standard), color var(--dur-base) var(--ease-standard);
+  }
+  .wb-nav a:hover { background: rgba(255, 255, 255, 0.05); color: var(--wb-rail-ink-strong); }
+  .wb-nav a[aria-current="page"] { background: rgba(255, 255, 255, 0.1); color: var(--wb-rail-ink-strong); }
+  .wb-nav a .ds-icon { color: currentColor; opacity: 0.85; }
+  /* The count rides the nav item it belongs to — a tally, not a badge. */
+  .wb-nav a i {
+    margin-left: auto; font-family: var(--wb-mono); font-style: normal;
+    font-size: 10.5px; color: rgba(255, 255, 255, 0.4);
+  }
+
+  .wb-rail-foot {
+    margin-top: auto; padding: var(--space-200) var(--space-200) 0;
+    border-top: 1px solid var(--wb-rail-line);
+  }
+  .wb-rail-foot p {
+    margin: 0; font-family: var(--wb-mono); font-size: 10.5px; line-height: 1.7;
+    color: rgba(255, 255, 255, 0.38);
+  }
+  .wb-rail-foot b { color: rgba(255, 255, 255, 0.72); font-weight: var(--weight-semi); }
+
+  /* ── Main ─────────────────────────────────────────────────────────────────── */
+  .wb-main { flex: 1; min-width: 0; margin-left: var(--wb-rail-w); }
+  .wb-top {
+    position: sticky; top: 0; z-index: 4;
+    display: flex; align-items: center; gap: var(--space-150);
+    padding: var(--space-150) var(--space-300);
+    background: color-mix(in srgb, var(--surface-page) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .wb-crumb { font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-heading); }
+  .wb-crumb em {
+    font-style: normal; color: var(--text-muted); font-weight: var(--weight-normal);
+    margin-left: var(--space-075);
+  }
+  .wb-controls { margin-left: auto; display: flex; align-items: center; gap: var(--space-100); }
+  .wb-controls label {
+    font-family: var(--wb-mono); font-size: 10px; letter-spacing: 0.06em;
     text-transform: uppercase; color: var(--text-muted);
+  }
+  .wb-controls select { width: auto; height: 30px; font-size: var(--text-xs); padding: 0 var(--space-100); }
+
+  .wb-view { display: none; padding: var(--space-300); max-width: var(--wb-measure); }
+  .wb-view.is-on { display: block; animation: wb-in 200ms var(--ease-decel) both; }
+  @keyframes wb-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .wb-lede { max-width: 62ch; margin: 0 0 var(--space-300); }
+  .wb-lede h1 {
+    font-size: 26px; font-weight: 780; letter-spacing: -0.02em; line-height: 1.2;
+    color: var(--text-heading); margin: 0 0 var(--space-100);
+  }
+  .wb-lede p { margin: 0; font-size: var(--text-lg); line-height: 1.55; color: var(--text-secondary); }
+  .wb-lede code { font-family: var(--wb-mono); font-size: 13px; color: var(--text-primary); }
+
+  .wb-sec { margin-bottom: var(--space-400); }
+  .wb-sec:last-child { margin-bottom: 0; }
+  .wb-sec > h2 {
+    font-family: var(--wb-mono); font-size: 10.5px; font-weight: var(--weight-semi);
+    letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-muted);
     margin: 0 0 var(--space-150); padding-bottom: var(--space-075);
     border-bottom: 1px solid var(--border-subtle);
   }
+  .wb-note { font-size: var(--text-xs); color: var(--text-muted); margin: 0 0 var(--space-150); line-height: 1.55; max-width: 74ch; }
+  .wb-note code { font-family: var(--wb-mono); }
   .wb-row { display: flex; align-items: center; gap: var(--space-150); flex-wrap: wrap; margin-bottom: var(--space-150); }
-  .wb-label { font-size: var(--text-xs); color: var(--text-muted); width: 92px; flex-shrink: 0; }
-  .wb-note { font-size: var(--text-xs); color: var(--text-muted); margin: calc(var(--space-050) * -1) 0 var(--space-150); }
+  .wb-row:last-child { margin-bottom: 0; }
+  .wb-key {
+    font-family: var(--wb-mono); font-size: 10.5px; color: var(--text-muted);
+    width: 96px; flex-shrink: 0; letter-spacing: 0.04em;
+  }
 
-  /* Token swatches — reading the value straight off the page beats reading the file. */
-  .wb-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(122px, 1fr)); gap: var(--space-100); }
-  .wb-sw { border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-primary); }
-  .wb-sw i { display: block; height: 42px; }
-  .wb-sw b, .wb-sw code { display: block; padding: 0 var(--space-075); }
-  .wb-sw b { font-size: var(--text-2xs); font-weight: var(--weight-semi); color: var(--text-primary); margin-top: var(--space-075); }
-  .wb-sw code { font-size: 10px; color: var(--text-muted); padding-bottom: var(--space-075); }
+  /* ── The stat band ─────────────────────────────────────────────────────────
+     Tabular numerals doing the talking. Three figures, because three is what the
+     content supports: what is covered, what is not, and the size of the mess. */
+  /* Per-cell hairlines, not a gap-coloured backdrop: three stats in a two-column grid
+     would otherwise leave a grey stub where the row runs out. */
+  .wb-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(184px, 1fr)); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: var(--space-300); }
+  .wb-stat { padding: var(--space-150) var(--space-200) var(--space-200); border-right: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); }
+  .wb-stat b {
+    display: block; font-family: var(--wb-mono); font-size: 30px; font-weight: var(--weight-medium);
+    letter-spacing: -0.03em; color: var(--text-heading); font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  /* Denominator on the baseline, not raised — it reads as a fraction, not a footnote. */
+  .wb-stat b sup { font-size: 15px; font-weight: var(--weight-normal); color: var(--text-muted); letter-spacing: 0; vertical-align: baseline; }
+  .wb-stat span {
+    display: block; margin-top: var(--space-075); font-size: var(--text-xs);
+    color: var(--text-muted); line-height: 1.45;
+  }
+
+  /* ── The ledger: the signature ─────────────────────────────────────────────
+     One row per block. The bar is the duplication that block would absorb, to the
+     same scale across all rows, so the eye ranks the work without reading a number. */
+  .wb-ledger { border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden; background: var(--surface-primary); }
+  .wb-lrow {
+    display: grid; grid-template-columns: 14px minmax(150px, 1.2fr) minmax(120px, 0.9fr) minmax(110px, 1fr) 56px;
+    gap: var(--space-150); align-items: center;
+    padding: 9px var(--space-200); text-align: left; width: 100%;
+    background: none; border: none; border-top: 1px solid var(--gray-050);
+    font: inherit; color: inherit; cursor: pointer;
+    transition: background var(--dur-base) var(--ease-standard);
+  }
+  .wb-lrow:first-of-type { border-top: none; }
+  .wb-lrow:hover { background: var(--surface-hover); }
+  .wb-lrow.is-open { background: var(--surface-hover); }
+  .wb-lhead {
+    display: grid; grid-template-columns: 14px minmax(150px, 1.2fr) minmax(120px, 0.9fr) minmax(110px, 1fr) 56px;
+    gap: var(--space-150); padding: 9px var(--space-200);
+    background: var(--surface-recessed); border-bottom: 1px solid var(--border-subtle);
+    font-family: var(--wb-mono); font-size: 9.5px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-muted);
+  }
+  .wb-lhead button {
+    background: none; border: none; padding: 0; font: inherit; color: inherit;
+    cursor: pointer; text-align: left; letter-spacing: inherit;
+  }
+  .wb-lhead button:hover { color: var(--text-primary); }
+  .wb-lhead button[data-on] { color: var(--text-accent); }
+
+  /* Four states, because migration is a progression: hand-rolled → tokenised (a direction
+     reaches it) → a real component. Grey / accent / green reads as that order. */
+  .wb-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .wb-dot--built { background: var(--status-success); }
+  .wb-dot--tokenised { background: var(--accent-primary); }
+  .wb-dot--planned { background: var(--gray-300); }
+  .wb-dot--excluded { background: transparent; border: 1px solid var(--gray-300); }
+
+  .wb-lname { font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-heading); }
+  /* Lowercase, not caps: the subline now carries numbers, and caps make figures shout. */
+  .wb-lname small { display: block; font-family: var(--wb-mono); font-size: 10px; font-weight: var(--weight-normal); color: var(--text-muted); letter-spacing: 0.02em; margin-top: 2px; }
+  .wb-lcomp { font-family: var(--wb-mono); font-size: 10.5px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wb-lcomp.is-none { color: var(--text-disabled); }
+
+  .wb-bar { height: 5px; border-radius: 3px; background: var(--gray-050); overflow: hidden; position: relative; }
+  .wb-bar i { display: block; height: 100%; border-radius: 3px; width: 0; transition: width 620ms var(--ease-decel); }
+  /* A built block's bar carries a second, darker segment: the share of its call sites the
+     product actually routes through the component. Without it, "built" painted a full bar
+     while the pages still hand-rolled 97% of the work. */
+  .wb-bar u {
+    display: block; position: absolute; inset: 0 auto 0 0; height: 100%;
+    border-radius: 3px; width: 0; background: var(--green-600);
+    box-shadow: 0 0 0 1px var(--surface-primary);
+    transition: width 620ms var(--ease-decel);
+  }
+  .wb-bar--built i { opacity: 0.28; }
+  .wb-bar--built i { background: var(--status-success); }
+  .wb-bar--tokenised i { background: var(--accent-primary); }
+  .wb-bar--planned i { background: var(--gray-300); }
+  .wb-bar--excluded i { background: var(--gray-100); }
+  .wb-lnum {
+    font-family: var(--wb-mono); font-size: var(--text-xs); color: var(--text-primary);
+    font-variant-numeric: tabular-nums; text-align: right;
+  }
+  .wb-lnum s { text-decoration: none; color: var(--text-disabled); }
+  /* The adoption share sits above the pile size: the number that should be moving, over
+     the number it is moving against. */
+  .wb-lnum b { display: block; font-weight: var(--weight-semi); color: var(--status-success); }
+  .wb-lnum b:only-child { color: var(--text-primary); }
+
+  /* Detail drawer: the evidence, only when asked for. */
+  .wb-ldetail { display: none; padding: 0 var(--space-200) var(--space-200) 44px; background: var(--surface-hover); border-top: 1px solid var(--gray-050); }
+  .wb-ldetail.is-on { display: block; }
+  .wb-ldetail p { margin: var(--space-100) 0 0; font-size: var(--text-xs); line-height: 1.6; color: var(--text-secondary); max-width: 74ch; }
+  .wb-ldetail .where { font-family: var(--wb-mono); font-size: 10.5px; color: var(--text-muted); word-break: break-word; }
+
+  /* The dots meant nothing without this. */
+  .wb-legend { display: flex; flex-wrap: wrap; gap: var(--space-200); margin: var(--space-150) 0; }
+  .wb-legend div { display: flex; align-items: center; gap: var(--space-075); font-size: var(--text-xs); color: var(--text-secondary); }
+  .wb-legend b { font-weight: var(--weight-semi); color: var(--text-primary); }
+  .wb-legend em { font-style: normal; font-family: var(--wb-mono); font-size: 10px; color: var(--text-muted); }
+
+  /* ── Foundations ──────────────────────────────────────────────────────────── */
+  .wb-ramp { display: grid; grid-template-columns: repeat(auto-fit, minmax(58px, 1fr)); gap: 2px; margin-bottom: var(--space-150); }
+  .wb-step { border-radius: var(--radius-xs); overflow: hidden; }
+  .wb-step i { display: block; height: 46px; }
+  .wb-step code { display: block; font-family: var(--wb-mono); font-size: 9px; color: var(--text-muted); padding-top: 4px; letter-spacing: 0.02em; }
+  /* Hairlines drawn per row rather than by a 1px grid gap: 18 tokens never fill the last
+     grid line exactly, and a gap-coloured background leaves a grey stub where they stop. */
+  .wb-sem { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden; }
+  .wb-semrow { display: flex; align-items: center; gap: var(--space-100); padding: 8px var(--space-100); border-right: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); }
+  .wb-semrow i { width: 22px; height: 22px; border-radius: var(--radius-xs); border: 1px solid var(--border-subtle); flex-shrink: 0; }
+  .wb-semrow div { min-width: 0; }
+  .wb-semrow b { display: block; font-size: 11.5px; font-weight: var(--weight-semi); color: var(--text-primary); }
+  .wb-semrow code { font-family: var(--wb-mono); font-size: 9.5px; color: var(--text-muted); }
   .wb-scale { display: flex; flex-direction: column; gap: var(--space-100); }
-  .wb-scale-row { display: flex; align-items: baseline; gap: var(--space-150); }
-  .wb-scale-row code { font-size: var(--text-2xs); color: var(--text-muted); width: 84px; flex-shrink: 0; }
-  .wb-shape { display: flex; gap: var(--space-150); flex-wrap: wrap; }
-  .wb-shape div { width: 76px; height: 56px; background: var(--accent-subtle); border: 1px solid var(--blue-200); display: flex; align-items: flex-end; justify-content: center; font-size: 10px; color: var(--text-accent); padding-bottom: 3px; }
+  .wb-scale-row { display: flex; align-items: baseline; gap: var(--space-200); }
+  .wb-scale-row code { font-family: var(--wb-mono); font-size: 10px; color: var(--text-muted); width: 104px; flex-shrink: 0; }
+  .wb-shapes { display: flex; gap: var(--space-100); flex-wrap: wrap; }
+  .wb-shapes div {
+    width: 68px; height: 52px; background: var(--accent-subtle); border: 1px solid var(--blue-200);
+    display: flex; align-items: flex-end; justify-content: center; padding-bottom: 3px;
+    font-family: var(--wb-mono); font-size: 9px; color: var(--text-accent);
+  }
+  .wb-elev { display: flex; gap: var(--space-200); flex-wrap: wrap; }
+  .wb-elev div {
+    width: 148px; height: 74px; border-radius: var(--radius-lg); background: var(--surface-primary);
+    display: flex; align-items: flex-end; padding: var(--space-100);
+    font-family: var(--wb-mono); font-size: 9.5px; color: var(--text-muted);
+  }
+
+  /* The complete token index, read from the CSS rather than restated here. */
+  .wb-tokgroup { margin-bottom: var(--space-200); }
+  .wb-tokgroup > h3 {
+    font-family: var(--wb-mono); font-size: 10px; letter-spacing: 0.05em; font-weight: var(--weight-semi);
+    color: var(--text-secondary); margin: 0 0 var(--space-075);
+  }
+  .wb-tokgroup > h3 em { font-style: normal; color: var(--text-disabled); font-weight: var(--weight-normal); }
+  .wb-toks { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden; }
+  .wb-tok {
+    display: flex; align-items: center; gap: var(--space-100); padding: 6px var(--space-100);
+    border-right: 1px solid var(--border-hairline); border-bottom: 1px solid var(--border-hairline);
+    min-width: 0;
+  }
+  .wb-tok i {
+    width: 16px; height: 16px; border-radius: var(--radius-xs); flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px var(--border-subtle);
+  }
+  .wb-tok i.is-flat { box-shadow: none; background: none; }
+  .wb-tok code { font-family: var(--wb-mono); font-size: 10px; color: var(--text-primary); white-space: nowrap; }
+  .wb-tok small {
+    font-family: var(--wb-mono); font-size: 9.5px; color: var(--text-muted); margin-left: auto;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 46%; text-align: right;
+  }
+  /* Marks a token the current direction has changed out from under the base files. */
+  .wb-tok small.is-themed { color: var(--text-accent); }
+  #wb-tok-count { font-family: var(--wb-mono); color: var(--text-disabled); text-transform: none; letter-spacing: 0; }
+
+  /* ── Icons ────────────────────────────────────────────────────────────────── */
+  .wb-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 2px; }
+  .wb-ico {
+    display: flex; flex-direction: column; align-items: center; gap: var(--space-075);
+    padding: var(--space-150) var(--space-050); border-radius: var(--radius-md);
+    cursor: pointer; color: var(--text-primary); border: 1px solid transparent; background: none;
+    font: inherit; transition: background var(--dur-base) var(--ease-standard);
+  }
+  .wb-ico:hover { background: var(--surface-hover); }
+  .wb-ico.is-copied { background: var(--accent-subtle); border-color: var(--accent-muted); }
+  .wb-ico code { font-family: var(--wb-mono); font-size: 9px; color: var(--text-muted); text-align: center; line-height: 1.35; word-break: break-word; }
+  .wb-ico.is-copied code { color: var(--text-accent); }
+  .wb-filter { max-width: 260px; margin-bottom: var(--space-150); }
+  .wb-ilab { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; margin-right: var(--space-200); }
+  .wb-ilab code { font-family: var(--wb-mono); font-size: 9px; color: var(--text-muted); }
+
+  /* ── Components view ──────────────────────────────────────────────────────── */
+  .wb-spec { border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--surface-primary); overflow: hidden; margin-bottom: var(--space-200); }
+  .wb-spec-head { display: flex; align-items: baseline; gap: var(--space-100); padding: var(--space-150) var(--space-200); border-bottom: 1px solid var(--border-subtle); }
+  .wb-spec-head b { font-size: var(--text-lg); font-weight: var(--weight-semi); color: var(--text-heading); }
+  .wb-spec-head code { font-family: var(--wb-mono); font-size: 10.5px; color: var(--text-muted); }
+  .wb-spec-head span { margin-left: auto; font-family: var(--wb-mono); font-size: 10px; color: var(--text-muted); }
+  .wb-spec-body { padding: var(--space-200); }
+
+  /* ── Directions view ──────────────────────────────────────────────────────── */
+  .wb-dirs { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-200); align-items: start; }
+  .wb-dir { border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--surface-primary); padding: var(--space-200); }
+  .wb-dir h3 { margin: 0 0 var(--space-050); font-size: var(--text-lg); font-weight: var(--weight-semi); color: var(--text-heading); }
+  .wb-dir p { margin: 0 0 var(--space-200); font-size: var(--text-xs); color: var(--text-muted); line-height: 1.55; }
+  .wb-dir p b { color: var(--text-primary); font-weight: var(--weight-semi); }
+  /* The preview sits on the page ground, not the card's, so the direction's own surface
+     tokens are visible rather than being masked by the card behind them. */
+  .wb-dir-preview {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-100);
+    padding: var(--space-200); margin-bottom: var(--space-150);
+    background: var(--surface-page); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+  }
+  .wb-dir-preview .ds-input { width: 132px; }
+  .wb-dir-preview .ds-card { width: 100%; }
+  .wb-dir pre { margin: 0; font-family: var(--wb-mono); font-size: 10px; line-height: 1.65; color: var(--text-secondary); background: var(--surface-recessed); padding: var(--space-150); border-radius: var(--radius-sm); overflow-x: auto; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .wb-view.is-on { animation: none; }
+    .wb-bar i { transition: none; }
+  }
+  @media (max-width: 860px) {
+    :root { --wb-rail-w: 0px; }
+    .wb-rail { position: static; width: 100%; flex-direction: row; align-items: center; padding: var(--space-100); overflow-x: auto; }
+    .wb-mark { padding: 0 var(--space-150) 0 var(--space-100); }
+    .wb-mark span { display: none; }
+    .wb-nav { flex-direction: row; }
+    .wb-nav a i { display: none; }
+    .wb-rail-foot { display: none; }
+    body { flex-direction: column; }
+    .wb-main { margin-left: 0; }
+    /* Drop the component name and the bar; the dot, the name and the count still rank. */
+    .wb-lrow, .wb-lhead { grid-template-columns: 14px 1fr 56px; }
+    .wb-lrow > :nth-child(3), .wb-lhead > :nth-child(3),
+    .wb-lrow > :nth-child(4), .wb-lhead > :nth-child(4) { display: none; }
+    .wb-ldetail { padding-left: var(--space-200); }
+  }
 </style>
 </head>
 <body>
 
-<div class="wb-top">
-  <div class="wb-brand">Titan Design System <span>workbench</span></div>
-  <div class="wb-themes">
-    <label for="wb-theme">Direction</label>
-    <select class="ds-input" id="wb-theme" style="width:auto; height:32px;">
-      <option value="default">Default (extracted)</option>
-      <option value="soft">Soft — round, borderless</option>
-    </select>
+<nav class="wb-rail">
+  <div class="wb-mark"><b>Titan</b><span>design system</span></div>
+  <div class="wb-nav" id="wb-nav"></div>
+  <div class="wb-rail-foot">
+    <p id="wb-foot">…</p>
   </div>
+</nav>
+
+<div class="wb-main">
+  <header class="wb-top">
+    <div class="wb-crumb" id="wb-crumb">Overview</div>
+    <div class="wb-controls">
+      <label for="wb-weight">Icons</label>
+      <select class="ds-input" id="wb-weight"></select>
+      <label for="wb-theme">Direction</label>
+      <select class="ds-input" id="wb-theme"></select>
+    </div>
+  </header>
+
+  <!-- ── Overview ─────────────────────────────────────────────────────────── -->
+  <section class="wb-view is-on" id="view-overview">
+    <div class="wb-lede">
+      <!-- The headline is the tally, rendered from registry.json, so it can't go stale
+           the way a hand-typed claim about coverage would. -->
+      <h1 id="wb-h1">Counting what this system covers…</h1>
+      <p>Every recurring element in the CRM, found by reading all 756 CSS class rules in
+         it. A block being <em>built</em> is not the same as the product using it, so the
+         green segment on each bar is measured from the pages by
+         <code>measure-adoption.js</code> — rerun it and these numbers move.</p>
+    </div>
+    <div class="wb-stats" id="wb-stats"></div>
+    <div class="wb-ledger" id="wb-ledger"></div>
+    <div class="wb-legend" id="wb-legend"></div>
+    <p class="wb-note">
+      The bar is how big the pile is, not how much of it is gone — colour is the progress.
+      Click a row for the evidence. Sorted by duplication, so the top of the list is the
+      most work saved per component built.
+    </p>
+  </section>
+
+  <!-- ── Foundations ──────────────────────────────────────────────────────── -->
+  <section class="wb-view" id="view-foundations">
+    <div class="wb-lede">
+      <h1>Foundations</h1>
+      <p>Primitives are raw values. Semantics say what a value is <em>for</em>. Components
+         read semantics only, which is what makes a direction a one-file change.</p>
+    </div>
+    <div class="wb-sec"><h2>Neutral ramp — primitives</h2><div class="wb-ramp" id="wb-ramp-gray"></div></div>
+    <div class="wb-sec"><h2>Accent &amp; status — primitives</h2><div class="wb-ramp" id="wb-ramp-accent"></div></div>
+    <div class="wb-sec"><h2>Semantics — what components actually read</h2><div class="wb-sem" id="wb-sem"></div></div>
+    <div class="wb-sec"><h2>Type</h2><div class="wb-scale" id="wb-type"></div></div>
+    <div class="wb-sec"><h2>Radius</h2><div class="wb-shapes" id="wb-radius"></div></div>
+    <div class="wb-sec"><h2>Space</h2><div id="wb-space"></div></div>
+    <div class="wb-sec"><h2>Elevation</h2><div class="wb-elev" id="wb-elev"></div></div>
+    <div class="wb-sec">
+      <h2>Every token <span id="wb-tok-count"></span></h2>
+      <p class="wb-note">Parsed from <code>primitives.css</code> and <code>semantics.css</code>
+         at load, grouped by the section comments in those files. Add a token and it appears
+         here — the specimens above are curated, this is complete.</p>
+      <div id="wb-tokens"></div>
+    </div>
+  </section>
+
+  <!-- ── Icons ────────────────────────────────────────────────────────────── -->
+  <section class="wb-view" id="view-icons">
+    <div class="wb-lede">
+      <h1>Icons</h1>
+      <p>Phosphor, real upstream geometry, three weights. Colour comes from
+         <code>currentColor</code>, so an icon takes the ink of whatever it sits in.</p>
+    </div>
+    <input class="ds-input wb-filter" id="wb-icon-filter" placeholder="Filter icons…" autocomplete="off">
+    <div class="wb-sec">
+      <h2>Sizes &amp; states</h2>
+      <div class="wb-row"><span class="wb-key">size</span><span id="wb-icon-sizes"></span></div>
+      <div class="wb-row"><span class="wb-key">state</span><span id="wb-icon-states"></span></div>
+    </div>
+    <div class="wb-sec">
+      <h2>The set</h2>
+      <p class="wb-note">Click to copy the call. To change one, edit the <code>ICONS</code> map in
+         <code>icon.js</code>, or override it anywhere with <code>dsIcon.register()</code>.</p>
+      <div class="wb-icons" id="wb-icons"></div>
+      <p class="wb-note" id="wb-icon-alias" style="margin-top:var(--space-150)"></p>
+    </div>
+  </section>
+
+  <!-- ── Components ───────────────────────────────────────────────────────── -->
+  <section class="wb-view" id="view-components">
+    <div class="wb-lede">
+      <h1>Components</h1>
+      <p>Every variant in every state. If a state is missing here, it is missing in the
+         product too — this page is how you find out.</p>
+    </div>
+    <div id="wb-components"></div>
+  </section>
+
+  <!-- ── Directions ───────────────────────────────────────────────────────── -->
+  <section class="wb-view" id="view-directions">
+    <div class="wb-lede">
+      <h1>Directions</h1>
+      <p>A direction is one file that remaps semantic tokens. It may not add component
+         rules or invent raw values — that constraint is what makes trying one cheap and
+         abandoning one free.</p>
+    </div>
+    <p class="wb-note">
+      Each column below is a live direction, side by side. The theme file is fetched and
+      re-scoped to its column, so these are the real overrides rather than a copy of them —
+      edit <code>themes/soft.css</code>, reload, and the difference moves. The
+      <b>Direction</b> control in the header applies one to everything, including this tool.
+    </p>
+    <div class="wb-dirs" id="wb-dirs"></div>
+    <style id="wb-theme-scoped"></style>
+  </section>
 </div>
 
-<div class="wb-body">
-
-  <section class="wb-sec">
-    <h2>Surfaces &amp; text</h2>
-    <div class="wb-swatches" id="wb-colours"></div>
-  </section>
-
-  <section class="wb-sec">
-    <h2>Type scale</h2>
-    <div class="wb-scale" id="wb-type"></div>
-  </section>
-
-  <section class="wb-sec">
-    <h2>Radius</h2>
-    <div class="wb-shape" id="wb-radius"></div>
-  </section>
-
-  <section class="wb-sec">
-    <h2>Button</h2>
-    <p class="wb-note">Shape comes from the <code>--btn-*</code> tokens — switch the direction above and every one of these changes at once.</p>
-    <div id="wb-buttons"></div>
-  </section>
-
-  <section class="wb-sec">
-    <h2>Input</h2>
-    <div class="wb-row">
-      <span class="wb-label">default</span>
-      <div style="width:240px;"><input class="ds-input" placeholder="Search contacts…"></div>
-      <div style="width:240px;"><input class="ds-input" value="Filled value"></div>
-    </div>
-    <div class="wb-row">
-      <span class="wb-label">states</span>
-      <div style="width:240px;"><input class="ds-input ds-input--invalid" value="not-an-email"></div>
-      <div style="width:240px;"><input class="ds-input" value="Disabled" disabled></div>
-    </div>
-    <div class="wb-row">
-      <span class="wb-label">field</span>
-      <div class="ds-field" style="width:300px;">
-        <label class="ds-field-label" for="wb-i1">Full name</label>
-        <input class="ds-input" id="wb-i1" placeholder="Ada Lovelace">
-        <span class="ds-field-hint">Shown on every list.</span>
-      </div>
-      <div class="ds-field" style="width:300px;">
-        <label class="ds-field-label" for="wb-i2">Email</label>
-        <input class="ds-input ds-input--invalid" id="wb-i2" value="ada@">
-        <span class="ds-field-error">That doesn’t look like an email.</span>
-      </div>
-    </div>
-    <div class="wb-row">
-      <span class="wb-label">textarea</span>
-      <div style="width:400px;"><textarea class="ds-input" placeholder="A sentence or two…"></textarea></div>
-    </div>
-  </section>
-
-  <section class="wb-sec">
-    <h2>Badge</h2>
-    <div class="wb-row">
-      <span class="wb-label">semantic</span>
-      <span class="ds-badge">Neutral</span>
-      <span class="ds-badge ds-badge--accent">Accent</span>
-      <span class="ds-badge ds-badge--success ds-badge--dot">Live</span>
-      <span class="ds-badge ds-badge--warning">Paused</span>
-      <span class="ds-badge ds-badge--danger">Overdue</span>
-    </div>
-    <div class="wb-row">
-      <span class="wb-label">labels</span>
-      <span class="ds-badge ds-badge--teal">Design</span>
-      <span class="ds-badge ds-badge--green">Finance</span>
-      <span class="ds-badge ds-badge--amber">Travel</span>
-      <span class="ds-badge ds-badge--pink">Personal</span>
-      <span class="ds-badge ds-badge--purple">Product</span>
-    </div>
-  </section>
-
-  <section class="wb-sec">
-    <h2>Card</h2>
-    <div class="wb-row" style="align-items:stretch;">
-      <div class="ds-card" style="width:260px;">
-        <div class="ds-card-title">Elevated</div>
-        <div class="ds-card-sub">Shadow separates it, not a heavy border.</div>
-      </div>
-      <div class="ds-card ds-card--flat" style="width:260px;">
-        <div class="ds-card-title">Flat</div>
-        <div class="ds-card-sub">Inside another elevated surface.</div>
-      </div>
-      <div class="ds-card ds-card--interactive" style="width:260px;">
-        <div class="ds-card-title">Interactive</div>
-        <div class="ds-card-sub">Lifts on hover.</div>
-      </div>
-    </div>
-  </section>
-
-</div>
-
+<script src="./components/icon.js"></script>
 <script src="./components/button.js"></script>
 <script>
-  // ── Theme switching ──────────────────────────────────────────────────────
-  // Swapping one stylesheet. Nothing re-renders, no component knows it happened.
-  document.getElementById('wb-theme').addEventListener('change', function (e) {
-    document.getElementById('theme-link').href = './themes/' + e.target.value + '.css';
-  });
-
-  // ── Token galleries, read from the live computed styles ──────────────────
-  // Generated from the stylesheet rather than hand-listed, so a token added to
-  // semantics.css shows up here without anyone remembering to document it.
   const css = getComputedStyle(document.documentElement);
   const val = (t) => css.getPropertyValue(t).trim();
+  const esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  };
 
-  const COLOURS = [
-    ['--surface-page', 'page'], ['--surface-primary', 'primary'], ['--surface-recessed', 'recessed'],
-    ['--surface-hover', 'hover'], ['--surface-selected', 'selected'], ['--surface-selected-strong', 'selected+'],
-    ['--text-heading', 'heading'], ['--text-primary', 'body'], ['--text-secondary', 'secondary'],
-    ['--text-muted', 'muted'], ['--text-placeholder', 'placeholder'], ['--text-disabled', 'disabled'],
-    ['--border-subtle', 'border subtle'], ['--border-default', 'border'], ['--border-strong', 'border strong'],
-    ['--accent-primary', 'accent'], ['--accent-hover', 'accent hover'], ['--accent-subtle', 'accent subtle'],
-    ['--status-success', 'success'], ['--status-warning', 'warning'], ['--status-danger', 'danger'],
+  // ── Views ────────────────────────────────────────────────────────────────
+  // Hash routing, so a view is linkable and the back button works. Nav is generated
+  // from one list rather than duplicated in markup and JS.
+  // Icons chosen for what the view *is*, not for a generic nav vocabulary: the overview is
+  // a list, foundations are named values (tag), icons are a grid, components are a parts
+  // bin, and a direction is an experiment you can throw away.
+  const VIEWS = [
+    { id: 'overview', label: 'Overview', icon: 'list-bullets' },
+    { id: 'foundations', label: 'Foundations', icon: 'tag' },
+    { id: 'icons', label: 'Icons', icon: 'squares-four' },
+    { id: 'components', label: 'Components', icon: 'archive-box' },
+    { id: 'directions', label: 'Directions', icon: 'flask' },
   ];
-  document.getElementById('wb-colours').innerHTML = COLOURS.map(function (c) {
-    return '<div class="wb-sw"><i style="background:' + val(c[0]) + '"></i>' +
-      '<b>' + c[1] + '</b><code>' + c[0] + '</code></div>';
-  }).join('');
+  const counts = {};
+  function renderNav() {
+    document.getElementById('wb-nav').innerHTML = VIEWS.map(function (v) {
+      return '<a href="#' + v.id + '" data-view="' + v.id + '">' +
+        dsIcon(v.icon, { size: 15 }) + v.label +
+        (counts[v.id] ? '<i>' + counts[v.id] + '</i>' : '') + '</a>';
+    }).join('');
+  }
+  function show(id) {
+    const view = VIEWS.some(function (v) { return v.id === id; }) ? id : 'overview';
+    VIEWS.forEach(function (v) {
+      document.getElementById('view-' + v.id).classList.toggle('is-on', v.id === view);
+      const a = document.querySelector('.wb-nav a[data-view="' + v.id + '"]');
+      if (a) { if (v.id === view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
+    });
+    const meta = VIEWS.filter(function (v) { return v.id === view; })[0];
+    document.getElementById('wb-crumb').innerHTML = meta.label +
+      (counts[view] ? '<em>' + counts[view] + '</em>' : '');
+    if (view === 'overview') growBars();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  window.addEventListener('hashchange', function () { show(location.hash.slice(1)); });
 
-  const TYPE = ['--text-3xl', '--text-2xl', '--text-xl', '--text-lg', '--text-md', '--text-sm', '--text-xs', '--text-2xs'];
-  document.getElementById('wb-type').innerHTML = TYPE.map(function (t) {
-    return '<div class="wb-scale-row"><code>' + t + ' · ' + val(t) + '</code>' +
-      '<span style="font-size:' + val(t) + '">The quick brown fox</span></div>';
-  }).join('');
+  // ── Overview: stats + ledger ─────────────────────────────────────────────
+  let BLOCKS = [];
+  let sortKey = 'variants';
+  function growBars() {
+    // Width is set after paint so the bars measure themselves in, once per view entry.
+    requestAnimationFrame(function () {
+      document.querySelectorAll('.wb-bar i').forEach(function (el) { el.style.width = el.dataset.w; });
+    });
+  }
+  function renderLedger() {
+    const max = Math.max.apply(null, BLOCKS.map(function (b) { return b.variants || 0; })) || 1;
+    const order = { built: 0, tokenised: 1, planned: 2, excluded: 3 };
+    const rows = BLOCKS.slice().sort(function (a, b) {
+      if (sortKey === 'name') return a.name.localeCompare(b.name);
+      if (sortKey === 'status') return (order[a.status] - order[b.status]) || (b.variants - a.variants);
+      return (b.variants - a.variants) || a.name.localeCompare(b.name);
+    });
+    const col = function (key, label, extra) {
+      const on = sortKey === key;
+      return '<button data-sort="' + key + '" aria-pressed="' + on + '"' +
+        (on ? ' data-on' : '') + (extra || '') + '>' + label + '</button>';
+    };
+    // "Absorbed" was wrong: the bar is the size of the pile, and colour is how far the
+    // migration has got. Two different facts, so the header must not claim only one.
+    const head = '<div class="wb-lhead">' +
+      '<span></span>' + col('name', 'Block') + col('status', 'Today') +
+      '<span>Duplication at stake</span>' +
+      col('variants', 'Variants', ' style="text-align:right"') +
+      '</div>';
+    document.getElementById('wb-ledger').innerHTML = head + rows.map(function (b, i) {
+      const w = Math.round((b.variants || 0) / max * 100);
+      // For a built block this is the component's own class; for a planned one it's a
+      // representative legacy class, which is what you'd still be writing today.
+      const comp = (b.component && b.component !== '—') ? b.component : b.whereToday.split(',')[0];
+      // Adoption is only meaningful where a component exists to adopt.
+      const measured = typeof b.adopted === 'number' && (b.adopted + b.legacy) > 0;
+      const share = measured ? Math.round(b.adopted / (b.adopted + b.legacy) * 100) : null;
+      const sub = b.status === 'excluded' ? b.category + ' · not a component'
+        : b.status === 'tokenised' ? b.category + ' · themeable, no component'
+        : measured ? b.category + ' · ' + b.adopted + ' of ' + (b.adopted + b.legacy) + ' call sites moved'
+        : b.prefixes ? b.category + ' · ' + b.prefixes + ' prefixes'
+        : b.category;
+      return '<button class="wb-lrow" data-i="' + i + '" aria-expanded="false" aria-controls="wb-d' + i + '">' +
+          '<span class="wb-dot wb-dot--' + b.status + '"></span>' +
+          '<span class="wb-lname">' + esc(b.name) + '<small>' + esc(sub) + '</small></span>' +
+          '<span class="wb-lcomp' + (b.component === '—' ? ' is-none' : '') + '">' + esc(comp) + '</span>' +
+          // No bar where there is no count: an empty track would read as a measured
+          // zero, and these blocks were never prefix-surveyed at all.
+          (b.variants
+            ? '<span class="wb-bar wb-bar--' + b.status + '"><i data-w="' + w + '%"></i>' +
+                (share === null ? '' : '<u data-w="' + Math.round(w * share / 100) + '%"></u>') +
+              '</span>'
+            : '<span></span>') +
+          '<span class="wb-lnum">' +
+            (share === null ? '' : '<b>' + share + '%</b>') +
+            (b.variants ? b.variants : '<s>—</s>') +
+          '</span>' +
+        '</button>' +
+        '<div class="wb-ldetail" id="wb-d' + i + '" data-d="' + i + '">' +
+          '<p>' + esc(b.evidence) + (b.note ? ' ' + esc(b.note) : '') + '</p>' +
+          '<p class="where">' + esc(b.whereToday) + '</p>' +
+        '</div>';
+    }).join('');
+    growBars();
+  }
+  // Legend counts come from the data, so a state with no blocks in it doesn't get listed
+  // as if it were a category the product uses.
+  const STATES = [
+    ['built', 'Component exists', 'ds-* class or render module'],
+    ['tokenised', 'Themeable only', 'reads component tokens, still hand-rolled'],
+    ['planned', 'Hand-rolled', 'literals, per page'],
+    ['excluded', 'Not a component', 'derived data or brand art'],
+  ];
+  function renderLegend() {
+    document.getElementById('wb-legend').innerHTML = STATES.map(function (s) {
+      const n = BLOCKS.filter(function (b) { return b.status === s[0]; }).length;
+      if (!n) return '';
+      return '<div><span class="wb-dot wb-dot--' + s[0] + '"></span>' +
+        '<b>' + n + ' ' + s[1] + '</b><em>' + s[2] + '</em></div>';
+    }).join('');
+  }
 
-  const RADII = ['--radius-xs', '--radius-sm', '--radius-md', '--radius-lg', '--radius-full'];
-  document.getElementById('wb-radius').innerHTML = RADII.map(function (r) {
-    return '<div style="border-radius:' + val(r) + '">' + r.replace('--radius-', '') + '</div>';
-  }).join('');
-
-  // ── Buttons: every variant × every size × every state, from the module ───
-  const ICON = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none">' +
-    '<path d="M8 3.5v9M3.5 8h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
-
-  // Every variant × every size × every state. The `add` variant is full-width by
-  // design, so its row gets a column instead of being laid out inline.
-  let html = '';
-  dsButton.variants.forEach(function (v) {
-    const states = [
-      dsButton({ label: 'Default', variant: v }),
-      dsButton({ label: 'Small', variant: v, size: 'sm' }),
-      dsButton({ label: 'Large', variant: v, size: 'lg' }),
-      dsButton({ label: 'Loading', variant: v, loading: true }),
-      dsButton({ label: 'Disabled', variant: v, disabled: true }),
-    ];
-    if (v !== 'add') states.push(dsButton({ icon: ICON, variant: v, title: 'Add' }));
-    const inner = v === 'add'
-      ? '<div style="flex:1; display:grid; gap:8px;">' + states.join('') + '</div>'
-      : states.join('');
-    html += '<div class="wb-row"><span class="wb-label">' + v + '</span>' + inner + '</div>';
+  document.getElementById('wb-ledger').addEventListener('click', function (e) {
+    const sortBtn = e.target.closest('[data-sort]');
+    if (sortBtn) { sortKey = sortBtn.dataset.sort; renderLedger(); return; }
+    const row = e.target.closest('.wb-lrow');
+    if (!row) return;
+    const d = document.querySelector('.wb-ldetail[data-d="' + row.dataset.i + '"]');
+    const open = d.classList.toggle('is-on');
+    row.classList.toggle('is-open', open);
+    row.setAttribute('aria-expanded', String(open));
   });
-  html += '<div class="wb-row"><span class="wb-label">as a link</span>' +
-    dsButton({ label: 'Opens the form', variant: 'secondary', href: '#', newTab: true }) +
-    dsButton({ label: 'Disabled link', variant: 'secondary', href: '#', disabled: true }) +
-    '</div>';
-  document.getElementById('wb-buttons').innerHTML = html;
+
+  fetch('./registry.json', { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (reg) {
+      BLOCKS = (reg.inventory && reg.inventory.blocks) || [];
+      const built = BLOCKS.filter(function (b) { return b.status === 'built'; });
+      const tokenised = BLOCKS.filter(function (b) { return b.status === 'tokenised'; });
+      // Tokenised counts as hand-rolled here on purpose: a direction can restyle it, but
+      // every page still writes its own copy, so the duplication is all still at stake.
+      const handRolled = BLOCKS.filter(function (b) {
+        return b.status === 'tokenised' || b.status === 'planned';
+      }).sort(function (a, b) { return (b.variants || 0) - (a.variants || 0); });
+      const dup = handRolled.reduce(function (a, b) { return a + (b.variants || 0); }, 0);
+      const top = handRolled[0];
+
+      // Adoption across every block that has a component to adopt. This is the number the
+      // headline leads with, because "5 built" was true while the product used almost none
+      // of it — and a ledger that flatters itself is worse than no ledger.
+      const adopted = BLOCKS.reduce(function (n, b) { return n + (b.adopted || 0); }, 0);
+      const legacy  = BLOCKS.reduce(function (n, b) { return n + (b.legacy || 0); }, 0);
+      const share   = (adopted + legacy) ? Math.round(adopted / (adopted + legacy) * 100) : 0;
+
+      document.getElementById('wb-h1').innerHTML =
+        share + '% of the product goes through the system.';
+
+      document.getElementById('wb-stats').innerHTML =
+        '<div class="wb-stat"><b>' + adopted + '<sup>/' + (adopted + legacy) + '</sup></b>' +
+          '<span>call sites moved onto a component. The rest still hand-roll it.</span></div>' +
+        '<div class="wb-stat"><b>' + built.length + '<sup>/' + BLOCKS.length + '</sup></b>' +
+          '<span>blocks have a component at all' +
+          (tokenised.length ? '; ' + tokenised.length + ' more are themeable only' : '') + '.</span></div>' +
+        '<div class="wb-stat"><b>' + (top ? top.variants : 0) + '</b>' +
+          '<span>CRM rules in the biggest unbuilt block: ' + (top ? esc(top.name).toLowerCase() : '—') +
+          ', under ' + (top ? top.prefixes : 0) + ' different class prefixes.</span></div>';
+
+      counts.overview = built.length + '/' + BLOCKS.length;
+      counts.components = String((reg.components || []).length);
+      counts.directions = String((reg.themes || []).length);
+      renderNav();
+      renderLedger();
+      renderLegend();
+      renderComponents(reg.components || []);
+      renderDirections(reg.themes || []);
+      document.getElementById('wb-foot').innerHTML =
+        '<b>' + built.length + '/' + BLOCKS.length + '</b> blocks built<br>' +
+        '<b>' + dsIcon.builtins().length + '</b> icons · <b>' + (reg.components || []).length + '</b> components<br>' +
+        'v' + (reg.version || '0');
+      show(location.hash.slice(1));
+    })
+    .catch(function () {
+      document.getElementById('wb-stats').innerHTML =
+        '<div class="wb-stat"><b>—</b><span>registry.json needs to be served over HTTP. ' +
+        'Run <code>node dev-server.js</code> and open /design-system/.</span></div>';
+      renderNav(); show(location.hash.slice(1));
+    });
+
+  // ── Foundations ──────────────────────────────────────────────────────────
+  const GRAYS = ['--gray-000','--gray-025','--gray-050','--gray-100','--gray-150','--gray-200',
+                 '--gray-300','--gray-400','--gray-450','--gray-500','--gray-600','--gray-700','--gray-800','--gray-900'];
+  const ACCENTS = ['--blue-050','--blue-100','--blue-200','--blue-300','--blue-600','--blue-700',
+                   '--green-050','--green-600','--amber-050','--amber-600','--red-050','--red-600'];
+  const SEM = ['--surface-page','--surface-primary','--surface-recessed','--surface-hover','--surface-selected',
+               '--text-heading','--text-primary','--text-secondary','--text-muted','--text-disabled',
+               '--border-subtle','--border-default','--accent-primary','--accent-hover','--accent-subtle',
+               '--status-success','--status-warning','--status-danger'];
+
+  // Foundations print their own resolved values, so this has to be re-read whenever the
+  // direction changes — otherwise the swatches keep showing the values of the old theme.
+  function paintFoundations() {
+    const ramp = function (host, toks) {
+      document.getElementById(host).innerHTML = toks.map(function (t) {
+        return '<div class="wb-step"><i style="background:' + val(t) +
+          '; box-shadow: inset 0 0 0 1px ' + val('--border-subtle') + '"></i>' +
+          '<code>' + t.replace('--', '') + '</code></div>';
+      }).join('');
+    };
+    ramp('wb-ramp-gray', GRAYS); ramp('wb-ramp-accent', ACCENTS);
+
+    document.getElementById('wb-sem').innerHTML = SEM.map(function (t) {
+      return '<div class="wb-semrow"><i style="background:' + val(t) + '"></i>' +
+        '<div><b>' + t.replace('--', '').replace(/-/g, ' ') + '</b><code>' + val(t) + '</code></div></div>';
+    }).join('');
+
+    document.getElementById('wb-type').innerHTML =
+      ['--text-3xl','--text-2xl','--text-xl','--text-lg','--text-md','--text-sm','--text-xs','--text-2xs']
+      .map(function (t) {
+        return '<div class="wb-scale-row"><code>' + t.replace('--','') + ' · ' + val(t) + '</code>' +
+          '<span style="font-size:' + val(t) + '">Pipeline, record, contact</span></div>';
+      }).join('');
+
+    document.getElementById('wb-radius').innerHTML =
+      ['--radius-xs','--radius-sm','--radius-md','--radius-lg','--radius-xl','--radius-full'].map(function (r) {
+        return '<div style="border-radius:' + val(r) + '">' + r.replace('--radius-','') + '</div>';
+      }).join('');
+
+    document.getElementById('wb-space').innerHTML =
+      ['--space-025','--space-050','--space-075','--space-100','--space-150','--space-200','--space-300','--space-400']
+      .map(function (s) {
+        return '<div class="wb-scale-row"><code>' + s.replace('--','') + ' · ' + val(s) + '</code>' +
+          '<i style="display:block; height:10px; width:' + val(s) + '; background:var(--accent-primary); border-radius:2px"></i></div>';
+      }).join('');
+
+    document.getElementById('wb-elev').innerHTML =
+      [['--elevation-card','card'],['--elevation-menu','menu'],['--elevation-modal','modal']]
+      .map(function (e) { return '<div style="box-shadow:' + val(e[0]) + '">' + e[1] + '</div>'; }).join('');
+  }
+  paintFoundations();
+
+  // ── The complete token index ───────────────────────────────────────────────
+  // The specimens above are a curated list, which meant every token added since this page
+  // was written — --checkbox-size, --border-hairline, --surface-sunken, --kanban-*, and
+  // every component token — was invisible here. So this reads the CSS instead: sections come
+  // from the files' own comment headers, rows from their declarations. Nothing to keep in
+  // sync, which is the same reason the ledger reads registry.json.
+  function paintTokenIndex() {
+    Promise.all(['./tokens/primitives.css', './tokens/semantics.css'].map(function (f) {
+      return fetch(f, { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; })
+        .catch(function () { return ''; });
+    })).then(function (texts) {
+      const groups = [];
+      texts.forEach(function (text, fileIdx) {
+        let current = null;
+        text.split('\n').forEach(function (line) {
+          // Section headers look like `/* ── Neutral ramp ───` or `/* ═══ Component tokens ═══`.
+          const head = line.match(/\/\*\s*[─═-]{2,}\s*(.+?)\s*[─═-]{2,}/);
+          if (head) {
+            current = { name: head[1], file: fileIdx ? 'semantics' : 'primitives', toks: [] };
+            groups.push(current);
+            return;
+          }
+          const decl = line.match(/^\s*(--[\w-]+)\s*:\s*([^;]+);/);
+          if (!decl) return;
+          if (!current) { current = { name: 'Ungrouped', file: fileIdx ? 'semantics' : 'primitives', toks: [] }; groups.push(current); }
+          current.toks.push({ name: decl[1], raw: decl[2].trim() });
+        });
+      });
+
+      const live = groups.filter(function (g) { return g.toks.length; });
+      const total = live.reduce(function (n, g) { return n + g.toks.length; }, 0);
+      document.getElementById('wb-tok-count').textContent = '· ' + total;
+      counts.foundations = String(total);
+      // Re-render the rail so the count lands, then re-assert the current view: renderNav
+      // rebuilds the markup and would otherwise drop aria-current.
+      renderNav();
+      show(location.hash.slice(1));
+
+      document.getElementById('wb-tokens').innerHTML = live.map(function (g) {
+        return '<div class="wb-tokgroup"><h3>' + esc(g.name) +
+          ' <em>' + g.file + ' · ' + g.toks.length + '</em></h3><div class="wb-toks">' +
+          g.toks.map(function (t) {
+            const v = val(t.name);
+            // A swatch only where the value is actually a colour; shadows, sizes and
+            // easings get their value printed instead of a misleading empty square.
+            const isColour = /^(#|rgb|hsl|oklch|color)/i.test(v);
+            // For a semantic, the mapping is the useful thing to read — except when a
+            // direction has overridden it, where printing the file's mapping would describe
+            // something that isn't on screen. So compare what the authored `var()` resolves
+            // to against what the token actually resolves to now, and show the live value
+            // when they disagree.
+            const ref = t.raw.match(/^var\(\s*(--[\w-]+)/);
+            // Literal-valued tokens (--btn-height: 32px) can be overridden too, and comparing
+            // the authored text against the resolved value catches them. Restricted to
+            // single-word values: a shadow or cubic-bezier gets re-serialised by the browser,
+            // so a text comparison there would flag every one of them as themed.
+            const simple = /^[\w.%#-]+$/.test(t.raw);
+            const overridden = ref ? val(ref[1]) !== v
+                             : simple ? t.raw !== v
+                             : false;
+            const shown = (ref && !overridden) ? t.raw : (v || t.raw);
+            return '<div class="wb-tok">' +
+              '<i class="' + (isColour ? '' : 'is-flat') + '"' +
+                (isColour ? ' style="background:' + v + '"' : '') + '></i>' +
+              '<code>' + t.name.replace('--', '') + '</code>' +
+              '<small' + (overridden ? ' class="is-themed"' : '') +
+                ' title="' + esc(t.raw + (overridden ? ' — overridden by the current direction' : '')) + '">' +
+                esc(shown) + (overridden ? ' ●' : '') + '</small>' +
+            '</div>';
+          }).join('') + '</div></div>';
+      }).join('');
+    });
+  }
+  paintTokenIndex();
+
+  // ── Icons ────────────────────────────────────────────────────────────────
+  const labelled = function (label, html) {
+    return '<span class="wb-ilab">' + html + '<code>' + label + '</code></span>';
+  };
+  function paintIconRows() {
+    document.getElementById('wb-icon-sizes').innerHTML =
+      [13, 16, 20, 28].map(function (n) {
+        return labelled(n + 'px', dsIcon('mail', { size: n }));
+      }).join('');
+    document.getElementById('wb-icon-states').innerHTML =
+      labelled('default', dsIcon('mail')) +
+      labelled('muted', dsIcon('mail', { className: 'ds-icon--muted' })) +
+      labelled('accent', dsIcon('mail', { className: 'ds-icon--accent' })) +
+      labelled('danger', dsIcon('delete', { className: 'ds-icon--danger' })) +
+      labelled('spin', dsIcon('loading', { className: 'ds-icon--spin' }));
+  }
+  function paintIconGrid(filter) {
+    const q = (filter || '').trim().toLowerCase();
+    const al = dsIcon.aliases();
+    const names = dsIcon.builtins().filter(function (n) {
+      if (!q) return true;
+      const alias = Object.keys(al).filter(function (k) { return al[k] === n; }).join(' ');
+      return (n + ' ' + alias).indexOf(q) !== -1;
+    });
+    document.getElementById('wb-icons').innerHTML = names.length
+      ? names.map(function (n) {
+          return '<button class="wb-ico" data-name="' + n + '" title="dsIcon(\'' + n + '\')">' +
+            dsIcon(n, { size: 21 }) + '<code>' + n + '</code></button>';
+        }).join('')
+      : '<p class="wb-note">No icon matches that. ' + dsIcon.builtins().length + ' in the set.</p>';
+    counts.icons = String(dsIcon.builtins().length);
+  }
+  document.getElementById('wb-icons').addEventListener('click', function (e) {
+    const el = e.target.closest('.wb-ico');
+    if (!el) return;
+    navigator.clipboard.writeText("dsIcon('" + el.dataset.name + "')").then(function () {
+      el.classList.add('is-copied');
+      setTimeout(function () { el.classList.remove('is-copied'); }, 900);
+    });
+  });
+  document.getElementById('wb-icon-filter').addEventListener('input', function (e) { paintIconGrid(e.target.value); });
+  const AL = dsIcon.aliases();
+  document.getElementById('wb-icon-alias').innerHTML =
+    dsIcon.builtins().length + ' icons, plus ' + Object.keys(AL).length +
+    ' aliases so call sites read in our words rather than Phosphor’s — ' +
+    Object.keys(AL).slice(0, 6).map(function (k) { return '<code>' + k + ' → ' + AL[k] + '</code>'; }).join(', ') + ', …';
+  paintIconRows(); paintIconGrid('');
+
+  // Options and selection both come from the module, so the control can never claim a
+  // weight the icons aren't actually rendering.
+  const weightSel = document.getElementById('wb-weight');
+  weightSel.innerHTML = dsIcon.weights().map(function (w) {
+    return '<option value="' + w + '"' + (w === dsIcon.weight() ? ' selected' : '') + '>' +
+      w.charAt(0).toUpperCase() + w.slice(1) + '</option>';
+  }).join('');
+  weightSel.addEventListener('change', function (e) {
+    dsIcon.setWeight(e.target.value);
+    // Icons are baked into strings at render time, so everything holding one repaints.
+    paintIconRows();
+    paintIconGrid(document.getElementById('wb-icon-filter').value);
+    renderComponents(SPECS);
+    renderNav();
+    show(location.hash.slice(1) || 'overview');
+  });
+  const themeLink = document.getElementById('theme-link');
+  // Both read resolved values, so both have to re-read when the direction changes.
+  themeLink.addEventListener('load', function () { paintFoundations(); paintTokenIndex(); });
+  document.getElementById('wb-theme').addEventListener('change', function (e) {
+    themeLink.href = './themes/' + e.target.value + '.css';
+  });
+
+  // ── Components ───────────────────────────────────────────────────────────
+  let SPECS = [];
+  function renderComponents(specs) {
+    SPECS = specs || SPECS;
+    const ICON_PLUS = dsIcon('plus', { size: 15 });
+    const spec = function (name, cls, meta, body) {
+      return '<div class="wb-spec"><div class="wb-spec-head"><b>' + name + '</b><code>.' + cls + '</code>' +
+        '<span>' + meta + '</span></div><div class="wb-spec-body">' + body + '</div></div>';
+    };
+    let out = '';
+
+    let btn = '';
+    dsButton.variants.forEach(function (v) {
+      const states = [
+        dsButton({ label: 'Default', variant: v }),
+        dsButton({ label: 'Small', variant: v, size: 'sm' }),
+        dsButton({ label: 'Large', variant: v, size: 'lg' }),
+        dsButton({ label: 'Loading', variant: v, loading: true }),
+        dsButton({ label: 'Disabled', variant: v, disabled: true }),
+      ];
+      if (v !== 'add') states.push(dsButton({ icon: ICON_PLUS, variant: v, title: 'Add' }));
+      // `add` is a full-width control, so it stacks — but at the width of the kanban
+      // column it actually lives in, not the width of this page.
+      btn += '<div class="wb-row"' + (v === 'add' ? ' style="align-items:flex-start"' : '') + '>' +
+        '<span class="wb-key">' + v + '</span>' +
+        (v === 'add' ? '<div style="width:288px; display:grid; gap:8px;">' + states.join('') + '</div>' : states.join('')) +
+        '</div>';
+    });
+    out += spec('Button', 'ds-btn', dsButton.variants.length + ' variants · 3 sizes · 6 states', btn);
+
+    out += spec('Input', 'ds-input', 'boxed · inline · textarea · select',
+      '<div class="wb-row"><span class="wb-key">default</span>' +
+        '<div style="width:230px"><input class="ds-input" placeholder="Search contacts…"></div>' +
+        '<div style="width:230px"><input class="ds-input" value="Filled"></div></div>' +
+      '<div class="wb-row"><span class="wb-key">invalid</span>' +
+        '<div style="width:230px"><input class="ds-input ds-input--invalid" value="ada@"></div>' +
+        '<div style="width:230px"><input class="ds-input" value="Disabled" disabled></div></div>' +
+      '<div class="wb-row" style="align-items:flex-start"><span class="wb-key">field</span>' +
+        '<div class="ds-field" style="width:280px"><label class="ds-field-label" for="wb-f1">Full name</label>' +
+        '<input class="ds-input" id="wb-f1" placeholder="Ada Lovelace"><span class="ds-field-hint">Shown on every list.</span></div>' +
+        '<div class="ds-field" style="width:280px"><label class="ds-field-label" for="wb-f2">Email</label>' +
+        '<input class="ds-input ds-input--invalid" id="wb-f2" value="ada@"><span class="ds-field-error">That doesn’t look like an email.</span></div></div>' +
+      '<div class="wb-row" style="align-items:flex-start"><span class="wb-key">textarea</span>' +
+        '<div style="width:380px"><textarea class="ds-input" placeholder="A sentence or two…"></textarea></div></div>' +
+      // Shown on a text line, because that is the only place it makes sense: the point of the
+      // inline variant is that it disappears into copy until you hover it.
+      '<div class="wb-row"><span class="wb-key">inline</span>' +
+        '<span style="font-size:15px; color:var(--text-heading)">Total value ' +
+        '<input class="ds-input ds-input--inline" value="3000" style="width:70px"> at ' +
+        '<input class="ds-input ds-input--inline" value="BrightPath Co" style="width:130px"></span></div>');
+
+    out += spec('Badge', 'ds-badge', '4 semantic · 5 category · pill',
+      '<div class="wb-row"><span class="wb-key">semantic</span>' +
+        '<span class="ds-badge">Neutral</span><span class="ds-badge ds-badge--accent">Accent</span>' +
+        '<span class="ds-badge ds-badge--success ds-badge--dot">Live</span>' +
+        '<span class="ds-badge ds-badge--warning">Paused</span>' +
+        '<span class="ds-badge ds-badge--danger">Overdue</span></div>' +
+      '<div class="wb-row"><span class="wb-key">category</span>' +
+        ['teal','green','amber','pink','purple'].map(function (c) {
+          return '<span class="ds-badge ds-badge--' + c + '">' + c + '</span>';
+        }).join('') + '</div>' +
+      '<div class="wb-row"><span class="wb-key">pill</span>' +
+        '<span class="ds-badge ds-badge--pill">Neutral</span>' +
+        '<span class="ds-badge ds-badge--accent ds-badge--pill">Contact person</span>' +
+        '<span class="ds-badge ds-badge--success ds-badge--pill ds-badge--dot">Won</span></div>');
+
+    out += spec('Card', 'ds-card', '5 variants',
+      '<div class="wb-row" style="align-items:stretch">' +
+        '<div class="ds-card" style="width:240px"><div class="ds-card-title">Elevated</div>' +
+          '<div class="ds-card-sub">Shadow separates it, not a border.</div></div>' +
+        '<div class="ds-card ds-card--flat" style="width:240px"><div class="ds-card-title">Flat</div>' +
+          '<div class="ds-card-sub">Inside another elevated surface.</div></div>' +
+        '<div class="ds-card ds-card--interactive" style="width:240px"><div class="ds-card-title">Interactive</div>' +
+          '<div class="ds-card-sub">Lifts on hover.</div></div></div>' +
+      '<div class="wb-row" style="align-items:stretch">' +
+        '<div class="ds-card ds-card--section" style="width:100%"><div class="ds-card-title">Section</div>' +
+          '<div class="ds-card-sub">A page content panel, not a tile — rounder and roomier. ' +
+          'The record screen stacks seven of these.</div></div></div>');
+
+    out += spec('Icon', 'ds-icon', dsIcon.builtins().length + ' icons · 3 weights',
+      '<div class="wb-row"><span class="wb-key">in context</span>' +
+        dsButton({ label: 'Add candidate', variant: 'primary', icon: ICON_PLUS }) +
+        dsButton({ icon: dsIcon('menu', { size: 15 }), variant: 'ghost', title: 'More' }) +
+        '<span class="ds-badge ds-badge--success ds-badge--dot">Live</span>' +
+        '<a href="#icons" class="ds-btn ds-btn--secondary ds-btn--sm">See all ' + dsIcon.builtins().length + '</a></div>');
+
+    // Stage chevron — shape only, so the demo supplies its own fills the way the board does.
+    const STAGES_DEMO = ['Lead', 'Qualified', 'Proposal', 'Closed'];
+    out += spec('Stage chevron', 'ds-stage', '2 sizes · first / last',
+      '<div class="wb-row"><span class="wb-key">board</span>' +
+        '<div style="display:flex; flex:1">' +
+        STAGES_DEMO.map(function (n, i) {
+          const t = 0.18 + i * 0.2;
+          return '<div class="ds-stage' + (i ? '' : ' ds-stage--first') +
+            (i === STAGES_DEMO.length - 1 ? ' ds-stage--last' : '') +
+            '" style="flex:1; background:rgba(83,63,148,' + t + ')">' +
+            '<div style="font-size:var(--text-md); font-weight:var(--weight-bold); color:#2c2450">' + n + '</div>' +
+            '<div style="font-size:var(--text-xs); color:#5b527f">3 &middot; $5,400</div></div>';
+        }).join('') + '</div></div>' +
+      '<div class="wb-row"><span class="wb-key">sm</span>' +
+        '<div style="display:flex; flex:1; gap:6px">' +
+        STAGES_DEMO.map(function (n, i) {
+          return '<div class="ds-stage ds-stage--sm' + (i ? '' : ' ds-stage--first') +
+            (i === STAGES_DEMO.length - 1 ? ' ds-stage--last' : '') +
+            '" style="flex:1; text-align:center; background:rgba(83,63,148,' + (0.18 + i * 0.2) + ');' +
+            ' font-size:var(--text-xs); font-weight:var(--weight-bold); color:#2c2450">' + n + '</div>';
+        }).join('') + '</div></div>' +
+      '<p class="wb-note" style="margin:var(--space-150) 0 0">Shape only. The fill is derived from ' +
+        'the pipeline&rsquo;s own colour at runtime, so it stays an inline style &mdash; the same ' +
+        'reason the stage ink is not a token.</p>');
+
+    out += spec('Segmented control', 'ds-segmented', 'mode picker &middot; aria-pressed',
+      '<div class="wb-row"><span class="wb-key">default</span>' +
+        '<div class="ds-segmented" role="group" aria-label="View">' +
+          '<button type="button" aria-pressed="true">' + dsIcon('board', { size: 17 }) + '</button>' +
+          '<button type="button" aria-pressed="false">' + dsIcon('list', { size: 17 }) + '</button>' +
+        '</div>' +
+        '<div class="ds-segmented" role="group" aria-label="Scope">' +
+          '<button type="button" aria-pressed="true">Sales</button>' +
+          '<button type="button" aria-pressed="false">Hiring</button>' +
+        '</div></div>');
+
+    // A registered component with no demo here is a hole in the instrument, so say so
+    // rather than quietly rendering four of five.
+    const shown = ['Button', 'Input', 'Badge', 'Card', 'Icon', 'Stage chevron', 'Segmented control'];
+    const missing = (SPECS || []).map(function (c) { return c.name; })
+      .filter(function (n) { return shown.indexOf(n) === -1; });
+    if (missing.length) {
+      out += '<p class="wb-note">In <code>registry.json</code> but not rendered here: ' +
+        esc(missing.join(', ')) + '. Add a demo to <code>renderComponents()</code>.</p>';
+    }
+    document.getElementById('wb-components').innerHTML = out;
+  }
+
+  // ── Directions ───────────────────────────────────────────────────────────
+  // Two halves. The header control swaps the live <link>, which restyles the whole
+  // workbench. This view instead fetches each theme file and rewrites its `:root` to a
+  // wrapper class, so every direction can be shown at once without the file being
+  // duplicated here — the theme stays the only place its values are written down.
+  function previewStrip() {
+    return '<div class="wb-dir-preview">' +
+      dsButton({ label: 'Add candidate', variant: 'primary', icon: dsIcon('plus', { size: 15 }) }) +
+      dsButton({ label: 'Cancel', variant: 'secondary' }) +
+      '<input class="ds-input" placeholder="Search…">' +
+      '<span class="ds-badge ds-badge--success ds-badge--dot">Live</span>' +
+      '<div class="ds-card"><div class="ds-card-title">Senior designer</div>' +
+        '<div class="ds-card-sub">Delta Retail · ₹18L</div></div>' +
+      '</div>';
+  }
+  function renderDirections(themes) {
+    const host = document.getElementById('wb-dirs');
+    // Options mirror the registry, so adding a theme there is the only step.
+    document.getElementById('wb-theme').innerHTML = themes.map(function (t) {
+      return '<option value="' + t.id + '">' + esc(t.name) + '</option>';
+    }).join('');
+    host.innerHTML = themes.map(function (t) {
+      return '<div class="wb-dir" id="wb-dir-' + t.id + '">' +
+        '<h3>' + esc(t.name) + '</h3><p>' + esc(t.description) + '</p>' +
+        '<div class="wb-theme-' + t.id + '">' + previewStrip() + '</div>' +
+        '<pre data-overrides>reading ' + esc(t.file) + '…</pre></div>';
+    }).join('');
+
+    const sheet = document.getElementById('wb-theme-scoped');
+    Promise.all(themes.map(function (t) {
+      return fetch('./' + t.file, { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.text() : ''; })
+        .catch(function () { return ''; });
+    })).then(function (texts) {
+      let scoped = '';
+      texts.forEach(function (text, i) {
+        const t = themes[i];
+        // Strip comments first so a `:root` mentioned in prose can't be rewritten.
+        const body = text.replace(/\/\*[\s\S]*?\*\//g, '');
+        scoped += body.replace(/:root/g, '.wb-theme-' + t.id) + '\n';
+        const decls = (body.match(/--[\w-]+\s*:[^;}]+/g) || [])
+          .map(function (d) { return d.replace(/\s+/g, ' ').trim() + ';'; });
+        const pre = document.querySelector('#wb-dir-' + t.id + ' [data-overrides]');
+        pre.textContent = decls.length
+          ? decls.join('\n')
+          : t.file + '\n/* no overrides — the semantics exactly as authored */';
+        const p = document.querySelector('#wb-dir-' + t.id + ' p');
+        p.innerHTML = esc(t.description) + ' <b>' + decls.length + ' token' +
+          (decls.length === 1 ? '' : 's') + '</b> overridden.';
+      });
+      sheet.textContent = scoped;
+    });
+  }
 </script>
 </body>
 </html>

@@ -1,0 +1,31 @@
+/* Icon — sizing and alignment only. Colour comes from `currentColor`, so an icon
+   takes the ink of whatever it sits in; that is why there is no colour token here. */
+.ds-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  /* Keeps a glyph optically centred against a cap-height label rather than sitting
+     on the baseline. */
+  position: relative;
+  top: -0.5px;
+}
+
+/* Sizes as tokens, so "the icons are a shade too big" is one value, not 200 edits. */
+:root {
+  --icon-size: 16px;
+  --icon-size-sm: 13px;
+  --icon-size-lg: 20px;
+}
+.ds-icon--sm { width: var(--icon-size-sm) !important; height: var(--icon-size-sm) !important; }
+.ds-icon--lg { width: var(--icon-size-lg) !important; height: var(--icon-size-lg) !important; }
+
+/* Quiet by default where an icon is decoration beside a label; the caller opts into
+   full-strength ink. */
+.ds-icon--muted { color: var(--text-muted); }
+.ds-icon--accent { color: var(--accent-primary); }
+.ds-icon--danger { color: var(--status-danger); }
+
+/* The one animated icon: dsIcon('loading'). */
+.ds-icon--spin { animation: ds-icon-spin 0.7s linear infinite; }
+@keyframes ds-icon-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ds-icon--spin { animation-duration: 2s; } }

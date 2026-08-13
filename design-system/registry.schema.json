@@ -3,34 +3,207 @@
   "title": "Titan Design System Registry",
   "description": "Shape of registry.json. Kept beside it so a validator — or an agent — can check the manifest is still well-formed after an edit.",
   "type": "object",
-  "required": ["name", "version", "components"],
+  "required": [
+    "name",
+    "version",
+    "components"
+  ],
   "properties": {
-    "$schema": { "type": "string" },
-    "name": { "type": "string" },
-    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
-    "description": { "type": "string" },
-    "conventions": { "type": "object" },
-    "tokens": { "type": "object" },
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "conventions": {
+      "type": "object"
+    },
+    "tokens": {
+      "type": "object"
+    },
+    "themes": {
+      "type": "array",
+      "description": "Design directions. A theme file may only redefine semantic tokens; the workbench reads this list to render every direction side by side.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "file",
+          "description"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Basename of the file in themes/, without .css."
+          },
+          "name": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "components": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "category", "css", "class", "props", "states", "usage"],
+        "required": [
+          "name",
+          "category",
+          "css",
+          "class",
+          "props",
+          "states",
+          "usage"
+        ],
         "properties": {
-          "name": { "type": "string" },
-          "category": { "type": "string", "enum": ["primitives", "layout", "composite", "pattern"] },
-          "css": { "type": "string", "description": "Path to the component stylesheet." },
-          "module": { "type": "string", "description": "Optional JS render module." },
-          "render": { "type": "string", "description": "Signature of the render function, if there is one." },
-          "class": { "type": "string", "pattern": "^ds-" },
-          "props": { "type": "object", "additionalProperties": { "type": "string" } },
-          "shapeTokens": { "type": "array", "items": { "type": "string", "pattern": "^--" } },
-          "states": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
-          "usage": { "type": "string" },
-          "avoid": { "type": "string" }
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "primitives",
+              "layout",
+              "composite",
+              "pattern"
+            ]
+          },
+          "css": {
+            "type": "string",
+            "description": "Path to the component stylesheet."
+          },
+          "module": {
+            "type": "string",
+            "description": "Optional JS render module."
+          },
+          "render": {
+            "type": "string",
+            "description": "Signature of the render function, if there is one."
+          },
+          "class": {
+            "type": "string",
+            "pattern": "^ds-"
+          },
+          "props": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "shapeTokens": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^--"
+            }
+          },
+          "states": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "usage": {
+            "type": "string"
+          },
+          "avoid": {
+            "type": "string"
+          }
         }
       }
     },
-    "notPortedYet": { "type": "object" }
+    "inventory": {
+      "type": "object",
+      "description": "The building-block inventory: every recurring UI role in the product and whether the system covers it yet.",
+      "required": [
+        "blocks"
+      ],
+      "properties": {
+        "note": {
+          "type": "string"
+        },
+        "surveyed": {
+          "type": "string"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "category",
+              "status",
+              "evidence",
+              "whereToday"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "primitives",
+                  "layout",
+                  "composites",
+                  "patterns"
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "built",
+                  "tokenised",
+                  "planned",
+                  "excluded"
+                ],
+                "description": "built = consumable component exists; tokenised = still hand-rolled per page, but its CSS reads component tokens so a direction can restyle it; planned = recurring block each page still hand-rolls with literals; excluded = deliberately not a component."
+              },
+              "adopted": {
+                "type": "integer",
+                "description": "Call sites in the shipped pages that go through the design system. Measured by design-system/measure-adoption.js — never hand-edited."
+              },
+              "legacy": {
+                "type": "integer",
+                "description": "Call sites that still hand-roll the same block. Same measurement run."
+              },
+              "component": {
+                "type": "string"
+              },
+              "evidence": {
+                "type": "string",
+                "description": "The duplication this block would absorb — also the priority signal."
+              },
+              "whereToday": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "adoptionMeasuredBy": {
+          "type": "string",
+          "description": "The script that produced every adopted/legacy figure, so the numbers can be regenerated rather than trusted."
+        }
+      }
+    }
   }
 }

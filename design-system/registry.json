@@ -17,6 +17,20 @@
     "themes": "themes/",
     "rule": "Components read semantics only. Primitives are raw values; a theme remaps semantics onto them."
   },
+  "themes": [
+    {
+      "id": "default",
+      "name": "Default",
+      "file": "themes/default.css",
+      "description": "The look extracted from the redesign — every semantic already holds these values."
+    },
+    {
+      "id": "soft",
+      "name": "Soft",
+      "file": "themes/soft.css",
+      "description": "Rounder controls, borderless cards, elevation doing all the separating."
+    }
+  ],
   "components": [
     {
       "name": "Button",
@@ -28,7 +42,7 @@
       "props": {
         "label": "string — omit together with `icon` set for an icon-only button",
         "icon": "string (inline SVG markup)",
-        "variant": "'primary' | 'secondary' | 'ghost' | 'destructive' | 'add'",
+        "variant": "'primary' | 'secondary' | 'soft' | 'ghost' | 'destructive' | 'destructive-quiet' | 'add'",
         "size": "'sm' | 'md' | 'lg'",
         "loading": "boolean — keeps the variant's fill and shows a spinner; not the same as disabled",
         "disabled": "boolean",
@@ -40,10 +54,59 @@
         "id": "string",
         "className": "string — extra classes for layout only, never for restyling"
       },
-      "shapeTokens": ["--btn-radius", "--btn-height", "--btn-height-sm", "--btn-height-lg", "--btn-pad-x", "--btn-weight", "--btn-font", "--btn-border-width"],
-      "states": ["default", "hover", "active", "focus-visible", "disabled", "loading"],
+      "shapeTokens": [
+        "--btn-radius",
+        "--btn-height",
+        "--btn-height-sm",
+        "--btn-height-lg",
+        "--btn-pad-x",
+        "--btn-weight",
+        "--btn-font",
+        "--btn-border-width"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "focus-visible",
+        "disabled",
+        "loading"
+      ],
       "usage": "Every clickable action. `primary` for the one main action on a surface, `secondary` for the rest, `ghost` for toolbar and icon actions, `destructive` for deletes, `add` for the full-width dashed 'add a thing' affordance from the reference.",
-      "avoid": "Do not hand-roll a button. The product currently has 82 button rules across 14 class names — that is the duplication this replaces."
+      "avoid": "Do not hand-roll a button. The product currently has 82 button rules across 14 class names — that is the duplication this replaces.",
+      "variantNotes": {
+        "destructive-quiet": "Outlined, not filled. A \"Delete record\" inside a form the user is editing must not read as the page's primary action. Found on the record screen, which had already forked .ov-btn-danger because no filled variant fit.",
+        "soft": "Filled neutral. Secondary is white with an edge, ghost has no fill at rest; a toolbar button must look like a button without competing with the primary action. The board header had this as three separate inline styles."
+      }
+    },
+    {
+      "name": "Icon",
+      "category": "primitives",
+      "css": "components/icon.css",
+      "module": "components/icon.js",
+      "render": "dsIcon(name, opts) -> html string",
+      "class": "ds-icon",
+      "props": {
+        "name": "string — a built-in Phosphor name ('caret-left') or a product alias ('back'). dsIcon.names() lists all 85.",
+        "size": "number (px) | string (any CSS length) — defaults to var(--icon-size, 16px)",
+        "title": "string — makes the icon meaningful: adds role=img + aria-label. Omit for decoration beside a label, which is the default and renders aria-hidden.",
+        "className": "string — 'ds-icon--sm' | 'ds-icon--lg' | 'ds-icon--muted' | 'ds-icon--accent' | 'ds-icon--danger' | 'ds-icon--spin'"
+      },
+      "shapeTokens": [
+        "--icon-size",
+        "--icon-size-sm",
+        "--icon-size-lg"
+      ],
+      "states": [
+        "default",
+        "muted",
+        "accent",
+        "danger",
+        "spin"
+      ],
+      "usage": "Every icon. Colour comes from currentColor so an icon inherits its context. Source is Phosphor regular (MIT) — genuine upstream path data, not a redraw.",
+      "avoid": "Do not paste a new inline <svg>. To change or add an icon, edit the ICONS map in icon.js, or call dsIcon.register(name, body, viewBox) to override one — including with your own custom drawing on its own grid.",
+      "extend": "dsIcon.register('plus', '<path d=\"…\"/>') replaces a built-in everywhere; a third argument sets a custom viewBox."
     },
     {
       "name": "Input",
@@ -54,9 +117,25 @@
         "variant": "'default' | 'invalid' (class .ds-input--invalid)",
         "element": "input | textarea | select — the same class styles all three"
       },
-      "shapeTokens": ["--input-radius", "--input-height", "--input-pad-x", "--input-bg", "--input-border"],
-      "states": ["default", "hover", "focus", "invalid", "disabled", "placeholder"],
-      "usage": "Any single-line or multi-line text entry, and selects. Wrap in .ds-field with .ds-field-label plus .ds-field-hint or .ds-field-error to get the labelled layout."
+      "shapeTokens": [
+        "--input-radius",
+        "--input-height",
+        "--input-pad-x",
+        "--input-bg",
+        "--input-border"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "invalid",
+        "disabled",
+        "placeholder"
+      ],
+      "usage": "Any single-line or multi-line text entry, and selects. Wrap in .ds-field with .ds-field-label plus .ds-field-hint or .ds-field-error to get the labelled layout.",
+      "variantNotes": {
+        "inline": ".ds-input--inline — edit-in-place. A boxed field would draw a border around what reads as body text; the record screen edits 25 values this way. Shorter than a boxed field (--input-inline-height), transparent until hover, same focus ring."
+      }
     },
     {
       "name": "Badge",
@@ -67,10 +146,19 @@
         "variant": "'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'teal' | 'green' | 'amber' | 'pink' | 'purple'",
         "dot": "boolean (class .ds-badge--dot) — leading state dot"
       },
-      "shapeTokens": ["--badge-radius", "--badge-pad-x", "--badge-font"],
-      "states": ["default"],
+      "shapeTokens": [
+        "--badge-radius",
+        "--badge-pad-x",
+        "--badge-font"
+      ],
+      "states": [
+        "default"
+      ],
       "usage": "Status and category labels. The semantic four (accent/success/warning/danger) carry meaning; the five colour labels are for user-assigned categories and ship as fill/ink pairs so they cannot be mismatched.",
-      "avoid": "Do not use a status variant for a category, or a category colour for a state."
+      "avoid": "Do not use a status variant for a category, or a category colour for a state.",
+      "variantNotes": {
+        "pill": ".ds-badge--pill — fully rounded. The default badge is a soft rectangle; several surfaces had independently typed 999px (ov-contact-person-pill, kanban-won-pill)."
+      }
     },
     {
       "name": "Card",
@@ -80,13 +168,368 @@
       "props": {
         "variant": "'default' | 'flat' | 'recessed' | 'interactive'"
       },
-      "shapeTokens": ["--card-radius", "--card-pad", "--card-border", "--card-shadow"],
-      "states": ["default", "hover (interactive only)"],
-      "usage": "Any grouped region. Elevation is what separates regions in this system — reach for a card before reaching for a border. .ds-card-title and .ds-card-sub give the heading pair."
+      "shapeTokens": [
+        "--card-radius",
+        "--card-pad",
+        "--card-border",
+        "--card-shadow"
+      ],
+      "states": [
+        "default",
+        "hover (interactive only)"
+      ],
+      "usage": "Any grouped region. Elevation is what separates regions in this system — reach for a card before reaching for a border. .ds-card-title and .ds-card-sub give the heading pair.",
+      "variantNotes": {
+        "section": ".ds-card--section — a page content panel rather than a tile: --card-section-radius (12px) and --card-section-pad (24px). The record screen stacks seven. Forking a second card class for this is what produced .ov-card."
+      }
+    },
+    {
+      "name": "Stage chevron",
+      "category": "composites",
+      "css": "components/board.css",
+      "class": "ds-stage",
+      "variants": "'sm' (compact editor chips) · 'first' / 'last' flatten the ends of the flow",
+      "shapeTokens": "--stage-taper, --stage-taper-sm, --stage-pad-x, --stage-pad-y, --stage-radius",
+      "usage": "The arrow-shaped stage header on the board and the stage chips in the pipeline editor.",
+      "avoid": "Don't set its fill from a token — the colour is derived from the pipeline's own colour at runtime (shadeFor/darken), so it stays an inline style. Shape only.",
+      "note": "Found by auditing /crm/pipeline/:id. The clip-path polygon appeared four times with three tapers, and .np-chev in crm.html and pipeline-settings.html were byte-identical. Uses --first/--last modifiers, not :first-child: on the board each header is the first child of its own column, so :first-child matched all six stages."
+    },
+    {
+      "name": "Segmented control",
+      "category": "composites",
+      "css": "components/board.css",
+      "class": "ds-segmented",
+      "variants": "none — state is aria-pressed on the item",
+      "shapeTokens": "--seg-radius, --seg-item-radius, --seg-track-bg, --seg-item-bg-on",
+      "usage": "Picking a mode: the board's kanban/list toggle.",
+      "avoid": "Not Tabs. Tabs switch a page's content region and sit on a baseline; a segmented control picks a mode and sits in a track. Use aria-pressed so the state is announced."
     }
   ],
-  "notPortedYet": {
-    "note": "Present in the reference or the live app but not yet a component. Listed so an agent knows what exists and does not reinvent it under a new name.",
-    "items": ["Modal", "Nav / sidebar item", "Tooltip", "Checkbox", "Toggle", "Avatar", "Table row", "Menu / dropdown", "Toast", "Tabs"]
+  "inventory": {
+    "note": "The fundamental building blocks of this UI, derived by surveying every CSS rule in the CRM (756 distinct class-rule roots) and clustering by role. `status` is the honest state: built = a component exists and is consumable; planned = the block is real and recurring but each page still hand-rolls it; excluded = deliberately not a component. `evidence` is the duplication a block would absorb — it is also the priority signal.",
+    "surveyed": "crm.html, dashboard.html, opportunity-view.html, the directory and settings pages, titan-sidebar, crm-directory, form-builder, form-render, integrations, index.html",
+    "blocks": [
+      {
+        "name": "Button",
+        "category": "primitives",
+        "status": "built",
+        "component": "ds-btn / dsButton",
+        "evidence": "63 CRM call sites, 13 of them on the component",
+        "whereToday": "components/button.{css,js}",
+        "note": "ao-, np-, ps-, os-, opp-, dir-, fl-, dash-, footer- … all the same button.",
+        "variants": 63,
+        "prefixes": 23,
+        "adopted": 13,
+        "legacy": 50
+      },
+      {
+        "name": "Icon",
+        "category": "primitives",
+        "status": "built",
+        "component": "ds-icon / dsIcon",
+        "evidence": "86 CRM call sites, 59 of them on the component",
+        "whereToday": "components/icon.{css,js}",
+        "note": "27 inline SVGs remain and most are deliberate: kanban status fills and the chart ring are data geometry; LinkedIn/Instagram/AI sparkles are brand marks; the pipeline chevron interpolates the pipeline colour; the circle-check is a checkbox affordance. form.html keeps one inline tick because it is the public page and must not load a 57KB module. Genuinely convertible leftovers: globe, download, arrow up-right/down-left — no equivalent in the set yet.",
+        "variants": 86,
+        "prefixes": null,
+        "adopted": 59,
+        "legacy": 27
+      },
+      {
+        "name": "Input / field",
+        "category": "primitives",
+        "status": "built",
+        "component": "ds-input / ds-field",
+        "evidence": "117 CRM call sites, 22 of them on the component",
+        "whereToday": "components/primitives.css",
+        "note": "Covers input, textarea and select; ds-field adds label/hint/error.",
+        "variants": 117,
+        "prefixes": 15,
+        "adopted": 22,
+        "legacy": 95
+      },
+      {
+        "name": "Badge / chip / pill",
+        "category": "primitives",
+        "status": "built",
+        "component": "ds-badge",
+        "evidence": "40 CRM call sites, 3 of them on the component",
+        "whereToday": "components/primitives.css",
+        "note": "Status four + five category fill/ink pairs.",
+        "variants": 40,
+        "prefixes": 13,
+        "adopted": 3,
+        "legacy": 37
+      },
+      {
+        "name": "Card / panel",
+        "category": "layout",
+        "status": "built",
+        "component": "ds-card",
+        "evidence": "51 CRM call sites, 7 of them on the component",
+        "whereToday": "components/primitives.css",
+        "note": "Elevation separates regions; border is a hairline, not the mechanism.",
+        "variants": 51,
+        "prefixes": 16,
+        "adopted": 7,
+        "legacy": 44
+      },
+      {
+        "name": "List row",
+        "category": "composites",
+        "status": "planned",
+        "component": "—",
+        "evidence": "80 CRM rules across 6 prefixes",
+        "whereToday": "email-tile, crm-activity-row, opp-activity-row, tile, thread-*, kanban-card …",
+        "note": "Counted under email-tile, crm-activity-row, opp-activity-row and dir-row. email-tile and thread-* are MAILBOX classes that still have 35 CSS rules inside crm.html (thread-*: 25 rules, 0 markup uses) — leaked chrome like the composer was, not CRM list rows. Remove those and this block shrinks.",
+        "variants": 80,
+        "prefixes": 6
+      },
+      {
+        "name": "Modal / dialog",
+        "category": "composites",
+        "status": "planned",
+        "component": "—",
+        "evidence": "62 CRM rules across 6 prefixes",
+        "whereToday": "np-overlay, fb-overlay, ov-modal, side-modal, app-switcher-dropdown, pipeline-picker …",
+        "note": "Overlay + panel + head/body/foot, Escape to close, scroll lock, focus trap. fb-overlay is the closest thing to a reference.",
+        "variants": 62,
+        "prefixes": 6
+      },
+      {
+        "name": "Section header / toolbar",
+        "category": "layout",
+        "status": "planned",
+        "component": "—",
+        "evidence": "8 CRM rules across 4 prefixes",
+        "whereToday": "subpage-top, kanban-col-header, np-header, dir-toolbar …",
+        "note": "Title + optional meta + right-aligned actions. board-header's stacking bug came from every page rebuilding this.",
+        "variants": 8,
+        "prefixes": 4
+      },
+      {
+        "name": "Menu / dropdown",
+        "category": "composites",
+        "status": "planned",
+        "component": "—",
+        "evidence": "24 CRM rules across 3 prefixes",
+        "whereToday": "pipeline-nav-menu, card-action-menu, account-menu",
+        "note": "Anchored panel, item, separator, danger item, outside-click close.",
+        "variants": 24,
+        "prefixes": 3
+      },
+      {
+        "name": "Avatar",
+        "category": "primitives",
+        "status": "planned",
+        "component": "—",
+        "evidence": "10 CRM rules across 5 prefixes",
+        "whereToday": "dir-avatar, kanban-card-avatar, account-avatar, crm-contact-avatar, side-modal-avatar",
+        "note": "Initial + optional image + size + colour-from-name. Facepile is a stack of these.",
+        "variants": 10,
+        "prefixes": 5
+      },
+      {
+        "name": "Divider",
+        "category": "primitives",
+        "status": "planned",
+        "component": "—",
+        "evidence": "4 CRM rules across 4 prefixes",
+        "whereToday": "sidebar-line, account-menu-sep, footer-divider, pipeline-nav-menu-sep",
+        "note": "Horizontal and vertical, one hairline token. Trivial, and reinvented 20 times.",
+        "variants": 4,
+        "prefixes": 4
+      },
+      {
+        "name": "Checkbox / toggle / radio",
+        "category": "primitives",
+        "status": "planned",
+        "component": "—",
+        "evidence": "21 CRM rules across 5 prefixes; 1 prefix mailbox-only, out of scope",
+        "whereToday": "dash-toggle, fb-toggle, np-radio, tab-checkbox-wrap, crm-act-check, pl-*",
+        "note": "dash-toggle (5 rules) is tokenised and reads --checkbox-size / --checkbox-accent; fb-toggle, np-radio, tab-checkbox-wrap and crm-act-check are still literals. Native <input> + accent-color throughout — no component exists.",
+        "variants": 21,
+        "prefixes": 5
+      },
+      {
+        "name": "Empty state",
+        "category": "layout",
+        "status": "planned",
+        "component": "—",
+        "evidence": "6 CRM rules across 6 prefixes",
+        "whereToday": "dash-empty, dir-empty, kanban-empty, tf-empty, fl-empty, thread-empty-state",
+        "note": "Icon + line + optional action. Currently a bare <div> with a grey string on every page.",
+        "variants": 6,
+        "prefixes": 6
+      },
+      {
+        "name": "Toast / inline note",
+        "category": "composites",
+        "status": "planned",
+        "component": "—",
+        "evidence": "8 CRM rules across 4 prefixes",
+        "whereToday": "np-toast, dir-note, dash-note, int-alert",
+        "note": "Transient toast and persistent inline note are two different things wearing one name.",
+        "variants": 8,
+        "prefixes": 4
+      },
+      {
+        "name": "Tooltip",
+        "category": "composites",
+        "status": "planned",
+        "component": "—",
+        "evidence": "14 CRM rules across 2 prefixes",
+        "whereToday": "crm-file-action-btn, avatar-tip",
+        "note": "Missed by the original 27-block survey because it has no class of its own — it is an ::after on a [data-tip] attribute, so a class-rule census could not see it. Found while migrating the record screen.",
+        "variants": 14,
+        "prefixes": 2
+      },
+      {
+        "name": "Meter / progress",
+        "category": "primitives",
+        "status": "planned",
+        "component": "—",
+        "evidence": "2 CRM rules across 2 prefixes",
+        "whereToday": "dash bars, ring, hcol-bar",
+        "note": "A ratio against a limit. Note the dashboard's KPI meters were deleted for being ratios against nothing.",
+        "variants": 2,
+        "prefixes": 2
+      },
+      {
+        "name": "Link",
+        "category": "primitives",
+        "status": "planned",
+        "component": "—",
+        "evidence": "8 CRM rules across 4 prefixes",
+        "whereToday": "dir-link, ov-add-link, ps-add-link, ao-add-link",
+        "note": "Inline link and 'add another' link are distinct; both keep getting redrawn.",
+        "variants": 8,
+        "prefixes": 4
+      },
+      {
+        "name": "Tabs",
+        "category": "composites",
+        "status": "planned",
+        "component": "—",
+        "evidence": "4 CRM rules across 1 prefix",
+        "whereToday": "tab-item, dash tabs, fl tabs",
+        "note": "Underline tabs (dashboard type switch) and segmented control (board view toggle) are different blocks.",
+        "variants": 4,
+        "prefixes": 1
+      },
+      {
+        "name": "Table",
+        "category": "layout",
+        "status": "planned",
+        "component": "—",
+        "evidence": "16 CRM rules across 2 prefixes",
+        "whereToday": "dir-table, ai-table, kanban col grid",
+        "note": "Header row, body row, numeric cell, truncating cell, sticky header.",
+        "variants": 16,
+        "prefixes": 2
+      },
+      {
+        "name": "Nav item",
+        "category": "composites",
+        "status": "planned",
+        "component": "—",
+        "evidence": "16 CRM rules across 1 prefix",
+        "whereToday": "titan-sidebar.css .nav-item",
+        "note": "Already centralised in the sidebar component but not registered here, so it reads as unowned.",
+        "variants": 16,
+        "prefixes": 1
+      },
+      {
+        "name": "Kanban card",
+        "category": "composites",
+        "status": "tokenised",
+        "component": "— (tokenised: --kanban-card-*)",
+        "evidence": "13 CRM rules across 2 prefixes",
+        "whereToday": "crm.html .kanban-card / .opp-card",
+        "note": "CSS is fully tokenised and a direction can restyle the board, but there is still no component: renderCard() builds each card as an innerHTML string, so componentising it means a dsKanbanCard() module.",
+        "variants": 13,
+        "prefixes": 2
+      },
+      {
+        "name": "Kanban column",
+        "category": "layout",
+        "status": "tokenised",
+        "component": "— (tokenised: --kanban-lane-*)",
+        "evidence": "7 CRM rules across 1 prefix",
+        "whereToday": "crm.html .kanban-col*",
+        "note": "Stage-header colour is intentionally NOT a token: renderBoard() derives it from the pipeline colour via darken()/shadeFor(), which is data, not theme.",
+        "variants": 7,
+        "prefixes": 1
+      },
+      {
+        "name": "Side panel / drawer",
+        "category": "layout",
+        "status": "planned",
+        "component": "—",
+        "evidence": "24 CRM rules across 1 prefix",
+        "whereToday": "crm-directory.css .dir-panel",
+        "note": "Opens beside content and pushes it rather than covering it — a stated layout premise.",
+        "variants": 24,
+        "prefixes": 1
+      },
+      {
+        "name": "Stat tile",
+        "category": "composites",
+        "status": "planned",
+        "component": "—",
+        "evidence": "25 CRM rules across 1 prefix",
+        "whereToday": "dashboard.html .tile / .kpi",
+        "note": "Label + value + context line. Deliberately not a chart.",
+        "variants": 25,
+        "prefixes": 1
+      },
+      {
+        "name": "Search bar",
+        "category": "composites",
+        "status": "planned",
+        "component": "—",
+        "evidence": "3 CRM rules across 1 prefix",
+        "whereToday": "crm.html, dir-search, ai input",
+        "note": "Input + icon + optional scope dropdown.",
+        "variants": 3,
+        "prefixes": 1
+      },
+      {
+        "name": "Split button",
+        "category": "composites",
+        "status": "planned",
+        "component": "—",
+        "evidence": "no class prefixes recorded by the survey; scale unmeasured",
+        "whereToday": "crm.html",
+        "note": "Primary action plus a chevron opening a menu.",
+        "variants": null,
+        "prefixes": null
+      },
+      {
+        "name": "Chart marks",
+        "category": "patterns",
+        "status": "excluded",
+        "component": "—",
+        "evidence": "donut ring, pie wedges, stacked bar, dot plot, histogram",
+        "whereToday": "dashboard.html",
+        "note": "Not icons and not components — data geometry. Owned by the dataviz rules, not this registry.",
+        "variants": 0,
+        "prefixes": null
+      },
+      {
+        "name": "Brand marks",
+        "category": "patterns",
+        "status": "excluded",
+        "component": "—",
+        "evidence": "LinkedIn, Instagram, Drive, HTML badge, Titan logo",
+        "whereToday": "opportunity-view.html",
+        "note": "No Phosphor equivalent. Register via dsIcon.register() or keep as assets; never redraw inline.",
+        "variants": 0,
+        "prefixes": null
+      }
+    ],
+    "adoptionMeasuredBy": "design-system/measure-adoption.js",
+    "scope": "The CRM and its modules. index.html (the mailbox) is out of scope.",
+    "variantsMeasuredBy": "design-system/measure-inventory.js"
   }
 }

@@ -30,6 +30,12 @@
 }
 .ds-btn--secondary:hover:not(:disabled) { border-color: var(--border-accent); color: var(--text-accent); }
 
+/* Soft: a filled neutral control. Secondary is white with an edge and ghost has no fill at
+   rest; a toolbar button needs to look like a button without competing with the primary
+   action. The board header had this as three separate inline styles. */
+.ds-btn--soft { background: var(--surface-hover); color: var(--text-secondary); }
+.ds-btn--soft:hover:not(:disabled) { background: var(--surface-pressed); color: var(--text-primary); }
+
 .ds-btn--ghost { background: transparent; color: var(--text-secondary); }
 .ds-btn--ghost:hover:not(:disabled) { background: var(--surface-hover); color: var(--text-primary); }
 
@@ -38,6 +44,17 @@
   border-color: var(--status-danger);
 }
 .ds-btn--destructive:hover:not(:disabled) { filter: brightness(0.94); }
+
+/* Quiet destructive: outlined, not filled. "Delete this record" sits inside a form the user
+   is editing, so a solid red block reads as the primary action of the page — which it is not.
+   The record screen had already invented this as .ov-btn-danger; there was no filled variant
+   that fit, which is why it forked instead of reusing. */
+.ds-btn--destructive-quiet {
+  background: transparent; color: var(--status-danger);
+  border-color: var(--border-danger);
+}
+.ds-btn--destructive-quiet:hover:not(:disabled) { background: var(--status-danger-subtle); }
+.ds-btn--destructive-quiet:focus-visible { box-shadow: var(--focus-ring-danger); }
 
 /* The reference's dashed "add" affordance — a full-width invitation, not a button
    pretending to be small. */
@@ -78,6 +95,9 @@
 .ds-btn--secondary.ds-btn--loading::after,
 .ds-btn--ghost.ds-btn--loading::after,
 .ds-btn--add.ds-btn--loading::after { color: var(--text-secondary); }
+/* Unfilled variants need a visible spinner: the default is --text-on-accent, which is white
+   and vanished on the quiet destructive button's transparent fill. */
+.ds-btn--destructive-quiet.ds-btn--loading::after { color: var(--status-danger); }
 @keyframes ds-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
   .ds-btn { transition: none; }

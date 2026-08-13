@@ -11,10 +11,18 @@
   --input-radius:   var(--radius-lg);
   --input-height:   38px;
 
-  --card-radius:    12px;
+  --card-radius:    var(--radius-xl);
   --card-border:    transparent;
   --card-shadow:    var(--shadow-card-soft);
 
   --badge-radius:   var(--radius-full);
   --surface-hover:  var(--blue-050);
+
+  /* The board follows too, now that the kanban has component tokens. Same idea as the
+     card above: no border, elevation doing the separating, and a softer lane. */
+  --kanban-card-radius: var(--radius-xl);
+  --kanban-card-shadow: var(--shadow-card);
+  --kanban-card-pad:    14px;
+  --kanban-lane-bg:     var(--gray-025);
+  --kanban-lane-radius: var(--radius-xl);
 }

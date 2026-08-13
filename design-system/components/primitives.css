@@ -22,8 +22,25 @@
 .ds-input--invalid { border-color: var(--status-danger); }
 .ds-input--invalid:focus { box-shadow: var(--focus-ring-danger); }
 
+/* Inline: edit-in-place, where a boxed field would put a border around what reads as body
+   text. Found on the record screen, which edits 25 values this way — mapping those onto the
+   boxed .ds-input would have drawn 25 boxes into a reading layout. It is still a real input:
+   it takes the same focus ring, and it shows its edges on hover so the affordance survives. */
+.ds-input--inline {
+  /* .ds-input is display:block for boxed fields; inline ones must stay in the sentence. */
+  display: inline-block; vertical-align: baseline;
+  height: var(--input-inline-height); padding: 0 var(--space-050);
+  background: transparent; border-color: transparent;
+  border-radius: var(--radius-sm); width: auto;
+  font-size: inherit; font-weight: inherit; color: inherit;
+}
+.ds-input--inline:hover:not(:disabled):not(:focus) { background: var(--surface-hover); border-color: transparent; }
+.ds-input--inline:focus { background: var(--input-bg); border-color: var(--border-focus); }
+.ds-input--inline:disabled { background: transparent; }
+
 textarea.ds-input { height: auto; min-height: 96px; padding: var(--space-100) var(--input-pad-x); line-height: 1.5; resize: vertical; }
 select.ds-input { padding-right: var(--space-300); cursor: pointer; }
+select.ds-input--inline { padding-right: var(--space-200); }
 
 .ds-field { display: grid; gap: var(--space-075); }
 .ds-field-label { font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-primary); }
@@ -51,6 +68,11 @@ select.ds-input { padding-right: var(--space-300); cursor: pointer; }
 .ds-badge--pink   { background: var(--label-pink-bg);   color: var(--label-pink-fg); }
 .ds-badge--purple { background: var(--label-purple-bg); color: var(--label-purple-fg); }
 
+/* Fully rounded. The default badge is a soft rectangle; a "pill" is a distinct shape
+   decision that several surfaces already made on their own (ov-contact-person-pill,
+   kanban-won-pill), so it is a variant rather than 999px typed per page. */
+.ds-badge--pill { border-radius: var(--radius-full); padding: 3px var(--space-100); }
+
 .ds-badge--dot::before {
   content: ''; width: 6px; height: 6px; border-radius: 50%;
   background: currentColor; flex-shrink: 0;
@@ -67,6 +89,11 @@ select.ds-input { padding-right: var(--space-300); cursor: pointer; }
   padding: var(--card-pad);
   box-shadow: var(--card-shadow);
 }
+/* Section: a page's content panel, not a tile. Roomier and rounder than the default card
+   — the record screen stacks seven of them. Kept as a variant because the difference is two
+   token values, and forking a second card class is what produced .ov-card in the first place. */
+.ds-card--section { border-radius: var(--card-section-radius); padding: var(--card-section-pad); }
+
 .ds-card--flat { box-shadow: none; }
 .ds-card--recessed { background: var(--surface-recessed); box-shadow: none; }
 .ds-card--interactive { cursor: pointer; transition: var(--motion-hover), box-shadow var(--dur-base) var(--ease-standard); }

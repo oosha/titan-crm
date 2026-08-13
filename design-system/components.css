@@ -1,0 +1,18 @@
+/* Single entry point for every component stylesheet, the counterpart to tokens.css.
+
+   It exists because per-page link lists drift: crm.html linked button.css, nothing linked
+   primitives.css, and opportunity-view.html was migrated to .ds-input / .ds-card / .ds-badge
+   while none of those rules were reachable on the page. The classes were in the markup, the
+   adoption count went up, and the screen rendered unstyled — a component you cannot see is
+   not adopted.
+
+   A page needs exactly two links now:
+
+     <link rel="stylesheet" href="/design-system/tokens.css">
+     <link rel="stylesheet" href="/design-system/components.css">
+
+   Add a component file here in the same change that creates it. */
+@import url('./components/icon.css');
+@import url('./components/button.css');
+@import url('./components/primitives.css');
+@import url('./components/board.css');

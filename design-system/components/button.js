@@ -11,7 +11,7 @@
 // size → .ds-btn--<size> — so the registry, the CSS and this signature cannot
 // drift apart without it being obvious.
 (function () {
-  var VARIANTS = ['primary', 'secondary', 'ghost', 'destructive', 'add'];
+  var VARIANTS = ['primary', 'secondary', 'soft', 'ghost', 'destructive', 'destructive-quiet', 'add'];
   var SIZES = ['sm', 'md', 'lg'];
 
   function esc(s) {
