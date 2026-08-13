@@ -3383,7 +3383,7 @@
         </div>
         <div class="np-body">
           <div class="np-done-head">
-            <div class="np-done-check">
+            <div class="np-done-check" id="np-done-check">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <div class="np-done-title" id="np-done-title">Pipeline created</div>
@@ -4983,6 +4983,9 @@
       if (kind === 'form') { openPipelineForm(pipelineKey); return; }
       if (kind === 'delete-pipeline') { deletePipeline(pipelineKey); return; }
       if (kind === 'add-team') { openAddTeamModal(pipelineKey); return; }
+      // The sources modal is right here, so open it in place — no ?intent= round
+      // trip like the sidebar's copy of this handler needs from a sub-page.
+      if (kind === 'add-records') { openAddRecordsFor(pipelineKey); return; }
       alert('Prototype only: "Add filter view" for ' + (pl.name || pipelineKey) + ' is not wired up yet.');
     }
 
@@ -6047,6 +6050,9 @@
       history.replaceState(null, '', location.pathname + (rest ? '?' + rest : ''));
       if (intent === 'new-pipeline') openNewPipeline();
       else if (intent === 'settings') toggleSettingsModal();
+      // Sent by the sidebar's three-dot menu and pipeline settings — the sources
+      // modal lives here, so they navigate to the board and ask for it.
+      else if (intent === 'add-records') openAddRecordsFor(currentPipelineId);
     }
 
     function openNewPipeline() {
@@ -6262,7 +6268,7 @@
       // The board is already live behind the modal; step 3 is the optional
       // "now get records into it" nudge, so closing from here loses nothing.
       npCreatedId = id;
-      npShowDone(name, entity, npState.plural);
+      npShowDone(name, entity, npState.plural, true);
     }
 
     // ── Step 3: created, now fill it ──────────────────────────────────────────
@@ -6282,13 +6288,24 @@
 
     // The record noun for this pipeline type, so the copy reads "add candidates"
     // on a hiring board and "add opportunities" on a sales one.
-    function npShowDone(name, entity, plural) {
+    // justCreated distinguishes the two ways in: straight after npCreate() (a
+    // confirmation, "…is ready"), or reopened later for an existing pipeline from the
+    // three-dot menu / pipeline settings, where the created banner would be a lie.
+    function npShowDone(name, entity, plural, justCreated) {
       const one = (entity || 'Record').toLowerCase();
       const many = (plural || 'records').toLowerCase();
-      document.getElementById('np-done-header').textContent = name + ' created';
-      document.getElementById('np-done-title').textContent = '“' + name + '” is ready';
-      document.getElementById('np-done-sub').textContent =
-        'It has no ' + many + ' yet. Choose how they should come in — you can skip this and add them by hand.';
+      const pl = PIPELINES[npCreatedId] || {};
+      const has = (pl.cards || []).length;
+
+      document.getElementById('np-done-check').style.display = justCreated ? '' : 'none';
+      document.getElementById('np-done-header').textContent = justCreated ? name + ' created' : 'Add ' + many;
+      document.getElementById('np-done-title').textContent =
+        justCreated ? '“' + name + '” is ready' : 'Add ' + many + ' to “' + name + '”';
+      document.getElementById('np-done-sub').textContent = justCreated
+        ? 'It has no ' + many + ' yet. Choose how they should come in — you can skip this and add them by hand.'
+        : (has
+            ? 'Set up a source and new ' + many + ' arrive here on their own.'
+            : 'It has no ' + many + ' yet. Choose how they should come in.');
       document.getElementById('np-source-label').textContent = 'How should ' + many + ' be added?';
       document.getElementById('np-source-form-desc').textContent =
         'A hosted form you can share — every submission becomes ' + npArticle(one) + ' ' + one + ' here.';
@@ -6296,8 +6313,10 @@
         'Describe what to look for and matching mail becomes ' + npArticle(one) + ' ' + one + '.';
 
       const rule = document.getElementById('np-email-rule');
+      // Reopened on a pipeline that already has a rule: show it rather than an
+      // empty box, so this is an edit and not a silent overwrite.
       rule.placeholder = NP_RULE_PLACEHOLDER[npState.type] || NP_RULE_PLACEHOLDER.other;
-      rule.value = '';
+      rule.value = (pl.emailIntake && pl.emailIntake.rule) || '';
       document.getElementById('np-email-hint').textContent =
         'Plain English is fine — for example “anything asking about pricing”. Titan matches on the subject and body.';
 
@@ -6305,6 +6324,18 @@
       npRenderFormSlot();
       npCloseSourcePanels();
       npShowStep(3);
+      document.getElementById('np-overlay').classList.add('open');
+    }
+
+    // Entry point for an existing pipeline (three-dot menu, pipeline settings).
+    function openAddRecordsFor(pipelineId) {
+      const pl = PIPELINES[pipelineId];
+      if (!pl) return;
+      npCreatedId = pipelineId;
+      // The rule placeholder is keyed by template type; map the stored pipeline type
+      // back onto one so a reopened hiring board still suggests hiring examples.
+      npState.type = pl.type === 'hiring' ? 'candidates' : 'sales';
+      npShowDone(pl.name, pl.entity, pl.plural, false);
     }
     function npArticle(word) { return /^[aeiou]/i.test(word || '') ? 'an' : 'a'; }
 

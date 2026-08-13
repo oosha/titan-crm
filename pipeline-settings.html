@@ -28,6 +28,12 @@
   .ps-swatch.selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px currentColor; }
   .ps-add-link { font-size: 12.5px; font-weight: 600; color: #2170f4; cursor: pointer; }
   .ps-add-link:hover { text-decoration: underline; }
+  /* What's already wired up, listed above the link that opens the editor. */
+  .ps-intake-status { margin-bottom: 12px; }
+  .ps-intake-status:empty { display: none; }
+  .ps-intake-row { display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: #333; padding: 5px 0; }
+  .ps-intake-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .ps-intake-muted { color: #9aa1a9; }
   .ps-note { font-size: 12px; color: #9a9fa7; padding: 10px 22px; text-align: center; }
   .ps-note a { color: #2170f4; text-decoration: none; }
   .np-help { font-size: 11.5px; color: #9a9fa7; margin: 0 2px 10px; }
@@ -172,6 +178,15 @@
           <div id="ps-stage-details"></div>
         </div>
 
+        <!-- The sources themselves are configured on the board (that's where the modal
+             lives), so this is a signpost plus a summary of what's already set up. -->
+        <div class="ps-card">
+          <div class="ps-card-title" id="ps-intake-title">Adding records</div>
+          <div class="np-help" id="ps-intake-help">Let records arrive on their own — from a form, an existing form tool, or matching email.</div>
+          <div class="ps-intake-status" id="ps-intake-status"></div>
+          <span class="ps-add-link" id="ps-intake-link" onclick="openAddRecords()">Set up automatic records</span>
+        </div>
+
         <div class="ps-note" id="ps-opener-note"></div>
       </div>
     </div><!-- /subpage-body -->
@@ -187,17 +202,15 @@
   // read from or write back into. crm.html hands off the pipeline being edited via
   // sessionStorage right before navigating here; saveSettings() below writes the result
   // back the same way and navigates to /crm/pipeline/<id> to apply it.
+  //
+  // That handoff only exists when you arrive from the board, though — a bookmark, a
+  // refresh, or a link from another page has nothing stashed. init() below falls back
+  // to fetching this pipeline directly, so the page works as a cold deep link.
   let editSource = null;
   try { editSource = JSON.parse(sessionStorage.getItem('titan-crm-edit-pipeline') || 'null'); } catch (e) {}
-  const pipeline = (editSource && editSource.pipelineKey === pipelineKey) ? editSource.pipeline : null;
+  let pipeline = (editSource && editSource.pipelineKey === pipelineKey) ? editSource.pipeline : null;
   function goBack() { location.href = '/crm/pipeline/' + encodeURIComponent(pipelineKey) + location.search; }
   const PIPELINE_COLORS = ['#4f6d9e', '#3f8a7d', '#5e8a4e', '#b5813f', '#ab5f74', '#7a6ba3', '#2170f4'];
-
-  if (!pipeline) {
-    document.getElementById('ps-opener-note').innerHTML =
-      'This pipeline’s data isn’t available (opened directly, not from Titan CRM). ' +
-      '<a href="/crm">Open Titan CRM</a> and try again.';
-  }
 
   const EMAIL_TEMPLATE_OPTIONS = [
     { value: '', label: 'None' },
@@ -260,15 +273,44 @@
   }
   function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 
-  let color = pipeline ? (pipeline.color || '#2170f4') : '#2170f4';
-  let stages = pipeline ? pipeline.stages.map(function (s) { return ensureStageDetailFields(Object.assign({}, s)); }) : [];
-  let stageSeq = stages.length;
+  // Derived from `pipeline`, so applyPipeline() fills them in once it is known
+  // rather than at parse time — on a cold deep link it isn't loaded yet.
+  let color = '#2170f4';
+  let stages = [];
+  let stageSeq = 0;
   let openStageDetailIdx = null;
 
-  const psTitleText = (pipeline ? pipeline.name : 'Pipeline') + ' setting';
-  document.getElementById('ps-title').textContent = psTitleText;
-  document.title = psTitleText + ' — Titan CRM';
-  document.getElementById('ps-name').value = pipeline ? pipeline.name : '';
+  function applyPipeline() {
+    color = pipeline ? (pipeline.color || '#2170f4') : '#2170f4';
+    stages = pipeline ? pipeline.stages.map(function (s) { return ensureStageDetailFields(Object.assign({}, s)); }) : [];
+    stageSeq = stages.length;
+
+    const psTitleText = (pipeline ? pipeline.name : 'Pipeline') + ' setting';
+    document.getElementById('ps-title').textContent = psTitleText;
+    document.title = psTitleText + ' — Titan CRM';
+    document.getElementById('ps-name').value = pipeline ? pipeline.name : '';
+
+    renderColors();
+    renderStages();
+    renderIntakeCard();
+  }
+
+  async function init() {
+    if (!pipeline) {
+      try {
+        const res = await fetch('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID || 'default'), { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          pipeline = (data.pipelines || {})[pipelineKey] || null;
+        }
+      } catch (e) { /* fall through to the note below */ }
+    }
+    if (!pipeline) {
+      document.getElementById('ps-opener-note').innerHTML =
+        'This pipeline couldn’t be loaded. <a href="/crm">Open Titan CRM</a> and try again.';
+    }
+    applyPipeline();
+  }
 
   function renderColors() {
     const wrap = document.getElementById('ps-colors');
@@ -282,7 +324,6 @@
       wrap.appendChild(sw);
     });
   }
-  renderColors();
 
   function hexToRgb(hex) {
     hex = (hex || '#2170f4').replace('#', '');
@@ -635,7 +676,52 @@
       wrap.appendChild(row);
     });
   }
-  renderStages();
+
+  // ── Adding records ────────────────────────────────────────────────────────
+  // Summarises what already brings records in. The sources are edited on the
+  // board, so this only reports and links.
+  function renderIntakeCard() {
+    const entity = (pipeline && pipeline.entity) || 'Record';
+    const many = ((pipeline && pipeline.plural) || 'records').toLowerCase();
+    document.getElementById('ps-intake-title').textContent = 'Adding ' + many;
+    document.getElementById('ps-intake-help').textContent =
+      'Let ' + many + ' arrive on their own — from a form, an existing form tool, or matching email.';
+
+    const rows = [];
+    const form = pipeline && pipeline.intakeForm;
+    if (form) {
+      rows.push({ on: !!form.enabled,
+        text: 'Intake form — ' + (form.enabled ? 'accepting responses' : 'paused') });
+    }
+    const mail = pipeline && pipeline.emailIntake;
+    if (mail && mail.rule) {
+      rows.push({ on: mail.enabled !== false, text: 'Email rule — “' + mail.rule + '”' });
+    }
+
+    const status = document.getElementById('ps-intake-status');
+    status.innerHTML = rows.length
+      ? rows.map(function (r) {
+          return '<div class="ps-intake-row">' +
+            '<span class="ps-intake-dot" style="background:' + (r.on ? '#1e8e3e' : '#b3b7bd') + ';"></span>' +
+            psEsc(r.text) + '</div>';
+        }).join('')
+      : '<div class="ps-intake-row ps-intake-muted">Nothing set up yet — ' + psEsc(many) + ' are added by hand.</div>';
+
+    document.getElementById('ps-intake-link').textContent =
+      rows.length ? 'Edit how ' + many + ' are added' : 'Set up automatic ' + many;
+  }
+  function psEsc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  // The sources modal lives on the board, so hand off with ?intent= — the same
+  // convention the sidebar uses for modals only crm.html owns.
+  function openAddRecords() {
+    const q = new URLSearchParams(location.search);
+    q.set('intent', 'add-records');
+    location.href = '/crm/pipeline/' + encodeURIComponent(pipelineKey) + '?' + q.toString();
+  }
 
   function saveSettings() {
     flushOpenEdit();
@@ -650,6 +736,8 @@
     }));
     goBack();
   }
+
+  init();
 </script>
 </body>
 </html>

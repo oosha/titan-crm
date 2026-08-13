@@ -223,6 +223,7 @@
   // of it, so the same row offered different actions depending on where you were.
   function navMenuHtml() {
     return '<div class="pipeline-nav-menu" id="pipeline-nav-menu">' +
+      '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'add-records\')">Add records automatically</div>' +
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'add-team\')">Add team</div>' +
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'filter\')">Add filter view</div>' +
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'form\')">Form</div>' +
@@ -436,6 +437,15 @@
     if (kind === 'pipeline-setting') { location.href = base + '/setting' + location.search; return; }
     if (kind === 'entity-setting') { location.href = base + '/record-setting' + location.search; return; }
     if (kind === 'form') { location.href = base + '/form' + location.search; return; }
+    // The sources modal only exists on the board, so travel there and ask for it —
+    // same ?intent= convention the new-pipeline and settings modals use. Unlike those
+    // it must land on *this* pipeline, not just /crm, so it keeps the base path.
+    if (kind === 'add-records') {
+      var q = new URLSearchParams(location.search);
+      q.set('intent', 'add-records');
+      location.href = base + '?' + q.toString();
+      return;
+    }
     if (kind === 'filter') { alert('Prototype only: "Add filter view" is not wired up yet.'); return; }
     if (kind === 'add-team') { alert('Prototype only: "Add team" is not wired up yet.'); return; }
     // Deleting needs the board's confirm-and-repersist path, which lives in crm.html.

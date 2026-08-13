@@ -110,6 +110,7 @@
   .ov-contact-x:hover { color: #dc2626; border-color: #f0c6c6; background: #fdecec; }
   .ov-add-link { font-size: 12.5px; font-weight: 600; color: #2170f4; cursor: pointer; display: inline-block; margin-top: 12px; }
   .ov-add-link:hover { text-decoration: underline; }
+  .ov-field-empty { font-size: 13px; color: #9aa1a9; }
 
   .ov-custom-field { border: 1px solid #ececf0; border-radius: 9px; padding: 14px; margin-top: 12px; }
   .ov-custom-field:first-of-type { margin-top: 0; }
@@ -539,9 +540,14 @@
           <input type="file" id="ov-file-input" multiple style="display:none;" onchange="addFiles(this.files)">
         </div>
 
-        <div class="ov-card" id="ov-custom-fields-card" style="display:none;">
-          <div class="ov-heading">Custom fields</div>
+        <!-- Which fields a record has is a per-pipeline setting, so this card is the
+             place to reach it from — it stays visible even with no custom fields yet,
+             since "there are none" is exactly when you'd want to add one. -->
+        <div class="ov-card" id="ov-custom-fields-card">
+          <div class="ov-heading" id="ov-custom-fields-heading">Custom fields</div>
           <div id="ov-custom-fields"></div>
+          <div class="ov-field-empty" id="ov-custom-fields-empty" style="display:none;"></div>
+          <span class="ov-add-link" id="ov-configure-fields" onclick="openRecordSettings()"></span>
         </div>
       </div>
 
@@ -1370,8 +1376,16 @@
   function renderCustomFields() {
     const defs = pipeline.customFieldDefs || [];
     const wrap = document.getElementById('ov-custom-fields');
-    const cardEl = document.getElementById('ov-custom-fields-card');
-    cardEl.style.display = defs.length ? '' : 'none';
+    const emptyEl = document.getElementById('ov-custom-fields-empty');
+    // Named for what this pipeline tracks — "Order fields" on an orders board,
+    // "Candidate fields" on a hiring one — since that's what the settings page
+    // this links to actually configures.
+    const entity = pipeline.entity || 'Record';
+    document.getElementById('ov-custom-fields-heading').textContent = entity + ' fields';
+    document.getElementById('ov-configure-fields').textContent =
+      (defs.length ? 'Add or edit ' : 'Set up ') + entity.toLowerCase() + ' fields';
+    emptyEl.style.display = defs.length ? 'none' : '';
+    emptyEl.textContent = 'No custom fields on ' + (pipeline.name || 'this pipeline') + ' yet.';
     // Render custom fields with the same label+input treatment as the standard
     // fields (a 2-column .ov-field grid), not a bordered box with bare inputs.
     wrap.className = 'ov-field-grid';
@@ -1382,6 +1396,16 @@
       field.innerHTML = '<div class="ov-field-label">' + esc(f.name) + '</div>' + customFieldValueHTML(f);
       wrap.appendChild(field);
     });
+  }
+
+  // Which fields exist is a pipeline setting, not a per-record one, so this leaves
+  // the record for that pipeline's record-settings page. Any in-flight edit is
+  // flushed first — navigating away would otherwise drop whatever the 600ms
+  // debounce hadn't written yet.
+  async function openRecordSettings() {
+    clearTimeout(persistTimer);
+    try { await persistNow(); } catch (e) { /* navigate anyway — the page reloads its data */ }
+    location.href = crmPath('/crm/pipeline/' + encodeURIComponent(pipelineKey) + '/record-setting');
   }
 
   function deleteRecord() {
