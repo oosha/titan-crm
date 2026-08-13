@@ -13,6 +13,10 @@
     if (u) document.write('<' + 'script src="/personas/' + u + '.js"><' + '/script>');
   })();
 </script>
+  <!-- Design system tokens. Everything below can use --text-primary, --accent-primary,
+       and the bridged --dir-* names; see design-system/DESIGN-SYSTEM.md. -->
+<link rel="stylesheet" href="/design-system/tokens.css">
+  <link rel="stylesheet" href="/design-system/components.css">
 <link rel="stylesheet" href="/titan-sidebar.css">
 <link rel="stylesheet" href="/crm-directory.css">
 <style>
@@ -286,11 +290,17 @@
   }
 
   /* Customize modal toggle rows */
-  .dash-toggle { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; cursor: pointer; }
-  .dash-toggle + .dash-toggle { border-top: 1px solid var(--dir-hair); }
-  .dash-toggle input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--dir-accent); flex-shrink: 0; cursor: pointer; }
-  .dash-toggle-name { font-size: 13.5px; font-weight: 600; color: var(--dir-ink); }
-  .dash-toggle-desc { font-size: 12px; color: var(--dir-muted); margin-top: 2px; }
+  .dash-toggle { display: flex; align-items: flex-start; gap: var(--space-150); padding: var(--space-150) 0; cursor: pointer; }
+  .dash-toggle + .dash-toggle { border-top: 1px solid var(--border-hairline); }
+  .dash-toggle input {
+    margin-top: var(--space-025); width: var(--checkbox-size); height: var(--checkbox-size);
+    accent-color: var(--checkbox-accent); flex-shrink: 0; cursor: pointer;
+  }
+  /* Both of these are spans, so they need display:block to stack — without it the label and
+     its description run together on one line ("Key metricsThe four headline numbers") and the
+     margin-top below silently does nothing, which is exactly what was shipping. */
+  .dash-toggle-name { display: block; font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-heading); }
+  .dash-toggle-desc { display: block; font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-025); }
 </style>
 </head>
 <body data-subpage="dashboard" data-sidebar-data="page">
@@ -343,7 +353,7 @@
             <div class="ai-sub">Your pipeline copilot</div>
           </div>
           <button class="ai-close" id="ai-close" type="button" aria-label="Hide assistant">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <span data-ds-icon="close" data-size="13"></span>
           </button>
         </div>
         <div class="ai-msgs" id="ai-msgs"></div>
@@ -351,7 +361,7 @@
         <form class="ai-input" id="ai-form">
           <textarea id="ai-text" rows="1" placeholder="Ask about your pipeline…" aria-label="Message Titan"></textarea>
           <button class="ai-send" id="ai-send" type="submit" aria-label="Send" disabled>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8h9M7 4l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span data-ds-icon="forward" data-size="16"></span>
           </button>
         </form>
       </aside>
@@ -359,6 +369,7 @@
   </div>
 </div>
 
+<script src="/design-system/components/icon.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
 <script>

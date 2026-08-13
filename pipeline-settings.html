@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Pipeline setting — Titan CRM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/design-system/tokens.css">
+<link rel="stylesheet" href="/design-system/components.css">
 <link rel="stylesheet" href="/titan-sidebar.css">
 <style>
   .subpage-body { background: #f7f8fa; color: #222; }
@@ -37,13 +39,12 @@
     display: flex; align-items: stretch; gap: 6px; margin-top: 6px;
     overflow-x: auto; padding: 6px 0 30px;
   }
+  /* Shape from .ds-stage--sm — this rule was a byte-identical copy of crm.html's. */
   .np-chev {
     position: relative; flex: 1 1 0; min-width: 84px; height: 60px;
     display: flex; align-items: center; justify-content: center;
-    clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%, 8% 50%);
     cursor: default; user-select: none;
   }
-  .np-chev:first-child { clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%); }
   .np-chev.dragging { opacity: 0.4; }
   .np-chev.drop-target { filter: brightness(0.93); }
   .np-chev-name {
@@ -134,6 +135,7 @@
 </style>
 </head>
 <body data-subpage="pipeline-settings">
+<script src="/design-system/components/icon.js"></script>
 <script src="/titan-sidebar.js"></script>
 
 <div class="app-window">
@@ -142,7 +144,7 @@
 
     <div class="subpage-top">
       <span class="subpage-back" onclick="goBack()">
-        <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-ds-icon="back" data-size="13"></span>
         Back
       </span>
       <span class="subpage-title" id="ps-title">Pipeline setting</span>
@@ -320,7 +322,9 @@
     const n = stages.length;
     stages.forEach(function (stage, i) {
       const chev = document.createElement('div');
-      chev.className = 'np-chev';
+      // ds-stage--sm draws the chevron; --first/--last flatten the ends of the flow.
+      chev.className = 'np-chev ds-stage ds-stage--sm' +
+        (i === 0 ? ' ds-stage--first' : '') + (i === n - 1 ? ' ds-stage--last' : '');
       chev.draggable = true;
       chev.dataset.idx = i;
       chev.style.background = shadeFor(color, i, n);
@@ -328,7 +332,7 @@
         '<span class="np-chev-name" title="Click to rename" style="color:' + darken(color, 0.5) + ';"></span>' +
         (n > 2
           ? '<span class="np-chev-remove" title="Remove stage">' +
-              '<svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1 1l7 7M8 1L1 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' +
+              '<span data-ds-icon="close" data-size="9"></span>' +
             '</span>'
           : '');
       chev.querySelector('.np-chev-name').textContent = stage.label || '—';
@@ -363,7 +367,7 @@
     const add = document.createElement('div');
     add.className = 'np-chev-add';
     add.title = 'Add a stage';
-    add.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Add stage';
+    add.innerHTML = '<span data-ds-icon="plus" data-size="12"></span> Add stage';
     add.addEventListener('click', addStage);
     wrap.appendChild(add);
 
@@ -438,7 +442,7 @@
         '<span class="ps-stage-detail-name"></span>' +
         '<span class="ps-stage-detail-summary"></span>' +
         '<span class="ps-stage-detail-chevron">' +
-          '<svg width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          '<span data-ds-icon="expand" data-size="12"></span>' +
         '</span>';
       header.querySelector('.ps-stage-detail-name').textContent = stage.label || '—';
       header.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(stage);
@@ -497,7 +501,7 @@
       } else {
         const addTaskPill = document.createElement('span');
         addTaskPill.className = 'ps-task-add-pill';
-        addTaskPill.innerHTML = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Add task';
+        addTaskPill.innerHTML = '<span data-ds-icon="plus" data-size="12"></span> Add task';
         addTaskPill.addEventListener('click', function () { taskAddOpenForIdx = i; renderStageDetails(); });
         tasksField.appendChild(addTaskPill);
       }

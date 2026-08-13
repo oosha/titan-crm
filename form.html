@@ -101,7 +101,9 @@
       if (!res.ok) throw new Error(out.error || 'Something went wrong. Please try again.');
       document.getElementById('f-card').innerHTML =
         '<div class="tf-state">' +
-          '<div class="tf-tick"><svg width="22" height="22" viewBox="0 0 24 24" fill="none">' +
+          '<div class="tf-tick"><!-- Inline on purpose: form.html is the PUBLIC page and does not load icon.js. One
+           confirmation tick is not worth 57KB on a surface with no auth and no sidebar. -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">' +
             '<path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
           '<h2>Submitted</h2><p>' + esc(out.thanks || DEF.thanks || 'Thanks — we have your details.') + '</p>' +
         '</div>';

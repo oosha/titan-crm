@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Opportunity setting — Titan CRM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/design-system/tokens.css">
+<link rel="stylesheet" href="/design-system/components.css">
 <link rel="stylesheet" href="/titan-sidebar.css">
 <style>
   .subpage-body { background: #f7f8fa; color: #222; }
@@ -61,6 +63,7 @@
 </style>
 </head>
 <body data-subpage="opportunity-settings">
+<script src="/design-system/components/icon.js"></script>
 <script src="/titan-sidebar.js"></script>
 
 <div class="app-window">
@@ -69,7 +72,7 @@
 
     <div class="subpage-top">
       <span class="subpage-back" onclick="goBack()">
-        <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-ds-icon="back" data-size="13"></span>
         Back
       </span>
       <span class="subpage-title" id="os-title">Opportunity setting</span>
@@ -101,7 +104,7 @@
           <div class="os-chip-row" id="os-custom-fields"></div>
           <div style="margin-top:10px;">
             <span class="os-chip-add" id="os-add-field-btn" onclick="openNewFieldForm()">
-              <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <span data-ds-icon="plus" data-size="12"></span>
               Add custom field
             </span>
           </div>
@@ -115,7 +118,7 @@
             </select>
             <span class="os-new-field-add" onclick="confirmNewField()">Add</span>
             <span class="os-new-field-close" onclick="closeNewFieldForm()" title="Close">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <span data-ds-icon="close" data-size="12"></span>
             </span>
           </div>
         </div>
@@ -139,8 +142,8 @@
   const pipeline = (editSource && editSource.pipelineKey === pipelineKey) ? editSource.pipeline : null;
   function goBack() { location.href = '/crm/pipeline/' + encodeURIComponent(pipelineKey) + location.search; }
   const TYPE_LABEL = { text: 'Text', number: 'Number', date: 'Date', amount: 'Amount ($)' };
-  const ICON_TICK = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const ICON_X = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="#9aa1a9" stroke-width="2" stroke-linecap="round"/></svg>';
+  const ICON_TICK = '<span data-ds-icon="check" data-size="12"></span>';
+  const ICON_X = '<span data-ds-icon="close" data-size="12"></span>';
 
   // Same fields as the Add-opportunity form, in the same order. `key` matches
   // that page's input id suffix (ao-<key>), so turning one off hides it there.

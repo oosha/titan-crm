@@ -13,6 +13,10 @@
     if (u) document.write('<' + 'script src="/personas/' + u + '.js"><' + '/script>');
   })();
 </script>
+  <!-- Design system tokens. Everything below can use --text-primary, --accent-primary,
+       and the bridged --dir-* names; see design-system/DESIGN-SYSTEM.md. -->
+<link rel="stylesheet" href="/design-system/tokens.css">
+  <link rel="stylesheet" href="/design-system/components.css">
 <link rel="stylesheet" href="/titan-sidebar.css">
 <link rel="stylesheet" href="/crm-directory.css">
 </head>
@@ -26,7 +30,7 @@
   <div class="main-area">
     <div class="subpage-top">
       <span class="subpage-back" onclick="location.href=crmPath('/crm')">
-        <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-ds-icon="back" data-size="13"></span>
         Back
       </span>
       <span class="subpage-title">Contacts</span>
@@ -69,6 +73,7 @@
   </div>
 </div>
 
+<script src="/design-system/components/icon.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
 <script>
@@ -245,9 +250,7 @@
           '<th scope="row">' + esc(f.label) + '</th>' +
           '<td class="dir-edit-val">' + valueCellHTML(r.values[f.key] || '') +
             '<button class="dir-edit-btn" type="button" aria-label="Edit ' + esc(f.label) + '">' +
-              '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
-                '<path d="M11.2 2.4l2.4 2.4M2 14l.6-3 8-8 2.4 2.4-8 8L2 14z" stroke="currentColor" ' +
-                'stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+              '<span data-ds-icon="edit" data-size="12"></span>' +
             '</button>' +
           '</td>' +
         '</tr>';
@@ -440,7 +443,7 @@
           (f.locked
             ? '<span class="dir-field-lock" title="Contacts are identified by this field">Fixed</span>'
             : '<button class="dir-field-drop" type="button" aria-label="Remove ' + esc(f.label) + '">' +
-                '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>' +
+                '<span data-ds-icon="close" data-size="13"></span>' +
               '</button>');
         rowEl.querySelector('.dir-field-label').addEventListener('input', function (e) { draft[i].label = e.target.value; });
         rowEl.querySelector('.dir-field-type').addEventListener('change', function (e) { draft[i].type = e.target.value; });

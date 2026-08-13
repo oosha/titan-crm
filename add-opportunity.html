@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Add opportunity — Titan CRM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/design-system/tokens.css">
+<link rel="stylesheet" href="/design-system/components.css">
 <link rel="stylesheet" href="/titan-sidebar.css">
 <style>
   .subpage-body { background: #f7f8fa; color: #222; }
@@ -47,6 +49,7 @@
 </style>
 </head>
 <body data-subpage="add-opportunity">
+<script src="/design-system/components/icon.js"></script>
 <script src="/titan-sidebar.js"></script>
 
 <div class="app-window">
@@ -55,7 +58,7 @@
 
     <div class="subpage-top">
       <span class="subpage-back" onclick="goBack()">
-        <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M6.5 1l-5 5.5 5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-ds-icon="back" data-size="13"></span>
         Back
       </span>
       <span class="subpage-title" id="ao-top-title">Add a new opportunity</span>
