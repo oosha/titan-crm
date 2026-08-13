@@ -1398,5 +1398,28 @@
     ],
     "type": "sales",
     "scope": "all"
+  },
+  "integrations": {
+    "hubspot": {
+      "connections": [
+        {
+          "id": "cmsr5d0lh",
+          "formGuid": "cc0bd918-ed93-4496-8fd7-85f6d3c92afb",
+          "formName": "Neo Leads",
+          "pipelineId": "neo",
+          "stage": "lead",
+          "map": {
+            "firstname": "contact",
+            "lastname": "contact",
+            "email": "contactEmail",
+            "phone": "contactPhone",
+            "company": "company",
+            "message": "note"
+          },
+          "seen": [],
+          "lastSyncedAt": 0
+        }
+      ]
+    }
   }
 }
