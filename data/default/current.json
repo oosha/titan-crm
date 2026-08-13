@@ -1,6 +1,6 @@
 {
-  "currentPipelineId": "p3",
-  "pipelineSeq": 3,
+  "currentPipelineId": "p4",
+  "pipelineSeq": 4,
   "pipelines": {
     "neo": {
       "id": "neo",
@@ -1516,6 +1516,41 @@
         ]
       },
       "customFieldDefs": []
+    },
+    "p4": {
+      "id": "p4",
+      "name": "test Sales Pipeline",
+      "entity": "Opportunity",
+      "plural": "opportunities",
+      "color": "#3f8a7d",
+      "type": "sales",
+      "stages": [
+        {
+          "key": "lead-0",
+          "label": "Lead"
+        },
+        {
+          "key": "qualified-1",
+          "label": "Qualified"
+        },
+        {
+          "key": "demo-scheduled-2",
+          "label": "Demo Scheduled"
+        },
+        {
+          "key": "proposal-sent-3",
+          "label": "Proposal Sent"
+        },
+        {
+          "key": "negotiation-4",
+          "label": "Negotiation"
+        },
+        {
+          "key": "closed-5",
+          "label": "Closed"
+        }
+      ],
+      "cards": []
     }
   },
   "dashboard": {
