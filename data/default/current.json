@@ -1596,6 +1596,10 @@
             "placeholder": "A sentence or two about what you’re after"
           }
         ]
+      },
+      "emailIntake": {
+        "enabled": true,
+        "rule": "All emails that mention neo partnership or AI website..."
       }
     }
   },
