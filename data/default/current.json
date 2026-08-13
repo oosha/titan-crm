@@ -1,6 +1,6 @@
 {
-  "currentPipelineId": "p3",
-  "pipelineSeq": 3,
+  "currentPipelineId": "neo",
+  "pipelineSeq": 5,
   "pipelines": {
     "neo": {
       "id": "neo",
@@ -185,7 +185,37 @@
           "contactEmail": "ethan.price@coastalsupply.com",
           "contactPhone": "+1 (619) 555-0163",
           "contactDesignation": "VP Engineering",
-          "website": "coastalsupply.com"
+          "website": "coastalsupply.com",
+          "noteHistory": [],
+          "upcomingActivities": [
+            {
+              "type": "task",
+              "text": "Follow-up overdue",
+              "overdue": true
+            }
+          ],
+          "currency": "$",
+          "location": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "autoLinkActivity": true,
+          "contacts": [
+            {
+              "name": "Ethan Price",
+              "email": "ethan.price@coastalsupply.com",
+              "designation": "VP Engineering",
+              "phone": "+1 (619) 555-0163",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
         },
         {
           "id": 5,
@@ -216,8 +246,8 @@
           "deal": "Meridian AI site",
           "value": 18000,
           "stage": "demo",
-          "lastActivity": "8d ago",
-          "activityType": "Email sent",
+          "lastActivity": "just now",
+          "activityType": "Note added",
           "overdue": false,
           "currency": "$",
           "website": "meridiandatalabs.com",
@@ -226,8 +256,8 @@
           "location": "San Jose, US",
           "closeDate": "",
           "source": "",
-          "note": "We'll need to figure a new approach for this opportunity soon, they may opt for Acme instead!",
-          "noteDate": "5 Aug",
+          "note": "They're ready to move to the next phase as long as we give concrete integration timelines.",
+          "noteDate": "",
           "contacts": [
             {
               "name": "Ryan Walker",
@@ -600,6 +630,188 @@
           "overdue": false,
           "createdBy": "Form",
           "customFieldValues": {}
+        },
+        {
+          "id": 210,
+          "company": "",
+          "contact": "Mathews D",
+          "initials": "M",
+          "deal": "Neo Leads submission",
+          "value": 0,
+          "stage": "lead",
+          "lastActivity": "just now",
+          "activityType": "Form submission",
+          "overdue": false,
+          "upcomingActivities": [],
+          "createdBy": "HubSpot",
+          "note": "I am applying for a product designer role",
+          "noteDate": "",
+          "currency": "$",
+          "location": "",
+          "website": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "HubSpot form",
+          "contacts": [
+            {
+              "name": "Mathews D",
+              "email": "mathewsd@gmail.com",
+              "phone": "",
+              "designation": "",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactEmail": "mathewsd@gmail.com",
+          "contactPhone": "",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {},
+          "hubspotSubmissionKey": "c:28ac0d55-3575-4c62-9d7b-7192b1c0f63e"
+        },
+        {
+          "id": 211,
+          "company": "Newfold Logistics",
+          "contact": "Alex D",
+          "initials": "A",
+          "deal": "Newfold Logistics — Neo Leads",
+          "value": 0,
+          "stage": "lead",
+          "lastActivity": "just now",
+          "activityType": "Form submission",
+          "overdue": false,
+          "upcomingActivities": [],
+          "createdBy": "HubSpot",
+          "note": "Want to use Neo for our organisation",
+          "noteDate": "",
+          "currency": "$",
+          "location": "",
+          "website": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "HubSpot form",
+          "contacts": [
+            {
+              "name": "Alex D",
+              "email": "alex@gmail.com",
+              "phone": "",
+              "designation": "",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactEmail": "alex@gmail.com",
+          "contactPhone": "",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {},
+          "hubspotSubmissionKey": "c:f9cdea55-3cc2-45d1-8ae9-5f6fee85dd48"
+        },
+        {
+          "id": 212,
+          "company": "Maker Logistics",
+          "contact": "Nintendo Mathews",
+          "initials": "N",
+          "deal": "Maker Logistics — Neo Leads",
+          "value": 0,
+          "stage": "lead",
+          "lastActivity": "just now",
+          "activityType": "Form submission",
+          "overdue": false,
+          "upcomingActivities": [],
+          "createdBy": "HubSpot",
+          "note": "Applying for the role of Maker Logistics",
+          "noteDate": "",
+          "currency": "$",
+          "location": "",
+          "website": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "HubSpot form",
+          "contacts": [
+            {
+              "name": "Nintendo Mathews",
+              "email": "nintendomathews@gmail.com",
+              "phone": "+919438444444",
+              "designation": "",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactEmail": "nintendomathews@gmail.com",
+          "contactPhone": "+919438444444",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {},
+          "hubspotSubmissionKey": "c:c132b8e7-ac9e-486b-9f40-510fa4c51e34"
+        },
+        {
+          "id": 213,
+          "company": "Folo",
+          "contact": "Gary Johnson",
+          "initials": "G",
+          "deal": "Neo Leads submission",
+          "value": 0,
+          "stage": "lead",
+          "lastActivity": "just now",
+          "activityType": "Form submission",
+          "overdue": false,
+          "upcomingActivities": [],
+          "createdBy": "HubSpot",
+          "note": "Hey, lets talk integrations with neo",
+          "noteDate": "",
+          "currency": "$",
+          "location": "",
+          "website": "",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "source": "HubSpot form",
+          "contacts": [
+            {
+              "name": "Gary Johnson",
+              "email": "gary.j@folo.games",
+              "phone": "+971522124566",
+              "designation": "",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactEmail": "gary.j@folo.games",
+          "contactPhone": "+971522124566",
+          "contactDesignation": "",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {},
+          "hubspotSubmissionKey": "c:aa85bb2d-2810-42ce-aece-62554b63a0e4",
+          "noteHistory": [],
+          "autoLinkActivity": true
+        },
+        {
+          "id": 214,
+          "deal": "Emma Clarke",
+          "company": "Northwind",
+          "contact": "Emma Clarke",
+          "contactEmail": "emma.clarke@northwind.co",
+          "value": 0,
+          "stage": "lead",
+          "lastActivity": "just now",
+          "activityType": "Email received",
+          "overdue": false
         }
       ],
       "hiddenFields": [],
@@ -753,9 +965,9 @@
           "initials": "L",
           "deal": "Baby wear for FirstCry",
           "value": 12000,
-          "stage": "processing-1",
+          "stage": "shipped-2",
           "lastActivity": "just now",
-          "activityType": "Email sent",
+          "activityType": "Updated",
           "overdue": false,
           "location": "Dubai, UAE",
           "website": "firstcry.com",
@@ -1121,9 +1333,9 @@
           "company": "Delta Retail",
           "website": "delta.com",
           "deal": "Backend Engineer",
-          "stage": "applied",
-          "lastActivity": "5d ago",
-          "activityType": "Application received",
+          "stage": "screen",
+          "lastActivity": "just now",
+          "activityType": "Updated",
           "source": "Job board",
           "contactEmail": "arun.mehta91@gmail.com",
           "contactPhone": "+91 99000 45120",
@@ -1390,6 +1602,126 @@
         ]
       },
       "customFieldDefs": []
+    },
+    "p4": {
+      "id": "p4",
+      "name": "test Sales Pipeline",
+      "entity": "Opportunity",
+      "plural": "opportunities",
+      "color": "#3f8a7d",
+      "type": "sales",
+      "stages": [
+        {
+          "key": "lead-0",
+          "label": "Lead"
+        },
+        {
+          "key": "qualified-1",
+          "label": "Qualified"
+        },
+        {
+          "key": "demo-scheduled-2",
+          "label": "Demo Scheduled"
+        },
+        {
+          "key": "proposal-sent-3",
+          "label": "Proposal Sent"
+        },
+        {
+          "key": "negotiation-4",
+          "label": "Negotiation"
+        },
+        {
+          "key": "closed-5",
+          "label": "Closed"
+        }
+      ],
+      "cards": [],
+      "intakeForm": {
+        "token": "default.3a4a0i6y5t",
+        "enabled": false,
+        "heading": "Get in touch for Neo partnerships",
+        "blurb": "",
+        "logoUrl": "",
+        "submitLabel": "Submit",
+        "thanks": "Thanks — we have your details and will be in touch.",
+        "recordTitle": "test Sales Pipeline",
+        "sourceLabel": "Form",
+        "fields": [
+          {
+            "key": "name",
+            "label": "Full name",
+            "type": "text",
+            "target": "name",
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "Email",
+            "type": "email",
+            "target": "email",
+            "required": true
+          },
+          {
+            "key": "company",
+            "label": "Company",
+            "type": "text",
+            "target": "company"
+          },
+          {
+            "key": "phone",
+            "label": "Phone",
+            "type": "tel",
+            "target": "phone"
+          },
+          {
+            "key": "note",
+            "label": "What do you need?",
+            "type": "textarea",
+            "target": "note",
+            "placeholder": "A sentence or two about what you’re after"
+          }
+        ]
+      },
+      "emailIntake": {
+        "enabled": true,
+        "rule": "All emails that mention neo partnership or AI website..."
+      }
+    },
+    "p5": {
+      "id": "p5",
+      "name": "My Sales Pipeline",
+      "entity": "Opportunity",
+      "plural": "opportunities",
+      "color": "#ab5f74",
+      "type": "sales",
+      "stages": [
+        {
+          "key": "lead-0",
+          "label": "Lead"
+        },
+        {
+          "key": "qualified-1",
+          "label": "Qualified"
+        },
+        {
+          "key": "demo-scheduled-2",
+          "label": "Demo Scheduled"
+        },
+        {
+          "key": "proposal-sent-3",
+          "label": "Proposal Sent"
+        },
+        {
+          "key": "negotiation-4",
+          "label": "Negotiation"
+        },
+        {
+          "key": "closed-5",
+          "label": "Closed"
+        }
+      ],
+      "cards": []
     }
   },
   "dashboard": {
@@ -1398,5 +1730,33 @@
     ],
     "type": "sales",
     "scope": "all"
+  },
+  "integrations": {
+    "hubspot": {
+      "connections": [
+        {
+          "id": "cmsr5d0lh",
+          "formGuid": "cc0bd918-ed93-4496-8fd7-85f6d3c92afb",
+          "formName": "Neo Leads",
+          "pipelineId": "neo",
+          "stage": "lead",
+          "map": {
+            "firstname": "contact",
+            "lastname": "contact",
+            "email": "contactEmail",
+            "phone": "contactPhone",
+            "company": "company",
+            "message": "note"
+          },
+          "seen": [
+            "c:28ac0d55-3575-4c62-9d7b-7192b1c0f63e",
+            "c:f9cdea55-3cc2-45d1-8ae9-5f6fee85dd48",
+            "c:c132b8e7-ac9e-486b-9f40-510fa4c51e34",
+            "c:aa85bb2d-2810-42ce-aece-62554b63a0e4"
+          ],
+          "lastSyncedAt": 1786615109765
+        }
+      ]
+    }
   }
 }

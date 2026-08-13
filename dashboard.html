@@ -259,6 +259,50 @@
   .ai-table td:first-child { max-width: 0; width: 62%; }   /* the label column is the one that clips */
   .ai-table td b { color: var(--dir-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
+  /* ── Confirm card ──────────────────────────────────────────────────────────
+     The assistant never writes on its own; it proposes, and this is the
+     proposal. It shows every field that would change, old → new, because the
+     user is usually mid-call and half-listening — the card has to be readable
+     at a glance or the confirmation is meaningless. Full rail width: a
+     shrink-to-fit bubble would squeeze the two value columns together. */
+  .ai-act { width: 100%; align-self: stretch; }
+  .ai-act-card {
+    border: 1px solid var(--dir-line); border-left: 3px solid var(--dir-accent);
+    border-radius: 10px; background: var(--dir-surface); overflow: hidden;
+  }
+  .ai-act-head { padding: 11px 13px 9px; border-bottom: 1px solid var(--dir-hair); }
+  .ai-act-kind {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--dir-accent);
+  }
+  .ai-act-rec { font-size: 13px; font-weight: 650; color: var(--dir-ink); margin-top: 2px; }
+  .ai-act-where { font-size: 11.5px; color: var(--dir-muted); margin-top: 1px; }
+  .ai-act-body { padding: 4px 13px 10px; }
+  .ai-act-row { display: flex; align-items: baseline; gap: 8px; padding: 7px 0; font-size: 12.5px; }
+  .ai-act-row + .ai-act-row { border-top: 1px solid var(--dir-hair); }
+  .ai-act-f { flex: 0 0 34%; color: var(--dir-muted); }
+  .ai-act-v { flex: 1; min-width: 0; color: var(--dir-ink); }
+  .ai-act-old { color: var(--dir-muted); text-decoration: line-through; }
+  .ai-act-arrow { color: var(--dir-faint); margin: 0 5px; }
+  .ai-act-note { font-size: 12.5px; line-height: 1.5; color: var(--dir-ink); white-space: pre-wrap; padding: 8px 0 2px; }
+  .ai-act-foot { display: flex; align-items: center; gap: 8px; padding: 10px 13px; border-top: 1px solid var(--dir-hair); background: var(--dir-canvas); }
+  .ai-act-apply {
+    font: inherit; font-size: 12.5px; font-weight: 650; color: #fff; background: var(--dir-accent);
+    border: none; border-radius: 8px; padding: 7px 14px; cursor: pointer;
+  }
+  .ai-act-apply:hover { background: #1b5fd0; }
+  .ai-act-apply:disabled { opacity: 0.5; cursor: default; }
+  .ai-act-skip {
+    font: inherit; font-size: 12.5px; color: var(--dir-muted); background: none;
+    border: none; padding: 7px 4px; cursor: pointer;
+  }
+  .ai-act-skip:hover { color: var(--dir-ink); }
+  .ai-act-state { font-size: 12px; margin-left: auto; }
+  .ai-act-state.ok { color: #1f7a42; font-weight: 600; }
+  .ai-act-state.err { color: #b42318; }
+  .ai-act-card.is-done { border-left-color: #1f7a42; }
+  .ai-act-card.is-dropped { border-left-color: var(--dir-faint); opacity: 0.6; }
+
   .ai-typing { display: inline-flex; gap: 4px; padding: 12px 14px; background: var(--dir-canvas); border: 1px solid var(--dir-hair); border-radius: 4px 13px 13px 13px; }
   .ai-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--dir-faint); animation: ai-blink 1.2s infinite both; }
   .ai-typing i:nth-child(2) { animation-delay: 0.2s; }
@@ -349,7 +393,7 @@
             </svg>
           </span>
           <div class="ai-id">
-            <div class="ai-name">Ask Titan <span class="ai-pill">Preview</span></div>
+            <div class="ai-name">Ask Titan <span class="ai-pill">Beta</span></div>
             <div class="ai-sub">Your pipeline copilot</div>
           </div>
           <button class="ai-close" id="ai-close" type="button" aria-label="Hide assistant">
@@ -1009,7 +1053,14 @@
   // ── Copilot rail (mocked) ───────────────────────────────────────────────────
   // A preview: it answers a fixed set of prompts from the live numbers rather than
   // a model. The header says "Preview" and the fallback is honest about it.
-  const CHIPS = ['Summarize my pipeline', 'What needs attention?', 'Which stage holds the most?', 'Draft a nudge to my biggest one'];
+  // Two read prompts and two write prompts, so the write half of the assistant
+  // is discoverable — nobody guesses they can dictate a record change.
+  const CHIPS = [
+    'Summarize this pipeline',
+    'What needs attention?',
+    'Add a note to…',
+    'Move a deal to the next stage',
+  ];
   let aiMsgs = [];
 
   // Everything the rail can say, read once. `money` decides what "the most" means:
@@ -1037,61 +1088,6 @@
     return (nm.split(/\s+/)[0]) || 'there';
   }
 
-  // Returns an HTML answer for a prompt, computed from real data.
-  function aiAnswer(text) {
-    const t = text.toLowerCase(), d = aiRead();
-    if (!d.all.length) return '<p>There’s nothing in view right now — pick a pipeline with records and I’ll break it down.</p>';
-
-    if (/summ|overview|how.*doing|pipeline$|status/.test(t)) {
-      const rows = d.money
-        ? [['Open amount', d.openMoney], ['Open ' + noun(d.open.length), String(d.open.length)]]
-        : [['Active ' + noun(d.open.length), String(d.open.length)], ['Total', String(d.all.length)]];
-      rows.push([activeType().rateLabel.replace(/^./, function (ch) { return ch.toUpperCase(); }), d.rate + '%']);
-      rows.push(['Overdue', String(d.overdue.length)]);
-      const tail = !d.top ? ''
-        : d.money
-          ? 'Biggest open ' + noun(1) + ' is <b>' + esc(d.top.card.deal || 'Untitled') + '</b> at ' + esc(fmtMoney(d.top.card.value, d.top.card.currency)) + ', in ' + esc(stageLabel(d.top.pipeline, d.top.card.stage)) + '.'
-          : 'Most of the movement is in <b>' + esc(d.topStage || '') + '</b>.';
-      return '<p>Here’s the read on <b>' + esc(scopeName()) + '</b>:</p>' + aiTable(null, rows) + '<p>' + tail + '</p>';
-    }
-    if (/attention|overdue|risk|stuck follow|follow.?up|urgent/.test(t)) {
-      if (d.overdue.length) {
-        return '<p><b>' + d.overdue.length + '</b> ' + noun(d.overdue.length) + (d.overdue.length > 1 ? ' are' : ' is') + ' overdue and waiting on you:</p>' +
-          aiTable([noun(1), d.money ? 'Amount' : 'Last touch'], d.overdue.slice(0, 6).map(function (e) {
-            return [e.card.deal || e.card.company || 'Untitled',
-                    d.money ? fmtMoney(e.card.value, e.card.currency) : (e.card.lastActivity || '—')];
-          })) +
-          '<p>Clearing the oldest first usually frees up the most.</p>';
-      }
-      return '<p>Nothing’s overdue right now — nice. Your next one is <b>' + esc(d.top ? (d.top.card.deal || d.top.card.contact || '') : '') + '</b>' +
-        (d.top && d.money ? ' at ' + esc(fmtMoney(d.top.card.value, d.top.card.currency)) : '') + '.</p>';
-    }
-    if (/stuck|amount|hold|where.*sit|concentrat|stage/.test(t)) {
-      if (d.topStage) {
-        const s = d.byStage[d.topStage];
-        const stages = Object.keys(d.byStage).sort(function (a, b) { return d.weight(b) - d.weight(a); });
-        const lead = d.money
-          ? 'The most open amount is sitting in <b>' + esc(d.topStage) + '</b> — ' + esc(s.cur + s.v.toLocaleString()) + ' across ' + s.n + ' ' + noun(s.n) + '.'
-          : 'Most of your ' + noun(2) + ' are sitting in <b>' + esc(d.topStage) + '</b> — ' + s.n + ' of ' + d.open.length + '.';
-        return '<p>' + lead + '</p>' +
-          aiTable(['Stage', d.money ? 'Open amount' : 'Open'], stages.map(function (k) {
-            return d.money ? [k + ' · ' + d.byStage[k].n, d.byStage[k].cur + d.byStage[k].v.toLocaleString()]
-                           : [k, String(d.byStage[k].n)];
-          })) +
-          '<p>That’s the stage to work if you want to move the number this week.</p>';
-      }
-      return '<p>Things look evenly spread across your stages right now.</p>';
-    }
-    if (/draft|nudge|email|write|follow.?up|reach|biggest/.test(t)) {
-      if (!d.top) return '<p>No open ' + noun(1) + ' to write to at the moment.</p>';
-      const c = d.top.card, fn = firstName(d.top);
-      const draft = 'Subject: Next steps on ' + (c.deal || 'our conversation') + '\n\n' +
-        'Hi ' + fn + ',\n\nWanted to keep things moving on ' + (c.deal || 'this') + '. ' +
-        'Happy to jump on a quick call this week to work through the details — does Thursday suit?\n\nBest,\nElla';
-      return '<p>Here’s a nudge you could send to <b>' + esc(c.company || c.deal) + '</b>:</p><span class="draft">' + esc(draft) + '</span>';
-    }
-    return '<p>I’m a preview for now, so I can’t answer that freely yet — the live copilot is on the way. Try one of the suggestions below to see how it’ll feel.</p>';
-  }
   // The only structure an answer is allowed beyond a paragraph: label left, the
   // figure right and bold. Pass head=null for a bare two-column list.
   function aiTable(head, rows) {
@@ -1108,10 +1104,66 @@
     return typesPresent().length > 1 ? 'all ' + activeType().label.toLowerCase() + ' pipelines' : 'all pipelines';
   }
 
+  // Model replies come back as plain text. Split on blank lines so a two-part
+  // answer reads as two paragraphs rather than one wall.
+  function textToHtml(t) {
+    return String(t || '').split(/\n{2,}/).map(function (para) {
+      return '<p>' + esc(para.trim()).replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+  }
+
+  // ── Confirm cards ───────────────────────────────────────────────────────────
+  // A proposal, not a change. Nothing has been written when this renders — see
+  // the header of api/_assistant.js for why writes wait for a click.
+  function actionCardHTML(m, idx) {
+    const a = m.action;
+    const isNote = a.type === 'add_note';
+    const done = m.state === 'done', dropped = m.state === 'dropped', busy = m.state === 'busy';
+
+    const body = isNote
+      ? '<div class="ai-act-note">' + esc(a.note) + '</div>' +
+        (a.existingNote ? '<div class="ai-act-row"><div class="ai-act-f">Replaces</div>' +
+          '<div class="ai-act-v ai-act-old">' + esc(a.existingNote) + '</div></div>' : '')
+      : a.changes.map(function (c) {
+          return '<div class="ai-act-row">' +
+            '<div class="ai-act-f">' + esc(c.label) + '</div>' +
+            '<div class="ai-act-v">' +
+              (c.beforeText ? '<span class="ai-act-old">' + esc(c.beforeText) + '</span><span class="ai-act-arrow">→</span>' : '') +
+              '<b>' + esc(c.afterText) + '</b>' +
+            '</div></div>';
+        }).join('');
+
+    let foot;
+    if (done) {
+      foot = '<div class="ai-act-state ok">Saved</div>';
+    } else if (dropped) {
+      foot = '<div class="ai-act-state">Discarded</div>';
+    } else {
+      foot =
+        '<button class="ai-act-apply" type="button" data-apply="' + idx + '"' + (busy ? ' disabled' : '') + '>' +
+          (busy ? 'Saving…' : (isNote ? 'Add note' : 'Apply change')) + '</button>' +
+        '<button class="ai-act-skip" type="button" data-skip="' + idx + '">Discard</button>' +
+        (m.error ? '<div class="ai-act-state err">' + esc(m.error) + '</div>' : '');
+    }
+
+    return '<div class="ai-msg ai-act">' +
+      '<div class="ai-act-card' + (done ? ' is-done' : '') + (dropped ? ' is-dropped' : '') + '">' +
+        '<div class="ai-act-head">' +
+          '<div class="ai-act-kind">' + (isNote ? 'Add a note' : 'Update record') + '</div>' +
+          '<div class="ai-act-rec">' + esc(a.recordName) + '</div>' +
+          '<div class="ai-act-where">' + esc(a.pipelineName) + '</div>' +
+        '</div>' +
+        '<div class="ai-act-body">' + body + '</div>' +
+        '<div class="ai-act-foot">' + foot + '</div>' +
+      '</div></div>';
+  }
+
   function renderMsgs(typing) {
     const box = document.getElementById('ai-msgs');
-    box.innerHTML = aiMsgs.map(function (m) {
-      return '<div class="ai-msg ' + m.role + '"><div class="bubble">' + (m.role === 'me' ? '<p>' + esc(m.text) + '</p>' : m.html) + '</div></div>';
+    box.innerHTML = aiMsgs.map(function (m, i) {
+      if (m.role === 'act') return actionCardHTML(m, i);
+      const inner = m.role === 'me' ? '<p>' + esc(m.text) + '</p>' : (m.html || textToHtml(m.text));
+      return '<div class="ai-msg ' + m.role + '"><div class="bubble">' + inner + '</div></div>';
     }).join('') + (typing ? '<div class="ai-msg bot"><div class="ai-typing"><i></i><i></i><i></i></div></div>' : '');
     box.scrollTop = box.scrollHeight;
   }
@@ -1120,21 +1172,93 @@
       return '<button class="ai-chip" type="button">' + esc(c) + '</button>';
     }).join('');
   }
-  function ask(text) {
-    text = String(text || '').trim(); if (!text) return;
+  // Only the spoken turns go back to the model — the greeting is computed
+  // locally and the confirm cards are interface state, not conversation.
+  function apiHistory() {
+    return aiMsgs
+      .filter(function (m) { return (m.role === 'me' || m.role === 'bot') && !m.local; })
+      .map(function (m) {
+        return { role: m.role === 'me' ? 'user' : 'assistant', content: m.text || '' };
+      })
+      .filter(function (m) { return m.content; });
+  }
+
+  let aiBusy = false;
+
+  async function ask(text) {
+    text = String(text || '').trim();
+    if (!text || aiBusy) return;
+    aiBusy = true;
     aiMsgs.push({ role: 'me', text: text });
     renderMsgs(true);
-    const answer = aiAnswer(text);
-    setTimeout(function () {
-      aiMsgs.push({ role: 'bot', html: answer });
+
+    try {
+      const res = await fetch('/api/assistant?persona=' + encodeURIComponent(window.PERSONA_ID), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: apiHistory(), account: accountName() }),
+      });
+      const body = await res.json().catch(function () { return {}; });
+
+      if (!res.ok) {
+        // Server messages are already written as instructions, so show as-is.
+        aiMsgs.push({ role: 'bot', local: true, html: '<p>' + esc(body.error || 'Something went wrong. Try again in a moment.') + '</p>' });
+      } else {
+        if (body.reply) aiMsgs.push({ role: 'bot', text: body.reply });
+        (body.actions || []).forEach(function (a) {
+          aiMsgs.push({ role: 'act', action: a, state: 'pending' });
+        });
+      }
+    } catch (e) {
+      aiMsgs.push({ role: 'bot', local: true, html: '<p>Couldn’t reach the assistant. Check your connection and try again.</p>' });
+    } finally {
+      aiBusy = false;
       renderMsgs(false);
-    }, 620);
+    }
+  }
+
+  async function applyAction(idx) {
+    const m = aiMsgs[idx];
+    if (!m || m.role !== 'act' || m.state !== 'pending') return;
+    m.state = 'busy';
+    m.error = '';
+    renderMsgs(false);
+    try {
+      const res = await fetch('/api/assistant-apply?persona=' + encodeURIComponent(window.PERSONA_ID), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: m.action }),
+      });
+      const body = await res.json().catch(function () { return {}; });
+      if (!res.ok) {
+        m.state = 'pending';
+        m.error = body.error || 'Couldn’t save that.';
+      } else {
+        m.state = 'done';
+        // The tiles were computed from data fetched at load, so a saved change
+        // isn't reflected in them. Re-pull and redraw rather than leaving the
+        // dashboard quietly disagreeing with the record.
+        try { await fetchPipelineData(); render(); } catch (e) {}
+      }
+    } catch (e) {
+      m.state = 'pending';
+      m.error = 'Couldn’t reach the server.';
+    }
+    renderMsgs(false);
+  }
+
+  function accountName() {
+    const p = (window.TITAN_PERSONAS || {})[window.PERSONA_ID];
+    return (p && p.account && p.account.name) || 'Ella Henderson';
   }
   function resetAssistant() {
     // Greeting re-derives from the current scope, so switching pipelines refreshes it.
     const d = aiRead();
-    aiMsgs = [{ role: 'bot', html:
-      '<p>Hi Ella — here’s a quick read on <b>' + esc(scopeName()) + '</b>.</p>' +
+    // `local` keeps the greeting out of the history sent to the model — it's
+    // computed here from the tiles' own numbers, so replaying it would just be
+    // the model reading its own summary back.
+    aiMsgs = [{ role: 'bot', local: true, html:
+      '<p>Hi ' + esc(accountName().split(/\s+/)[0]) + ' — here’s a quick read on <b>' + esc(scopeName()) + '</b>.</p>' +
       (d.all.length ? aiTable(null, (d.money ? [['Open amount', d.openMoney]] : [['Active ' + noun(d.open.length), String(d.open.length)]])
         .concat([[activeType().rateLabel.replace(/^./, function (ch) { return ch.toUpperCase(); }), d.rate + '%'], ['Overdue', String(d.overdue.length)]])) : '') +
       '<p>Ask me anything below, or tap a suggestion.</p>' }];
@@ -1149,7 +1273,28 @@
     text.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (text.value.trim()) { ask(text.value); text.value = ''; sync(); } } });
     form.addEventListener('submit', function (e) { e.preventDefault(); if (text.value.trim()) { ask(text.value); text.value = ''; sync(); } });
     document.getElementById('ai-chips').addEventListener('click', function (e) {
-      const chip = e.target.closest('.ai-chip'); if (chip) ask(chip.textContent);
+      const chip = e.target.closest('.ai-chip');
+      if (!chip) return;
+      // The two write chips are openers, not questions — drop them in the box so
+      // the user finishes the sentence rather than sending a half-formed ask.
+      if (/…$/.test(chip.textContent) || /^Move a deal/.test(chip.textContent)) {
+        text.value = chip.textContent.replace(/…$/, '');
+        text.focus();
+        sync();
+        return;
+      }
+      ask(chip.textContent);
+    });
+
+    // Delegated so cards re-rendered on every message keep working.
+    document.getElementById('ai-msgs').addEventListener('click', function (e) {
+      const apply = e.target.closest('[data-apply]');
+      if (apply) { applyAction(Number(apply.dataset.apply)); return; }
+      const skip = e.target.closest('[data-skip]');
+      if (skip) {
+        const m = aiMsgs[Number(skip.dataset.skip)];
+        if (m && m.state === 'pending') { m.state = 'dropped'; renderMsgs(false); }
+      }
     });
 
     const rail = document.getElementById('ai-rail'), toggle = document.getElementById('d-ai-toggle');

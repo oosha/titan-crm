@@ -214,39 +214,39 @@
         "category": "primitives",
         "status": "built",
         "component": "ds-btn / dsButton",
-        "evidence": "63 CRM call sites, 13 of them on the component",
+        "evidence": "66 CRM call sites, 18 of them on the component",
         "whereToday": "components/button.{css,js}",
         "note": "ao-, np-, ps-, os-, opp-, dir-, fl-, dash-, footer- … all the same button.",
-        "variants": 63,
+        "variants": 66,
         "prefixes": 23,
-        "adopted": 13,
-        "legacy": 50
+        "adopted": 18,
+        "legacy": 48
       },
       {
         "name": "Icon",
         "category": "primitives",
         "status": "built",
         "component": "ds-icon / dsIcon",
-        "evidence": "86 CRM call sites, 59 of them on the component",
+        "evidence": "102 CRM call sites, 58 of them on the component",
         "whereToday": "components/icon.{css,js}",
         "note": "27 inline SVGs remain and most are deliberate: kanban status fills and the chart ring are data geometry; LinkedIn/Instagram/AI sparkles are brand marks; the pipeline chevron interpolates the pipeline colour; the circle-check is a checkbox affordance. form.html keeps one inline tick because it is the public page and must not load a 57KB module. Genuinely convertible leftovers: globe, download, arrow up-right/down-left — no equivalent in the set yet.",
-        "variants": 86,
+        "variants": 102,
         "prefixes": null,
-        "adopted": 59,
-        "legacy": 27
+        "adopted": 58,
+        "legacy": 44
       },
       {
         "name": "Input / field",
         "category": "primitives",
         "status": "built",
         "component": "ds-input / ds-field",
-        "evidence": "117 CRM call sites, 22 of them on the component",
+        "evidence": "119 CRM call sites, 22 of them on the component",
         "whereToday": "components/primitives.css",
         "note": "Covers input, textarea and select; ds-field adds label/hint/error.",
-        "variants": 117,
+        "variants": 119,
         "prefixes": 15,
         "adopted": 22,
-        "legacy": 95
+        "legacy": 97
       },
       {
         "name": "Badge / chip / pill",
@@ -266,23 +266,23 @@
         "category": "layout",
         "status": "built",
         "component": "ds-card",
-        "evidence": "51 CRM call sites, 7 of them on the component",
+        "evidence": "53 CRM call sites, 7 of them on the component",
         "whereToday": "components/primitives.css",
         "note": "Elevation separates regions; border is a hairline, not the mechanism.",
-        "variants": 51,
+        "variants": 53,
         "prefixes": 16,
         "adopted": 7,
-        "legacy": 44
+        "legacy": 46
       },
       {
         "name": "List row",
         "category": "composites",
         "status": "planned",
         "component": "—",
-        "evidence": "80 CRM rules across 6 prefixes",
+        "evidence": "84 CRM rules across 6 prefixes",
         "whereToday": "email-tile, crm-activity-row, opp-activity-row, tile, thread-*, kanban-card …",
         "note": "Counted under email-tile, crm-activity-row, opp-activity-row and dir-row. email-tile and thread-* are MAILBOX classes that still have 35 CSS rules inside crm.html (thread-*: 25 rules, 0 markup uses) — leaked chrome like the composer was, not CRM list rows. Remove those and this block shrinks.",
-        "variants": 80,
+        "variants": 84,
         "prefixes": 6
       },
       {
@@ -290,10 +290,10 @@
         "category": "composites",
         "status": "planned",
         "component": "—",
-        "evidence": "62 CRM rules across 6 prefixes",
+        "evidence": "64 CRM rules across 6 prefixes",
         "whereToday": "np-overlay, fb-overlay, ov-modal, side-modal, app-switcher-dropdown, pipeline-picker …",
         "note": "Overlay + panel + head/body/foot, Escape to close, scroll lock, focus trap. fb-overlay is the closest thing to a reference.",
-        "variants": 62,
+        "variants": 64,
         "prefixes": 6
       },
       {
@@ -301,10 +301,10 @@
         "category": "layout",
         "status": "planned",
         "component": "—",
-        "evidence": "8 CRM rules across 4 prefixes",
+        "evidence": "10 CRM rules across 4 prefixes",
         "whereToday": "subpage-top, kanban-col-header, np-header, dir-toolbar …",
         "note": "Title + optional meta + right-aligned actions. board-header's stacking bug came from every page rebuilding this.",
-        "variants": 8,
+        "variants": 10,
         "prefixes": 4
       },
       {
@@ -367,10 +367,10 @@
         "category": "composites",
         "status": "planned",
         "component": "—",
-        "evidence": "8 CRM rules across 4 prefixes",
+        "evidence": "11 CRM rules across 4 prefixes",
         "whereToday": "np-toast, dir-note, dash-note, int-alert",
         "note": "Transient toast and persistent inline note are two different things wearing one name.",
-        "variants": 8,
+        "variants": 11,
         "prefixes": 4
       },
       {
@@ -400,11 +400,11 @@
         "category": "primitives",
         "status": "planned",
         "component": "—",
-        "evidence": "8 CRM rules across 4 prefixes",
-        "whereToday": "dir-link, ov-add-link, ps-add-link, ao-add-link",
+        "evidence": "6 CRM rules across 3 prefixes",
+        "whereToday": "dir-link, ov-add-link, ao-add-link",
         "note": "Inline link and 'add another' link are distinct; both keep getting redrawn.",
-        "variants": 8,
-        "prefixes": 4
+        "variants": 6,
+        "prefixes": 3
       },
       {
         "name": "Tabs",
@@ -444,10 +444,10 @@
         "category": "composites",
         "status": "tokenised",
         "component": "— (tokenised: --kanban-card-*)",
-        "evidence": "13 CRM rules across 2 prefixes",
+        "evidence": "17 CRM rules across 2 prefixes",
         "whereToday": "crm.html .kanban-card / .opp-card",
         "note": "CSS is fully tokenised and a direction can restyle the board, but there is still no component: renderCard() builds each card as an innerHTML string, so componentising it means a dsKanbanCard() module.",
-        "variants": 13,
+        "variants": 17,
         "prefixes": 2
       },
       {

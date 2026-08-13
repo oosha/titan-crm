@@ -60,6 +60,8 @@
     color: #9a9fa7; cursor: pointer; flex-shrink: 0; border-radius: 6px;
   }
   .os-new-field-close:hover { color: #555; background: #f2f3f5; }
+  .os-note { font-size: 12.5px; color: #9a9fa7; padding: 14px 4px; text-align: center; }
+  .os-note a { color: #2170f4; text-decoration: none; }
 </style>
 </head>
 <body data-subpage="opportunity-settings">
@@ -123,6 +125,7 @@
           </div>
         </div>
 
+        <div class="os-note" id="os-opener-note"></div>
       </div>
     </div><!-- /subpage-body -->
   </div><!-- /main-area -->
@@ -137,9 +140,13 @@
   // read from or write back into. crm.html hands off the pipeline being edited via
   // sessionStorage right before navigating here; saveSettings() below writes the result
   // back the same way and navigates to /crm/pipeline/<id> to apply it.
+  //
+  // That handoff only exists when you arrive from the board, though — a bookmark, a
+  // refresh, or a link from the record page has nothing stashed. init() below falls
+  // back to fetching this pipeline directly, so the page works as a cold deep link.
   let editSource = null;
   try { editSource = JSON.parse(sessionStorage.getItem('titan-crm-edit-pipeline') || 'null'); } catch (e) {}
-  const pipeline = (editSource && editSource.pipelineKey === pipelineKey) ? editSource.pipeline : null;
+  let pipeline = (editSource && editSource.pipelineKey === pipelineKey) ? editSource.pipeline : null;
   function goBack() { location.href = '/crm/pipeline/' + encodeURIComponent(pipelineKey) + location.search; }
   const TYPE_LABEL = { text: 'Text', number: 'Number', date: 'Date', amount: 'Amount ($)' };
   const ICON_TICK = '<span data-ds-icon="check" data-size="12"></span>';
@@ -169,16 +176,51 @@
     { key: 'contact-linkedin', label: 'LinkedIn', group: 'contact' },
   ];
 
-  const entity = (pipeline && pipeline.entity) || 'Opportunity';
-  const osTitleText = entity + ' setting' + (pipeline ? ' - ' + pipeline.name : '');
-  document.getElementById('os-title').textContent = osTitleText;
-  document.title = osTitleText + ' — Titan CRM';
-
+  // Derived from `pipeline`, so they're filled in by applyPipeline() once it's known
+  // rather than at parse time — on a cold deep link it isn't loaded yet.
   const hidden = {};
-  (pipeline && pipeline.hiddenFields ? pipeline.hiddenFields : []).forEach(function (k) { hidden[k] = true; });
-  let customFieldDefs = pipeline && pipeline.customFieldDefs ? pipeline.customFieldDefs.map(function (f) { return Object.assign({}, f); }) : [];
-  let customFieldSeq = customFieldDefs.length;
-  let contactsEnabled = pipeline ? (pipeline.contactsEnabled !== false) : true;
+  let customFieldDefs = [];
+  let customFieldSeq = 0;
+  let contactsEnabled = true;
+
+  function applyPipeline() {
+    const entity = (pipeline && pipeline.entity) || 'Opportunity';
+    const osTitleText = entity + ' setting' + (pipeline ? ' - ' + pipeline.name : '');
+    document.getElementById('os-title').textContent = osTitleText;
+    document.title = osTitleText + ' — Titan CRM';
+
+    Object.keys(hidden).forEach(function (k) { delete hidden[k]; });
+    (pipeline && pipeline.hiddenFields ? pipeline.hiddenFields : []).forEach(function (k) { hidden[k] = true; });
+    customFieldDefs = pipeline && pipeline.customFieldDefs
+      ? pipeline.customFieldDefs.map(function (f) { return Object.assign({}, f); })
+      : [];
+    customFieldSeq = customFieldDefs.length;
+    contactsEnabled = pipeline ? (pipeline.contactsEnabled !== false) : true;
+
+    renderStandardFields();
+    renderCustomFields();
+  }
+
+  async function init() {
+    if (!pipeline) {
+      // No handoff — arrived here cold. Fetch this persona's data and pick out the
+      // pipeline named in the URL.
+      try {
+        const res = await fetch('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID || 'default'), { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          pipeline = (data.pipelines || {})[pipelineKey] || null;
+        }
+      } catch (e) { /* fall through to the note below */ }
+    }
+    if (!pipeline) {
+      const note = document.getElementById('os-opener-note');
+      if (note) {
+        note.innerHTML = 'This pipeline couldn’t be loaded. <a href="/crm">Open Titan CRM</a> and try again.';
+      }
+    }
+    applyPipeline();
+  }
 
   function renderStandardFields() {
     document.querySelectorAll('.os-chip-row[data-group]').forEach(function (wrap) { wrap.innerHTML = ''; });
@@ -217,7 +259,6 @@
     renderContactsMaster();
     applyContactsDependentFields();
   }
-  renderStandardFields();
 
   // "Add contacts" only controls whether more than one contact can be added to a
   // record — it does NOT gate the contact-person's own info fields (email, phone,
@@ -257,7 +298,6 @@
       wrap.appendChild(chip);
     });
   }
-  renderCustomFields();
 
   function openNewFieldForm() {
     document.getElementById('os-new-field-form').classList.add('open');
@@ -296,6 +336,8 @@
     }));
     goBack();
   }
+
+  init();
 </script>
 </body>
 </html>
