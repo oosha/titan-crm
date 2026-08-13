@@ -5134,11 +5134,13 @@
         btn.title = 'Set up a form that files into this pipeline';
         return;
       }
+      // The button reads "Form"; paused is the only state worth saying in the label.
+      // The submission count stays in the tooltip rather than the button, which
+      // otherwise changed width as records came in.
       const n = (pl.cards || []).filter(function (c) {
         return c.createdBy === 'Form' || c.source === (f.sourceLabel || 'Form');
       }).length;
-      // Paused/active is carried by the label text, not a status dot.
-      label.textContent = f.enabled ? (n ? 'Form · ' + n : 'Form') : 'Form · paused';
+      label.textContent = f.enabled ? 'Form' : 'Form · paused';
       btn.title = f.enabled
         ? 'Accepting responses' + (n ? ' — ' + n + (n === 1 ? ' submission' : ' submissions') : '')
         : 'This form is not accepting responses';
