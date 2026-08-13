@@ -1550,7 +1550,53 @@
           "label": "Closed"
         }
       ],
-      "cards": []
+      "cards": [],
+      "intakeForm": {
+        "token": "default.3a4a0i6y5t",
+        "enabled": false,
+        "heading": "Get in touch for Neo partnerships",
+        "blurb": "",
+        "logoUrl": "",
+        "submitLabel": "Submit",
+        "thanks": "Thanks — we have your details and will be in touch.",
+        "recordTitle": "test Sales Pipeline",
+        "sourceLabel": "Form",
+        "fields": [
+          {
+            "key": "name",
+            "label": "Full name",
+            "type": "text",
+            "target": "name",
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "Email",
+            "type": "email",
+            "target": "email",
+            "required": true
+          },
+          {
+            "key": "company",
+            "label": "Company",
+            "type": "text",
+            "target": "company"
+          },
+          {
+            "key": "phone",
+            "label": "Phone",
+            "type": "tel",
+            "target": "phone"
+          },
+          {
+            "key": "note",
+            "label": "What do you need?",
+            "type": "textarea",
+            "target": "note",
+            "placeholder": "A sentence or two about what you’re after"
+          }
+        ]
+      }
     }
   },
   "dashboard": {
