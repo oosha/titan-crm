@@ -8,6 +8,14 @@ truth: when this document and that file disagree, the file wins and this gets fi
 its states and its file. [`index.html`](./index.html) is the workbench — open it and
 you can see the whole system at once.
 
+> **This directory changes only when someone asks for it, in so many words.** Adding a
+> component, a token, a variant or a direction is never a side effect of building a
+> feature — it is its own task, started by an explicit request. Building something? You
+> are a consumer: compose what is already here, write only page-local layout, and if
+> nothing fits, **name the gap in your summary instead of filling it**. The sections
+> below marked *owner* describe how the system grows when that request comes; reading
+> them is not the request.
+
 ## The workbench
 
 `node dev-server.js`, then **http://localhost:8000/design-system/**. Five views, each on
@@ -48,7 +56,9 @@ column from that entry.
 **82 button rules across 14 class names** (`titan-action-btn`, `comp-fmt-btn`,
 `action-btn`, `split-btn`, `dir-btn`, `np-btn`, …) — every one of them is someone
 solving "I need a button" again from scratch. That is the thing this replaces. If a
-component is close but not quite right, add a **variant** to it; don't fork it.
+component is close but not quite right, use it anyway and adjust *at the call site* with
+spacing tokens — don't fork it, and don't add a `ds-` variant of your own. A variant is
+the designer's to add; report the need instead.
 
 **2. Components read semantics, never primitives, never literals.** Three tiers:
 
@@ -60,8 +70,9 @@ semantics.css    intent              --text-primary: var(--gray-700)
 component css    use                 color: var(--text-primary)
 ```
 
-A hex or a themeable px inside a component file is a bug — it means a token is
-missing. Add it to `semantics.css` and point the component at it.
+A hex or a themeable px in any CSS you write is a bug — it means you reached past the
+system. The fix is a semantic token, which the designer adds; flag it rather than
+inlining the value and moving on.
 
 **3. A design direction is a theme file, not an edit.** See `themes/`. A direction may
 only redefine semantic tokens; it may not add component rules or new raw values.
@@ -70,7 +81,7 @@ That constraint is what makes exploring cheap: try it, look at the whole product
 
 ---
 
-## Trying a direction
+## Trying a direction *(owner)*
 
 ```html
 <link rel="stylesheet" href="/design-system/tokens/primitives.css">
@@ -105,7 +116,7 @@ there unnoticed.
 
 ---
 
-## Adding a component
+## Adding a component *(owner)*
 
 1. Stylesheet in `components/`, classes prefixed `ds-`, variants as
    `.ds-<name>--<variant>`. Semantic tokens only.

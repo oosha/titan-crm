@@ -61,8 +61,8 @@ every component, its props and its states; the doc has the rules.
 `design-system/index.html` is the workbench: **http://localhost:8000/design-system/**,
 five hash-routed views — `#overview` (the coverage ledger), `#foundations`, `#icons`,
 `#components`, `#directions`. Screenshot the relevant one after any visual change. It
-reads the registry and `dsIcon` rather than restating them, so a component you add without
-registering, or a state you skip, shows up as a hole in the page.
+renders straight from the registry and `dsIcon` rather than restating them, so it is the
+fastest way to see what exists before you build — and the place a visual regression shows up.
 
 **Scope is the CRM and its modules — `index.html` is deliberately out.** The mailbox is the
 mocked half; it keeps its own chrome and is excluded from both measurement scripts (and from
@@ -73,21 +73,60 @@ A page links the system with exactly two stylesheets — `/design-system/tokens.
 how the record screen ended up using `.ds-input` on a page where the rules weren't loaded.
 
 `node design-system/measure-adoption.js` reports how many call sites actually go through the
-system; `measure-inventory.js` reports how much duplication each block still carries. Both
-take `--write` to update `registry.json`, which is where the workbench's numbers come from.
-Run them before and after any migration — the delta is the only evidence that anything moved.
-Adoption ignores `ds-` classes on a page that doesn't link the CSS, and names them as inert.
+system; `measure-inventory.js` reports how much duplication each block still carries. Read
+them to see where a surface stands before and after you touch it — the delta is the only
+evidence that anything moved. Adoption ignores `ds-` classes on a page that doesn't link the
+CSS, and names them as inert, which is usually a missing `<link>` rather than a bad number.
 
 Three things it exists to stop:
 
 - **Reinventing controls.** The live product has 82 button rules across 14 class names.
-  Use `ds-btn` (or add a variant to it); don't write the fifteenth.
-- **Hardcoding values.** Components read semantic tokens (`--text-primary`), which map to
-  primitives (`--gray-700`). A hex inside a component file means a token is missing.
+  Use `ds-btn`; don't write the fifteenth, and don't invent the sixteenth.
+- **Hardcoding values.** Everything reads semantic tokens (`--text-primary`), which map to
+  primitives (`--gray-700`). A hex in the CSS you write means you reached past the system.
 - **Forking to explore.** A design direction is a file in `design-system/themes/` that
   redefines semantics only. Component *shape* is tokenised too (`--btn-radius`,
   `--btn-height`, …), so "try a different button everywhere" is a value change, not a
-  refactor.
+  refactor — and it is the designer's change to make.
+
+### `design-system/` changes only on request
+
+**Never edit anything under `design-system/` as part of doing something else.** Not to add
+a component you needed, not to add a token you were missing, not to fix a value that looks
+wrong. Only when the person you are talking to asks for that change, in this conversation,
+in those terms. Everything counts: `tokens/`, `components/`, `themes/`, `components.css`,
+`tokens.css`, `registry.json`, the workbench.
+
+The system has one owner and you cannot tell from a session whether you are talking to
+them, so the rule is written as a default rather than a permission — never on your own
+initiative, only on an explicit ask. "This surface obviously needs a `ds-tabs`" is not an
+ask; it is the exact reasoning the rule exists to stop.
+
+The measurement scripts are the one safe exception: run `measure-adoption.js` /
+`measure-inventory.js` to *read* where a surface stands. Don't pass `--write` — that
+rewrites the registry.
+
+### Building a new surface
+
+Compose it from what already exists, and stay inside the existing language:
+
+1. **Shop the registry first.** `registry.json` is the index of every component, its props
+   and its states; the workbench shows them rendered. Build from those pieces.
+2. **Take the nearest fit over an invention.** A tags input is a `ds-input` with `ds-badge`
+   children before it is a new component. A slightly-off button is `ds-btn` with a spacing
+   token applied at the call site, not `ds-btn--myvariant`.
+3. **Only page-specific layout is yours to write** — grids, positioning, how these
+   components sit together on this screen. That CSS lives with the page and must read
+   tokens (`--space-200`, `--text-secondary`), never literals or hex.
+4. **When nothing fits, say so.** Build the smallest honest thing with page-local classes
+   — **named for the page, never `ds-`** — keep it visually consistent with what's
+   already there, and **flag it in your summary**: what you
+   needed, what you used instead, which surface it's on. That list is what the designer
+   audits and decides to absorb. Don't pre-empt that decision by writing the component
+   yourself.
+
+The failure mode this prevents isn't ugly UI — it's a `ds-`-looking class that nobody
+designed, which reads as sanctioned and quietly becomes the fifteenth button.
 
 Extracted from `App Redesign/index_prodRedesign_interactions.html`, which remains the
 visual ground truth. The shipped CRM is not migrated yet: `semantics.css` ends with a
