@@ -2383,6 +2383,20 @@
     }
     .pipeline-picker-confirm.show { display: block; }
 
+    /* Board header: pipeline name on the left, actions on the right.
+       These live in a rule rather than an inline style attribute on purpose —
+       applyEmptyBoardState() shows/hides this row with `style.display = ''`, which
+       *deletes* an inline display and would drop the row to `block`, stacking the
+       two halves and left-aligning the actions. Clearing it now falls back here. */
+    #board-header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; margin-bottom: 18px;
+    }
+    #board-header > :first-child { min-width: 0; }
+    #board-header .board-header-actions {
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+
     /* ── CRM: New Pipeline flow (§4.1–4.3) ── */
     .np-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.28);
@@ -2527,6 +2541,71 @@
       cursor: pointer; flex-shrink: 0;
     }
     .np-slot-btn:hover { border-color: #2170f4; color: #2170f4; }
+
+    /* Step 3 — "created, now fill it" confirmation. */
+    .np-done-head { text-align: center; padding: 6px 0 22px; }
+    .np-done-check {
+      width: 46px; height: 46px; border-radius: 50%; margin: 0 auto 14px;
+      display: flex; align-items: center; justify-content: center;
+      background: #e6f4ea; color: #1e8e3e;
+    }
+    .np-done-title { font-size: 19px; font-weight: 700; color: #1a1a1a; }
+    .np-done-sub { font-size: 13.5px; color: #8a8f98; margin-top: 6px; }
+    .np-source-label {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+      color: #9aa1a9; margin: 0 2px 10px;
+    }
+    /* Same three-column shape as .np-form-slot, so a source row and the form row
+       that follows it read as the same kind of thing. */
+    .np-source {
+      display: grid; grid-template-columns: 42px minmax(0,1fr) auto; gap: 14px; align-items: center;
+      border: 1px solid #e8eaed; border-radius: 13px; padding: 14px 16px; margin-bottom: 10px;
+      cursor: pointer; text-align: left; width: 100%; background: #fff; font: inherit;
+    }
+    .np-source:hover { border-color: #2170f4; background: #f9fbff; }
+    .np-source.open { border-color: #2170f4; }
+    .np-source-icon {
+      width: 42px; height: 42px; border-radius: 11px; display: inline-flex;
+      align-items: center; justify-content: center; flex-shrink: 0;
+      background: #f2f4f6; color: #6b7280;
+    }
+    .np-source:hover .np-source-icon, .np-source.open .np-source-icon { background: #e8f0fe; color: #2170f4; }
+    /* Both are <span>s inside the button, so they need to be made block-level or
+       the label and its description run together on one line. */
+    .np-source-name { display: block; font-size: 14px; font-weight: 650; color: #222; }
+    .np-source-desc { display: block; font-size: 12.5px; color: #8b9096; margin-top: 3px; }
+    .np-source-go { color: #b3b7bd; flex-shrink: 0; display: flex; }
+    .np-source:hover .np-source-go { color: #2170f4; }
+
+    /* Panel revealed under a source row (integrations list, email rule). */
+    .np-source-panel {
+      display: none; border: 1px solid #e8eaed; border-top: none;
+      border-radius: 0 0 13px 13px; margin: -14px 0 10px; padding: 16px;
+    }
+    .np-source-panel.open { display: block; }
+    .np-source.open { border-radius: 13px 13px 0 0; margin-bottom: 0; }
+
+    .np-int-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+    .np-int {
+      display: flex; align-items: center; gap: 10px; border: 1px solid #e8eaed;
+      border-radius: 10px; padding: 10px 12px; cursor: pointer; background: #fff;
+      font: inherit; font-size: 13.5px; color: #333; text-align: left;
+    }
+    .np-int:hover { border-color: #2170f4; color: #2170f4; background: #f9fbff; }
+    .np-int-logo {
+      width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0; color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+    }
+    .np-rule-label { font-size: 13px; font-weight: 600; color: #444; margin-bottom: 7px; }
+    .np-rule-input {
+      width: 100%; padding: 10px 12px; border: 1px solid #d9dce1; border-radius: 8px;
+      font-size: 13.5px; font-family: inherit; color: #222; outline: none; resize: vertical;
+      min-height: 68px;
+    }
+    .np-rule-input:focus { border-color: #2170f4; box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+    .np-rule-hint { font-size: 12px; color: #9aa1a9; margin-top: 8px; }
+    .np-rule-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 
     .np-footer {
       padding: 13px 18px; border-top: 1px solid #eee; display: flex;
@@ -2893,11 +2972,11 @@
       </div><!-- /top-toolbar -->
 
       <div class="content-area" style="display:block; overflow:auto; padding:20px 24px;">
-        <div id="board-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+        <div id="board-header">
           <div style="font-size:19px; font-weight:700; color:#1a1a1a;">
             <span id="pipeline-name-heading">Neo partnerships</span> <span id="pipeline-total" style="font-size:13.5px; font-weight:500; color:#888; margin-left:8px;"></span>
           </div>
-          <div style="display:flex; align-items:center; gap:10px;">
+          <div class="board-header-actions">
             <!-- The pipeline's intake form, on the pipeline. It was reachable only from
                  the row's three-dot menu, which is not where you look for it while
                  staring at the board. The label reflects whether one exists yet. -->
@@ -2907,7 +2986,6 @@
                 <path d="M8 2.5h4a1 1 0 011 1V4a1 1 0 01-1 1H8a1 1 0 01-1-1V3.5a1 1 0 011-1z" fill="currentColor"/>
                 <path d="M7.5 8.5h5M7.5 11h5M7.5 13.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
               </svg>
-              <span id="board-form-dot" style="display:none; width:7px; height:7px; border-radius:50%; flex-shrink:0;"></span>
               <span id="board-form-label">Form</span>
             </div>
             <div title="Add team" style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:7px; background:#f4f4f7; color:#555; cursor:pointer;" onclick="openAddTeamModal(currentPipelineId)">
@@ -3289,14 +3367,86 @@
           <div class="np-help">Click a stage to rename it. These are the columns on your board.</div>
           <div class="np-chev-chain" id="np-stages"></div>
 
-          <div style="height:26px;"></div>
-
-          <div class="np-label">Lead form <span class="np-optional">optional</span></div>
-          <div class="np-form-slot" id="np-form-slot"></div>
         </div>
         <div class="np-footer">
           <div class="np-btn-secondary" onclick="npBack()">Back</div>
           <div class="np-btn-primary" onclick="npCreate()">Create pipeline</div>
+        </div>
+      </div>
+
+      <!-- Step 3: created — now pick how records get in. Shown after the pipeline is
+           already saved, so every action here is optional and closing is a valid end. -->
+      <div class="np-step" id="np-step-3">
+        <div class="np-header">
+          <span class="np-title" id="np-done-header">Pipeline created</span>
+          <span class="np-close" onclick="closeNewPipeline()">&times;</span>
+        </div>
+        <div class="np-body">
+          <div class="np-done-head">
+            <div class="np-done-check">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="np-done-title" id="np-done-title">Pipeline created</div>
+            <div class="np-done-sub" id="np-done-sub"></div>
+          </div>
+
+          <div class="np-source-label" id="np-source-label">Add records</div>
+
+          <!-- 1. Build a form here — reuses the same builder the old step-2 slot used. -->
+          <button type="button" class="np-source" onclick="npSourceForm()">
+            <span class="np-source-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4.5" y="3" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M8 2.5h4a1 1 0 011 1V4a1 1 0 01-1 1H8a1 1 0 01-1-1V3.5a1 1 0 011-1z" fill="currentColor"/><path d="M7.5 8.5h5M7.5 11h5M7.5 13.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </span>
+            <span>
+              <span class="np-source-name" id="np-source-form-name">Create a form</span>
+              <span class="np-source-desc" id="np-source-form-desc">A hosted form you can share — every submission lands here.</span>
+            </span>
+            <span class="np-source-go">
+              <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1.5 1l5 5.5-5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </button>
+
+          <!-- 2. Connect a form that already exists elsewhere. -->
+          <button type="button" class="np-source" id="np-source-int-btn" onclick="npToggleSource('int')">
+            <span class="np-source-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M8 12l4-4M7.2 5.6l1.2-1.2a3.4 3.4 0 014.8 4.8l-1.2 1.2M8 10.4l-1.2 1.2a3.4 3.4 0 004.8 4.8l1.2-1.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </span>
+            <span>
+              <span class="np-source-name">Connect an existing form</span>
+              <span class="np-source-desc">Contact Form 7, WPForms, Elementor, Jetpack or HubSpot.</span>
+            </span>
+            <span class="np-source-go">
+              <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1.5 1l5 5.5-5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </button>
+          <div class="np-source-panel" id="np-source-int-panel">
+            <div class="np-int-grid" id="np-int-grid"></div>
+          </div>
+
+          <!-- 3. Watch the inbox for matching mail. -->
+          <button type="button" class="np-source" id="np-source-email-btn" onclick="npToggleSource('email')">
+            <span class="np-source-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="4.5" width="15" height="11" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M3.2 5.8L10 10.5l6.8-4.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </span>
+            <span>
+              <span class="np-source-name">Add incoming email leads</span>
+              <span class="np-source-desc" id="np-source-email-desc">Describe what to look for and matching mail becomes a record.</span>
+            </span>
+            <span class="np-source-go">
+              <svg width="8" height="13" viewBox="0 0 8 13" fill="none"><path d="M1.5 1l5 5.5-5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </button>
+          <div class="np-source-panel" id="np-source-email-panel">
+            <div class="np-rule-label">What should Titan look for?</div>
+            <textarea class="np-rule-input" id="np-email-rule" spellcheck="false"></textarea>
+            <div class="np-rule-hint" id="np-email-hint"></div>
+            <div class="np-rule-actions">
+              <button type="button" class="np-btn-primary" onclick="npSaveEmailRule()">Save rule</button>
+            </div>
+          </div>
+        </div>
+        <div class="np-footer">
+          <div class="np-btn-primary" onclick="closeNewPipeline()">Done</div>
         </div>
       </div>
 
@@ -4974,14 +5124,12 @@
     // useful thing to put in the label — it is why you would look at the button at all.
     function updateBoardFormBtn() {
       const label = document.getElementById('board-form-label');
-      const dot = document.getElementById('board-form-dot');
       const btn = document.getElementById('board-form-btn');
       if (!label || !btn) return;
       const pl = PIPELINES[currentPipelineId] || {};
       const f = pl.intakeForm;
 
       if (!f) {
-        dot.style.display = 'none';
         label.textContent = 'Add form';
         btn.title = 'Set up a form that files into this pipeline';
         return;
@@ -4989,8 +5137,7 @@
       const n = (pl.cards || []).filter(function (c) {
         return c.createdBy === 'Form' || c.source === (f.sourceLabel || 'Form');
       }).length;
-      dot.style.display = '';
-      dot.style.background = f.enabled ? '#1e8e3e' : '#b3b7bd';
+      // Paused/active is carried by the label text, not a status dot.
       label.textContent = f.enabled ? (n ? 'Form · ' + n : 'Form') : 'Form · paused';
       btn.title = f.enabled
         ? 'Accepting responses' + (n ? ' — ' + n + (n === 1 ? ' submission' : ' submissions') : '')
@@ -5901,7 +6048,7 @@
     }
 
     function openNewPipeline() {
-      npForm = null; npFormPipeline = null;   // a fresh flow starts with no form
+      npCreatedId = null;       // a fresh flow has nothing created yet
       npState.type = 'sales';   // default selection so Continue is always actionable
       npRenderRadios();
       npShowStep(1);
@@ -5913,60 +6060,25 @@
     function npShowStep(n) {
       document.getElementById('np-step-1').classList.toggle('active', n === 1);
       document.getElementById('np-step-2').classList.toggle('active', n === 2);
+      document.getElementById('np-step-3').classList.toggle('active', n === 3);
       document.getElementById('np-modal').classList.toggle('np-step2-open', n === 2);
     }
 
-    // The form being drafted alongside the pipeline. It is held here until
-    // npCreate() writes both together — the pipeline does not exist yet, so there is
-    // nothing to save it onto.
-    let npForm = null;
-    let npFormPipeline = null;     // carries customFieldDefs the builder adds
-
+    // Reflects whether the created pipeline already has a form, so the step-3 row
+    // reads "Create a form" or "Edit the form" rather than always offering to create
+    // one the user just made.
     function npRenderFormSlot() {
-      const slot = document.getElementById('np-form-slot');
-      if (!slot) return;
-      if (!npForm) {
-        slot.innerHTML =
-          '<span class="np-slot-icon">' + NP_FORM_ICON + '</span>' +
-          '<div><div class="np-slot-name is-empty">No form yet</div></div>' +
-          '<button type="button" class="np-slot-btn" onclick="npEditForm()">Set up a form</button>';
-        return;
-      }
-      slot.innerHTML =
-        '<span class="np-slot-icon is-set">' + NP_FORM_ICON + '</span>' +
-        '<div><div class="np-slot-name">' + window.titanFormEsc(npForm.heading || 'Untitled form') + '</div>' +
-          '<div class="np-slot-meta"><span class="' + (npForm.enabled ? 'on">Active' : 'off">Paused') + '</span>' +
-            ' · ' + npForm.fields.length + ' fields</div></div>' +
-        '<button type="button" class="np-slot-btn" onclick="npEditForm()">Edit</button>';
+      const nameEl = document.getElementById('np-source-form-name');
+      if (!nameEl) return;
+      const form = (PIPELINES[npCreatedId] || {}).intakeForm;
+      const descEl = document.getElementById('np-source-form-desc');
+      if (!form) { nameEl.textContent = 'Create a form'; return; }
+      nameEl.textContent = 'Edit the form';
+      descEl.textContent = (form.heading || 'Untitled form') +
+        ' · ' + (form.enabled ? 'Active' : 'Paused') +
+        ' · ' + (form.fields || []).length + ' fields';
     }
 
-    const NP_FORM_ICON = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none">' +
-      '<rect x="4.5" y="3" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.4"/>' +
-      '<path d="M8 2.5h4a1 1 0 011 1V4a1 1 0 01-1 1H8a1 1 0 01-1-1V3.5a1 1 0 011-1z" fill="currentColor"/>' +
-      '<path d="M7.5 8.5h5M7.5 11h5M7.5 13.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>';
-
-    // Opens the shared builder over this modal. Nothing is written here — the form
-    // comes back into npForm and is saved with the pipeline.
-    function npEditForm() {
-      const name = (document.getElementById('np-name').value || '').trim() || 'this pipeline';
-      window.titanFormBuilder.open({
-        pipeline: npFormPipeline || {
-          name: name,
-          type: NP_PIPELINE_TYPE[npState.type] || 'sales',
-          stages: (npState.stages || []).map(function (st, i) { return { key: slugify(st.name, i), label: st.name }; }),
-          customFieldDefs: [],
-        },
-        form: npForm,
-        personaId: window.PERSONA_ID,
-        title: 'Form — ' + name,
-        saveLabel: 'Done',
-        onSave: function (form, pipeline) {
-          npForm = form;
-          npFormPipeline = pipeline;
-          npRenderFormSlot();
-        },
-      });
-    }
     function npBack() { npShowStep(1); }
 
     // Step 1 — radio selection (no advance until Continue)
@@ -5985,7 +6097,6 @@
       // Deep copy so edits don't mutate the template.
       npState.stages = tpl.stages.map(function (s) { return { name: s.name, wonLost: !!s.wonLost }; });
       document.getElementById('np-step2-title').textContent = tpl.title;
-      npRenderFormSlot();
       document.getElementById('np-name').value = tpl.name;
       npRenderColors();
       npRenderStages();
@@ -6138,15 +6249,6 @@
         stages: clean.map(function (s, i) { return { key: slugify(s.name, i), label: s.name }; }),
         cards: [],
       };
-      // Attach the drafted form before the persist below, so pipeline and form land in
-      // the same write rather than the form needing a second save.
-      if (npForm) {
-        PIPELINES[id].intakeForm = npForm;
-        if (npFormPipeline && npFormPipeline.customFieldDefs) {
-          PIPELINES[id].customFieldDefs = npFormPipeline.customFieldDefs;
-        }
-      }
-
       npAddSidebarPipeline();
       // Leaves the "no pipelines yet" state when this is the first one.
       applyEmptyBoardState();
@@ -6155,8 +6257,128 @@
       // DOM and is gone on the next load (switchPipeline doesn't save on its own).
       schedulePersist();
 
-      closeNewPipeline();
-      npToast('“' + name + '” created' + (npForm ? ' with its form.' : ' — link an email to add your first ' + entity.toLowerCase() + '.'), true);
+      // The board is already live behind the modal; step 3 is the optional
+      // "now get records into it" nudge, so closing from here loses nothing.
+      npCreatedId = id;
+      npShowDone(name, entity, npState.plural);
+    }
+
+    // ── Step 3: created, now fill it ──────────────────────────────────────────
+    // The pipeline this step is acting on. Set by npCreate(); everything below
+    // writes onto PIPELINES[npCreatedId], which already exists and is saved.
+    let npCreatedId = null;
+
+    // Forms this prototype can pretend to ingest from. Colour + mark are just the
+    // recognisable badge — no real integration is wired up.
+    const NP_INTEGRATIONS = [
+      { id: 'cf7', name: 'Contact Form 7', mark: 'CF', color: '#1c7c54' },
+      { id: 'wpforms', name: 'WPForms', mark: 'W', color: '#e27730' },
+      { id: 'elementor', name: 'Elementor', mark: 'E', color: '#92003b' },
+      { id: 'jetpack', name: 'Jetpack Contact Form', mark: 'J', color: '#0f9d58' },
+      { id: 'hubspot', name: 'HubSpot Form', mark: 'H', color: '#ff7a59' },
+    ];
+
+    // The record noun for this pipeline type, so the copy reads "add candidates"
+    // on a hiring board and "add opportunities" on a sales one.
+    function npShowDone(name, entity, plural) {
+      const one = (entity || 'Record').toLowerCase();
+      const many = (plural || 'records').toLowerCase();
+      document.getElementById('np-done-header').textContent = name + ' created';
+      document.getElementById('np-done-title').textContent = '“' + name + '” is ready';
+      document.getElementById('np-done-sub').textContent =
+        'It has no ' + many + ' yet. Choose how they should come in — you can skip this and add them by hand.';
+      document.getElementById('np-source-label').textContent = 'How should ' + many + ' be added?';
+      document.getElementById('np-source-form-desc').textContent =
+        'A hosted form you can share — every submission becomes ' + npArticle(one) + ' ' + one + ' here.';
+      document.getElementById('np-source-email-desc').textContent =
+        'Describe what to look for and matching mail becomes ' + npArticle(one) + ' ' + one + '.';
+
+      const rule = document.getElementById('np-email-rule');
+      rule.placeholder = NP_RULE_PLACEHOLDER[npState.type] || NP_RULE_PLACEHOLDER.other;
+      rule.value = '';
+      document.getElementById('np-email-hint').textContent =
+        'Plain English is fine — for example “anything asking about pricing”. Titan matches on the subject and body.';
+
+      npRenderIntegrations();
+      npRenderFormSlot();
+      npCloseSourcePanels();
+      npShowStep(3);
+    }
+    function npArticle(word) { return /^[aeiou]/i.test(word || '') ? 'an' : 'a'; }
+
+    const NP_RULE_PLACEHOLDER = {
+      sales:      'e.g. anyone asking for a demo, pricing or a quote',
+      projects:   'e.g. a client describing a new brief or scope of work',
+      orders:     'e.g. a purchase order or an order confirmation request',
+      candidates: 'e.g. someone applying for a role, or sending a CV',
+      other:      'e.g. describe the emails that should become records',
+    };
+
+    function npRenderIntegrations() {
+      const grid = document.getElementById('np-int-grid');
+      if (!grid) return;
+      grid.innerHTML = NP_INTEGRATIONS.map(function (it) {
+        return '<button type="button" class="np-int" onclick="npPickIntegration(\'' + it.id + '\')">' +
+          '<span class="np-int-logo" style="background:' + it.color + ';">' + atEsc(it.mark) + '</span>' +
+          '<span>' + atEsc(it.name) + '</span>' +
+        '</button>';
+      }).join('');
+    }
+
+    // Only one panel open at a time — they're alternatives, not a checklist.
+    function npToggleSource(which) {
+      const openNow = document.getElementById('np-source-' + which + '-panel').classList.contains('open');
+      npCloseSourcePanels();
+      if (openNow) return;
+      document.getElementById('np-source-' + which + '-btn').classList.add('open');
+      document.getElementById('np-source-' + which + '-panel').classList.add('open');
+    }
+    function npCloseSourcePanels() {
+      ['int', 'email'].forEach(function (w) {
+        document.getElementById('np-source-' + w + '-btn').classList.remove('open');
+        document.getElementById('np-source-' + w + '-panel').classList.remove('open');
+      });
+    }
+
+    // Opens the same builder step 2 used to host, now saving straight onto the
+    // pipeline since it exists by this point.
+    function npSourceForm() {
+      const pl = PIPELINES[npCreatedId];
+      if (!pl) return;
+      npCloseSourcePanels();
+      window.titanFormBuilder.open({
+        pipeline: pl,
+        form: pl.intakeForm || null,
+        personaId: window.PERSONA_ID,
+        title: 'Form — ' + pl.name,
+        saveLabel: 'Done',
+        onSave: function (form, pipeline) {
+          pl.intakeForm = form;
+          if (pipeline && pipeline.customFieldDefs) pl.customFieldDefs = pipeline.customFieldDefs;
+          schedulePersist();
+          npRenderFormSlot();
+          npToast('Form saved for “' + pl.name + '”.', true);
+        },
+      });
+    }
+
+    function npPickIntegration(id) {
+      const it = NP_INTEGRATIONS.find(function (x) { return x.id === id; });
+      if (!it) return;
+      npToast('Prototype only: connecting ' + it.name + ' is not wired up yet.');
+    }
+
+    function npSaveEmailRule() {
+      const pl = PIPELINES[npCreatedId];
+      const rule = (document.getElementById('np-email-rule').value || '').trim();
+      if (!pl) return;
+      if (!rule) { npToast('Describe what to look for first.'); return; }
+      // Stored on the pipeline beside its form. Nothing reads it yet — no mail is
+      // actually scanned — so it is a saved intent, not a working rule.
+      pl.emailIntake = { enabled: true, rule: rule };
+      schedulePersist();
+      npCloseSourcePanels();
+      npToast('Rule saved — matching email will be added to “' + pl.name + '”.', true);
     }
 
     // Re-renders the rows from PIPELINES rather than hand-building a single row —
