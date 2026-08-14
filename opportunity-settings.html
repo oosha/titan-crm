@@ -115,12 +115,14 @@
           </div>
           <div class="os-new-field" id="os-new-field-form">
             <input type="text" id="os-new-field-name" placeholder="Field name">
-            <select id="os-new-field-type">
+            <select id="os-new-field-type" onchange="onNewFieldTypeChange()">
               <option value="text">Text</option>
               <option value="number">Number</option>
               <option value="date">Date</option>
               <option value="amount">Amount ($)</option>
+              <option value="select">Choice</option>
             </select>
+            <input type="text" id="os-new-field-options" placeholder="Choices, comma separated" style="display:none;">
             <span class="os-new-field-add" onclick="confirmNewField()">Add</span>
             <span class="os-new-field-close" onclick="closeNewFieldForm()" title="Close">
               <span data-ds-icon="close" data-size="12"></span>
@@ -300,18 +302,31 @@
     document.getElementById('os-new-field-form').classList.add('open');
     document.getElementById('os-add-field-btn').style.display = 'none';
     document.getElementById('os-new-field-name').value = '';
+    document.getElementById('os-new-field-options').value = '';
+    onNewFieldTypeChange();
     document.getElementById('os-new-field-name').focus();
   }
   function closeNewFieldForm() {
     document.getElementById('os-new-field-form').classList.remove('open');
     document.getElementById('os-add-field-btn').style.display = '';
   }
+  // A Choice field is only useful once it has choices, so the options box appears
+  // with the type rather than hiding in a second step.
+  function onNewFieldTypeChange() {
+    const isChoice = document.getElementById('os-new-field-type').value === 'select';
+    document.getElementById('os-new-field-options').style.display = isChoice ? '' : 'none';
+  }
   function confirmNewField() {
     const name = document.getElementById('os-new-field-name').value.trim();
     const type = document.getElementById('os-new-field-type').value;
     if (!name) { alert('Prototype only: field name is required.'); return; }
+    const options = document.getElementById('os-new-field-options').value
+      .split(',').map(function (o) { return o.trim(); }).filter(Boolean);
+    if (type === 'select' && !options.length) { alert('Add at least one choice, separated by commas.'); return; }
     customFieldSeq++;
-    customFieldDefs.push({ key: 'cf' + customFieldSeq, name: name, type: type });
+    const def = { key: 'cf' + customFieldSeq, name: name, type: type };
+    if (type === 'select') def.options = options;
+    customFieldDefs.push(def);
     renderCustomFields();
     closeNewFieldForm();
   }
