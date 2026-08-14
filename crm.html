@@ -2190,50 +2190,53 @@
     #np-step-3 .np-header, #np-step-3 .np-footer { border: none; }
     /* No top padding: .np-body already supplies the gap under the header, and a
        second one pushed the headline too far down the panel. */
-    .np-done-head { text-align: center; padding: 0 0 22px; }
+    /* No top padding: .np-body already supplies the gap under the header, and a
+       second one pushed the headline too far down the panel. */
+    .np-done-head { text-align: center; padding: 0 0 var(--space-300); }
     .np-done-check {
-      width: 46px; height: 46px; border-radius: 50%; margin: 0 auto 14px;
+      width: 46px; height: 46px; border-radius: var(--radius-full); margin: 0 auto var(--space-150);
       display: flex; align-items: center; justify-content: center;
-      background: #e6f4ea; color: #1e8e3e;
+      background: var(--status-success-subtle); color: var(--status-success);
     }
-    .np-done-title { font-size: 19px; font-weight: 700; color: #1a1a1a; }
-    .np-done-sub { font-size: 13.5px; color: #8a8f98; margin-top: 6px; }
-    /* One flat row style for every source — the 3 top-level options (Form, From
-       incoming email, Integrations) and, one screen deeper, each integration
-       tool. Same "clean: no boxes, lines, or arrows" language as .np-radio
-       above — a hairline border as light as the desc text below it, not a hard
-       dark box, plus a rounded gray hover fill. */
+    .np-done-title { font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--text-heading); }
+    .np-done-sub { font-size: var(--text-sm); color: var(--text-muted); margin-top: var(--space-075); }
+
+    /* One flat row style for every source — the 4 top-level options and, one screen
+       deeper, each integration tool. The box, border, radius and hover all come from
+       .ds-card--interactive; what's left here is only this screen's layout. */
     .np-src-row {
-      position: relative; display: flex; align-items: center; gap: 14px;
-      padding: 13px 8px; margin: 0 0 6px; border: 1px solid #eee; border-radius: 8px;
-      cursor: pointer; text-align: left; width: 100%; background: transparent; font: inherit;
+      position: relative; display: flex; align-items: center; gap: var(--space-150);
+      padding: var(--space-150); margin: 0 0 var(--space-075);
+      text-align: left; width: 100%; font: inherit;
     }
     .np-src-row:last-child { margin-bottom: 0; }
-    .np-src-row:hover { background: #fafafa; }
     .np-src-icon {
-      width: 34px; height: 34px; border-radius: 9px; display: inline-flex;
+      width: 34px; height: 34px; border-radius: var(--radius-lg); display: inline-flex;
       align-items: center; justify-content: center; flex-shrink: 0;
-      background: #f2f4f6; color: #6b7280;
+      background: var(--surface-sunken); color: var(--text-secondary);
     }
-    .np-src-row:hover .np-src-icon { background: #e8eaed; color: #444; }
-    .np-src-logo { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+    .np-src-row:hover .np-src-icon { background: var(--surface-hover); color: var(--text-primary); }
+    /* Integration tools carry their brand colour, so this one keeps a literal — it is
+       set inline per tool from NP_INTEGRATIONS, not themeable. */
+    .np-src-logo {
+      width: 34px; height: 34px; border-radius: var(--radius-lg); flex-shrink: 0; color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: var(--text-xs); font-weight: var(--weight-bold);
+    }
     .np-src-text { flex: 1; min-width: 0; }
-    .np-src-name { display: block; font-size: 14.5px; font-weight: 650; color: #222; }
-    .np-src-desc { display: block; font-size: 11.5px; color: #8b9096; line-height: 1.4; margin-top: 1px; }
+    .np-src-name { display: block; font-size: var(--text-md); font-weight: var(--weight-semi); color: var(--text-heading); }
+    .np-src-desc { display: block; font-size: var(--text-2xs); color: var(--text-muted); line-height: 1.4; margin-top: 1px; }
     .np-src-tick {
-      position: absolute; top: 50%; right: 14px; transform: translateY(-50%);
-      width: 18px; height: 18px; border-radius: 50%;
-      background: #1e8e3e; color: #fff; display: none; align-items: center; justify-content: center;
+      position: absolute; top: 50%; right: var(--space-150); transform: translateY(-50%);
+      width: 18px; height: 18px; border-radius: var(--radius-full);
+      background: var(--status-success); color: var(--text-on-accent);
+      display: none; align-items: center; justify-content: center;
     }
     .np-src-row.configured .np-src-tick { display: flex; }
 
-    .np-rule-label { font-size: 13px; font-weight: 600; color: #444; margin-bottom: 7px; }
-    .np-rule-input {
-      width: 100%; padding: 10px 12px; border: 1px solid #d9dce1; border-radius: 8px;
-      font-size: 13.5px; font-family: inherit; color: #222; outline: none; resize: vertical;
-      min-height: 68px;
-    }
-    .np-rule-input:focus { border-color: #2170f4; box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+    .np-rule-label { font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-secondary); margin-bottom: var(--space-075); }
+    /* Box, border and focus ring come from .ds-input; only this field's height is local. */
+    .np-rule-input { min-height: 68px; }
     .np-rule-hint { font-size: 12px; color: #9aa1a9; margin-top: 8px; }
 
     .np-footer {
@@ -2991,17 +2994,15 @@
         </div>
         <div class="np-body">
           <div class="np-done-head">
-            <div class="np-done-check" id="np-done-check">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
+            <div class="np-done-check" id="np-done-check"><span data-ds-icon="check" data-size="24"></span></div>
             <div class="np-done-title" id="np-done-title">Pipeline created</div>
             <div class="np-done-sub" id="np-done-sub"></div>
           </div>
 
           <!-- Exactly 4 options, each a plain row — its own name is the only label
                it needs, no section heading duplicating it. -->
-          <button type="button" class="np-src-row" id="np-src-form-card" onclick="npSourceForm()">
-            <span class="np-src-tick"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <button type="button" class="ds-card ds-card--interactive np-src-row" id="np-src-form-card" onclick="npSourceForm()">
+            <span class="np-src-tick"><span data-ds-icon="check" data-size="11"></span></span>
             <!-- Same icon the sidebar uses for Forms, from the design system. -->
             <span class="np-src-icon"><span data-ds-icon="forms" data-size="18"></span></span>
             <span class="np-src-text">
@@ -3010,11 +3011,9 @@
             </span>
           </button>
 
-          <button type="button" class="np-src-row" id="np-src-email-card" onclick="npShowStep(4)">
-            <span class="np-src-tick"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-            <span class="np-src-icon">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="4.5" width="15" height="11" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M3.2 5.8L10 10.5l6.8-4.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-            </span>
+          <button type="button" class="ds-card ds-card--interactive np-src-row" id="np-src-email-card" onclick="npShowStep(4)">
+            <span class="np-src-tick"><span data-ds-icon="check" data-size="11"></span></span>
+            <span class="np-src-icon"><span data-ds-icon="mail" data-size="18"></span></span>
             <span class="np-src-text">
               <span class="np-src-name">From incoming email</span>
               <span class="np-src-desc" id="np-source-email-desc">Describe what to look for and matching mail becomes a record.</span>
@@ -3023,8 +3022,8 @@
 
           <!-- 3. Forms that already exist elsewhere — one row like the other two;
                opening it goes one screen deeper to the individual tools. -->
-          <button type="button" class="np-src-row" id="np-src-integrations-card" onclick="npShowStep(5)">
-            <span class="np-src-tick"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <button type="button" class="ds-card ds-card--interactive np-src-row" id="np-src-integrations-card" onclick="npShowStep(5)">
+            <span class="np-src-tick"><span data-ds-icon="check" data-size="11"></span></span>
             <!-- Same icon the sidebar uses for Integrations, from the design system. -->
             <span class="np-src-icon"><span data-ds-icon="integrations" data-size="18"></span></span>
             <span class="np-src-text">
@@ -3035,11 +3034,9 @@
 
           <!-- 4. Bulk import. Placeholder for now: the option is here so the set of
                ways records get in is complete, but there is no importer behind it. -->
-          <button type="button" class="np-src-row" id="np-src-import-card" onclick="npSourceImport()">
-            <span class="np-src-tick"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-            <span class="np-src-icon">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2.8v8.4M6.8 8l3.2 3.2L13.2 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 12.8v2.4a1.4 1.4 0 001.4 1.4h10.2a1.4 1.4 0 001.4-1.4v-2.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-            </span>
+          <button type="button" class="ds-card ds-card--interactive np-src-row" id="np-src-import-card" onclick="npSourceImport()">
+            <span class="np-src-tick"><span data-ds-icon="check" data-size="11"></span></span>
+            <span class="np-src-icon"><span data-ds-icon="upload" data-size="18"></span></span>
             <span class="np-src-text">
               <span class="np-src-name" id="np-source-import-name">Import records</span>
               <span class="np-src-desc" id="np-source-import-desc">Bring in records you already have from a spreadsheet or another CRM.</span>
@@ -3062,7 +3059,7 @@
         </div>
         <div class="np-body">
           <div class="np-rule-label">What should Titan look for?</div>
-          <textarea class="np-rule-input" id="np-email-rule" spellcheck="false"></textarea>
+          <textarea class="ds-input np-rule-input" id="np-email-rule" spellcheck="false"></textarea>
           <div class="np-rule-hint" id="np-email-hint"></div>
         </div>
         <div class="np-footer">
@@ -5064,8 +5061,8 @@
       const connected = pl.connectedIntegrations || [];
       grid.innerHTML = NP_INTEGRATIONS.map(function (it) {
         const on = connected.indexOf(it.id) !== -1;
-        return '<button type="button" class="np-src-row' + (on ? ' configured' : '') + '" onclick="npPickIntegration(\'' + it.id + '\')">' +
-          '<span class="np-src-tick"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
+        return '<button type="button" class="ds-card ds-card--interactive np-src-row' + (on ? ' configured' : '') + '" onclick="npPickIntegration(\'' + it.id + '\')">' +
+          '<span class="np-src-tick"><span data-ds-icon="check" data-size="11"></span></span>' +
           '<span class="np-src-logo" style="background:' + it.color + ';"><svg width="16" height="16" viewBox="0 0 16 16">' + it.svg + '</svg></span>' +
           '<span class="np-src-text"><span class="np-src-name">' + atEsc(it.name) + '</span>' +
           '<span class="np-src-desc">' + (on ? 'Connected' : 'Not connected') + '</span></span>' +
