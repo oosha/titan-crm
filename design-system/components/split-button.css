@@ -1,0 +1,47 @@
+/* Split button — a primary action with a caret beside it opening related, rarer ones.
+
+   Use it when the second action belongs to the first: "Add opportunity" and "import a
+   batch of them" are the same intent at different scale, so they share one control and
+   the board header keeps one visual weight. Two separate buttons would say they are two
+   separate features. If the actions are unrelated, they are unrelated buttons.
+
+   It is not a new button. Both halves are real `.ds-btn`s and take any variant —
+   `--primary`, `--secondary`, `--soft` — so the split inherits height, weight, radius and
+   press behaviour automatically, and a direction that changes --btn-height moves it too.
+   This file only owns the seam. */
+.ds-split {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  transition: var(--motion-press);
+}
+
+/* The seam. Squaring the inner corners is what makes two buttons read as one control;
+   the divider is mixed from the button's own ink, so a filled primary gets a translucent
+   white line and an outlined secondary gets a grey one with no variant needed. */
+.ds-split > .ds-btn:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.ds-split > .ds-btn:first-child + .ds-btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-left: var(--split-toggle-pad-x);
+  padding-right: var(--split-toggle-pad-x);
+  box-shadow: inset 1px 0 0 0 var(--split-divider);
+}
+/* An outlined variant draws its own border on both halves, so the shared edge lands twice
+   and reads 2px. Pull the caret over by one. */
+.ds-split > .ds-btn:first-child + .ds-btn { margin-left: calc(var(--btn-border-width) * -1); }
+
+/* The two halves press independently, but scaling one and not the other tears the seam
+   open. Scale the pair from the side that stays put. */
+.ds-split > .ds-btn:active:not(:disabled) { transform: none; }
+.ds-split:has(> .ds-btn:active:not(:disabled)) { transform: scale(var(--press-scale)); }
+
+/* Focus has to sit above the neighbour or the ring is clipped by the seam. */
+.ds-split > .ds-btn:focus-visible { z-index: 1; }
+
+/* The caret itself is `.ds-menu-caret`, in menu.css — the state it shows belongs to the
+   menu, and a plain button that opens one needs the same chevron. */

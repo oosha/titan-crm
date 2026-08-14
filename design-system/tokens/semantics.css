@@ -180,6 +180,30 @@
   --badge-pad-x:  var(--space-075);
   --badge-font:   var(--text-2xs);
 
+  /* Menu — the anchored panel behind a three-dot, an account switcher, a split button's
+     caret. Three hand-rolled copies exist today (pipeline-nav-menu, card-action-menu,
+     account-menu) and they disagree on radius, shadow and padding; these are the values
+     they were all approximating. */
+  --menu-bg:          var(--surface-primary);
+  --menu-radius:      var(--radius-container);
+  --menu-shadow:      var(--elevation-menu);
+  --menu-pad:         var(--space-075);
+  --menu-min-width:   200px;
+  --menu-item-height: 32px;
+  --menu-item-pad-x:  var(--space-125);
+  --menu-item-radius: var(--radius-inner);
+  --menu-item-font:   var(--text-sm);
+  --menu-item-gap:    var(--space-100);
+  --menu-sep-color:   var(--border-hairline);
+  --menu-gap:         var(--space-050);   /* panel's offset from its trigger */
+
+  /* Split button — one control, two targets. It inherits every --btn-* value, so it is
+     the same height and weight as the button beside it; only the seam is its own.
+     The divider is mixed from the button's own ink so it works on a filled primary and
+     an outlined secondary alike, without a variant per case. */
+  --split-divider:       color-mix(in srgb, currentColor 26%, transparent);
+  --split-toggle-pad-x:  var(--space-100);
+
   /* ═══ Bridge to the shipped app ══════════════════════════════════════════
      crm-directory.css defines these itself today. A page adopts the system by
      dropping its own definitions and inheriting these — nothing else changes,

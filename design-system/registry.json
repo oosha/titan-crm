@@ -203,6 +203,85 @@
       "shapeTokens": "--seg-radius, --seg-item-radius, --seg-track-bg, --seg-item-bg-on",
       "usage": "Picking a mode: the board's kanban/list toggle.",
       "avoid": "Not Tabs. Tabs switch a page's content region and sit on a baseline; a segmented control picks a mode and sits in a track. Use aria-pressed so the state is announced."
+    },
+    {
+      "name": "Menu",
+      "category": "composites",
+      "css": "components/menu.css",
+      "module": "components/menu.js",
+      "render": "declarative — data-ds-menu=\"<panel id>\" on the trigger; dsMenu.open/close/toggle(id) for programmatic control",
+      "class": "ds-menu",
+      "props": {
+        "placement": "'below' | 'below-end' | 'fixed' — ds-menu--below aligns to the trigger's left edge, --below-end to its right, --fixed takes viewport coordinates set by the caller",
+        "item": ".ds-menu__item — a <button> or <a>; add an icon element and it lands in the aligned icon column",
+        "meta": ".ds-menu__meta — right-aligned secondary text on an item: a count, a shortcut, a state",
+        "separator": ".ds-menu__sep",
+        "label": ".ds-menu__label — an uppercase heading above a group",
+        "danger": ".ds-menu__item--danger",
+        "caret": ".ds-menu-caret — the chevron on whatever opens the menu; rotates 180° while it is open. Also used by Split button.",
+        "anchor": ".ds-menu-anchor — a bare positioning context for a --below menu. Use .ds-split only when there really are two buttons."
+      },
+      "shapeTokens": [
+        "--menu-bg",
+        "--menu-radius",
+        "--menu-shadow",
+        "--menu-pad",
+        "--menu-min-width",
+        "--menu-item-height",
+        "--menu-item-pad-x",
+        "--menu-item-radius",
+        "--menu-item-font",
+        "--menu-item-gap",
+        "--menu-sep-color",
+        "--menu-gap"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus-visible",
+        "disabled",
+        "open"
+      ],
+      "usage": "An anchored panel of actions: a three-dot menu, an account switcher, the panel behind a Split button's caret.",
+      "avoid": "Positioning is not this component's job — anchor it with a relatively-positioned wrapper (--below/--below-end) or with coordinates (--fixed). Baking position in is what made all three existing copies re-declare everything. Do not use it for navigation between pages; that is the sidebar.",
+      "variantNotes": {
+        "fixed": "An absolutely-positioned panel is clipped by any overflow ancestor, which is why a three-dot inside a scrolling list needs viewport coordinates instead.",
+        "behaviour": "dsMenu binds by delegation on document, so markup rendered after load works with no re-binding, and it enforces one open menu at a time, outside-click and Escape close, and arrow-key movement. The three hand-rolled copies each implemented a different subset."
+      }
+    },
+    {
+      "name": "Split button",
+      "category": "composites",
+      "css": "components/split-button.css",
+      "module": "components/menu.js — the caret's panel is a Menu",
+      "render": "markup — .ds-split wrapping two .ds-btn and one .ds-menu",
+      "class": "ds-split",
+      "props": {
+        "variant": "inherited — put the same .ds-btn--* on both halves; primary, secondary and soft all work",
+        "main": ".ds-split > .ds-btn:first-child — the default action, unchanged from a plain button",
+        "toggle": "the second .ds-btn — carries data-ds-menu, aria-haspopup=\"menu\" and aria-expanded",
+        "caret": ".ds-menu-caret on the icon — defined by Menu, since the state it shows is the menu's"
+      },
+      "shapeTokens": [
+        "--split-divider",
+        "--split-toggle-pad-x",
+        "inherits every --btn-* token"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "active",
+        "focus-visible",
+        "disabled",
+        "open"
+      ],
+      "usage": "A primary action with rarer, related actions behind a caret — \"Add opportunity\" plus \"Import records from sources\". One control, one visual weight in the toolbar.",
+      "avoid": "Only when the second action belongs to the first. Unrelated actions are unrelated buttons; a caret is not a place to park a toolbar. Both halves must carry the same variant, or the seam shows.",
+      "variantNotes": {
+        "not a new button": "Both halves are real .ds-btn, so height, weight, radius and press behaviour come from --btn-*. This file owns only the seam — squared inner corners, the divider, and pressing as one control.",
+        "divider": "Mixed from currentColor rather than declared per variant, so a filled primary gets a translucent white line and an outlined secondary a grey one, with no variant per case.",
+        "brand colour": "A pipeline's own colour reaches the split by setting --accent-primary on the wrapper, not a background on one half — fill, border and hover all follow from the one property. See crm.html's board header."
+      }
     }
   ],
   "inventory": {
@@ -310,13 +389,14 @@
       {
         "name": "Menu / dropdown",
         "category": "composites",
-        "status": "planned",
-        "component": "—",
+        "status": "built",
+        "component": "ds-menu",
         "evidence": "24 CRM rules across 3 prefixes",
         "whereToday": "pipeline-nav-menu, card-action-menu, account-menu",
         "note": "Anchored panel, item, separator, danger item, outside-click close.",
         "variants": 24,
-        "prefixes": 3
+        "prefixes": 3,
+        "css": "components/menu.css"
       },
       {
         "name": "Avatar",
@@ -497,13 +577,14 @@
       {
         "name": "Split button",
         "category": "composites",
-        "status": "planned",
-        "component": "—",
+        "status": "built",
+        "component": "ds-split",
         "evidence": "no class prefixes recorded by the survey; scale unmeasured",
         "whereToday": "crm.html",
         "note": "Primary action plus a chevron opening a menu.",
         "variants": null,
-        "prefixes": null
+        "prefixes": null,
+        "css": "components/split-button.css"
       },
       {
         "name": "Chart marks",

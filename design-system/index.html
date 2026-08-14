@@ -489,6 +489,7 @@
 
 <script src="./components/icon.js"></script>
 <script src="./components/button.js"></script>
+<script src="./components/menu.js"></script>
 <script>
   const css = getComputedStyle(document.documentElement);
   const val = (t) => css.getPropertyValue(t).trim();
@@ -1002,9 +1003,56 @@
           '<button type="button" aria-pressed="false">Hiring</button>' +
         '</div></div>');
 
+    // Menu and Split button are one demo each but two components: the split's caret opens
+    // a real .ds-menu, so showing them apart would hide the only thing worth checking —
+    // that the seam, the caret rotation and the panel line up.
+    const menuItem = function (icon, label, meta, cls) {
+      return '<button type="button" class="ds-menu__item' + (cls ? ' ' + cls : '') + '" role="menuitem">' +
+        dsIcon(icon, { size: 15 }) + '<span>' + label + '</span>' +
+        (meta ? '<span class="ds-menu__meta">' + meta + '</span>' : '') + '</button>';
+    };
+    out += spec('Menu', 'ds-menu', 'item &middot; meta &middot; separator &middot; label &middot; danger',
+      '<div class="wb-row" style="align-items:flex-start">' +
+        '<span class="wb-key">panel</span>' +
+        // Shown open and in place rather than behind a trigger — a menu you have to click
+        // to inspect is a menu whose states nobody checks.
+        '<div class="ds-menu is-open" style="position:relative; top:0; left:0">' +
+          '<div class="ds-menu__label">Record</div>' +
+          menuItem('edit', 'Rename') +
+          menuItem('upload', 'Import from sources', '3') +
+          '<div class="ds-menu__sep"></div>' +
+          menuItem('trash', 'Delete pipeline', '', 'ds-menu__item--danger') +
+        '</div>' +
+        '<p class="wb-note" style="flex:1; margin:0">Anchoring is the caller&rsquo;s: ' +
+          '<code>--below</code> / <code>--below-end</code> against a relatively-positioned ' +
+          'wrapper, or <code>--fixed</code> with viewport coordinates when an overflow ' +
+          'ancestor would clip it. <code>dsMenu</code> handles one-open-at-a-time, ' +
+          'outside-click, Escape and arrow keys.</p></div>');
+
+    out += spec('Split button', 'ds-split', 'any button variant &middot; caret opens a Menu',
+      ['primary', 'secondary', 'soft'].map(function (v, i) {
+        return '<div class="wb-row"><span class="wb-key">' + v + '</span>' +
+          '<div class="ds-split">' +
+            '<button type="button" class="ds-btn ds-btn--' + v + '">' +
+              dsIcon('plus', { size: 14 }) + 'Add opportunity</button>' +
+            '<button type="button" class="ds-btn ds-btn--' + v + '" data-ds-menu="wb-split-' + i + '"' +
+              ' aria-haspopup="menu" aria-expanded="false" title="More ways to add">' +
+              '<span class="ds-menu-caret">' + dsIcon('caret-down', { size: 12 }) + '</span></button>' +
+            '<div class="ds-menu ds-menu--below-end" id="wb-split-' + i + '" role="menu">' +
+              menuItem('upload', 'Import records from a source') +
+            '</div>' +
+          '</div>' +
+          '<span class="wb-note" style="margin:0">click the caret &mdash; the seam and the ' +
+            'panel both adapt to the variant</span></div>';
+      }).join('') +
+      '<p class="wb-note" style="margin:var(--space-150) 0 0">Both halves are real ' +
+        '<code>.ds-btn</code>. Only the seam is this component&rsquo;s &mdash; squared inner ' +
+        'corners, a divider mixed from the button&rsquo;s own ink, and pressing as one control.</p>');
+
     // A registered component with no demo here is a hole in the instrument, so say so
     // rather than quietly rendering four of five.
-    const shown = ['Button', 'Input', 'Badge', 'Card', 'Icon', 'Stage chevron', 'Segmented control'];
+    const shown = ['Button', 'Input', 'Badge', 'Card', 'Icon', 'Stage chevron', 'Segmented control',
+                   'Menu', 'Split button'];
     const missing = (SPECS || []).map(function (c) { return c.name; })
       .filter(function (n) { return shown.indexOf(n) === -1; });
     if (missing.length) {

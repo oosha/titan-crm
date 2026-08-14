@@ -1,0 +1,101 @@
+/* Menu — an anchored panel of actions. Reads only semantic tokens; its shape comes from
+   the --menu-* component tokens, so a direction restyles every menu in the product.
+
+   It replaces three hand-rolled copies that had each picked their own values:
+
+     .pipeline-nav-menu   8px radius, 0 8px 24px/0.20 shadow, 6px pad, 190px
+     .card-action-menu    8px radius, 0 6px 24px/0.14 shadow, 0 pad,  210px
+     .account-menu        its own again
+
+   Positioning is deliberately NOT this file's job. A menu is anchored by whatever opens
+   it — a trigger inside a relatively-positioned wrapper, or fixed coordinates from a
+   getBoundingClientRect(). Baking `position: fixed` in here is what forced two of the
+   three copies above to re-declare everything anyway. */
+.ds-menu {
+  position: absolute;
+  z-index: 600;
+  min-width: var(--menu-min-width);
+  padding: var(--menu-pad);
+  background: var(--menu-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--menu-radius);
+  box-shadow: var(--menu-shadow);
+  display: none;
+}
+.ds-menu.is-open { display: block; }
+
+/* Opened by a trigger it sits under. The wrapper supplies `position: relative`. */
+.ds-menu--below { top: calc(100% + var(--menu-gap)); left: 0; }
+.ds-menu--below-end { top: calc(100% + var(--menu-gap)); right: 0; left: auto; }
+
+/* The wrapper a --below menu measures itself against. It is deliberately nothing but a
+   positioning context: reach for .ds-split only when there really are two buttons, or its
+   seam rules square the corners of the lone one. */
+.ds-menu-anchor { position: relative; display: inline-flex; flex-shrink: 0; }
+
+/* The chevron on whatever opens the menu — a split button's caret half, or a plain button
+   that carries its label and a caret together. It belongs here rather than to Split button
+   because the state it reflects is the menu's.
+
+   inline-flex, not inline: `transform` does not apply to a non-replaced inline box, so a
+   bare <span> silently drops the rotation and paints a half-clipped chevron instead —
+   which reads as an icon bug rather than a missing rule. */
+.ds-menu-caret {
+  display: inline-flex;
+  transition: transform var(--dur-base) var(--ease-standard);
+}
+[aria-expanded="true"] > .ds-menu-caret,
+[aria-expanded="true"] .ds-menu-caret { transform: rotate(180deg); }
+
+/* Anchored to viewport coordinates instead — the shape a three-dot inside a scrolling
+   list needs, because an absolutely-positioned panel gets clipped by an overflow parent. */
+.ds-menu--fixed { position: fixed; top: auto; left: auto; }
+
+.ds-menu__item {
+  appearance: none; margin: 0; border: 0; background: transparent;
+  font: inherit; text-align: left; text-decoration: none; cursor: pointer;
+
+  display: flex; align-items: center; gap: var(--menu-item-gap);
+  width: 100%; min-height: var(--menu-item-height);
+  padding: 0 var(--menu-item-pad-x);
+  border-radius: var(--menu-item-radius);
+  font-size: var(--menu-item-font); color: var(--text-primary);
+  /* A menu sizes to its longest item; --menu-min-width is a floor, not a width. Letting
+     labels wrap turns a one-line action into a paragraph and makes the panel look like a
+     dialog. */
+  white-space: nowrap;
+  transition: var(--motion-hover);
+}
+.ds-menu__item:hover:not(:disabled) { background: var(--surface-hover); }
+.ds-menu__item:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ds-menu__item:disabled, .ds-menu__item[aria-disabled="true"] {
+  color: var(--text-disabled); cursor: default; background: transparent;
+}
+
+/* The icon column. Fixed width so labels line up whether or not every item has one —
+   a ragged left edge is the tell of a menu assembled item by item. */
+.ds-menu__item > [data-ds-icon], .ds-menu__item > svg {
+  flex-shrink: 0; color: var(--text-secondary);
+}
+
+/* Secondary text on the right of an item: a count, a shortcut, a state. */
+.ds-menu__meta {
+  margin-left: auto; padding-left: var(--space-200);
+  color: var(--text-muted); font-size: var(--text-2xs); white-space: nowrap;
+}
+
+.ds-menu__item--danger { color: var(--status-danger); }
+.ds-menu__item--danger:hover:not(:disabled) { background: var(--status-danger-subtle); }
+.ds-menu__item--danger > [data-ds-icon] { color: var(--status-danger); }
+
+.ds-menu__sep {
+  height: 1px; margin: var(--space-050) var(--space-025);
+  background: var(--menu-sep-color); border: 0;
+}
+
+/* A heading above a group of items. */
+.ds-menu__label {
+  padding: var(--space-075) var(--menu-item-pad-x) var(--space-050);
+  font-size: var(--text-2xs); font-weight: var(--weight-semi);
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;
+}

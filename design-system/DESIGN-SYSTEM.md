@@ -145,6 +145,11 @@ Every page needs exactly **two** links, in this order:
 `components.css` imports every component stylesheet. Add a new component file to it in the
 same change that creates it.
 
+Two components also ship behaviour, and a script is not something a stylesheet can `@import`,
+so those pages add a `<script>` as well — `icon.js` if the page uses `data-ds-icon`
+placeholders, `menu.js` if it uses `.ds-menu` or `.ds-split`. Both bind by delegation on
+`document` and are safe to include on a page that has none yet.
+
 This replaced per-page link lists, which had already drifted badly: `crm.html` linked
 `button.css`, **nothing linked `primitives.css` at all**, and the record screen was migrated
 to `.ds-input` / `.ds-card` / `.ds-badge` while none of those rules could reach it. Thirty-four
@@ -165,6 +170,14 @@ under `variantNotes`:
 | `ds-badge--pill` | The default badge is a soft rectangle; three surfaces had independently typed `999px`. |
 | `ds-card--section` | A page content panel, not a tile — `--card-section-radius` / `--card-section-pad`. Seven per screen. Forking a second card class for this is what produced `.ov-card`. |
 | **Tooltip** (block, planned) | Missed by the original 27-block survey because it has **no class of its own** — it's an `::after` on a `[data-tip]` attribute, so a class-rule census could not see it. |
+
+The board header's split button added two more, and the second was only visible once the
+first existed:
+
+| Added | Because |
+|---|---|
+| `ds-menu` + `dsMenu` | A split button is a button and a menu. Building the caret with a private panel would have made the fourth hand-rolled menu in `crm.html` — the three existing ones each close on a different subset of outside-click / Escape / selection. |
+| `ds-split` | Both halves are real `.ds-btn`, so the component owns only the seam. What it could *not* inherit was the pipeline's brand colour: `crm.html` painted `background` onto the one button directly, which left the new caret in stock blue beside a purple button. Setting `--accent-primary` on the wrapper instead carries fill, border, hover and the status dot's ring at once — a scoped token override, which is what the tier is for. |
 
 The rule this suggests: when a surface resists a component, ask whether the component is
 missing a variant before writing a local rule. Four of the five above already existed in the
@@ -197,12 +210,13 @@ absorb, which is also its priority:
 | block | status | duplication it absorbs |
 |---|---|---|
 | Button, Icon, Input, Badge, Card | **built** | 46 / 196 / 46 / 25 / 40 variants |
+| **Menu**, **Split button** | **built** | 24 rules across 3 prefixes / page-specific today |
 | **List row** | planned | 88 variants across 30 prefixes — the largest in the codebase |
 | **Modal / dialog** | planned | 58 across 14 |
 | **Section header / toolbar** | planned | 35 across 17 |
-| Menu, Avatar, Divider, Checkbox, Empty state, Toast, Meter, Link, Tabs, Table | planned | 11–20 each |
+| Avatar, Divider, Checkbox, Empty state, Toast, Meter, Link, Tabs, Table | planned | 11–20 each |
 | **Kanban card / column** | planned, **tokenised** | 26 rules, 0 hex, 23 tokens. `--kanban-card-*` / `--kanban-lane-*` mean a direction restyles the board; a component still needs `dsKanbanCard()`, because `renderCard()` builds each card as an innerHTML string |
-| Nav item, Side panel, Stat tile, Search bar, Split button | planned | page-specific today |
+| Nav item, Side panel, Stat tile, Search bar | planned | page-specific today |
 | Chart marks, Brand marks | **excluded** | not components — data geometry and brand art |
 
 Read that inventory before adding anything. Two rules follow from it:
@@ -259,9 +273,12 @@ Two rules this measurement enforces:
 
 ## Known gaps
 
-- **20 of the 27 blocks are still `planned`** — see the inventory above. The system
-  currently governs tokens everywhere they are linked, icons in the sidebar, and five
-  primitives; everything else is per-page.
+- **21 of the 28 blocks are still `planned`** — see the inventory above. The system
+  currently governs tokens everywhere they are linked, icons in the sidebar, five
+  primitives and two composites; everything else is per-page.
+- **Menu is built but not yet adopted.** `pipeline-nav-menu`, `card-action-menu` and
+  `account-menu` are still hand-rolled; only the board's split button goes through
+  `ds-menu`. Built is not adopted — that is the whole point of the two scripts.
 - **No dark mode.** The reference has none. When it arrives it is a theme file, and
   primitives will need dark steps rather than an inverted filter.
 - **Contrast is unverified** for the label palette pairs. Anything that becomes text
