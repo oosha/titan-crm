@@ -1,6 +1,6 @@
 {
-  "currentPipelineId": "p1",
-  "pipelineSeq": 1,
+  "currentPipelineId": "p2",
+  "pipelineSeq": 2,
   "pipelines": {
     "inquiries": {
       "id": "inquiries",
@@ -602,6 +602,42 @@
         }
       ],
       "contactsEnabled": true
+    },
+    "p2": {
+      "id": "p2",
+      "name": "Hiring Pipeline",
+      "entity": "Candidate",
+      "plural": "candidates",
+      "color": "#b5813f",
+      "type": "hiring",
+      "subject": "person",
+      "stages": [
+        {
+          "key": "applied-0",
+          "label": "Applied"
+        },
+        {
+          "key": "screen-1",
+          "label": "Screen"
+        },
+        {
+          "key": "interview-2",
+          "label": "Interview"
+        },
+        {
+          "key": "final-round-3",
+          "label": "Final Round"
+        },
+        {
+          "key": "offer-4",
+          "label": "Offer"
+        },
+        {
+          "key": "hired-5",
+          "label": "Hired"
+        }
+      ],
+      "cards": []
     }
   }
 }
