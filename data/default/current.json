@@ -485,7 +485,11 @@
             }
           ],
           "status": "In progress",
-          "autoLinkActivity": true
+          "autoLinkActivity": true,
+          "owner": {
+            "name": "Ella Henderson",
+            "email": "ella.henderson@avontechlabs.com"
+          }
         },
         {
           "id": 7,
