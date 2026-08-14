@@ -402,9 +402,9 @@
           <div class="ov-meta-row">
             <span id="ov-company-logo"></span>
             <input class="ds-input ds-input--inline ov-company-input" id="ov-company" data-field="company" placeholder="Company" oninput="onFieldChange()">
-            <span class="ov-dot">&middot;</span>
-            <span class="ov-value-label">Total value:</span>
-            <div class="ov-value-row">
+            <span class="ov-dot" data-field="value">&middot;</span>
+            <span class="ov-value-label" data-field="value"><span class="ov-field-label-text">Total value</span>:</span>
+            <div class="ov-value-row" data-field="value">
               <select class="ds-input ds-input--inline ov-currency-select" id="ov-currency" onchange="onFieldChange()">
                 <option value="$">$</option><option value="€">€</option><option value="£">£</option><option value="AU$">AU$</option>
               </select>
@@ -1045,7 +1045,7 @@
         '<div class="ov-contact-top">' +
           '<div class="crm-contact-avatar ov-contact-avatar" style="width:28px;height:28px;border-radius:50%;background:#8a9099;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;">' + ((c.name || '?').charAt(0).toUpperCase()) + '</div>' +
           (nameHidden ? '' : '<input class="ds-input" placeholder="Name" value="' + esc(c.name) + '" style="width:calc(50% - 43px); box-sizing:border-box; flex:0 0 auto; min-width:90px; border:1px solid #d9dce1; border-radius:7px; padding:7px 9px; font-size:13px; font-weight:600;" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);">') +
-          (i === 0 ? '<span class="ds-badge ds-badge--accent ds-badge--pill">Contact person</span>' : '') +
+          (i === 0 && schema && !schema.isPerson ? '<span class="ds-badge ds-badge--accent ds-badge--pill">Contact person</span>' : '') +
           (contactsEnabled && contacts.length > 1 ? '<span class="ov-contact-x" onclick="removeContact(' + i + ')" title="Remove">&times;</span>' : '') +
         '</div>' +
         '<div class="ov-contact-grid">' +
@@ -1060,7 +1060,9 @@
       wrap.appendChild(row);
     });
     const addLink = document.getElementById('ov-add-contact-link');
-    if (addLink) addLink.style.display = contactsEnabled ? '' : 'none';
+    // A person-subject record has exactly one person — itself — so there's
+    // no "additional contact" to add. Company-subject only, like contact-name.
+    if (addLink) addLink.style.display = (contactsEnabled && schema && !schema.isPerson) ? '' : 'none';
   }
   function addContact() {
     contacts.push({ name: '', email: '', designation: '', phone: '', department: '', location: '', linkedin: '' });

@@ -256,7 +256,17 @@
       const parent = el.parentElement;
       const hideTarget = (parent && parent.children.length === 2 && parent.querySelector('.np-label')) ? parent : null;
       if (hideTarget) { hideTarget.style.display = on ? '' : 'none'; }
-      else { if (label) label.style.display = on ? '' : 'none'; el.style.display = on ? '' : 'none'; }
+      else {
+        if (label) label.style.display = on ? '' : 'none';
+        el.style.display = on ? '' : 'none';
+        // The value field shares its row with the currency select, which has no
+        // schema key of its own — without this a Candidate form (value: none) was
+        // left with a bare "$" dropdown floating where Total value used to be.
+        if (key === 'value') {
+          const currency = document.getElementById('ao-currency');
+          if (currency) currency.style.display = on ? '' : 'none';
+        }
+      }
       if (on && schema.byKey[key] && schema.byKey[key].group === 'company') companyShown++;
     });
     // Nothing left to ask about the company — drop the card rather than show a

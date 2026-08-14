@@ -126,10 +126,21 @@
   var PERSON_STATES = {
     'website': 'none', 'company-linkedin': 'none', 'instagram': 'none',
     'company': 'off',
+    // "Contact name" exists only to name *additional* contacts. A person-subject
+    // record has exactly one person — itself — so there are none to name.
+    'contact-name': 'none',
   };
+
+  // `contact` stays required for a person-subject record, because that IS the
+  // record's person and their name has to live somewhere. What changes is that it
+  // stops being a *contact* — hence the relabel here, and why the settings page
+  // stops offering it as something to configure (see contactIsSubject).
   var PERSON_LABELS = {
-    Order: { 'company': 'Ordering on behalf of' },
-    Candidate: { 'company': 'Current employer' },
+    Opportunity: { 'contact': 'Customer' },
+    Project:     { 'contact': 'Client' },
+    Order:       { 'company': 'Ordering on behalf of', 'contact': 'Customer' },
+    Candidate:   { 'company': 'Current employer', 'contact': 'Candidate' },
+    Record:      { 'contact': 'Person' },
   };
 
   function entityOf(pipeline) {
