@@ -210,8 +210,12 @@
   .ps-stage-row .ds-input { width: auto; min-width: 200px; }
   .ps-stage-row .ps-entry-value { min-width: 280px; }
   .ps-add-action { width: 170px; min-width: 170px; margin-top: var(--space-200); }
+  .ps-add-condition { margin-top: var(--space-200); }
   .ps-stage-row .ps-action-text { flex: 1; min-width: 220px; max-width: 340px; }
   .ps-stage-row .ps-number { width: 64px; min-width: 64px; }
+  .ps-stage-row:has(.ps-condition-join) { display: grid; grid-template-columns: 96px 200px 200px; gap: var(--space-100); }
+  .ps-stage-row:has(.ps-condition-join) .ps-condition-join { width: 96px; min-width: 96px; margin: 0; }
+  .ps-stage-row:has(.ps-condition-join) select:nth-of-type(3) { margin-left: var(--space-100); }
   .ps-stage-row-remove { position: absolute; right: 0; opacity: 0; transition: var(--motion-hover); }
   .ps-stage-row:hover .ps-stage-row-remove, .ps-stage-row:focus-within .ps-stage-row-remove { opacity: 1; }
   .ps-stage-textarea { min-height: 96px; }
@@ -421,7 +425,7 @@
   function stageDefaults() {
     return {
       description: '', entry: [],
-      idle: { on: false, days: 3, action: 'remind', template: '', taskName: '' },
+      idle: { on: false, days: 3, action: '', template: '', taskName: '' },
       exit: { mode: 'manual', rules: [] },
     };
   }
@@ -488,7 +492,10 @@
   function renderColors() {
     const wrap = document.getElementById('ps-colors');
     wrap.innerHTML = '';
-    PIPELINE_COLORS.forEach(function (c) {
+    // Older or imported pipelines can carry a colour outside the starter palette.
+    // Show it first so the picker always reflects the pipeline actually being edited.
+    const colors = PIPELINE_COLORS.indexOf(color) === -1 ? [color].concat(PIPELINE_COLORS) : PIPELINE_COLORS;
+    colors.forEach(function (c) {
       const sw = document.createElement('div');
       sw.className = 'ps-swatch' + (c === color ? ' selected' : '');
       sw.style.background = c; sw.style.color = c;
@@ -758,28 +765,23 @@
     descriptionInput.addEventListener('input', function () { stage.description = descriptionInput.value; });
     editor.appendChild(description);
 
-    const entrySection = addSection('When a record arrives', 'runs once, on entry');
+    const entryType = ((pipeline && pipeline.entity) || 'record').toLowerCase();
+    const entryArticle = /^[aeiou]/.test(entryType) ? 'an' : 'a';
+    const entrySection = addSection('When ' + entryArticle + ' ' + entryType + ' is added to ' + (stage.label || 'this stage'), 'runs once, on entry');
     function actionRow(action, ai) {
       const row = document.createElement('div'); row.className = 'ps-stage-row';
       const remove = function () { stage.entry.splice(ai, 1); renderStageDetails(); };
-      if (action.type === 'task' && action.name) {
-        row.classList.add('ps-stage-row--compact');
-        row.innerHTML = '<span class="ps-task-pill"><span class="ps-task-pill-label"></span><button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm" title="Remove task"><span data-ds-icon="close" data-size="14"></span></button></span>';
-        row.querySelector('.ps-task-pill-label').textContent = 'Task: ' + action.name;
-        row.querySelector('.ds-btn').addEventListener('click', remove);
-        entrySection.appendChild(row);
-        return;
-      }
       row.innerHTML = '<span class="ds-badge ds-badge--accent"></span><button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm ps-stage-row-remove" title="Remove action"><span data-ds-icon="close" data-size="14"></span></button>';
       row.querySelector('.ds-badge').textContent = action.type === 'email' ? 'Send email' : 'Create task';
       row.querySelector('.ps-stage-row-remove').addEventListener('click', remove);
       if (action.type === 'email') {
-        const using = document.createElement('select'); using.className = 'ds-input'; using.innerHTML = '<option value="template">Email template</option><option value="sequence">Email sequence</option>'; using.value = action.using || 'template';
+        const using = document.createElement('select'); using.className = 'ds-input'; using.innerHTML = '<option value="">Select the email</option><option value="template">Email template</option><option value="sequence">Email sequence</option>'; using.value = action.using || '';
         const value = document.createElement('select'); value.className = 'ds-input ps-entry-value';
-        const fill = function () { const opts = using.value === 'sequence' ? EMAIL_SEQUENCE_OPTIONS : EMAIL_TEMPLATE_OPTIONS; value.innerHTML = opts.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join(''); value.value = action.value || ''; if (value.value !== action.value) action.value = value.value; };
-        using.addEventListener('change', function () { action.using = using.value; action.value = ''; fill(); }); value.addEventListener('change', function () { action.value = value.value; }); fill(); row.insertBefore(using, row.lastChild); row.insertBefore(value, row.lastChild);
+        const fill = function () { if (!using.value) { value.style.display = 'none'; return; } const opts = (using.value === 'sequence' ? EMAIL_SEQUENCE_OPTIONS : EMAIL_TEMPLATE_OPTIONS).filter(function (o) { return o.value; }); const placeholder = using.value === 'sequence' ? 'Select email sequence' : 'Select email template'; value.innerHTML = '<option value="">' + placeholder + '</option>' + opts.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join(''); value.value = action.value || ''; value.style.display = ''; };
+        using.addEventListener('change', function () { action.using = using.value; action.value = ''; fill(); }); value.addEventListener('change', function () { action.value = value.value; renderStageDetails(); }); fill(); row.insertBefore(using, row.lastChild); if (using.value && action.value) { const template = document.createElement('button'); template.type = 'button'; template.className = 'ds-btn ds-btn--secondary ps-template-link'; const options = using.value === 'sequence' ? EMAIL_SEQUENCE_OPTIONS : EMAIL_TEMPLATE_OPTIONS; const chosen = options.find(function (o) { return o.value === action.value; }); template.textContent = chosen ? chosen.label : action.value; template.title = 'Open and edit this ' + (using.value === 'sequence' ? 'email sequence' : 'email template'); row.insertBefore(template, row.lastChild); } else { row.insertBefore(value, row.lastChild); }
       } else {
-        const name = document.createElement('input'); name.className = 'ds-input ps-action-text'; name.placeholder = 'e.g. Book a discovery call'; name.value = action.name || ''; name.addEventListener('input', function () { action.name = name.value; });
+        const name = action.name ? document.createElement('button') : document.createElement('input');
+        if (action.name) { name.type = 'button'; name.className = 'ds-btn ds-btn--secondary ps-template-link'; name.textContent = action.name; name.title = 'Open and edit this task'; } else { name.className = 'ds-input ps-action-text'; name.placeholder = 'e.g. Book a discovery call'; name.value = ''; name.addEventListener('input', function () { action.name = name.value; }); }
         const due = document.createElement('input'); due.type = 'number'; due.min = '1'; due.className = 'ds-input ps-number'; due.value = action.due || 2; due.addEventListener('input', function () { action.due = Number(due.value) || 1; });
         row.insertBefore(name, row.lastChild); row.insertBefore(document.createTextNode('due in'), row.lastChild); row.insertBefore(due, row.lastChild); row.insertBefore(document.createTextNode('days'), row.lastChild);
         if (!action.name) { const add = document.createElement('button'); add.type = 'button'; add.className = 'ds-btn ds-btn--primary ds-btn--sm'; add.textContent = 'Add'; add.addEventListener('click', function () { if (!name.value.trim()) { name.focus(); return; } action.name = name.value.trim(); renderStageDetails(); }); row.insertBefore(add, row.lastChild); }
@@ -788,22 +790,25 @@
     }
     stage.entry.forEach(actionRow);
     const addAction = document.createElement('select'); addAction.className = 'ds-input ps-add-action'; addAction.innerHTML = '<option value="">Add an action…</option><option value="email">Send email</option><option value="task">Create task</option>';
-    addAction.addEventListener('change', function () { if (!addAction.value) return; stage.entry.push({ id: addAction.value + '-' + Date.now(), type: addAction.value, using: 'template', value: '', name: '', due: 2 }); renderStageDetails(); }); entrySection.appendChild(addAction);
+    addAction.addEventListener('change', function () { if (!addAction.value) return; stage.entry.push({ id: addAction.value + '-' + Date.now(), type: addAction.value, using: '', value: '', name: '', due: 2 }); renderStageDetails(); }); entrySection.appendChild(addAction);
 
     const idleSection = addSection('If it goes quiet', 'nothing logged against the record');
     const idleRow = document.createElement('label'); idleRow.className = 'ps-stage-row'; idleRow.innerHTML = '<input type="checkbox"> After <input type="number" class="ds-input ps-number" min="1"> days of no activity,';
     const idleOn = idleRow.querySelector('input[type=checkbox]'), idleDays = idleRow.querySelector('input[type=number]'); idleOn.checked = stage.idle.on; idleDays.value = stage.idle.days; idleDays.disabled = !stage.idle.on;
-    const idleAction = document.createElement('select'); idleAction.className = 'ds-input'; idleAction.innerHTML = '<option value="remind">Remind me</option><option value="email">Send email</option><option value="task">Create task</option>'; idleAction.value = stage.idle.action; idleAction.disabled = !stage.idle.on; idleRow.appendChild(idleAction);
-    if (stage.idle.action === 'email') { const template = document.createElement('select'); template.className = 'ds-input ps-entry-value'; template.innerHTML = EMAIL_TEMPLATE_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join(''); template.value = stage.idle.template || ''; template.disabled = !stage.idle.on; template.addEventListener('change', function () { stage.idle.template = template.value; }); idleRow.appendChild(template); }
-    if (stage.idle.action === 'task') { const task = document.createElement('input'); task.className = 'ds-input ps-action-text'; task.placeholder = 'Task name'; task.value = stage.idle.taskName || ''; task.disabled = !stage.idle.on; task.addEventListener('input', function () { stage.idle.taskName = task.value; }); idleRow.appendChild(task); }
+    const idleAction = document.createElement('select'); idleAction.className = 'ds-input'; idleAction.innerHTML = '<option value="">Select action</option><option value="remind">Remind me</option><option value="email">Send email</option><option value="task">Create task</option>'; idleAction.value = stage.idle.action || ''; idleAction.disabled = !stage.idle.on; idleRow.appendChild(idleAction);
+    if (stage.idle.action === 'email') { const template = document.createElement('select'); template.className = 'ds-input ps-entry-value'; template.innerHTML = '<option value="">Select email template</option>' + EMAIL_TEMPLATE_OPTIONS.filter(function (o) { return o.value; }).map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join(''); template.value = stage.idle.template || ''; template.disabled = !stage.idle.on; template.addEventListener('change', function () { stage.idle.template = template.value; renderStageDetails(); }); if (stage.idle.template) { const selected = EMAIL_TEMPLATE_OPTIONS.find(function (o) { return o.value === stage.idle.template; }); const link = document.createElement('button'); link.type = 'button'; link.className = 'ds-btn ds-btn--secondary ps-template-link'; link.textContent = selected ? selected.label : stage.idle.template; link.title = 'Open and edit this email template'; link.disabled = !stage.idle.on; idleRow.appendChild(link); } else idleRow.appendChild(template); }
+    if (stage.idle.action === 'task') { const task = stage.idle.taskName ? document.createElement('button') : document.createElement('input'); if (stage.idle.taskName) { task.type = 'button'; task.className = 'ds-btn ds-btn--secondary ps-template-link'; task.textContent = stage.idle.taskName; task.title = 'Open and edit this task'; task.disabled = !stage.idle.on; } else { task.className = 'ds-input ps-action-text'; task.placeholder = 'e.g. Book a discovery call'; task.disabled = !stage.idle.on; } const add = document.createElement('button'); add.type = 'button'; add.className = 'ds-btn ds-btn--primary ds-btn--sm'; add.textContent = 'Add'; add.disabled = !stage.idle.on; add.addEventListener('click', function () { if (!task.value.trim()) { task.focus(); return; } stage.idle.taskName = task.value.trim(); renderStageDetails(); }); idleRow.appendChild(task); if (!stage.idle.taskName) idleRow.appendChild(add); }
     idleOn.addEventListener('change', function () { stage.idle.on = idleOn.checked; idleDays.disabled = !idleOn.checked; idleAction.disabled = !idleOn.checked; idleRow.querySelectorAll('select, input').forEach(function (control) { if (control !== idleOn) control.disabled = !idleOn.checked; }); }); idleDays.addEventListener('input', function () { stage.idle.days = Number(idleDays.value) || 1; }); idleAction.addEventListener('change', function () { stage.idle.action = idleAction.value; renderStageDetails(); }); idleSection.appendChild(idleRow);
 
     const exitSection = addSection('Moving on to the next stage', 'whichever stage follows this one');
     const radios = document.createElement('div'); radios.className = 'ps-stage-radio'; radios.innerHTML = '<label><input type="radio" name="ps-exit" value="manual"> Move it manually</label><label><input type="radio" name="ps-exit" value="auto"> Move it automatically</label>';
-    radios.querySelector('input[value="' + stage.exit.mode + '"]').checked = true; radios.querySelectorAll('input').forEach(function (radio) { radio.addEventListener('change', function () { stage.exit.mode = radio.value; if (radio.value === 'auto' && !stage.exit.rules.length) stage.exit.rules.push({ id: 'rule-' + Date.now(), when: 'task', task: '', field: RECORD_FIELD_OPTIONS[0].value, days: 7 }); renderStageDetails(); }); }); exitSection.appendChild(radios);
+    radios.querySelector('input[value="' + stage.exit.mode + '"]').checked = true; radios.querySelectorAll('input').forEach(function (radio) { radio.addEventListener('change', function () { stage.exit.mode = radio.value; if (radio.value === 'auto') { if (!stage.exit.rules.length) stage.exit.rules.push({ id: 'rule-' + Date.now(), when: '', task: '', field: '', days: 7, join: 'or' }); else { stage.exit.rules[0].when = ''; stage.exit.rules[0].task = ''; } } renderStageDetails(); }); }); exitSection.appendChild(radios);
     if (stage.exit.mode === 'auto') stage.exit.rules.forEach(function (rule, ri) { const row = document.createElement('div'); row.className = 'ps-stage-row'; row.innerHTML = '<span>' + (ri ? 'or when' : 'Move it when') + '</span><select class="ds-input"><option value="task">A task is completed</option><option value="field">Data is added for a field</option><option value="days">Days pass in this stage</option></select><button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm ps-stage-row-remove" title="Remove condition"><span data-ds-icon="close" data-size="14"></span></button>'; const when = row.querySelector('select'); when.value = rule.when; const detail = document.createElement(rule.when === 'days' ? 'input' : 'select'); detail.className = 'ds-input ' + (rule.when === 'days' ? 'ps-number' : ''); if (rule.when === 'days') { detail.type = 'number'; detail.value = rule.days || 7; detail.addEventListener('input', function () { rule.days = Number(detail.value) || 1; }); } else { const source = rule.when === 'task' ? stage.entry.filter(function (x) { return x.type === 'task'; }).map(function (x) { return x.name; }) : RECORD_FIELD_OPTIONS; detail.disabled = rule.when === 'task' && !source.length; detail.innerHTML = rule.when === 'task' ? '<option value="">Select action</option>' + source.map(function (x) { return '<option value="' + escHtml(x) + '">' + escHtml(x) + '</option>'; }).join('') : source.map(function (x) { return '<option value="' + escHtml(x.value) + '">' + escHtml(x.label) + '</option>'; }).join(''); detail.value = rule[rule.when] || ''; detail.addEventListener('change', function () { rule[rule.when] = detail.value; }); } row.insertBefore(detail, row.lastChild); when.addEventListener('change', function () { rule.when = when.value; renderStageDetails(); }); row.querySelector('.ps-stage-row-remove').addEventListener('click', function () { stage.exit.rules.splice(ri, 1); renderStageDetails(); }); exitSection.appendChild(row); });
+    if (stage.exit.mode === 'auto') Array.from(exitSection.querySelectorAll('.ps-stage-row')).forEach(function (row, ri) { const rule = stage.exit.rules[ri]; const selects = row.querySelectorAll('select'); const condition = selects[0]; const detail = selects[1]; if (!rule.when) { const blank = document.createElement('option'); blank.value = ''; blank.textContent = 'Select condition'; condition.insertBefore(blank, condition.firstChild); condition.value = ''; if (detail) { detail.innerHTML = '<option value="">Select task</option>'; detail.disabled = true; } } else if (rule.when === 'task' && detail && detail.options.length) detail.options[0].textContent = 'Select task'; if (ri > 0) { const connector = document.createElement('select'); connector.className = 'ds-input ps-condition-join'; connector.innerHTML = '<option value="or">OR</option><option value="and">AND</option>'; connector.value = rule.join || 'or'; connector.addEventListener('change', function () { rule.join = connector.value; }); row.querySelector('span').replaceWith(connector); } });
+    Array.from(exitSection.querySelectorAll('.ps-stage-row')).forEach(function (row, ri) { const selects = row.querySelectorAll('select'); const condition = row.querySelector('.ps-condition-join') ? selects[1] : selects[0]; if (condition && !condition.querySelector('option[value=""]')) { const blank = document.createElement('option'); blank.value = ''; blank.textContent = 'Select condition'; condition.insertBefore(blank, condition.firstChild); } if (condition) condition.value = stage.exit.rules[ri].when || ''; });
+    Array.from(exitSection.querySelectorAll('.ps-condition-join')).forEach(function (connector) { const conditionRow = connector.parentElement; conditionRow.style.display = 'grid'; conditionRow.style.gridTemplateColumns = '96px 200px 200px'; conditionRow.style.gap = '8px'; connector.style.width = '96px'; connector.style.minWidth = '96px'; connector.style.margin = '0'; const taskSelect = conditionRow.querySelectorAll('select')[2]; if (taskSelect) taskSelect.style.marginLeft = '8px'; });
     if (stage.exit.mode === 'auto' && stage.exit.rules.some(function (rule) { return rule.when === 'task'; }) && !stage.entry.some(function (x) { return x.type === 'task'; })) { const note = document.createElement('div'); note.className = 'ps-stage-empty'; note.textContent = 'Add a task above and it will show up here.'; exitSection.appendChild(note); }
-    const addRule = document.createElement('button'); addRule.type = 'button'; addRule.className = 'ds-btn ds-btn--secondary ds-btn--sm'; addRule.innerHTML = '<span data-ds-icon="plus" data-size="14"></span> Add another condition'; addRule.addEventListener('click', function () { stage.exit.rules.push({ id: 'rule-' + Date.now(), when: 'task', task: '', field: RECORD_FIELD_OPTIONS[0].value, days: 7 }); renderStageDetails(); }); if (stage.exit.mode === 'auto') exitSection.appendChild(addRule);
+    const addRule = document.createElement('button'); addRule.type = 'button'; addRule.className = 'ds-btn ds-btn--secondary ds-btn--sm ps-add-condition'; addRule.innerHTML = '<span data-ds-icon="plus" data-size="14"></span> Add another condition'; addRule.addEventListener('click', function () { stage.exit.rules.push({ id: 'rule-' + Date.now(), when: '', task: '', field: '', days: 7, join: 'or' }); renderStageDetails(); }); if (stage.exit.mode === 'auto') exitSection.appendChild(addRule);
     detailBodies[i].appendChild(editor);
     return;
     const body = document.createElement('div');
