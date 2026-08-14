@@ -1893,6 +1893,10 @@
             "placeholder": "A sentence or two about what you’re after"
           }
         ]
+      },
+      "emailIntake": {
+        "enabled": true,
+        "rule": "book sales meeting"
       }
     }
   },
