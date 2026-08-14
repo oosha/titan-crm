@@ -585,6 +585,25 @@
             </div>
           </div>
 
+          <!-- Things you DO, as opposed to fields you edit. They were buried in an
+               "+ Add activity" menu at the bottom of a list, which is the wrong
+               shape twice over: writing an email is not an entry in a to-do list,
+               and the list is not where you go looking to start one. -->
+          <div class="ov-actions" id="ov-actions">
+            <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actEmail()">
+              <span data-ds-icon="mail" data-size="15"></span> Email
+            </button>
+            <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actCall()">
+              <span data-ds-icon="phone" data-size="15"></span> Schedule a call
+            </button>
+            <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actBooking()">
+              <span data-ds-icon="calendar" data-size="15"></span> Send booking link
+            </button>
+            <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actNote()">
+              <span data-ds-icon="drafts" data-size="15"></span> Note
+            </button>
+          </div>
+
           <!-- Source and the pipeline's own custom fields are all deal attributes, so
                they share one grid. Rendering the custom ones into a second grid of
                their own left both stacked down the left with the right half empty. -->
@@ -646,34 +665,14 @@
         </div>
 
         <div class="ov-section ds-card ds-card--section">
-          <div class="ov-heading">Upcoming activity</div>
+          <!-- Was "Upcoming activity", which had to cover both things you must do and
+               things already in the diary, and ended up listing a past meeting as
+               upcoming. This is the to-do list for this record: every row is
+               something to finish and can be ticked off. What happened lives in
+               Activity below; what you start lives in the buttons above. -->
+          <div class="ov-heading">Tasks</div>
           <div id="ov-upcoming-activity"></div>
-          <div class="crm-add-activity" onclick="openActivityMenu(event)">+ Add activity</div>
-          <div class="crm-activity-menu" id="ov-activity-menu">
-            <div class="cam2-bar" id="ov-activity-menu-bar">No activity yet</div>
-            <div class="cam2-items">
-              <div class="cam2-item" onclick="addActivity('followup')">
-                <span class="ic"><span data-ds-icon="mail" data-size="16"></span></span>
-                Follow-up on email
-              </div>
-              <div class="cam2-item" onclick="addActivity('call')">
-                <span class="ic"><span data-ds-icon="phone" data-size="16"></span></span>
-                Schedule a call
-              </div>
-              <div class="cam2-item" onclick="addActivity('booking')">
-                <span class="ic"><span data-ds-icon="calendar" data-size="16"></span></span>
-                Send a booking link
-              </div>
-              <div class="cam2-item" onclick="addActivity('task')">
-                <span class="ic"><span data-ds-icon="check" data-size="16"></span></span>
-                Create a task
-              </div>
-              <div class="cam2-item" onclick="addActivity('note')">
-                <span class="ic"><span data-ds-icon="drafts" data-size="16"></span></span>
-                Add a note
-              </div>
-            </div>
-          </div>
+          <div class="crm-add-activity" onclick="addActivity('task')">+ Add task</div>
         </div>
 
         <div class="ov-section ds-card ds-card--section">
@@ -684,7 +683,7 @@
 
 
         <div class="ov-section ds-card ds-card--section">
-          <div class="ov-heading">Recent activity</div>
+          <div class="ov-heading">Activity</div>
           <div id="ov-recent-activity"></div>
         </div>
 
@@ -1582,39 +1581,6 @@
   // "+ Add activity" — same menu the mailclient CRM panel's card action icon shows, but
   // wired to actually create the activity (that panel leaves it as a prototype-only
   // stub for everything except notes).
-  function openActivityMenu(evt) {
-    if (evt) evt.stopPropagation();
-    const m = document.getElementById('ov-activity-menu');
-    const trigger = evt && (evt.currentTarget || evt.target);
-    const bar = document.getElementById('ov-activity-menu-bar');
-    const recentItems = (card.recentActivities && card.recentActivities.length) ? card.recentActivities : null;
-    bar.textContent = recentItems
-      ? ('Last activity: ' + recentItems[0].text + (recentItems[0].date ? ' · ' + recentItems[0].date : ''))
-      : ((card.activityType || card.lastActivity) ? ('Last activity: ' + (card.activityType || 'Activity') + ' ' + (card.lastActivity || '')) : 'No activity yet');
-    m.classList.add('open');
-    if (trigger && trigger.getBoundingClientRect) {
-      const r = trigger.getBoundingClientRect();
-      const w = m.offsetWidth || 214;
-      const h = m.offsetHeight || 190;
-      let left = r.left;
-      if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
-      if (left < 8) left = 8;
-      let top = r.bottom + 6;
-      if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 6);
-      m.style.left = left + 'px';
-      m.style.top = top + 'px';
-    }
-    setTimeout(function () { document.addEventListener('click', outsideActivityMenu); }, 0);
-  }
-  function outsideActivityMenu(e) {
-    const m = document.getElementById('ov-activity-menu');
-    if (m && !m.contains(e.target)) closeActivityMenu();
-  }
-  function closeActivityMenu() {
-    const m = document.getElementById('ov-activity-menu');
-    if (m) m.classList.remove('open');
-    document.removeEventListener('click', outsideActivityMenu);
-  }
   const ACT_LABELS = { followup: 'Follow-up on email', call: 'Schedule a call',
                        booking: 'Send a booking link', task: 'Create a task' };
 
@@ -1623,7 +1589,6 @@
   // nothing — which is what "not working" looked like. A draft row in the list
   // needs no modal permission and lets you see what you are adding.
   function addActivity(kind) {
-    closeActivityMenu();
     if (kind === 'note') {
       const input = document.getElementById('ov-note-input');
       if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); input.focus(); }
@@ -1637,7 +1602,7 @@
     row.innerHTML =
       actIcon(kind === 'call' ? 'phone' : kind === 'booking' ? 'meeting' : kind === 'task' ? 'task' : 'email') +
       '<input class="ds-input ov-act-draft-text" id="ov-act-draft-text" value="' + esc(ACT_LABELS[kind] || '') + '">' +
-      '<input class="ds-input ov-act-draft-date" id="ov-act-draft-date" placeholder="When? e.g. Fri">' +
+      '<input class="ds-input ov-act-draft-date" id="ov-act-draft-date" type="datetime-local" aria-label="Due">' +
       '<button class="ds-btn ds-btn--primary ds-btn--sm" type="button" onclick="commitActivity(\'' + kind + '\')">Add</button>' +
       '<button class="ds-btn ds-btn--ghost ds-btn--sm" type="button" onclick="cancelActivity()">Cancel</button>';
     host.appendChild(row);
@@ -1647,6 +1612,53 @@
       if (e.key === 'Enter') { e.preventDefault(); commitActivity(kind); }
       if (e.key === 'Escape') { e.preventDefault(); cancelActivity(); }
     });
+  }
+
+  // "12 Aug at 3:00 pm" — matches the note stamps rather than inventing a
+  // third date format on the same page.
+  function formatDueStamp(d) {
+    if (isNaN(d.getTime())) return '';
+    let h = d.getHours(); const ampm = h >= 12 ? 'pm' : 'am';
+    h = h % 12 || 12;
+    return d.getDate() + ' ' + MONTH_ABBR[d.getMonth()] + ' at ' + h + ':' +
+      String(d.getMinutes()).padStart(2, '0') + ' ' + ampm;
+  }
+
+  // ── Record actions ────────────────────────────────────────────────────────
+  // Everyone the record is about, for prefilling a mail.
+  function accountName() {
+    const sel = document.getElementById('ov-owner');
+    return (sel && sel.value) || 'me';
+  }
+  function contactEmails() {
+    return (contacts || []).map(function (c) { return c.email; }).filter(Boolean).join(', ');
+  }
+  function mailTo(subject, body) {
+    const q = new URLSearchParams(location.search);
+    q.set('compose', '1');
+    q.set('to', contactEmails());
+    if (subject) q.set('subject', subject);
+    if (body) q.set('body', body);
+    location.href = '/mail?' + q.toString();
+  }
+  function actEmail() {
+    mailTo('Following up on ' + (card.deal || card.company || 'our conversation'), '');
+  }
+  function actBooking() {
+    // The prototype has no booking product behind this; the link shape is what a
+    // Titan booking page would be, and the mail is real.
+    const slug = (accountName() || 'me').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    mailTo('Time to talk about ' + (card.deal || card.company || 'this'),
+      'Here is my booking link — grab whichever slot suits you:\n\nhttps://titan.email/book/' + slug + '\n');
+  }
+  // No Calendar app exists in this prototype, so this cannot create a real invite.
+  // A dated call task is the honest version: it is the part we can actually keep.
+  function actCall() {
+    addActivity('call');
+  }
+  function actNote() {
+    const input = document.getElementById('ov-note-input');
+    if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); input.focus(); }
   }
 
   function cancelActivity() {
@@ -1659,7 +1671,10 @@
     const dateEl = document.getElementById('ov-act-draft-date');
     if (!textEl) return;
     const text = (textEl.value || '').trim() || ACT_LABELS[kind] || 'Activity';
-    const date = (dateEl && dateEl.value || '').trim();
+    // Stored as the same kind of display string the rest of this data uses, so the
+    // list, looksPast() and the board all keep reading one format.
+    const raw = (dateEl && dateEl.value || '').trim();
+    const date = raw ? formatDueStamp(new Date(raw)) : '';
     upcomingActivityList().push({ type: kind, text: text, date: date });
     cancelActivity();
     renderActivityAndFiles();

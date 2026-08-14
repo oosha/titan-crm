@@ -4724,7 +4724,7 @@
       <div class="comp-divider"></div>
       <div class="comp-row">
         <span class="comp-lbl comp-lbl-subject">Subject:</span>
-        <input type="text" class="comp-field-input" autocomplete="off">
+        <input type="text" class="comp-field-input" id="comp-subject-input" autocomplete="off">
       </div>
       <div class="comp-divider"></div>
       <!-- Feature chips -->
@@ -5752,6 +5752,37 @@
         if (toInput) toInput.focus();
       }, 340);
     }
+
+    // ── Compose deep link ────────────────────────────────────────────────
+    // /mail?compose=1&to=…&subject=…&body=… — how the CRM's record page starts an
+    // email against a deal without the user re-typing who it's to. Everything is
+    // read from the query string and written into the existing composer; there is
+    // no separate code path to keep in step.
+    function openComposerFromQuery() {
+      const q = new URLSearchParams(location.search);
+      if (!q.get('compose')) return;
+      openComposer();
+      const to = q.get('to') || '', subject = q.get('subject') || '', body = q.get('body') || '';
+      const toEl = document.getElementById('comp-to-input');
+      const subjEl = document.getElementById('comp-subject-input');
+      const bodyEl = document.getElementById('comp-body');
+      if (toEl) toEl.value = to;
+      if (subjEl) subjEl.value = subject;
+      // contenteditable, so line breaks have to become elements.
+      if (bodyEl && body) {
+        bodyEl.innerHTML = body.split('\n').map(function (line) {
+          const d = document.createElement('div');
+          d.textContent = line;
+          return d.outerHTML;
+        }).join('');
+      }
+      // Focus the first thing still empty, so a fully-prefilled mail lands in the body.
+      setTimeout(function () {
+        const target = !to ? toEl : (!subject ? subjEl : bodyEl);
+        if (target) target.focus();
+      }, 360);
+    }
+    document.addEventListener('DOMContentLoaded', openComposerFromQuery);
 
     function closeComposer() {
       const w = document.getElementById('composer-window');
