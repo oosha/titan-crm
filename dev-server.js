@@ -290,6 +290,31 @@ async function apiAssistant(pathname, req, res, query) {
         return json(res, 400, { error: 'Nothing to answer.' });
       }
       const out = await assistant.converse(data, messages, typeof body.account === 'string' ? body.account : '');
+
+      // Mirrors api/assistant.js: anything the model did without needing
+      // confirmation is applied here and comes back already saved, with the undo
+      // the card's button posts. Locally this is one file write instead of a
+      // GitHub commit, but the states the page sees must be identical or the
+      // rail behaves differently here than in production.
+      const auto = (out.actions || []).filter((a) => !a.confirm);
+      const applied = new Map();
+      const failed = new Map();
+      auto.forEach((a) => {
+        try {
+          applied.set(a, assistant.applyAction(data, a));
+        } catch (e) {
+          failed.set(a, String((e && e.message) || e));
+        }
+      });
+      if (applied.size) {
+        await writeJson(rel, data);
+        applied.forEach((r) => console.log('  assistant → ' + r.summary + ' on ' + r.recordName));
+      }
+      out.actions = (out.actions || []).map((a) => {
+        if (a.confirm) return Object.assign({}, a, { state: 'pending' });
+        if (applied.has(a)) return Object.assign({}, a, { state: 'done', undo: applied.get(a).undo });
+        return Object.assign({}, a, { state: 'failed', error: failed.get(a) || 'Couldn’t save that.' });
+      });
       return json(res, 200, out);
     }
 

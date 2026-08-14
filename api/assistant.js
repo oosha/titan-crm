@@ -1,16 +1,17 @@
 // POST /api/assistant?persona=<id> — one turn of the Ask Titan conversation.
 //
 // Body: { messages: [{ role: "user" | "assistant", content: "..." }] }
-// Returns: { reply, actions[] }
+// Returns: { reply, actions[], links[] }
 //
-// `actions` are proposals the user has NOT yet confirmed — nothing in this
-// endpoint writes to the CRM. Applying happens in assistant-apply.js, only after
-// the user clicks. See the header of _assistant.js for why.
+// Each action comes back with a `state`: "done" if it was applied here (and then
+// it carries `undo`), or "pending" if the target was ambiguous enough that the
+// user has to approve it — those go to assistant-apply.js on a click. Which of
+// the two is decided in _assistant.js; see the safety model at the top of it.
 //
 // The conversation is stateless: the page sends the history each turn, the same
 // way the rest of this app avoids server-side session state.
-const { currentPathFor, applyCors, isValidPersonaId, readJsonFile } = require('./_github');
-const { isConfigured, converse } = require('./_assistant');
+const { currentPathFor, applyCors, isValidPersonaId, readJsonFile, updateJsonFile } = require('./_github');
+const { isConfigured, converse, applyAction } = require('./_assistant');
 
 // Bounded so a page can't post an unbounded transcript back at us.
 const MAX_TURNS = 40;
@@ -46,6 +47,47 @@ module.exports = async function handler(req, res) {
 
     const account = req.body && typeof req.body.account === 'string' ? req.body.account.slice(0, 120) : '';
     const out = await converse(existing.json, messages, account);
+
+    const auto = (out.actions || []).filter(function (a) { return !a.confirm; });
+    if (auto.length) {
+      // One write for the whole turn, not one per action — every write is a
+      // commit, and "set the amount and add a note" is a single thought.
+      //
+      // updateJsonFile re-runs this callback against the freshest document on a
+      // conflict, so `applied` and `failed` are rebuilt from scratch each time
+      // rather than accumulating across attempts.
+      let applied, failed;
+      await updateJsonFile(currentPathFor(personaId), function (doc) {
+        applied = []; failed = [];
+        auto.forEach(function (a) {
+          try {
+            applied.push({ action: a, result: applyAction(doc, a) });
+          } catch (err) {
+            // One bad action shouldn't sink the others — a stage that vanished
+            // between the model reading it and this running is a real case.
+            failed.push({ action: a, message: String((err && err.message) || err) });
+          }
+        });
+        // Every write is a commit. If nothing survived validation there is
+        // nothing to record, so abort rather than commit an unchanged file.
+        return applied.length ? doc : false;
+      }, 'Assistant: ' + auto.map(function (a) {
+        return a.type === 'add_note' ? 'add note' : 'update record';
+      }).join(', '));
+
+      out.actions = (out.actions || []).map(function (a) {
+        if (a.confirm) return Object.assign({}, a, { state: 'pending' });
+        const ok = applied.filter(function (x) { return x.action === a; })[0];
+        if (ok) return Object.assign({}, a, { state: 'done', undo: ok.result.undo });
+        const bad = failed.filter(function (x) { return x.action === a; })[0];
+        return Object.assign({}, a, { state: 'failed', error: bad ? bad.message : 'Couldn’t save that.' });
+      });
+    } else {
+      out.actions = (out.actions || []).map(function (a) {
+        return Object.assign({}, a, { state: 'pending' });
+      });
+    }
+
     res.status(200).json(out);
   } catch (err) {
     res.status(err && err.isUserError ? 400 : 500).json({ error: String((err && err.message) || err) });

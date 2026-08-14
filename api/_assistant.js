@@ -8,16 +8,31 @@
 // step, swapping this for @anthropic-ai/sdk is a contained change: only
 // callModel() below touches the wire format.
 //
-// ── The safety property that shapes everything here ───────────────────────────
-// Read tools run immediately. Write tools DO NOT. When the model calls
-// update_record or add_note, the server records the request as a *pending
-// action* and tells the model it has been put to the user — nothing touches the
-// data. The page renders a confirm card showing old → new per field, and only an
-// explicit click sends it to /api/assistant-apply.
+// ── The safety model ──────────────────────────────────────────────────────────
+// Three tiers, by how bad it is to get the action wrong:
 //
-// This is not ceremony. The stated use case is someone on a phone call, and a
-// misheard word is the normal case there, not the exception. The CRM has no undo
-// and no change history, so an unconfirmed wrong write is silent and permanent.
+//   Reads          run immediately.
+//   Edits          apply immediately, and come back with an Undo button.
+//   Deletes        are not possible at all. See MANUAL_TASKS below.
+//
+// Edits used to wait for a confirm click. They no longer do, because confirming
+// every "add a note" made the rail slower than typing into the form it exists to
+// replace — and a prompt that always appears stops being read. What replaces it
+// is narrower and, for a routine edit, stronger: every applied edit carries the
+// inverse action, so one click puts the record back exactly as it was.
+//
+// Confirmation still fires where undo is not the right answer — when we cannot
+// be sure the change is landing on the record the user meant. Two gates, in
+// needsConfirm() below: the server flags a target it saw more than one candidate
+// for, and the model can escalate anything it had to guess at. Getting the
+// *record* wrong is the failure undo repairs badly: by the time anyone notices,
+// they are looking at two wrong records, not one.
+//
+// Deletes are the exception with no undo path — there is no delete tool and
+// there must not be one. The stated use case is someone talking on a call, where
+// a misheard word is normal, and this document is shared, commit-backed and
+// carries no history. So the assistant hands over a link to the screen that owns
+// the control instead, and the person does it with the record in front of them.
 
 // ANTHROPIC_BASE_URL exists so the tool loop can be exercised locally against a
 // stub — the loop, the field allowlist and the confirmation rule are worth
@@ -76,6 +91,46 @@ function fieldLabel(key) {
   const f = EDITABLE.filter(function (x) { return x.key === key; })[0];
   return f ? f.label : key;
 }
+
+// ── What the assistant sends people elsewhere for ─────────────────────────────
+// Refusing on its own is useless — the user still wants the thing done, and
+// "I can't do that" leaves them hunting through a nav they may not know. Each
+// entry names the screen that actually carries the control.
+//
+// These paths were read off the markup, not guessed, and they are the reason
+// this is a table rather than a line in the prompt: a model inventing a plausible
+// CRM URL is how you hand someone a 404 at the exact moment they are annoyed
+// with you. `steps` is what to do once the page is open, since none of these
+// controls is the first thing you see on it.
+const MANUAL_TASKS = {
+  delete_record: {
+    label: 'Open the record',
+    // opportunity-view.html renders a Delete button in the record header.
+    steps: 'Open the record, then use Delete at the top right.',
+    path: function (ctx) {
+      return ctx.pipelineId && ctx.recordId
+        ? '/crm/pipeline/' + ctx.pipelineId + '/record/' + ctx.recordId
+        : '/crm';
+    },
+  },
+  delete_pipeline: {
+    label: 'Open the board',
+    // deletePipeline() lives only in crm.html — the shared sidebar's own copy of
+    // this menu item tells people to go to the board, so anywhere else is a dead end.
+    steps: 'On the board, open the pipeline’s ••• menu in the sidebar and choose Delete pipeline.',
+    path: function (ctx) { return ctx.pipelineId ? '/crm/pipeline/' + ctx.pipelineId : '/crm'; },
+  },
+  delete_stage: {
+    label: 'Open pipeline settings',
+    steps: 'Remove the stage under Stages. Move any records out of it first — they don’t move themselves.',
+    path: function (ctx) { return ctx.pipelineId ? '/crm/pipeline/' + ctx.pipelineId + '/setting' : '/crm'; },
+  },
+  delete_field: {
+    label: 'Open field settings',
+    steps: 'Remove the field there. Anything already saved in it goes with it.',
+    path: function (ctx) { return ctx.pipelineId ? '/crm/pipeline/' + ctx.pipelineId + '/record-setting' : '/crm'; },
+  },
+};
 
 // ── Reading the CRM ───────────────────────────────────────────────────────────
 function allCards(data) {
@@ -163,11 +218,11 @@ function toolDefs() {
     {
       name: 'update_record',
       description:
-        'Propose changes to a record\'s fields. Use this when the user states new information about ' +
+        'Change a record\'s fields. Use this when the user states new information about ' +
         'a deal — a new amount, a stage move, a corrected email. Look the record up with find_records ' +
         'first so you have its id and can see what the values are now. ' +
-        'This does NOT save anything: the user is shown exactly what would change and confirms it ' +
-        'themselves. Propose the change once and then stop — do not re-propose or ask whether to go ahead.',
+        'This saves straight away and the user gets an Undo button, so do not ask permission first ' +
+        'and do not ask afterwards whether they want it kept. Make the change once and stop.',
       input_schema: {
         type: 'object',
         properties: {
@@ -178,6 +233,13 @@ function toolDefs() {
               'The fields to change, as field name to new value. Allowed fields: ' +
               EDITABLE_KEYS.join(', ') + '. For stage, use the stage name as shown on the board.',
           },
+          confirm: {
+            type: 'boolean',
+            description:
+              'Set true if you had to guess anything — which record they meant, or a value they ' +
+              'did not state outright. The change is then shown for approval instead of saving. ' +
+              'Leave it out when they were specific.',
+          },
         },
         required: ['recordId', 'changes'],
       },
@@ -185,21 +247,75 @@ function toolDefs() {
     {
       name: 'add_note',
       description:
-        'Propose adding a note to a record — call notes, next steps, anything the user says happened. ' +
+        'Add a note to a record — call notes, next steps, anything the user says happened. ' +
         'Use this whenever the user is recounting a conversation rather than changing a field. Write ' +
         'the note in their voice, keeping the specifics they gave (names, numbers, dates); do not ' +
         'editorialise or add detail they did not say. ' +
-        'This does NOT save anything — the user confirms it themselves.',
+        'This saves straight away and the user gets an Undo button — do not ask permission first.',
       input_schema: {
         type: 'object',
         properties: {
           recordId: { type: 'string', description: 'The record id from find_records.' },
           note: { type: 'string', description: 'The note text.' },
+          confirm: {
+            type: 'boolean',
+            description:
+              'Set true if you had to guess which record they meant. The note is then shown for ' +
+              'approval instead of saving.',
+          },
         },
         required: ['recordId', 'note'],
       },
     },
+    {
+      name: 'where_to_do_it',
+      description:
+        'Get a link to the screen where the user can do something you have no tool for. ' +
+        'Call this whenever they ask you to DELETE or permanently remove anything — a record, a ' +
+        'pipeline, a stage, a custom field. You cannot delete, and you must never say or imply that ' +
+        'you have. Call this, then tell them in one sentence what to do; the interface shows them ' +
+        'the button, so do not write out a URL or repeat the steps it already gives you.',
+      input_schema: {
+        type: 'object',
+        properties: {
+          task: {
+            type: 'string',
+            enum: Object.keys(MANUAL_TASKS),
+            description: 'Which thing they are trying to do.',
+          },
+          recordId: {
+            type: 'string',
+            description: 'The record id, for delete_record. Look it up with find_records first.',
+          },
+          pipelineId: {
+            type: 'string',
+            description: 'The pipeline id. Omit only if you genuinely cannot tell which one they mean.',
+          },
+        },
+        required: ['task'],
+      },
+    },
   ];
+}
+
+// Resolves the link server-side so the path is always real. Takes the pipeline
+// from the record when only a record was named, which is the common case —
+// people say "delete the Meridian deal", not which board it is on.
+function runWhereToDoIt(data, input) {
+  const spec = MANUAL_TASKS[input.task];
+  if (!spec) return { error: 'Unknown task: ' + input.task };
+
+  const ctx = { pipelineId: input.pipelineId ? String(input.pipelineId) : '', recordId: '' };
+  if (input.recordId) {
+    const entry = findCard(data, input.recordId);
+    if (entry) {
+      ctx.recordId = String(entry.card.id);
+      ctx.pipelineId = entry.pipelineId;
+    }
+  }
+  if (ctx.pipelineId && !(data.pipelines || {})[ctx.pipelineId]) ctx.pipelineId = '';
+
+  return { link: { label: spec.label, path: spec.path(ctx), steps: spec.steps } };
 }
 
 // ── Executing read tools ──────────────────────────────────────────────────────
@@ -362,15 +478,36 @@ function systemPrompt(data, account) {
     'plainly rather than offering a plausible answer.',
     '',
     '# Changing the CRM',
-    'update_record and add_note do not save anything — they put a change in front of the user',
-    'to confirm, and the interface shows them exactly which fields would change. So:',
-    '- Propose the change; do not ask "shall I?" first, and do not ask again afterwards.',
-    '- Say in one short sentence what you have put up for confirmation. The card already lists',
-    '  the fields, so do not repeat them.',
-    '- If the user tells you several things at once, propose them together in one call rather',
-    '  than one call per field.',
-    '- Only change what they actually said. If something is ambiguous — which of two records,',
-    '  an amount you are unsure you heard right — ask instead of picking.',
+    'update_record and add_note save immediately, and the user gets an Undo button. Act on what',
+    'they said rather than checking first — asking "shall I?" for a note they just dictated wastes',
+    'the turn that makes this worth using. So:',
+    '- Make the change. Do not ask permission first, and do not ask afterwards whether to keep it.',
+    '- Say in one short sentence what you did. The card already lists the fields, so do not',
+    '  repeat them back.',
+    '- If they tell you several things at once, do them in one call rather than one call per field.',
+    '- Only change what they actually said.',
+    '',
+    '# When to stop and ask instead',
+    'Undo fixes a wrong value. It does not really fix a change written to the wrong record — by',
+    'the time anyone notices, two records are wrong. So when you are not sure the change is',
+    'landing where they meant, do not guess:',
+    '- Several records could be the one they mean → ask which, and name them. Do not pick the',
+    '  likeliest and proceed.',
+    '- They asked for a change but did not say to what ("bump the amount", "move it along") →',
+    '  ask for the value. Do not infer one.',
+    '- You are fairly sure but not certain → make the call with confirm set to true, which shows',
+    '  it for approval rather than saving. Use this instead of a question when the question would',
+    '  only be "is this the right one?".',
+    '',
+    '# What you cannot do',
+    'You have no way to delete anything, and no way to undo a deletion someone else makes.',
+    'If they ask you to delete or permanently remove a record, a pipeline, a stage or a field:',
+    '- Call where_to_do_it and tell them where it is, in one sentence. The interface shows the',
+    '  link and the steps, so do not write a URL or list the steps yourself.',
+    '- Never say you have deleted something, never say you will, and do not offer a substitute',
+    '  like blanking the fields or moving it to a lost stage — that leaves a broken record behind',
+    '  and is not what they asked for.',
+    '- Do not argue the point or explain the policy at length. Point them at the screen and move on.',
     '',
     '# Style',
     'Keep replies short and plain — a couple of sentences, no headers, no bullet lists unless',
@@ -408,12 +545,26 @@ async function callModel(body) {
 }
 
 // ── The tool loop ─────────────────────────────────────────────────────────────
-// Returns { reply, actions } — actions are proposals awaiting confirmation and
-// have NOT been applied.
+// Returns { reply, actions, links }. Each action carries `confirm`: false means
+// the caller should apply it now, true means the page must ask first. Nothing is
+// written here either way — this function has no file access, and keeping it
+// that way is what lets it be exercised against a stubbed model.
 async function converse(data, history, account) {
   const messages = history.slice();
   const actions = [];
+  const links = [];
   const tools = toolDefs();
+
+  // Record ids that a search matched alongside others. If a write later targets
+  // one of these, the model picked from a list rather than being handed the
+  // record, and that is the case confirmation exists for. Populated as searches
+  // run, so it reflects this turn's actual ambiguity rather than a guess.
+  const contested = Object.create(null);
+
+  function needsConfirm(input) {
+    if (input && input.confirm === true) return true;           // the model escalated
+    return !!contested[String(input && input.recordId)];        // we saw rival candidates
+  }
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const response = await callModel({
@@ -430,7 +581,7 @@ async function converse(data, history, account) {
     // Checked before reading content: a refusal returns 200 with content that
     // may be empty, so indexing straight into it would throw.
     if (response.stop_reason === 'refusal') {
-      return { reply: 'I can’t help with that one.', actions: [] };
+      return { reply: 'I can’t help with that one.', actions: [], links: [] };
     }
 
     const textOut = (response.content || [])
@@ -438,7 +589,7 @@ async function converse(data, history, account) {
       .map(function (b) { return b.text; }).join('').trim();
 
     if (response.stop_reason !== 'tool_use') {
-      return { reply: textOut, actions: actions };
+      return { reply: textOut, actions: actions, links: links };
     }
 
     const toolUses = (response.content || []).filter(function (b) { return b.type === 'tool_use'; });
@@ -450,21 +601,33 @@ async function converse(data, history, account) {
       let payload;
       if (tu.name === 'find_records') {
         payload = runFindRecords(data, tu.input || {});
+        if ((payload.matches || []).length > 1) {
+          payload.matches.forEach(function (m) { contested[String(m.id)] = true; });
+        }
       } else if (tu.name === 'pipeline_overview') {
         payload = runPipelineOverview(data, tu.input || {});
+      } else if (tu.name === 'where_to_do_it') {
+        payload = runWhereToDoIt(data, tu.input || {});
+        if (payload.link) links.push(payload.link);
       } else if (tu.name === 'update_record' || tu.name === 'add_note') {
-        // The write path: validated, queued, never executed here.
+        const input = tu.input || {};
         const built = tu.name === 'update_record'
-          ? buildProposedUpdate(data, tu.input || {})
-          : buildProposedNote(data, tu.input || {});
+          ? buildProposedUpdate(data, input)
+          : buildProposedNote(data, input);
         if (built.error) {
           payload = { error: built.error };
         } else {
+          const confirm = needsConfirm(input);
+          built.action.confirm = confirm;
           actions.push(built.action);
           payload = {
-            status: 'Put to the user for confirmation. Nothing has been saved yet. The interface is ' +
-                    'already showing them each field that would change, so do not list the changes again — ' +
-                    'just say briefly what you have put up, and stop.',
+            status: confirm
+              ? 'NOT saved. More than one record could have been the one they meant, so this is ' +
+                'waiting on the user to approve it. Tell them in one line that you have put it up ' +
+                'to check — do not list the fields, the interface shows them.'
+              : 'Saved. The interface is showing them what changed and an Undo button, so do not ' +
+                'list the fields again and do not ask whether they want to keep it. One short line ' +
+                'about what you did, then stop.',
             skipped: built.skipped && built.skipped.length ? built.skipped : undefined,
           };
         }
@@ -486,6 +649,7 @@ async function converse(data, history, account) {
   return {
     reply: 'That turned into more digging than I can do in one go — try asking for one thing at a time.',
     actions: actions,
+    links: links,
   };
 }
 
@@ -497,25 +661,59 @@ function applyAction(data, action) {
   const entry = findCard(data, action && action.recordId);
   if (!entry) throw userError('That record no longer exists.');
 
+  // Shared by both branches: what the card said before we touched it, shaped as
+  // an action that puts it back. Built here rather than when the change was
+  // proposed, because this runs against the freshly-read document — if someone
+  // else edited the record in between, undo must restore what is actually there
+  // now, not what we showed a moment ago.
+  const where = {
+    recordId: String(entry.card.id),
+    recordName: entry.card.deal || entry.card.company || 'Untitled',
+    pipelineId: entry.pipelineId,
+    pipelineName: entry.pipeline.name,
+  };
+
+  // Also restores an empty note, which is how undoing the first note on a record
+  // has to work — add_note rejects empty text, and rightly so.
+  if (action.type === 'restore_note') {
+    const undo = Object.assign({ type: 'restore_note', note: entry.card.note || '' }, where);
+    entry.card.note = String(action.note || '');
+    entry.card.lastActivity = 'just now';
+    entry.card.activityType = entry.card.note ? 'Note added' : 'Note removed';
+    return { recordName: where.recordName, summary: 'Note restored', undo: undo };
+  }
+
   if (action.type === 'add_note') {
     const note = String(action.note || '').trim();
     if (!note) throw userError('The note is empty.');
+    const undo = Object.assign({ type: 'restore_note', note: entry.card.note || '' }, where);
     entry.card.note = note;
     entry.card.noteDate = '';
     entry.card.lastActivity = 'just now';
     entry.card.activityType = 'Note added';
-    return { recordName: entry.card.deal || 'Untitled', summary: 'Note added' };
+    return { recordName: where.recordName, summary: 'Note added', undo: undo };
   }
 
   if (action.type === 'update_record') {
     const changes = Array.isArray(action.changes) ? action.changes : [];
     const applied = [];
+    const back = [];
     changes.forEach(function (ch) {
       if (!ch || EDITABLE_KEYS.indexOf(ch.key) === -1) return;
       if (ch.key === 'stage') {
         const ok = (entry.pipeline.stages || []).some(function (s) { return s.key === ch.after; });
         if (!ok) return;
       }
+      // Read the live value rather than trusting ch.before from the browser.
+      const was = entry.card[ch.key];
+      back.push({
+        key: ch.key,
+        label: ch.label || fieldLabel(ch.key),
+        before: ch.after,
+        after: was == null ? '' : was,
+        beforeText: ch.key === 'stage' ? stageLabel(entry.pipeline, ch.after) : String(ch.after),
+        afterText: ch.key === 'stage' ? stageLabel(entry.pipeline, was) : String(was == null ? '' : was),
+      });
       entry.card[ch.key] = ch.after;
       // Keep the flat contact mirror in step — crm.html and the record page read
       // those, so updating only one side makes the change look half-applied.
@@ -533,7 +731,13 @@ function applyAction(data, action) {
     if (!applied.length) throw userError('None of those changes could be applied.');
     entry.card.lastActivity = 'just now';
     entry.card.activityType = 'Updated';
-    return { recordName: entry.card.deal || 'Untitled', summary: applied.join(', ') + ' updated' };
+    return {
+      recordName: where.recordName,
+      summary: applied.join(', ') + ' updated',
+      // recordName is re-read above, so if the change renamed the record the undo
+      // card still says what it was called when the edit happened.
+      undo: Object.assign({ type: 'update_record', changes: back }, where),
+    };
   }
 
   throw userError('Unknown action.');

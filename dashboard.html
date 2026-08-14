@@ -302,6 +302,22 @@
   .ai-act-state.err { color: #b42318; }
   .ai-act-card.is-done { border-left-color: #1f7a42; }
   .ai-act-card.is-dropped { border-left-color: var(--dir-faint); opacity: 0.6; }
+  .ai-act-card.is-failed { border-left-color: #b42318; }
+  /* Undo is the safety net for a change that saved without asking, so it reads
+     as a real control — outlined, not a text link tucked under the card. */
+  .ai-act-undo {
+    border: 1px solid var(--dir-line); background: var(--dir-surface); color: var(--dir-ink);
+    border-radius: 6px; padding: 5px 11px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  }
+  .ai-act-undo:hover { background: var(--dir-canvas); border-color: var(--dir-muted); }
+  .ai-link { width: 100%; align-self: stretch; }
+  .ai-link-btn {
+    display: inline-block; text-decoration: none;
+    border: 1px solid var(--dir-line); background: var(--dir-surface); color: var(--dir-ink);
+    border-radius: 6px; padding: 6px 12px; font-size: 12.5px; font-weight: 600;
+  }
+  .ai-link-btn:hover { background: var(--dir-canvas); border-color: var(--dir-muted); }
+  .ai-link-steps { font-size: 12px; line-height: 1.5; color: var(--dir-muted); margin-top: 6px; }
 
   .ai-typing { display: inline-flex; gap: 4px; padding: 12px 14px; background: var(--dir-canvas); border: 1px solid var(--dir-hair); border-radius: 4px 13px 13px 13px; }
   .ai-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--dir-faint); animation: ai-blink 1.2s infinite both; }
@@ -1050,11 +1066,13 @@
     });
   }
 
-  // ── Copilot rail (mocked) ───────────────────────────────────────────────────
-  // A preview: it answers a fixed set of prompts from the live numbers rather than
-  // a model. The header says "Preview" and the fallback is honest about it.
-  // Two read prompts and two write prompts, so the write half of the assistant
-  // is discoverable — nobody guesses they can dictate a record change.
+  // ── Copilot rail ────────────────────────────────────────────────────────────
+  // Backed by /api/assistant. The greeting below is still computed locally from
+  // the tiles, so the rail says something useful before anyone types and on a
+  // deployment with no key at all.
+  //
+  // Two read prompts and two write prompts, so the write half is discoverable —
+  // nobody guesses they can dictate a record change at a chat box.
   const CHIPS = [
     'Summarize this pipeline',
     'What needs attention?',
@@ -1112,19 +1130,26 @@
     }).join('');
   }
 
-  // ── Confirm cards ───────────────────────────────────────────────────────────
-  // A proposal, not a change. Nothing has been written when this renders — see
-  // the header of api/_assistant.js for why writes wait for a click.
+  // ── Action cards ────────────────────────────────────────────────────────────
+  // One card per change. Whether it has already happened is the server's call,
+  // not this function's: `done` arrives already written and the card's job is to
+  // show what changed and offer Undo, while `pending` means the target was
+  // ambiguous and nothing was saved. See the safety model in api/_assistant.js.
+  //
+  // Both look similar on purpose — the record and the fields read the same either
+  // way, so the only thing to take in is the footer.
   function actionCardHTML(m, idx) {
     const a = m.action;
-    const isNote = a.type === 'add_note';
-    const done = m.state === 'done', dropped = m.state === 'dropped', busy = m.state === 'busy';
+    const isNote = a.type === 'add_note' || a.type === 'restore_note';
+    const s = m.state;
 
     const body = isNote
-      ? '<div class="ai-act-note">' + esc(a.note) + '</div>' +
+      ? (a.note
+          ? '<div class="ai-act-note">' + esc(a.note) + '</div>'
+          : '<div class="ai-act-note ai-act-old">(no note)</div>') +
         (a.existingNote ? '<div class="ai-act-row"><div class="ai-act-f">Replaces</div>' +
           '<div class="ai-act-v ai-act-old">' + esc(a.existingNote) + '</div></div>' : '')
-      : a.changes.map(function (c) {
+      : (a.changes || []).map(function (c) {
           return '<div class="ai-act-row">' +
             '<div class="ai-act-f">' + esc(c.label) + '</div>' +
             '<div class="ai-act-v">' +
@@ -1133,12 +1158,29 @@
             '</div></div>';
         }).join('');
 
+    let kind;
+    if (a.type === 'restore_note') kind = 'Note restored';
+    else if (s === 'done' || s === 'undoing') kind = isNote ? 'Note added' : 'Record updated';
+    else kind = isNote ? 'Add a note' : 'Update record';
+
     let foot;
-    if (done) {
-      foot = '<div class="ai-act-state ok">Saved</div>';
-    } else if (dropped) {
+    if (s === 'done') {
+      // Undo is the whole reason this saved without asking, so it is a real
+      // button rather than a quiet link.
+      foot = (a.undo ? '<button class="ai-act-undo" type="button" data-undo="' + idx + '">Undo</button>' : '') +
+        (m.error
+          ? '<div class="ai-act-state err">' + esc(m.error) + '</div>'
+          : '<div class="ai-act-state ok">Saved</div>');
+    } else if (s === 'undoing') {
+      foot = '<div class="ai-act-state">Undoing…</div>';
+    } else if (s === 'undone') {
+      foot = '<div class="ai-act-state">Undone</div>';
+    } else if (s === 'dropped') {
       foot = '<div class="ai-act-state">Discarded</div>';
+    } else if (s === 'failed') {
+      foot = '<div class="ai-act-state err">' + esc(m.error || 'Couldn’t save that.') + '</div>';
     } else {
+      const busy = s === 'busy';
       foot =
         '<button class="ai-act-apply" type="button" data-apply="' + idx + '"' + (busy ? ' disabled' : '') + '>' +
           (busy ? 'Saving…' : (isNote ? 'Add note' : 'Apply change')) + '</button>' +
@@ -1147,9 +1189,11 @@
     }
 
     return '<div class="ai-msg ai-act">' +
-      '<div class="ai-act-card' + (done ? ' is-done' : '') + (dropped ? ' is-dropped' : '') + '">' +
+      '<div class="ai-act-card' + (s === 'done' ? ' is-done' : '') +
+        (s === 'dropped' || s === 'undone' ? ' is-dropped' : '') +
+        (s === 'failed' ? ' is-failed' : '') + '">' +
         '<div class="ai-act-head">' +
-          '<div class="ai-act-kind">' + (isNote ? 'Add a note' : 'Update record') + '</div>' +
+          '<div class="ai-act-kind">' + kind + '</div>' +
           '<div class="ai-act-rec">' + esc(a.recordName) + '</div>' +
           '<div class="ai-act-where">' + esc(a.pipelineName) + '</div>' +
         '</div>' +
@@ -1158,10 +1202,24 @@
       '</div></div>';
   }
 
+  // ── Where-to-do-it links ────────────────────────────────────────────────────
+  // The assistant can't delete anything, so it hands over the screen that can.
+  // The path comes from the server against the real routes — the model is never
+  // asked to write a URL, because a plausible-looking 404 is worse than a refusal.
+  function linkCardHTML(link) {
+    // crmPath carries the ?u= persona through, which every CRM link here needs.
+    const href = window.crmPath(link.path);
+    return '<div class="ai-msg ai-link">' +
+      '<a class="ai-link-btn" href="' + esc(href) + '">' + esc(link.label) + ' →</a>' +
+      (link.steps ? '<div class="ai-link-steps">' + esc(link.steps) + '</div>' : '') +
+      '</div>';
+  }
+
   function renderMsgs(typing) {
     const box = document.getElementById('ai-msgs');
     box.innerHTML = aiMsgs.map(function (m, i) {
       if (m.role === 'act') return actionCardHTML(m, i);
+      if (m.role === 'link') return linkCardHTML(m.link);
       const inner = m.role === 'me' ? '<p>' + esc(m.text) + '</p>' : (m.html || textToHtml(m.text));
       return '<div class="ai-msg ' + m.role + '"><div class="bubble">' + inner + '</div></div>';
     }).join('') + (typing ? '<div class="ai-msg bot"><div class="ai-typing"><i></i><i></i><i></i></div></div>' : '');
@@ -1205,9 +1263,19 @@
         aiMsgs.push({ role: 'bot', local: true, html: '<p>' + esc(body.error || 'Something went wrong. Try again in a moment.') + '</p>' });
       } else {
         if (body.reply) aiMsgs.push({ role: 'bot', text: body.reply });
+        (body.links || []).forEach(function (l) { aiMsgs.push({ role: 'link', link: l }); });
+        let wrote = false;
         (body.actions || []).forEach(function (a) {
-          aiMsgs.push({ role: 'act', action: a, state: 'pending' });
+          // The server decides the state: anything it already applied comes back
+          // as "done", so trusting a local default here would show an Apply
+          // button for a change that has already happened.
+          aiMsgs.push({ role: 'act', action: a, state: a.state || 'pending', error: a.error || '' });
+          if (a.state === 'done') wrote = true;
         });
+        // Tiles were computed from data fetched at load, so an applied change
+        // isn't in them yet. Re-pull rather than leave the dashboard quietly
+        // disagreeing with the record the user is looking at.
+        if (wrote) { try { await fetchPipelineData(); render(); } catch (e) {} }
       }
     } catch (e) {
       aiMsgs.push({ role: 'bot', local: true, html: '<p>Couldn’t reach the assistant. Check your connection and try again.</p>' });
@@ -1242,6 +1310,36 @@
       }
     } catch (e) {
       m.state = 'pending';
+      m.error = 'Couldn’t reach the server.';
+    }
+    renderMsgs(false);
+  }
+
+  // Undo posts the inverse action the server handed back with the change. It goes
+  // through the same apply endpoint and the same validation — an undo is an
+  // ordinary edit that happens to restore old values, not a privileged rewind.
+  async function undoAction(idx) {
+    const m = aiMsgs[idx];
+    if (!m || m.role !== 'act' || m.state !== 'done' || !m.action.undo) return;
+    m.state = 'undoing';
+    m.error = '';
+    renderMsgs(false);
+    try {
+      const res = await fetch('/api/assistant-apply?persona=' + encodeURIComponent(window.PERSONA_ID), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: m.action.undo }),
+      });
+      const body = await res.json().catch(function () { return {}; });
+      if (!res.ok) {
+        m.state = 'done';
+        m.error = body.error || 'Couldn’t undo that.';
+      } else {
+        m.state = 'undone';
+        try { await fetchPipelineData(); render(); } catch (e) {}
+      }
+    } catch (e) {
+      m.state = 'done';
       m.error = 'Couldn’t reach the server.';
     }
     renderMsgs(false);
@@ -1290,6 +1388,8 @@
     document.getElementById('ai-msgs').addEventListener('click', function (e) {
       const apply = e.target.closest('[data-apply]');
       if (apply) { applyAction(Number(apply.dataset.apply)); return; }
+      const undo = e.target.closest('[data-undo]');
+      if (undo) { undoAction(Number(undo.dataset.undo)); return; }
       const skip = e.target.closest('[data-skip]');
       if (skip) {
         const m = aiMsgs[Number(skip.dataset.skip)];
