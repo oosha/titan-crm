@@ -34,6 +34,12 @@
   .ao-heading:first-child { margin-top: 0; }
   .ao-add-link { font-size: 12.5px; font-weight: 600; color: #2170f4; cursor: pointer; }
   .ao-add-link:hover { text-decoration: underline; }
+  /* "Missing a field? Configure your <record> fields." — matches the record page.
+     Page-local layout only; reads system tokens. */
+  .ao-field-hint {
+    display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
+    margin-top: var(--space-300, 12px); font-size: 12.5px; color: var(--text-muted);
+  }
   .ao-custom-field { border: 1px solid #ececf0; border-radius: 9px; padding: 14px; margin-top: 12px; position: relative; }
   .ao-custom-field-top { display: flex; gap: 12px; margin-bottom: 10px; }
   .ao-custom-field-top input.np-name-input { flex: 1; }
@@ -170,9 +176,15 @@
       </div>
     </div>
 
-    <div class="ao-card" id="ao-custom-fields-card" style="display:none;">
-      <div class="ao-heading">Custom fields</div>
+    <!-- Which fields this record type has is a pipeline setting, so the card stays
+         visible even with none configured — that's exactly when you'd want to add one. -->
+    <div class="ao-card" id="ao-custom-fields-card">
+      <div class="ao-heading" id="ao-custom-fields-heading">Custom fields</div>
       <div id="ao-custom-fields"></div>
+      <div class="ao-field-hint">
+        <span>Missing a field?</span>
+        <span class="ao-add-link" id="ao-configure-fields" onclick="openRecordSettings()"></span>
+      </div>
     </div>
 
     <div class="ao-note" id="ao-opener-note"></div>
@@ -191,9 +203,13 @@
   // sessionStorage right before navigating here (needed for cross-pipeline contact
   // autocomplete); submitOpportunity() below writes the new card back the same way and
   // navigates to /crm/pipeline/<id> to apply it.
+  //
+  // That handoff only exists when you arrive from the board. A bookmark, a refresh,
+  // or coming back from record settings has nothing stashed — init() below falls back
+  // to fetching the data itself, so this works as a cold deep link.
   let addSource = null;
   try { addSource = JSON.parse(sessionStorage.getItem('titan-crm-add-opportunity-source') || 'null'); } catch (e) {}
-  const allPipelines = (addSource && addSource.pipelines) || null;
+  let allPipelines = (addSource && addSource.pipelines) || null;
   function goBack() { location.href = '/crm/pipeline/' + encodeURIComponent(pipelineKey) + location.search; }
   const ENTITY_LABELS = {
     Opportunity: { name: 'Opportunity name', stage: 'Opportunity stage', date: 'Expected close date' },
@@ -205,16 +221,11 @@
   function entityLabels(entity) { return ENTITY_LABELS[entity] || ENTITY_LABELS.Record; }
   function esc(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
 
-  const pipeline = allPipelines ? allPipelines[pipelineKey] : null;
-  const entity = (pipeline && pipeline.entity) || 'Opportunity';
-  if (!pipeline) {
-    document.getElementById('ao-opener-note').innerHTML =
-      'This pipeline’s data isn’t available (opened directly, not from Titan CRM). ' +
-      '<a href="/crm">Open Titan CRM</a> and use “+ Add” again.';
-  }
+  let pipeline = null;
+  let entity = 'Opportunity';
 
   // Hide any field this pipeline's "Opportunity setting" turned off.
-  (function hideDisabledFields() {
+  function hideDisabledFields() {
     const hiddenKeys = (pipeline && pipeline.hiddenFields) || [];
     hiddenKeys.forEach(function (key) {
       const el = document.getElementById('ao-' + key);
@@ -228,8 +239,11 @@
         el.style.display = 'none';
       }
     });
-  })();
+  }
 
+  function applyPipeline() {
+  entity = (pipeline && pipeline.entity) || 'Opportunity';
+  hideDisabledFields();
   document.getElementById('ao-top-title').textContent = 'Add a new ' + entity.toLowerCase();
   document.getElementById('ao-btn-entity').textContent = entity.toLowerCase();
   document.querySelector('.ao-btn-primary').style.background = (pipeline && pipeline.color) || '#2170f4';
@@ -247,13 +261,14 @@
     el.min = todayStr; el.max = '2030-12-31';
   })();
 
-  // Stage options + contact autocomplete, sourced from the handed-off pipeline data.
+  // Stage options + contact autocomplete, sourced from the pipeline data.
   const stageSelect = document.getElementById('ao-stage');
   const stages = (pipeline && pipeline.stages) || [];
   stageSelect.innerHTML = stages.map(function (s) { return '<option value="' + s.key + '">' + s.label + '</option>'; }).join('');
   ['ao-stage', 'ao-currency'].forEach(function (id) { document.getElementById(id).addEventListener('wheel', function () { this.blur(); }); });
 
   const contactList = document.getElementById('ao-contact-list');
+  contactList.innerHTML = '';
   if (allPipelines) {
     const seen = {};
     Object.keys(allPipelines).forEach(function (pid) {
@@ -269,6 +284,10 @@
   }
   document.getElementById('ao-currency').value = (addSource && addSource.currencySymbol) || '$';
 
+  customFieldDefs = (pipeline && pipeline.customFieldDefs) || [];
+  renderCustomFields();
+  }
+
   function syncContactLabel() {
     const name = document.getElementById('ao-contact').value.trim();
     document.getElementById('ao-contact-info-heading').textContent = name ? name + '’s contact details' : 'Contact’s details';
@@ -276,7 +295,7 @@
 
   // ── Custom fields: schema comes from this pipeline's Opportunity setting —
   // only the value is entered here, the field itself is defined there. ──
-  const customFieldDefs = (pipeline && pipeline.customFieldDefs) || [];
+  let customFieldDefs = [];
   const customFieldValues = {};
   function setCustomFieldValue(key, val) { customFieldValues[key] = val; }
   function customFieldValueHTML(f) {
@@ -297,10 +316,12 @@
     return '<input class="np-name-input" type="text" placeholder="Value" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">';
   }
   function renderCustomFields() {
-    if (!customFieldDefs.length) return;
-    document.getElementById('ao-custom-fields-card').style.display = '';
+    document.getElementById('ao-custom-fields-heading').textContent = entity + ' fields';
+    document.getElementById('ao-configure-fields').textContent =
+      'Configure your ' + entity.toLowerCase() + ' fields.';
     const wrap = document.getElementById('ao-custom-fields');
     wrap.innerHTML = '';
+    if (!customFieldDefs.length) return;
     customFieldDefs.forEach(function (f) {
       const row = document.createElement('div');
       row.style.marginBottom = '18px';
@@ -309,7 +330,34 @@
     });
     wrap.lastElementChild.style.marginBottom = '0';
   }
-  renderCustomFields();
+
+  // Nothing on this page is saved until Add is pressed, so leaving for the settings
+  // page discards whatever has been typed — say so rather than losing it silently.
+  function openRecordSettings() {
+    const dirty = Array.from(document.querySelectorAll('.ao-wrap input, .ao-wrap textarea'))
+      .some(function (el) { return (el.value || '').trim(); });
+    if (dirty && !confirm('Leave without adding this ' + entity.toLowerCase() + '? What you\'ve typed will be lost.')) return;
+    location.href = '/crm/pipeline/' + encodeURIComponent(pipelineKey) + '/record-setting' + location.search;
+  }
+
+  async function init() {
+    if (!allPipelines) {
+      try {
+        const res = await fetch('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID || 'default'), { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          allPipelines = data.pipelines || null;
+        }
+      } catch (e) { /* handled by the note below */ }
+    }
+    pipeline = allPipelines ? allPipelines[pipelineKey] : null;
+    if (!pipeline) {
+      document.getElementById('ao-opener-note').innerHTML =
+        'This pipeline couldn’t be loaded. <a href="/crm">Open Titan CRM</a> and try again.';
+    }
+    applyPipeline();
+  }
+  init();
 
   function submitOpportunity() {
     const name = document.getElementById('ao-name').value.trim();

@@ -88,6 +88,13 @@
   .ov-add-link { font-size: 12.5px; font-weight: 600; color: #2170f4; cursor: pointer; display: inline-block; margin-top: 12px; }
   .ov-add-link:hover { text-decoration: underline; }
   .ov-field-empty { font-size: 13px; color: #9aa1a9; }
+  /* "Missing a field? Configure your <record> fields." — the question is quiet, the
+     action next to it is the link. Page-local layout only; reads system tokens. */
+  .ov-field-hint {
+    display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
+    margin-top: var(--space-300, 12px); font-size: 12.5px; color: var(--text-muted);
+  }
+  .ov-field-hint .ov-add-link { margin-top: 0; }
 
   .ov-custom-field { border: 1px solid #ececf0; border-radius: 9px; padding: 14px; margin-top: 12px; }
   .ov-custom-field:first-of-type { margin-top: 0; }
@@ -522,7 +529,10 @@
           <div class="ov-heading" id="ov-custom-fields-heading">Custom fields</div>
           <div id="ov-custom-fields"></div>
           <div class="ov-field-empty" id="ov-custom-fields-empty" style="display:none;"></div>
-          <span class="ov-add-link" id="ov-configure-fields" onclick="openRecordSettings()"></span>
+          <div class="ov-field-hint">
+            <span id="ov-configure-fields-lead">Missing a field?</span>
+            <span class="ov-add-link" id="ov-configure-fields" onclick="openRecordSettings()"></span>
+          </div>
         </div>
       </div>
 
@@ -1359,7 +1369,7 @@
     const entity = pipeline.entity || 'Record';
     document.getElementById('ov-custom-fields-heading').textContent = entity + ' fields';
     document.getElementById('ov-configure-fields').textContent =
-      (defs.length ? 'Add or edit ' : 'Set up ') + entity.toLowerCase() + ' fields';
+      'Configure your ' + entity.toLowerCase() + ' fields.';
     emptyEl.style.display = defs.length ? 'none' : '';
     emptyEl.textContent = 'No custom fields on ' + (pipeline.name || 'this pipeline') + ' yet.';
     // Render custom fields with the same label+input treatment as the standard
