@@ -823,7 +823,12 @@
         }
       ],
       "contactsEnabled": true,
-      "team": [],
+      "team": [
+        {
+          "name": "Sam Mathews",
+          "email": "sam.mathews@avontechlabs.com"
+        }
+      ],
       "type": "sales",
       "intakeForm": {
         "token": "default.281o51736o",
