@@ -3043,9 +3043,11 @@
             </span>
           </button>
 
-          <!-- 3. Forms that already exist elsewhere — one row like the other two;
-               opening it goes one screen deeper to the individual tools. -->
-          <button type="button" class="ds-card ds-card--interactive np-src-row" id="np-src-integrations-card" onclick="npShowStep(5)">
+          <!-- 3. Forms that already exist elsewhere. Goes to the Integrations page
+               rather than a shallower copy of it inside this modal — the pipeline
+               already exists by this step (npCreate runs on step 3), so leaving the
+               flow costs nothing, and connecting a tool is a job with its own screen. -->
+          <button type="button" class="ds-card ds-card--interactive np-src-row" id="np-src-integrations-card" onclick="npGoIntegrations()">
             <span class="np-src-tick"><span data-ds-icon="check" data-size="11"></span></span>
             <!-- Same icon the sidebar uses for Integrations, from the design system. -->
             <span class="np-src-icon"><span data-ds-icon="integrations" data-size="18"></span></span>
@@ -5021,6 +5023,14 @@
 
     function slugify(s, i) {
       return (s || 'stage').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + i;
+    }
+
+    // Deep link to the Integrations tab, carrying the persona and telling the page
+    // which pipeline the user was setting up so a connection lands on it.
+    function npGoIntegrations() {
+      const q = new URLSearchParams(location.search);
+      if (npCreatedId) q.set('pipeline', npCreatedId);
+      location.href = '/crm/integrations' + (q.toString() ? '?' + q.toString() : '');
     }
 
     function npCreate() {

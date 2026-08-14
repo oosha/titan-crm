@@ -325,8 +325,8 @@
           "location": "San Jose, US",
           "closeDate": "",
           "source": "",
-          "note": "They're ready to move to the next phase as long as we give concrete integration timelines.",
-          "noteDate": "",
+          "note": "They did not seem interested the last time",
+          "noteDate": "14 Aug at 4:31 pm",
           "contacts": [
             {
               "name": "Ryan Walker",
@@ -372,16 +372,27 @@
             },
             {
               "type": "task",
-              "text": "Send updated proposal deck",
-              "overdue": true
-            },
-            {
-              "type": "task",
               "text": "Schedule follow-up call",
               "date": "Mon, 5pm"
+            },
+            {
+              "type": "call",
+              "text": "Schedule a call",
+              "date": "Friday at 1"
             }
           ],
           "recentActivities": [
+            {
+              "type": "note",
+              "text": "They did not seem interested the last time",
+              "author": "Usha",
+              "date": "14 Aug at 4:31 pm"
+            },
+            {
+              "type": "task",
+              "text": "Send updated proposal deck",
+              "date": "Just now"
+            },
             {
               "type": "note",
               "text": "AI capabilities are not clear to them yet and need a walkthrough",
@@ -471,7 +482,7 @@
           "contactPhone": "+1 (415) 555-0134",
           "contactDesignation": "VP, Product",
           "contactLinkedin": "linkedin.com/in/ryanwalker",
-          "noteAuthor": "John",
+          "noteAuthor": "Usha",
           "noteHistory": [
             {
               "text": "AI capabilities are not clear to them yet and need a walkthrough",
@@ -485,7 +496,11 @@
             }
           ],
           "status": "In progress",
-          "autoLinkActivity": true
+          "autoLinkActivity": true,
+          "owner": {
+            "name": "Ella Henderson",
+            "email": "ella.henderson@avontechlabs.com"
+          }
         },
         {
           "id": 7,

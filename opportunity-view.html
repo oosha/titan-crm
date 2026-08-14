@@ -58,7 +58,10 @@
      currency symbols do. */
   .ov-owner-select { font-size: var(--text-xs); color: var(--text-primary); max-width: 180px; }
   .ov-value-input { font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--text-secondary); width: 90px; padding-left: var(--space-025); }
-  .ov-dot { color: #ccc; }
+  .ov-dot { color: var(--border-strong); }
+  /* Anchored right rather than trailing the company name, where it read as
+     floating in the middle of the row. */
+  .ov-owner { margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-050); }
 
   .ov-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-200) var(--space-300); margin-top: var(--space-300); }
   .ov-field { display: flex; flex-direction: column; }
@@ -134,6 +137,8 @@
   /* Position in the pipeline, under the control that changes it. */
   .ov-stage-bar { display: flex; gap: var(--space-025); }
   .ov-seg { flex: 1; height: 4px; border-radius: 2px; background: var(--border-subtle); }
+  /* Filled segments take the pipeline's own colour, set in renderStageBar — the
+     pill above already does, and a purple pipeline with a blue bar read as a bug. */
   .ov-seg.is-on { background: var(--accent-primary); }
 
   /* display: contents so the custom fields become items of the deal's own field
@@ -170,6 +175,42 @@
   }
   .ov-act-draft .ov-act-draft-text { flex: 1; min-width: 0; }
   .ov-act-draft .ov-act-draft-date { width: 140px; flex-shrink: 0; }
+
+  /* Actions live top-right, beside the record's name — where you look to act on
+     the thing you just identified, not at the bottom of a list. */
+  .ov-title-actions { display: flex; align-items: center; gap: var(--space-075); flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .ov-more-wrap { position: relative; }
+  .ov-more-menu {
+    display: none; position: absolute; right: 0; top: calc(100% + var(--space-075));
+    min-width: 260px; z-index: 40; padding: var(--space-075);
+    background: var(--surface-primary); border: 1px solid var(--border-subtle);
+    border-radius: 10px; box-shadow: var(--elevation-menu);
+  }
+  .ov-more-menu.open { display: block; }
+  .ov-more-item {
+    display: flex; align-items: center; gap: var(--space-100); width: 100%; text-align: left;
+    padding: var(--space-100) var(--space-125); border: none; background: none; border-radius: 7px;
+    font: inherit; font-size: var(--text-sm); color: var(--text-primary); cursor: pointer;
+  }
+  .ov-more-item:hover { background: var(--surface-hover); }
+  .ov-more-check { cursor: pointer; }
+  .ov-more-check input { flex-shrink: 0; }
+  .ov-key .ov-owner-select { width: 100%; }
+
+  .ov-pick-search { width: 100%; margin-bottom: var(--space-150); }
+  .ov-pick-list { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; }
+  .ov-pick-row {
+    display: flex; align-items: center; gap: var(--space-125); width: 100%; text-align: left;
+    padding: var(--space-100); border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit;
+  }
+  .ov-pick-row:hover { background: var(--surface-hover); }
+  .ov-pick-row:disabled { opacity: .45; cursor: default; }
+  .ov-pick-id { display: flex; flex-direction: column; gap: var(--space-025); min-width: 0; }
+  .ov-pick-name { font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-primary); }
+  .ov-pick-sub { font-size: var(--text-xs); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ov-pick-on { margin-left: auto; font-size: var(--text-2xs); color: var(--text-secondary); flex-shrink: 0; }
+  .ov-pick-empty { padding: var(--space-200); font-size: var(--text-sm); color: var(--text-secondary); text-align: center; }
+  .ov-contact-remove { margin-bottom: var(--space-100); }
 
   /* An upcoming item with no date can't be chased; say so rather than leave a gap. */
   .crm-activity-date.is-undated { color: var(--text-secondary); font-style: italic; }
@@ -507,11 +548,44 @@
         <div class="ov-section ds-card ds-card--section">
           <div class="ov-title-row">
             <input class="ds-input ds-input--inline ov-title-input" id="ov-name" placeholder="Opportunity name" oninput="onFieldChange()">
-            <button class="ov-ai-btn ds-btn ds-btn--soft ds-btn--sm" id="ov-ai-btn" type="button"
-                    onclick="toggleAiSummary()" aria-expanded="false" aria-controls="ov-ai-card">
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
-              AI summary
-            </button>
+            <div class="ov-title-actions">
+              <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actEmail()" title="Write an email to this record's contacts">
+                <span data-ds-icon="mail" data-size="15"></span> Email
+              </button>
+              <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actCall()" title="Schedule a call">
+                <span data-ds-icon="phone" data-size="15"></span> Call
+              </button>
+              <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actBooking()" title="Send a booking link">
+                <span data-ds-icon="calendar" data-size="15"></span> Booking link
+              </button>
+              <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actNote()">
+                <span data-ds-icon="drafts" data-size="15"></span> Note
+              </button>
+              <button class="ov-ai-btn ds-btn ds-btn--soft ds-btn--sm" id="ov-ai-btn" type="button"
+                      onclick="toggleAiSummary()" aria-expanded="false" aria-controls="ov-ai-card">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
+                AI summary
+              </button>
+              <!-- Settings-shaped things that were sitting in the middle of the record:
+                   a "Missing a field?" link between two field rows, and a checkbox
+                   about activity linking under everything. Neither is part of reading
+                   or editing this deal, so both live behind the overflow. -->
+              <div class="ov-more-wrap">
+                <button class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm" id="ov-more-btn" type="button"
+                        aria-label="More options" aria-expanded="false" onclick="toggleMoreMenu(event)">
+                  <span data-ds-icon="more" data-size="16"></span>
+                </button>
+                <div class="ov-more-menu" id="ov-more-menu">
+                  <button class="ov-more-item" type="button" onclick="openRecordSettings()">
+                    <span id="ov-configure-fields">Configure fields</span>
+                  </button>
+                  <label class="ov-more-item ov-more-check">
+                    <input type="checkbox" id="ov-autolink" checked onchange="onFieldChange()">
+                    <span>Auto-link contacts' activity to this <span id="ov-autolink-entity">opportunity</span></span>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="ov-ai-card" id="ov-ai-card">
             <div class="ov-ai-head">
@@ -524,9 +598,7 @@
           <div class="ov-meta-row">
             <span id="ov-company-logo"></span>
             <input class="ds-input ds-input--inline ov-company-input" id="ov-company" data-field="company" placeholder="Company" oninput="onFieldChange()">
-            <span class="ov-dot">&middot;</span>
-            <span class="ov-value-label">Owner</span>
-            <select class="ds-input ds-input--inline ov-owner-select" id="ov-owner" onchange="onOwnerChange()"></select>
+
           </div>
           <div class="ov-created-by" id="ov-created-by"></div>
 
@@ -573,6 +645,13 @@
               </div>
             </div>
 
+            <!-- "Owner" beside a company name reads as who owns the company. This is
+                 the colleague carrying the deal, so it says so. -->
+            <div class="ov-key">
+              <div class="ov-key-label">Assigned to</div>
+              <select class="ds-input ov-key-input ov-owner-select" id="ov-owner" onchange="onOwnerChange()"></select>
+            </div>
+
             <div class="ov-key" data-field="close-date">
               <div class="ov-key-label"><span class="ov-field-label-text" id="ov-close-label">Expected close date</span></div>
               <input class="ds-input ov-key-input" id="ov-close-date" type="date" oninput="onFieldChange()">
@@ -590,15 +669,6 @@
             <div id="ov-custom-fields" class="ov-fields-contents"></div>
           </div>
           <div class="ov-field-empty" id="ov-custom-fields-empty" style="display:none;"></div>
-          <div class="ov-field-hint">
-            <span id="ov-configure-fields-lead">Missing a field?</span>
-            <span class="ov-add-link" id="ov-configure-fields" onclick="openRecordSettings()"></span>
-          </div>
-
-          <label class="ov-autolink-row">
-            <input type="checkbox" id="ov-autolink" checked onchange="onFieldChange()">
-            <span>Automatically link all activity with contacts to this <span id="ov-autolink-entity">opportunity</span></span>
-          </label>
         </div>
 
         <!-- The company's own details, in their own box. They describe Meridian Labs
@@ -640,34 +710,14 @@
         </div>
 
         <div class="ov-section ds-card ds-card--section">
-          <div class="ov-heading">Upcoming activity</div>
+          <!-- Was "Upcoming activity", which had to cover both things you must do and
+               things already in the diary, and ended up listing a past meeting as
+               upcoming. This is the to-do list for this record: every row is
+               something to finish and can be ticked off. What happened lives in
+               Activity below; what you start lives in the buttons above. -->
+          <div class="ov-heading">Tasks</div>
           <div id="ov-upcoming-activity"></div>
-          <div class="crm-add-activity" onclick="openActivityMenu(event)">+ Add activity</div>
-          <div class="crm-activity-menu" id="ov-activity-menu">
-            <div class="cam2-bar" id="ov-activity-menu-bar">No activity yet</div>
-            <div class="cam2-items">
-              <div class="cam2-item" onclick="addActivity('followup')">
-                <span class="ic"><span data-ds-icon="mail" data-size="16"></span></span>
-                Follow-up on email
-              </div>
-              <div class="cam2-item" onclick="addActivity('call')">
-                <span class="ic"><span data-ds-icon="phone" data-size="16"></span></span>
-                Schedule a call
-              </div>
-              <div class="cam2-item" onclick="addActivity('booking')">
-                <span class="ic"><span data-ds-icon="calendar" data-size="16"></span></span>
-                Send a booking link
-              </div>
-              <div class="cam2-item" onclick="addActivity('task')">
-                <span class="ic"><span data-ds-icon="check" data-size="16"></span></span>
-                Create a task
-              </div>
-              <div class="cam2-item" onclick="addActivity('note')">
-                <span class="ic"><span data-ds-icon="drafts" data-size="16"></span></span>
-                Add a note
-              </div>
-            </div>
-          </div>
+          <div class="crm-add-activity" onclick="addActivity('task')">+ Add task</div>
         </div>
 
         <div class="ov-section ds-card ds-card--section">
@@ -678,7 +728,7 @@
 
 
         <div class="ov-section ds-card ds-card--section">
-          <div class="ov-heading">Recent activity</div>
+          <div class="ov-heading">Activity</div>
           <div id="ov-recent-activity"></div>
         </div>
 
@@ -719,6 +769,28 @@
 
 <!-- Email activity detail — shown when the email was logged by someone other than the
      current user (your own emails open for real in the mailclient instead). -->
+<!-- Adding a contact used to append a blank row, so the same person got retyped
+     onto every deal they touched and the spellings drifted. This offers everyone
+     already in the CRM first, and falls back to creating a new one. -->
+<div class="ov-modal-overlay" id="ov-pick-contact-modal" onclick="if(event.target===this) closeOvModal('ov-pick-contact-modal')">
+  <div class="ov-modal">
+    <div class="ov-modal-header">
+      <div>
+        <div class="ov-modal-title">Add a contact</div>
+        <div class="ov-modal-subtitle">Someone already in Titan, or a new person</div>
+      </div>
+      <span class="ov-modal-close" onclick="closeOvModal('ov-pick-contact-modal')">&times;</span>
+    </div>
+    <div class="ov-modal-body">
+      <input class="ds-input ov-pick-search" id="ov-pick-search" placeholder="Search contacts by name or email" oninput="renderContactPicker()">
+      <div class="ov-pick-list" id="ov-pick-list"></div>
+    </div>
+    <div class="ov-modal-footer">
+      <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="addBlankContact()">Create a new contact</button>
+    </div>
+  </div>
+</div>
+
 <div class="ov-modal-overlay" id="ov-email-modal" onclick="if(event.target===this) closeOvModal('ov-email-modal')">
   <div class="ov-modal">
     <div class="ov-modal-header">
@@ -1022,6 +1094,25 @@
   // one-line summary from the record's own data instead (contact, company, stage,
   // value, latest note), which is both true parity (the same toggleable AI-summary
   // affordance) and "more" (it actually reflects the record you're looking at).
+  function toggleMoreMenu(evt) {
+    if (evt) evt.stopPropagation();
+    const m = document.getElementById('ov-more-menu');
+    const btn = document.getElementById('ov-more-btn');
+    const open = m.classList.toggle('open');
+    btn.setAttribute('aria-expanded', String(open));
+    if (open) setTimeout(function () { document.addEventListener('click', outsideMoreMenu); }, 0);
+    else document.removeEventListener('click', outsideMoreMenu);
+  }
+  function outsideMoreMenu(e) {
+    const m = document.getElementById('ov-more-menu');
+    // The checkbox inside the menu must not close it out from under the click.
+    if (m && !m.contains(e.target)) {
+      m.classList.remove('open');
+      document.getElementById('ov-more-btn').setAttribute('aria-expanded', 'false');
+      document.removeEventListener('click', outsideMoreMenu);
+    }
+  }
+
   function toggleAiSummary() {
     const cardEl = document.getElementById('ov-ai-card');
     const btn = document.getElementById('ov-ai-btn');
@@ -1141,15 +1232,24 @@
     const btn = document.getElementById('ov-add-note-btn');
     btn.style.display = input.value.trim() ? '' : 'none';
   }
+  const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   function formatNoteDate(d) {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return d.getDate() + ' ' + months[d.getMonth()];
+    return d.getDate() + ' ' + MONTH_ABBR[d.getMonth()];
+  }
+  // "5 Aug at 2:41 pm". A note is a record of when someone said something, so the
+  // hour matters as much as the day — two notes on one day used to be
+  // indistinguishable. Kept as a display string like the rest of this data.
+  function formatNoteStamp(d) {
+    let h = d.getHours(); const ampm = h >= 12 ? 'pm' : 'am';
+    h = h % 12 || 12;
+    const mins = String(d.getMinutes()).padStart(2, '0');
+    return formatNoteDate(d) + ' at ' + h + ':' + mins + ' ' + ampm;
   }
   function addNote() {
     const input = document.getElementById('ov-note-input');
     const text = input.value.trim();
     if (!text) return;
-    const now = formatNoteDate(new Date());
+    const now = formatNoteStamp(new Date());
     // The outgoing note is not copied into card.noteHistory: it is about to be
     // logged to Recent Activity just below, and writing both is what produced the
     // duplication this section used to show.
@@ -1232,8 +1332,10 @@
             (i === 0 && schema && !schema.isPerson ? '<span class="ds-badge ds-badge--accent ds-badge--pill">Contact person</span>' : '') +
             '<span class="ov-contact-caret"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.5 6.5L8 10l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
           '</div>' +
-          (contactsEnabled && contacts.length > 1 ? '<span class="ov-contact-x" onclick="removeContact(' + i + ')" title="Remove">&times;</span>' : '') +
         '</div>' +
+        (contactsEnabled && contacts.length > 1
+          ? '<div class="ov-contact-grid ov-contact-remove"><button class="ds-btn ds-btn--destructive-quiet ds-btn--sm" type="button" onclick="removeContact(' + i + ')">Remove from this record</button></div>'
+          : '') +
         (nameHidden ? '' : '<div class="ov-contact-grid ov-contact-namerow"><input class="ds-input" placeholder="Name" value="' + esc(c.name) + '" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);"></div>') +
         '<div class="ov-contact-grid">' +
           (fieldHidden('contact-email') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-email')) + '" value="' + esc(c.email) + '" oninput="setContactField(' + i + ',\'email\',this.value)">') +
@@ -1251,13 +1353,80 @@
     // no "additional contact" to add. Company-subject only, like contact-name.
     if (addLink) addLink.style.display = (contactsEnabled && schema && !schema.isPerson) ? '' : 'none';
   }
-  function addContact() {
+  // Everyone on any record in this account, deduped on email — the same key
+  // contactKey() uses elsewhere, so "already added" means the same thing here as
+  // it does on the Contacts page.
+  function knownContacts() {
+    const seen = Object.create(null), out = [];
+    Object.keys(pipelines || {}).forEach(function (pid) {
+      (pipelines[pid].cards || []).forEach(function (c) {
+        (window.contactsOf ? window.contactsOf(c) : (c.contacts || [])).forEach(function (person) {
+          const key = String(person.email || person.name || '').trim().toLowerCase();
+          if (!key || seen[key]) return;
+          seen[key] = true;
+          out.push({ person: person, company: c.company || '' });
+        });
+      });
+    });
+    return out.sort(function (a, b) { return String(a.person.name || '').localeCompare(String(b.person.name || '')); });
+  }
+  function onThisRecord(person) {
+    const key = String(person.email || person.name || '').trim().toLowerCase();
+    return (contacts || []).some(function (c) {
+      return String(c.email || c.name || '').trim().toLowerCase() === key;
+    });
+  }
+
+  function renderContactPicker() {
+    const q = (document.getElementById('ov-pick-search').value || '').trim().toLowerCase();
+    const list = document.getElementById('ov-pick-list');
+    const rows = knownContacts().filter(function (e) {
+      return !q || (String(e.person.name || '') + ' ' + String(e.person.email || '')).toLowerCase().indexOf(q) !== -1;
+    });
+    list.innerHTML = rows.length ? rows.map(function (e, i) {
+      const already = onThisRecord(e.person);
+      const sub = [e.person.designation, e.person.email].filter(Boolean).join(' · ');
+      return '<button class="ov-pick-row" type="button"' + (already ? ' disabled' : '') +
+        ' onclick="pickContact(' + i + ')">' +
+        '<span class="crm-contact-avatar" style="width:28px;height:28px;border-radius:50%;background:#8a9099;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0;">' +
+          esc((e.person.name || '?').charAt(0).toUpperCase()) + '</span>' +
+        '<span class="ov-pick-id"><span class="ov-pick-name">' + esc(e.person.name || 'Unnamed') + '</span>' +
+        (sub ? '<span class="ov-pick-sub">' + esc(sub) + '</span>' : '') + '</span>' +
+        (already ? '<span class="ov-pick-on">Already added</span>'
+                 : (e.company ? '<span class="ov-pick-on">' + esc(e.company) + '</span>' : '')) +
+      '</button>';
+    }).join('') : '<div class="ov-pick-empty">No one matches that. Create a new contact below.</div>';
+    // Index into the same filtered list the buttons were built from.
+    pickerRows = rows;
+  }
+  let pickerRows = [];
+
+  function pickContact(i) {
+    const entry = pickerRows[i];
+    if (!entry || onThisRecord(entry.person)) return;
+    const p = entry.person;
+    contacts.push({ name: p.name || '', email: p.email || '', designation: p.designation || '',
+                    phone: p.phone || '', department: p.department || '', location: p.location || '',
+                    linkedin: p.linkedin || '' });
+    closeOvModal('ov-pick-contact-modal');
+    renderContacts();
+    onFieldChange();
+  }
+
+  function addBlankContact() {
+    closeOvModal('ov-pick-contact-modal');
     contacts.push({ name: '', email: '', designation: '', phone: '', department: '', location: '', linkedin: '' });
     renderContacts();
-    // A blank contact has nothing to summarise, so it opens straight into its fields.
     const rows = document.querySelectorAll('#ov-contacts .ov-contact');
     const last = rows[rows.length - 1];
     if (last) { last.classList.remove('is-collapsed'); const f = last.querySelector('input'); if (f) f.focus(); }
+  }
+
+  function addContact() {
+    document.getElementById('ov-pick-search').value = '';
+    renderContactPicker();
+    document.getElementById('ov-pick-contact-modal').classList.add('open');
+    setTimeout(function () { document.getElementById('ov-pick-search').focus(); }, 50);
   }
   function removeContact(i) { contacts.splice(i, 1); renderContacts(); onFieldChange(); }
 
@@ -1305,9 +1474,12 @@
     if (!host) return;
     const stages = pipeline.stages || [];
     const at = stages.findIndex(function (st) { return st.key === card.stage; });
+    const color = pipeline.color || 'var(--accent-primary)';
     host.innerHTML = stages.map(function (st, i) {
-      return '<span class="ov-seg' + (at > -1 && i <= at ? ' is-on' : '') +
-        '" title="' + esc(st.label || st.key) + '"></span>';
+      const on = at > -1 && i <= at;
+      return '<span class="ov-seg' + (on ? ' is-on' : '') + '"' +
+        (on ? ' style="background:' + esc(color) + ';"' : '') +
+        ' title="' + esc(st.label || st.key) + '"></span>';
     }).join('');
   }
 
@@ -1349,9 +1521,7 @@
             ? '<span class="crm-act-check" onclick="toggleActTask(' + i + ')" title="Mark done"><span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l2.6 2.6L11.8 5" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>'
             : actIcon(a.type);
           // Email/meeting rows open detail (mailclient, or a modal here) on click.
-          const isOpenable = a.type === 'email' || a.type === 'meeting';
-          return '<div class="crm-activity-row' + (isOpenable ? ' clickable' : '') + '"' +
-            (isOpenable ? ' onclick="openActivityDetail(\'upcoming\',' + i + ')"' : '') + '>' + iconHTML +
+          return '<div class="crm-activity-row clickable" onclick="openActivityDetail(\'upcoming\',' + i + ')">' + iconHTML +
             '<div class="crm-activity-text">' + esc(a.text) + '</div>' +
             (a.date
               ? '<div class="crm-activity-date' + ((a.overdue || looksPast(a.date)) ? ' overdue' : '') + '">' + esc(a.date) + '</div>'
@@ -1376,9 +1546,7 @@
             ? '<div class="crm-activity-snippet crm-snippet-link">' + actIconSvgOnly('email') + '<span>' + esc(a.snippetLink) + '</span></div>'
             : ((a.snippet || (isNote && a.text)) ? '<div class="crm-activity-snippet">' + esc(a.snippet || a.text) + '</div>' : '');
           // Email/meeting rows open detail (mailclient, or a modal here) on click.
-          const isOpenable = a.type === 'email' || a.type === 'meeting';
-          return '<div class="crm-activity-row' + (isOpenable ? ' clickable' : '') + '"' +
-            (isOpenable ? ' onclick="openActivityDetail(\'recent\',' + i + ')"' : '') + '>' + actIcon(a.type) +
+          return '<div class="crm-activity-row clickable" onclick="openActivityDetail(\'recent\',' + i + ')">' + actIcon(a.type) +
             '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + title + '</div>' + snippetHTML + '</div>' +
             (a.date ? '<div class="crm-activity-date">' + esc(a.date) + '</div>' : '') +
             '</div>';
@@ -1438,14 +1606,32 @@
     const list = listKind === 'upcoming' ? upcomingActivityList() : (card.recentActivities || []);
     const a = list[i];
     if (!a) return;
-    if (a.type === 'email') {
+    if (a.type === 'email' || a.type === 'followup') {
       // Own email -> go read it for real in the mailclient; someone else's -> show it
       // here instead of navigating away from the record.
       if (isCurrentUser(a.author)) location.href = '/mail' + location.search;
       else openEmailModal(a);
-    } else if (a.type === 'meeting') {
+    } else if (a.type === 'meeting' || a.type === 'booking') {
       openMeetingModal(a);
+    } else {
+      // Notes, calls and tasks had no detail view, so two thirds of the feed
+      // looked inert. They carry less than an email does, but "who, when, and
+      // what it said" is exactly what you click a log entry to find out.
+      openSimpleActivityModal(a);
     }
+  }
+
+  function openSimpleActivityModal(a) {
+    const isNote = a.type === 'note';
+    const kind = isNote ? 'Note' : a.type === 'phone' || a.type === 'call' ? 'Call' : 'Task';
+    const who = a.author || NOTE_AUTHOR;
+    document.getElementById('ov-email-modal-subject').textContent =
+      isNote ? 'Note' : (a.text || kind);
+    document.getElementById('ov-email-modal-meta').textContent =
+      (isNote ? 'Added by ' + who : who) + (a.date ? ' · ' + a.date : '');
+    document.getElementById('ov-email-modal-body').innerHTML =
+      '<div class="ov-modal-text">' + esc(a.snippet || a.text || '') + '</div>';
+    document.getElementById('ov-email-modal').classList.add('open');
   }
 
   function openEmailModal(a) {
@@ -1534,8 +1720,12 @@
   let driveToastTimer = null;
   function addToDrive(i) {
     const f = (card.files || [])[i];
+    showToast(f ? '"' + f.name + '" has been added to Drive' : 'Attachment has been added to Drive');
+  }
+  // The page already had one toast, hardcoded to Drive. Same element, any message.
+  function showToast(text) {
     const msg = document.getElementById('ov-drive-toast-msg');
-    if (msg) msg.textContent = f ? '"' + f.name + '" has been added to Drive' : 'Attachment has been added to Drive';
+    if (msg) msg.textContent = text;
     const t = document.getElementById('ov-drive-toast');
     t.classList.add('show');
     clearTimeout(driveToastTimer);
@@ -1564,39 +1754,6 @@
   // "+ Add activity" — same menu the mailclient CRM panel's card action icon shows, but
   // wired to actually create the activity (that panel leaves it as a prototype-only
   // stub for everything except notes).
-  function openActivityMenu(evt) {
-    if (evt) evt.stopPropagation();
-    const m = document.getElementById('ov-activity-menu');
-    const trigger = evt && (evt.currentTarget || evt.target);
-    const bar = document.getElementById('ov-activity-menu-bar');
-    const recentItems = (card.recentActivities && card.recentActivities.length) ? card.recentActivities : null;
-    bar.textContent = recentItems
-      ? ('Last activity: ' + recentItems[0].text + (recentItems[0].date ? ' · ' + recentItems[0].date : ''))
-      : ((card.activityType || card.lastActivity) ? ('Last activity: ' + (card.activityType || 'Activity') + ' ' + (card.lastActivity || '')) : 'No activity yet');
-    m.classList.add('open');
-    if (trigger && trigger.getBoundingClientRect) {
-      const r = trigger.getBoundingClientRect();
-      const w = m.offsetWidth || 214;
-      const h = m.offsetHeight || 190;
-      let left = r.left;
-      if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
-      if (left < 8) left = 8;
-      let top = r.bottom + 6;
-      if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 6);
-      m.style.left = left + 'px';
-      m.style.top = top + 'px';
-    }
-    setTimeout(function () { document.addEventListener('click', outsideActivityMenu); }, 0);
-  }
-  function outsideActivityMenu(e) {
-    const m = document.getElementById('ov-activity-menu');
-    if (m && !m.contains(e.target)) closeActivityMenu();
-  }
-  function closeActivityMenu() {
-    const m = document.getElementById('ov-activity-menu');
-    if (m) m.classList.remove('open');
-    document.removeEventListener('click', outsideActivityMenu);
-  }
   const ACT_LABELS = { followup: 'Follow-up on email', call: 'Schedule a call',
                        booking: 'Send a booking link', task: 'Create a task' };
 
@@ -1605,7 +1762,6 @@
   // nothing — which is what "not working" looked like. A draft row in the list
   // needs no modal permission and lets you see what you are adding.
   function addActivity(kind) {
-    closeActivityMenu();
     if (kind === 'note') {
       const input = document.getElementById('ov-note-input');
       if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); input.focus(); }
@@ -1619,7 +1775,7 @@
     row.innerHTML =
       actIcon(kind === 'call' ? 'phone' : kind === 'booking' ? 'meeting' : kind === 'task' ? 'task' : 'email') +
       '<input class="ds-input ov-act-draft-text" id="ov-act-draft-text" value="' + esc(ACT_LABELS[kind] || '') + '">' +
-      '<input class="ds-input ov-act-draft-date" id="ov-act-draft-date" placeholder="When? e.g. Fri">' +
+      '<input class="ds-input ov-act-draft-date" id="ov-act-draft-date" type="datetime-local" aria-label="Due">' +
       '<button class="ds-btn ds-btn--primary ds-btn--sm" type="button" onclick="commitActivity(\'' + kind + '\')">Add</button>' +
       '<button class="ds-btn ds-btn--ghost ds-btn--sm" type="button" onclick="cancelActivity()">Cancel</button>';
     host.appendChild(row);
@@ -1629,6 +1785,54 @@
       if (e.key === 'Enter') { e.preventDefault(); commitActivity(kind); }
       if (e.key === 'Escape') { e.preventDefault(); cancelActivity(); }
     });
+  }
+
+  // "12 Aug at 3:00 pm" — matches the note stamps rather than inventing a
+  // third date format on the same page.
+  function formatDueStamp(d) {
+    if (isNaN(d.getTime())) return '';
+    let h = d.getHours(); const ampm = h >= 12 ? 'pm' : 'am';
+    h = h % 12 || 12;
+    return d.getDate() + ' ' + MONTH_ABBR[d.getMonth()] + ' at ' + h + ':' +
+      String(d.getMinutes()).padStart(2, '0') + ' ' + ampm;
+  }
+
+  // ── Record actions ────────────────────────────────────────────────────────
+  // Everyone the record is about, for prefilling a mail.
+  function accountName() {
+    const sel = document.getElementById('ov-owner');
+    return (sel && sel.value) || 'me';
+  }
+  function contactEmails() {
+    return (contacts || []).map(function (c) { return c.email; }).filter(Boolean).join(', ');
+  }
+  function mailTo(subject, body) {
+    const q = new URLSearchParams(location.search);
+    q.set('compose', '1');
+    q.set('to', contactEmails());
+    if (subject) q.set('subject', subject);
+    if (body) q.set('body', body);
+    location.href = '/mail?' + q.toString();
+  }
+  function actEmail() {
+    mailTo('Following up on ' + (card.deal || card.company || 'our conversation'), '');
+  }
+  function actBooking() {
+    // The prototype has no booking product behind this; the link shape is what a
+    // Titan booking page would be, and the mail is real.
+    const slug = (accountName() || 'me').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    mailTo('Time to talk about ' + (card.deal || card.company || 'this'),
+      'Here is my booking link — grab whichever slot suits you:\n\nhttps://titan.email/book/' + slug + '\n');
+  }
+  // Placeholder until there is a Calendar app to book into — the app switcher
+  // lists one but nothing is built behind it. Says so rather than quietly doing
+  // something else, the same way the Drive button on this page does.
+  function actCall() {
+    showToast('Calendar isn\u2019t connected yet — this will book a call.');
+  }
+  function actNote() {
+    const input = document.getElementById('ov-note-input');
+    if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); input.focus(); }
   }
 
   function cancelActivity() {
@@ -1641,7 +1845,10 @@
     const dateEl = document.getElementById('ov-act-draft-date');
     if (!textEl) return;
     const text = (textEl.value || '').trim() || ACT_LABELS[kind] || 'Activity';
-    const date = (dateEl && dateEl.value || '').trim();
+    // Stored as the same kind of display string the rest of this data uses, so the
+    // list, looksPast() and the board all keep reading one format.
+    const raw = (dateEl && dateEl.value || '').trim();
+    const date = raw ? formatDueStamp(new Date(raw)) : '';
     upcomingActivityList().push({ type: kind, text: text, date: date });
     cancelActivity();
     renderActivityAndFiles();
@@ -1688,7 +1895,7 @@
     // hiring board — since that's what the settings page this links to configures.
     const entity = pipeline.entity || 'Record';
     document.getElementById('ov-configure-fields').textContent =
-      'Configure your ' + entity.toLowerCase() + ' fields.';
+      'Configure ' + entity.toLowerCase() + ' fields';
     emptyEl.style.display = defs.length ? 'none' : '';
     emptyEl.textContent = 'No custom fields on ' + (pipeline.name || 'this pipeline') + ' yet.';
     // Stays display: contents (see .ov-fields-contents) so these land in the deal's
