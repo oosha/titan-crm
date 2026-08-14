@@ -179,7 +179,7 @@
           "instagram": "",
           "closeDate": "",
           "source": "",
-          "autoLinkActivity": true,
+          "autoLinkActivity": false,
           "contacts": [
             {
               "name": "Marcus Webb",
