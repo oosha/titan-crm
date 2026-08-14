@@ -344,8 +344,8 @@ records and is served through the API. Adding one is documented in `api/_github.
   contactFields[],            // the contact schema (Contacts page "Fields")
   dashboard: { type, scope, hidden[] },   // dashboard prefs, persisted like the rest
   pipelines: { <id>: { id, name, entity, plural, color, type,
-                       stages[], cards[], hiddenFields[],
-                       customFieldDefs[], contactsEnabled, team,
+                       stages[], cards[], hiddenFields[], shownFields[],
+                       subject, customFieldDefs[], contactsEnabled, team,
                        intakeForm } } }        // see § Intake forms
 ```
 
@@ -359,6 +359,41 @@ money columns. Check for it before trusting the field.
 Cards carry both a `contacts[]` array and legacy flat `contact*` fields. Normalize with
 `contactsOf()` in `crm-directory.js` rather than reading either directly. Values for
 `customFieldDefs[]` live on the card as `customFieldValues` keyed by field key.
+
+## Record fields
+
+`crm-schema.js` owns which fields a record type has, what they're called, and which
+sections they sit in. Two axes: `entity` (what the record is) and `subject` (who it's
+about — `'company'` or `'person'`). **Never hardcode a field label or list.** Call
+`titanSchema.resolve(pipeline)` and read `.label(key)`, `.on(key)`, `.headings`, or
+`.fields`; three pages used to keep their own tables and disagreed, which is how an
+orders board came to show "Opportunity name" under "Opportunity details".
+
+Four field states: `required` (locked on), `on`, `off`, and `none` — *not offered*,
+absent from `.fields` entirely, so a hiring board has no Instagram field to toggle.
+Only `on`/`off` are user-togglable, via **two** stored arrays: `hiddenFields[]` keeps
+its original meaning (an explicit hide list) and `shownFields[]` is its mirror, needed
+because some fields now default to off. A pipeline with neither behaves as it always did.
+
+`subject` is `'company'` unless set, so existing data is unchanged. `Candidate` is
+**locked** to `'person'` (`titanSchema.subjectLocked`) — a candidate is a person by
+definition, not by preference, and that's what keeps candidates' employers off the
+Companies page without a special case there. The New Pipeline flow asks only for the
+Orders and Custom templates; everything else infers it, the way `type` already does.
+Switching subject **hides company fields, never clears them** — `card.company` and
+friends stay on the card and come back if you switch again.
+
+`card.status` is the *outcome* axis and is deliberately independent of `card.stage` — a
+record can sit in the last stage and still be open, and can be Lost from anywhere. Its
+vocabulary is per `entity` and lives in `crm-status.js` (Won/Lost, Hired/Rejected/Withdrawn,
+Fulfilled/Returned…). Never compare `card.status` to a literal: read it through
+`titanStatus.current(card, entity)` and colour it by `titanStatus.toneOf(...)`, or a hiring
+board silently loses its pills. Cards predating the field carry a `won` boolean instead,
+which `current()` resolves to that entity's positive outcome.
+
+The dashboard's win/hire rate reads `card.status`, not the stage: `Won / (Won + Lost)`,
+so a full pipeline of live deals doesn't drag the rate down and a Closed-and-Lost deal
+doesn't score as a win. `'paused'` (a project On hold) counts as neither open nor settled.
 
 Two fields to be careful with, because they read as live signals and are not:
 `card.overdue` is a **hand-authored boolean** nothing computes — `lastActivity` is a

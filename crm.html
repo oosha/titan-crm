@@ -44,6 +44,8 @@
   <link rel="stylesheet" href="/form-builder.css">
   <script src="/form-render.js"></script>
   <script src="/form-builder.js"></script>
+  <script src="/crm-schema.js"></script>
+  <script src="/crm-status.js"></script>
   <script src="/titan-sidebar.js"></script>
   <style>
     .persona-cloak .app-window { visibility: hidden; }
@@ -2967,6 +2969,19 @@
           <div class="np-label">Pipeline name</div>
           <input class="np-name-input" id="np-name" type="text" placeholder="Pipeline name" spellcheck="false">
 
+          <!-- Only shown for templates that genuinely can't know: orders and custom.
+               A sales or projects pipeline defaults to companies and a hiring one is
+               always people, so asking there would be friction with a known answer.
+               Both are still changeable later in pipeline settings. -->
+          <div id="np-subject-block" style="display:none;">
+            <div style="height:24px;"></div>
+            <div class="np-label" id="np-subject-label">Who are these records about?</div>
+            <div class="ds-segmented" role="group" id="np-subject" aria-labelledby="np-subject-label">
+              <button type="button" data-subject="company" aria-pressed="true" onclick="npSetSubject('company')">Companies</button>
+              <button type="button" data-subject="person" aria-pressed="false" onclick="npSetSubject('person')">People</button>
+            </div>
+          </div>
+
           <div style="height:24px;"></div>
 
           <div class="np-label">Colour</div>
@@ -3941,6 +3956,35 @@
     function pipelineHasMoney(pl) { return !pl || pl.type !== 'hiring'; }
     function currentHasMoney() { return pipelineHasMoney(PIPELINES[currentPipelineId]); }
 
+    // Who the card is for, bottom-left. On a company-subject pipeline that's the
+    // company with its favicon; on a person-subject one the company field is off, so
+    // the buyer's own name and initial take the slot rather than leaving it blank.
+    function cardIdentityHTML(card) {
+      const pl = PIPELINES[currentPipelineId];
+      if (window.titanSchema.isPerson(pl)) {
+        const who = String(card.contact || '').trim();
+        // Same .company-logo slot, no favicon lookup — a person has no domain, and
+        // the initial circle is what the avatar elsewhere already uses for them.
+        return '<div class="kanban-card-company">' +
+          '<span class="company-logo" style="background:' + avatarColorFor(who || '?') + ';">' +
+          escAttr((who.charAt(0) || '?').toUpperCase()) + '</span>' +
+          '<span>' + escAttr(who) + '</span></div>';
+      }
+      return '<div class="kanban-card-company">' + companyLogoHTML(card) + '<span>' + card.company + '</span></div>';
+    }
+
+    // The outcome pill on a board card. Words and colour come from the pipeline's
+    // record type (crm-status.js) — Won here, Hired on a hiring board. A record
+    // still in progress yields no pill, and the card shows last activity instead.
+    function outcomePillHTML(card) {
+      const pl = PIPELINES[currentPipelineId];
+      const status = titanStatus.current(card, pl && pl.entity);
+      const tone = titanStatus.toneOf(pl && pl.entity, status);
+      if (tone === 'open') return '<span class="kanban-card-task">' + card.lastActivity + '</span>';
+      return '<span class="ds-badge ' + titanStatus.badgeClass(tone) +
+        ' ds-badge--pill kanban-outcome">' + status + '</span>';
+    }
+
     // Muted, varied avatar colors — no real photos in this prototype, so every
     // contact falls back to a single-initial circle, colored deterministically
     // by name so the same person always gets the same (muted) color.
@@ -4044,16 +4088,9 @@
     let cardSeq = 100;
 
 
-    // Per-record-type field wording (§7.2-adjacent) — each pipeline type calls its
-    // name/stage/date fields something slightly different in the Add and Detail views.
-    const ENTITY_LABELS = {
-      Opportunity: { name: 'Opportunity name', stage: 'Opportunity stage', date: 'Expected close date' },
-      Project:     { name: 'Project name',     stage: 'Project stage',     date: 'Expected launch date' },
-      Order:       { name: 'Order name',       stage: 'Order stage',       date: 'Expected completion date' },
-      Candidate:   { name: 'Candidate name',   stage: 'Candidate stage',   date: 'Expected close date' },
-      Record:      { name: 'Record name',      stage: 'Record stage',     date: 'Expected end date' },
-    };
-    function entityLabels(entity) { return ENTITY_LABELS[entity] || ENTITY_LABELS.Record; }
+    // A fourth copy of the per-record-type wording used to live here. It had no
+    // callers left, and it disagreed with the others (Order's date said "Expected
+    // completion date"). crm-schema.js owns this now — see titanSchema.resolve().
 
 
     // ── Add-opportunity custom fields: user names each one and picks a type
@@ -4489,14 +4526,11 @@
           '<span class="kanban-card-avatar" data-contact="' + escAttr(card.contact) + '" data-designation="' + escAttr(contactDetailFor(card, 'designation')) + '" data-email="' + escAttr(contactDetailFor(card, 'email')) + '" data-phone="' + escAttr(contactDetailFor(card, 'phone')) + '" style="background:' + avatarColorFor(card.contact) + ';">' + card.contact.charAt(0) + '</span>' +
         '</div>' +
         '<div class="kanban-card-footer">' +
-          '<div class="kanban-card-company">' + companyLogoHTML(card) + '<span>' + card.company + '</span></div>' +
-          // Won/Lost pill comes from card.status now (only shown for those two values);
-          // records that predate the Status field fall back to the old won boolean.
-          (card.status === 'Won' || (!card.status && card.won)
-            ? '<span class="ds-badge ds-badge--success ds-badge--pill kanban-outcome">Won</span>'
-            : card.status === 'Lost'
-              ? '<span class="ds-badge ds-badge--danger ds-badge--pill kanban-outcome">Lost</span>'
-              : '<span class="kanban-card-task">' + card.lastActivity + '</span>') +
+          cardIdentityHTML(card) +
+          // Outcome pill, in this pipeline's own words — Won on a sales board,
+          // Hired on a hiring one. Only settled records get one; a record that's
+          // still running shows its last activity here instead.
+          outcomePillHTML(card) +
         '</div>';
       return el;
     }
@@ -4725,7 +4759,7 @@
                     stages: [{ name: 'New' }, { name: 'Processing' }, { name: 'Stage 3' }, { name: 'Closed' }] },
     };
 
-    const npState = { type: null, name: '', plural: 'records', color: '#4f6d9e', stages: [] };
+    const npState = { type: null, name: '', plural: 'records', color: '#4f6d9e', stages: [], subject: 'company' };
     let npDragIndex = null;
 
     // Sub-pages can't open these modals themselves — they have no opener to call
@@ -4795,9 +4829,32 @@
       npState.stages = tpl.stages.map(function (s) { return { name: s.name, wonLost: !!s.wonLost }; });
       document.getElementById('np-step2-title').textContent = tpl.title;
       document.getElementById('np-name').value = tpl.name;
+      npState.subject = NP_SUBJECT_DEFAULT[npState.type] || 'company';
+      npRenderSubject();
       npRenderColors();
       npRenderStages();
       npShowStep(2);
+    }
+
+    // Who the records are about — a company or a person. Templates that know the
+    // answer keep it to themselves; orders and custom ask, because both genuinely go
+    // either way depending on the business. See crm-schema.js for what it changes.
+    const NP_SUBJECT_DEFAULT = { sales: 'company', projects: 'company', orders: 'company', candidates: 'person', other: 'company' };
+    const NP_SUBJECT_ASK = { orders: 'Who are your orders from?', other: 'Who are these records about?' };
+
+    function npSetSubject(subject) {
+      npState.subject = subject;
+      npRenderSubject();
+    }
+    function npRenderSubject() {
+      const block = document.getElementById('np-subject-block');
+      const question = NP_SUBJECT_ASK[npState.type];
+      block.style.display = question ? '' : 'none';
+      if (!question) return;
+      document.getElementById('np-subject-label').textContent = question;
+      document.querySelectorAll('#np-subject [data-subject]').forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.dataset.subject === npState.subject));
+      });
     }
 
     // Random colour, preferring one not already used by an existing pipeline.
@@ -4945,6 +5002,7 @@
       PIPELINES[id] = {
         id: id, name: name, entity: entity, plural: npState.plural, color: npState.color,
         type: NP_PIPELINE_TYPE[npState.type] || 'sales',
+        subject: npState.subject || 'company',
         stages: clean.map(function (s, i) { return { key: slugify(s.name, i), label: s.name }; }),
         cards: [],
       };

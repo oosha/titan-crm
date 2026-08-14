@@ -217,6 +217,7 @@
 <body data-subpage="pipeline-settings">
 <script src="/design-system/components/icon.js"></script>
 <script src="/crm-owner.js"></script>
+<script src="/crm-schema.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/form-render.js"></script>
 <script src="/form-builder.js"></script>
@@ -243,6 +244,17 @@
 
           <div class="np-label">Colour</div>
           <div class="ps-color-row" id="ps-colors"></div>
+
+          <!-- Hidden on hiring pipelines, where a candidate is a person by definition
+               rather than by preference — see titanSchema.subjectLocked(). -->
+          <div id="ps-subject-block">
+            <div class="np-label" id="ps-subject-label" style="margin-top:22px;">Records are about</div>
+            <div class="np-help" id="ps-subject-help"></div>
+            <div class="ds-segmented" role="group" id="ps-subject" aria-labelledby="ps-subject-label">
+              <button type="button" data-subject="company" aria-pressed="true" onclick="psSetSubject('company')">Companies</button>
+              <button type="button" data-subject="person" aria-pressed="false" onclick="psSetSubject('person')">People</button>
+            </div>
+          </div>
 
           <div class="np-label" id="ps-owner-label" style="margin-top:22px;">Default owner</div>
           <div class="np-help" id="ps-owner-help">Who new records are assigned to. Anyone already on this pipeline can be picked.</div>
@@ -406,10 +418,12 @@
     document.title = psTitleText + ' — Titan CRM';
     document.getElementById('ps-name').value = pipeline ? pipeline.name : '';
 
+    subject = window.titanSchema.subjectOf(pipeline);
     renderColors();
     renderStages();
     renderIntakeCard();
     renderDefaultOwner();
+    renderSubject();
   }
 
   async function init() {
@@ -974,6 +988,25 @@
     sel.innerHTML = window.titanOwner.optionsHtml(pipeline, pipeline && pipeline.defaultOwner, true);
   }
 
+  // Who the records are about. Switching this hides company fields rather than
+  // clearing them — card.company and friends stay on the card untouched and come
+  // straight back if you switch again, so the toggle is never destructive.
+  let subject = 'company';
+  function psSetSubject(value) { subject = value; renderSubject(); }
+  function renderSubject() {
+    const block = document.getElementById('ps-subject-block');
+    if (!block) return;
+    if (window.titanSchema.subjectLocked(pipeline && pipeline.entity)) { block.style.display = 'none'; return; }
+    block.style.display = '';
+    const many = ((pipeline && pipeline.plural) || 'records').toLowerCase();
+    document.getElementById('ps-subject-label').textContent = 'Your ' + many + ' are for';
+    document.getElementById('ps-subject-help').textContent =
+      'Company fields are hidden when your ' + many + ' are for people. Nothing already saved is deleted.';
+    document.querySelectorAll('#ps-subject [data-subject]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.subject === subject));
+    });
+  }
+
   function saveSettings() {
     flushOpenEdit();
     const name = document.getElementById('ps-name').value.trim();
@@ -984,7 +1017,7 @@
     sessionStorage.setItem('titan-crm-commit-pipeline', JSON.stringify({
       pipelineKey: pipelineKey,
       patch: {
-        name: name, color: color, stages: cleanStages,
+        name: name, color: color, stages: cleanStages, subject: subject,
         // "" means no default — new records then fall back to the account holder.
         defaultOwner: window.titanOwner.fromEmail(document.getElementById('ps-default-owner').value, pipeline),
       },

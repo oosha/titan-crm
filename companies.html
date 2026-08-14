@@ -64,6 +64,7 @@
 </div>
 
 <script src="/design-system/components/icon.js"></script>
+<script src="/crm-schema.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
 <script>
@@ -72,6 +73,10 @@
     const byKey = new Map();
     allCards(pipelines).forEach(function (entry) {
       const card = entry.card;
+      // A person-subject pipeline's company field is the employer, not a customer —
+      // a hiring board would otherwise list every candidate's current employer here
+      // as though you sold to them.
+      if (window.titanSchema.isPerson(entry.pipeline)) return;
       const name = String(card.company || '').trim();
       if (!name) return;   // records with no company don't belong on this page
       const key = name.toLowerCase();
