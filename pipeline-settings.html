@@ -126,7 +126,6 @@
     cursor: default; user-select: none;
   }
   .np-chev.dragging { opacity: 0.4; }
-  .np-chev.drop-target { filter: brightness(0.93); }
   .np-chev-name {
     font-size: 12.5px; font-weight: 700; text-align: center;
     padding: 0 15px 0 19px; max-width: 100%; white-space: nowrap; overflow: hidden;
@@ -151,34 +150,75 @@
   }
   .np-chev-add:hover { border-color: #2170f4; background: #f5f9ff; }
 
-  /* Per-stage details accordion */
-  .ps-stage-detail { border: 1px solid #e8eaed; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
-  .ps-stage-detail:last-child { margin-bottom: 0; }
-  .ps-stage-detail-header {
-    display: flex; align-items: center; gap: 10px; padding: 13px 16px; cursor: pointer; user-select: none;
+  /* Hover the seam between two stages to insert a new one there. The visible
+     "+" sits on a 20px circle, but the hoverable zone (::before) is much wider
+     than the 6px gap so it doesn't take precision aim to find. */
+  /* The insert target sits between two chevrons and is closed at rest, so the chain
+     keeps the tight interlocked spacing it reads best at — a permanent slot for a
+     button nobody is reaching for tripled the gap (6px chain + 6px slot + 6px chain).
+     It opens on hover instead, which also makes the + feel like it belongs to the
+     space it just made. Negative margins cancel one of the chain's two 6px gaps so
+     the resting distance between chevrons is exactly the 6px it was before. */
+  .np-chev-gap {
+    position: relative; width: 0; flex-shrink: 0; align-self: stretch; margin: 0 -3px;
+    transition: width var(--dur-slow) var(--ease-decel), margin var(--dur-slow) var(--ease-decel);
   }
-  .ps-stage-detail-header:hover { background: #f7f8fa; }
-  .ps-stage-detail-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-  .ps-stage-detail-name { font-size: 13.5px; font-weight: 600; color: #1a1a1a; flex: 1; }
-  .ps-stage-detail-summary { font-size: 12px; color: #9a9fa7; }
-  .ps-stage-detail-chevron {
-    color: #6b7280; flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+  /* Hit area wider than the slot, or a closed gap would be unhoverable. It stays
+     wider than the open slot too, so expanding can't pull the pointer out of its
+     own trigger and set off an open/close flicker. */
+  .np-chev-gap::before { content: ''; position: absolute; inset: 0 -10px; }
+  .np-chev-gap:hover { width: 20px; margin: 0; }
+  @media (prefers-reduced-motion: reduce) { .np-chev-gap { transition: none; } }
+  .np-chev-gap-btn {
+    position: absolute; top: 50%; left: 50%; z-index: 2;
+    width: 20px; height: 20px; border-radius: var(--radius-full);
     display: flex; align-items: center; justify-content: center;
-    transition: transform 0.15s ease, background 0.1s ease;
+    background: var(--accent-primary); color: var(--text-on-accent);
+    border: none; cursor: pointer; padding: 0;
+    box-shadow: var(--elevation-menu);
+    opacity: 0; pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.5);
+    transition: var(--motion-enter);
   }
-  .ps-stage-detail-chevron svg { width: 10px; height: 7px; }
-  .ps-stage-detail-header:hover .ps-stage-detail-chevron { background: #eceef1; color: #333; }
+  .np-chev-gap:hover .np-chev-gap-btn { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .np-chev-gap-btn:hover { filter: brightness(1.1); }
+
+  /* Stage automation is one time-ordered card, not a grid of unrelated controls. */
+  .ps-stage-editor { padding-top: var(--space-300); }
+  .ps-stage-detail { margin-top: var(--space-100); border: 1px solid var(--border-hairline); border-radius: var(--card-radius); overflow: hidden; }
+  .ps-stage-detail-header { display: flex; align-items: center; gap: var(--space-100); height: 40px; padding: 0 var(--space-200); cursor: pointer; }
+  .ps-stage-detail-header:hover { background: var(--surface-hover); }
+  .ps-stage-detail-dot { width: var(--space-100); height: var(--space-100); border-radius: var(--radius-full); }
+  .ps-stage-detail-name { font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-primary); }
+  .ps-stage-detail-summary { margin-left: auto; font-size: var(--text-xs); color: var(--text-muted); }
+  .ps-stage-detail-chevron { margin-left: var(--space-100); transition: var(--motion-hover); }
   .ps-stage-detail.open .ps-stage-detail-chevron { transform: rotate(180deg); }
-  .ps-stage-detail-body { display: none; padding: 4px 16px 24px; border-top: 1px solid #eee; }
+  .ps-stage-detail-body { display: none; padding: 0 var(--space-200) var(--space-200); border-top: 1px solid var(--border-hairline); }
   .ps-stage-detail.open .ps-stage-detail-body { display: block; }
-  .ps-stage-field { margin-top: 26px; }
-  .ps-stage-field-label { font-size: 14.5px; font-weight: 600; color: #333; margin-bottom: 9px; }
-  .ps-stage-textarea, .ps-stage-select, .ps-stage-input {
-    padding: 10px 12px; border: 1px solid #d9dce1; border-radius: 7px; font-size: 14px;
-    font-family: inherit; outline: none; color: #222; background: #fff;
-  }
-  .ps-stage-textarea:focus, .ps-stage-select:focus, .ps-stage-input:focus { border-color: #2170f4; }
-  .ps-stage-textarea { width: 100%; min-height: 60px; resize: vertical; }
+  .ps-stage-editor-head { display: none; }
+  .ps-stage-editor-dot { width: var(--space-100); height: var(--space-100); border-radius: var(--radius-full); flex-shrink: 0; }
+  .ps-stage-editor-meta, .ps-stage-section-hint { font-size: var(--text-xs); color: var(--text-muted); }
+  .ps-stage-editor-meta { margin-left: var(--space-100); }
+  .ps-stage-section { border-top: 1px solid var(--border-hairline); margin-top: var(--space-300); padding-top: var(--space-200); }
+  .ps-stage-section-head { display: flex; align-items: baseline; gap: var(--space-150); margin-bottom: var(--space-200); }
+  .ps-stage-section-title, .ps-stage-editor .ds-field-label { font-size: var(--text-md); font-weight: var(--weight-semi); color: var(--text-heading); }
+  .ps-stage-field { display: grid; gap: var(--space-075); }
+  .ps-stage-row { position: relative; display: flex; align-items: center; gap: var(--space-200); margin-top: var(--space-200); padding-right: calc(var(--btn-height-sm) + var(--space-100)); font-size: var(--text-md); color: var(--text-primary); }
+  .ps-stage-row:first-of-type { margin-top: 0; }
+  .ps-stage-row--compact { padding-right: 0; }
+  .ps-stage-row--compact .ps-task-pill { gap: var(--space-075); padding-right: var(--space-050); }
+  .ps-stage-row .ds-input { width: auto; min-width: 200px; }
+  .ps-stage-row .ps-entry-value { min-width: 280px; }
+  .ps-add-action { width: 170px; min-width: 170px; margin-top: var(--space-200); }
+  .ps-stage-row .ps-action-text { flex: 1; min-width: 220px; max-width: 340px; }
+  .ps-stage-row .ps-number { width: 64px; min-width: 64px; }
+  .ps-stage-row-remove { position: absolute; right: 0; opacity: 0; transition: var(--motion-hover); }
+  .ps-stage-row:hover .ps-stage-row-remove, .ps-stage-row:focus-within .ps-stage-row-remove { opacity: 1; }
+  .ps-stage-textarea { min-height: 96px; }
+  .ps-stage-radio { display: flex; align-items: center; gap: var(--space-300); margin-bottom: var(--space-300); font-size: var(--text-md); color: var(--text-primary); }
+  .ps-stage-radio label { display: inline-flex; align-items: center; gap: var(--space-075); }
+  .ps-stage-radio input { accent-color: var(--checkbox-accent); }
+  .ps-stage-empty { font-size: var(--text-sm); color: var(--text-muted); margin-top: var(--space-100); margin-bottom: var(--space-200); }
   /* Added tasks render as slightly-rounded pills with the × inside on the right. */
   .ps-task-list { display: flex; flex-wrap: wrap; gap: 8px; }
   .ps-task-list:not(:empty) { margin-bottom: 10px; }
@@ -194,12 +234,7 @@
   .ps-inline-label { font-size: 14px; color: #555; }
   .ps-advance-sub-control { display: flex; align-items: center; }
   .ps-task-add-row { display: flex; gap: 10px; }
-  .ps-task-add-row .ps-stage-input { flex: 1; }
-  .ps-task-add-btn {
-    background: #2170f4; border: none; border-radius: 7px; padding: 0 16px; font-size: 13.5px;
-    font-weight: 600; color: #fff; cursor: pointer; flex-shrink: 0;
-  }
-  .ps-task-add-btn:hover { filter: brightness(1.05); }
+  .ps-task-add-row .ds-input { flex: 1; }
   .ps-task-add-pill {
     display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1.5px dashed #c5cbd4;
     border-radius: 999px; padding: 8px 16px; font-size: 13.5px; font-weight: 600; color: #2170f4; cursor: pointer;
@@ -207,11 +242,12 @@
   .ps-task-add-pill:hover { border-color: #2170f4; background: #f5f9ff; }
   .ps-stage-subnote { font-size: 13px; color: #9a9fa7; margin-top: 4px; }
   .ps-advance-sub { margin-top: 12px; margin-left: 0; }
-  .ps-advance-sub .ps-stage-input { width: 70px; text-align: center; display: inline-block; }
+  .ps-advance-sub .ds-input { width: 70px; text-align: center; display: inline-block; }
   .ps-advance-days-row { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #222; }
   .ps-reminder-row { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #222; flex-wrap: wrap; }
   .ps-reminder-row input[type="checkbox"] { margin: 0; accent-color: #2170f4; width: 16px; height: 16px; }
-  .ps-reminder-row .ps-stage-input { width: 58px; text-align: center; padding: 8px; }
+  .ps-reminder-row .ds-input { width: 58px; text-align: center; }
+  @media (max-width: 720px) { .ps-stage-grid { grid-template-columns: 1fr; } .ps-stage-field--wide { grid-column: auto; } }
 </style>
 </head>
 <body data-subpage="pipeline-settings">
@@ -232,7 +268,7 @@
         Back
       </span>
       <span class="subpage-title" id="ps-title">Pipeline setting</span>
-      <button class="ps-btn-primary" onclick="saveSettings()">Save changes</button>
+      <button class="ds-btn ds-btn--primary" onclick="saveSettings()">Save changes</button>
     </div>
 
     <div class="subpage-body">
@@ -263,13 +299,13 @@
 
         <div class="ps-card">
           <div class="ps-card-title">Stages</div>
-          <div class="np-help">Click a stage to rename it. Drag to reorder. These are the columns on your board.</div>
+          <div class="np-help">Select a stage to configure it. Click its name to rename; drag to reorder.</div>
           <div class="np-chev-chain" id="ps-stages"></div>
         </div>
 
         <div class="ps-card">
           <div class="ps-card-title">Stage details</div>
-          <div class="np-help">Set up what happens at each stage — tasks, email sequences, and how records move to the next one.</div>
+          <div class="np-help">Open a stage to define what happens on entry, during inactivity, and before it moves on.</div>
           <div id="ps-stage-details"></div>
         </div>
 
@@ -384,19 +420,24 @@
   // than erroring, so this feature can roll out without a data migration.
   function stageDefaults() {
     return {
-      description: '', tasks: [],
-      // "Send email": sendUsing picks template vs sequence; each keeps its own value.
-      sendUsing: 'template', emailTemplate: '', emailSeqName: '',
-      advanceMode: 'manual', advanceCondition: ADVANCE_CONDITION_OPTIONS[0].value,
-      advanceTaskName: '', advanceFieldKey: RECORD_FIELD_OPTIONS[0].value, advanceDays: 3,
-      reminderEnabled: false, reminderDays: 3,
+      description: '', entry: [],
+      idle: { on: false, days: 3, action: 'remind', template: '', taskName: '' },
+      exit: { mode: 'manual', rules: [] },
     };
   }
   function ensureStageDetailFields(s) {
     const d = stageDefaults();
     Object.keys(d).forEach(function (k) { if (s[k] === undefined) s[k] = d[k]; });
-    // Migrate the older single "emailSequence" field into the new template slot.
-    if (!s.emailTemplate && s.emailSequence) { s.emailTemplate = s.emailSequence; }
+    if (!Array.isArray(s.entry)) {
+      s.entry = (s.tasks || []).map(function (name, i) { return { id: 'task-' + i, type: 'task', name: name, due: 2 }; });
+      const value = s.emailTemplate || s.emailSeqName || s.emailSequence || '';
+      if (value) s.entry.unshift({ id: 'email-0', type: 'email', using: s.emailSeqName ? 'sequence' : 'template', value: value });
+    }
+    if (!s.idle || typeof s.idle !== 'object') s.idle = { on: !!s.reminderEnabled, days: s.reminderDays || 3, action: 'remind', template: '', taskName: '' };
+    if (!s.exit || typeof s.exit !== 'object') {
+      const when = s.advanceCondition === 'field-updated' ? 'field' : s.advanceCondition === 'days-in-stage' ? 'days' : 'task';
+      s.exit = { mode: s.advanceMode || 'manual', rules: [{ id: 'rule-0', when: when, task: s.advanceTaskName || '', field: s.advanceFieldKey || RECORD_FIELD_OPTIONS[0].value, days: s.advanceDays || 7 }] };
+    }
     return s;
   }
   function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
@@ -412,6 +453,7 @@
     color = pipeline ? (pipeline.color || '#2170f4') : '#2170f4';
     stages = pipeline ? pipeline.stages.map(function (s) { return ensureStageDetailFields(Object.assign({}, s)); }) : [];
     stageSeq = stages.length;
+    openStageDetailIdx = stages.length ? 0 : null;
 
     const psTitleText = (pipeline ? pipeline.name : 'Pipeline') + ' setting';
     document.getElementById('ps-title').textContent = psTitleText;
@@ -485,7 +527,6 @@
     return 'rgb(' + blended[0] + ',' + blended[1] + ',' + blended[2] + ')';
   }
 
-  let stageDragIndex = null;
   function renderStages() {
     const wrap = document.getElementById('ps-stages');
     wrap.innerHTML = '';
@@ -493,10 +534,14 @@
     stages.forEach(function (stage, i) {
       const chev = document.createElement('div');
       // ds-stage--sm draws the chevron; --first/--last flatten the ends of the flow.
-      chev.className = 'np-chev ds-stage ds-stage--sm' +
+      chev.className = 'np-chev ds-stage ds-stage--sm' + (openStageDetailIdx === i ? ' selected' : '') +
         (i === 0 ? ' ds-stage--first' : '') + (i === n - 1 ? ' ds-stage--last' : '');
       chev.draggable = true;
       chev.dataset.idx = i;
+      chev._stage = stage; // reorder identity — see syncStagesFromDom()
+      chev.setAttribute('role', 'button');
+      chev.setAttribute('tabindex', '0');
+      chev.setAttribute('aria-pressed', String(openStageDetailIdx === i));
       chev.style.background = shadeFor(color, i, n);
       chev.innerHTML =
         '<span class="np-chev-name" title="Click to rename" style="color:' + darken(color, 0.5) + ';"></span>' +
@@ -506,32 +551,51 @@
             '</span>'
           : '');
       chev.querySelector('.np-chev-name').textContent = stage.label || '—';
-      chev.querySelector('.np-chev-name').addEventListener('click', function () { editStage(i); });
+      chev.querySelector('.np-chev-name').addEventListener('click', function (e) { e.stopPropagation(); editStage(i); });
+      chev.addEventListener('click', function () { selectStageDetail(i); });
+      chev.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectStageDetail(i); }
+      });
       const rm = chev.querySelector('.np-chev-remove');
       if (rm) rm.addEventListener('click', function (e) { e.stopPropagation(); removeStage(i); });
 
       chev.addEventListener('dragstart', function (e) {
-        stageDragIndex = i; chev.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move';
+        chev.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', stage.key || ''); } catch (err) {}
       });
       chev.addEventListener('dragend', function () {
-        stageDragIndex = null; chev.classList.remove('dragging');
-        wrap.querySelectorAll('.np-chev').forEach(function (c) { c.classList.remove('drop-target'); });
+        chev.classList.remove('dragging');
+        syncStagesFromDom();
       });
+      // Reorders live, as you cross a neighbour's midpoint — not just on drop —
+      // and FLIP-animates every chevron that has to shift, so the row reads as
+      // one continuous slide into place rather than a jump-cut on release.
       chev.addEventListener('dragover', function (e) {
         e.preventDefault();
-        if (stageDragIndex === null || stageDragIndex === i) return;
-        chev.classList.add('drop-target');
-      });
-      chev.addEventListener('dragleave', function () { chev.classList.remove('drop-target'); });
-      chev.addEventListener('drop', function (e) {
-        e.preventDefault();
-        if (stageDragIndex === null || stageDragIndex === i) return;
-        const moved = stages.splice(stageDragIndex, 1)[0];
-        stages.splice(i, 0, moved);
-        stageDragIndex = null;
-        renderStages();
+        const dragged = wrap.querySelector('.np-chev.dragging');
+        if (!dragged || dragged === chev) return;
+        const rect = chev.getBoundingClientRect();
+        const before = (e.clientX - rect.left) < rect.width / 2;
+        const target = before ? chev : chev.nextSibling;
+        if (dragged === target || dragged.nextSibling === target) return;
+        flipReorder(wrap, function () { wrap.insertBefore(dragged, target); });
       });
       wrap.appendChild(chev);
+
+      if (i < n - 1) {
+        const gap = document.createElement('div');
+        gap.className = 'np-chev-gap';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'np-chev-gap-btn';
+        btn.title = 'Insert a stage here';
+        btn.innerHTML = '<span data-ds-icon="plus" data-size="10"></span>';
+        const insertAt = i + 1;
+        btn.addEventListener('click', function () { insertStage(insertAt); });
+        gap.appendChild(btn);
+        wrap.appendChild(gap);
+      }
     });
 
     const add = document.createElement('div');
@@ -542,6 +606,43 @@
     wrap.appendChild(add);
 
     renderStageDetails();
+  }
+
+  // FLIP: capture every chevron's position, run the DOM mutation, then undo
+  // the jump each one just made with an inverted transform and let it
+  // transition back to identity — a live reorder that slides instead of pops.
+  function flipReorder(wrap, mutate) {
+    const before = new Map();
+    wrap.querySelectorAll('.np-chev').forEach(function (c) { before.set(c, c.getBoundingClientRect()); });
+    mutate();
+    before.forEach(function (prev, c) {
+      const next = c.getBoundingClientRect();
+      const dx = prev.left - next.left;
+      if (Math.abs(dx) < 0.5) return;
+      c.style.transition = 'none';
+      c.style.transform = 'translateX(' + dx + 'px)';
+      c.getBoundingClientRect(); // force reflow before transitioning
+      c.style.transition = 'transform var(--dur-slow) var(--ease-spring)';
+      c.style.transform = '';
+    });
+  }
+
+  // The live reorder above moves real DOM nodes, not the `stages` array — once
+  // the drag ends, read the DOM back into `stages` (matched by object identity
+  // via chev._stage, not position) and do one clean re-render so indices,
+  // the first/last taper and the insert gaps are all correct again.
+  function syncStagesFromDom() {
+    const wrap = document.getElementById('ps-stages');
+    const openStage = stages[openStageDetailIdx];
+    const reordered = Array.from(wrap.querySelectorAll('.np-chev'))
+      .map(function (c) { return c._stage; })
+      .filter(Boolean);
+    if (reordered.length === stages.length) stages = reordered;
+    if (openStage) {
+      const idx = stages.indexOf(openStage);
+      if (idx !== -1) openStageDetailIdx = idx;
+    }
+    renderStages();
   }
 
   function editStage(i) {
@@ -574,60 +675,146 @@
   }
   function addStage() {
     stageSeq++; stages.push(ensureStageDetailFields({ key: 's' + stageSeq, label: 'New stage' }));
+    openStageDetailIdx = stages.length - 1;
     renderStages();
     editStage(stages.length - 1);
+  }
+  // From the + that appears hovering the seam between two stages.
+  function insertStage(atIndex) {
+    stageSeq++;
+    stages.splice(atIndex, 0, ensureStageDetailFields({ key: 's' + stageSeq, label: 'New stage' }));
+    openStageDetailIdx = atIndex;
+    renderStages();
+    editStage(atIndex);
   }
   function removeStage(i) {
     if (stages.length <= 2) return;
     stages.splice(i, 1);
+    if (openStageDetailIdx >= stages.length) openStageDetailIdx = stages.length - 1;
     renderStages();
   }
 
   let taskAddOpenForIdx = null;
-  function toggleStageDetail(i) {
-    openStageDetailIdx = (openStageDetailIdx === i) ? null : i;
+  function selectStageDetail(i) {
+    openStageDetailIdx = i;
     taskAddOpenForIdx = null;
-    renderStageDetails();
+    renderStages();
   }
 
   function stageDetailSummary(stage) {
     const bits = [];
-    bits.push(stage.advanceMode === 'auto' ? 'Auto-advance' : 'Manual advance');
-    if (stage.reminderEnabled) bits.push('Reminder after ' + stage.reminderDays + 'd');
+    bits.push(stage.exit && stage.exit.mode === 'auto' ? 'Auto-advance' : 'Manual advance');
+    if (stage.idle && stage.idle.on) bits.push('Reminder after ' + stage.idle.days + 'd');
     return bits.join(' · ');
   }
 
   function renderStageDetails() {
     const wrap = document.getElementById('ps-stage-details');
     wrap.innerHTML = '';
-    stages.forEach(function (stage, i) {
-      ensureStageDetailFields(stage);
-      const row = document.createElement('div');
-      row.className = 'ps-stage-detail' + (openStageDetailIdx === i ? ' open' : '');
+    if (!stages.length) return;
+    const detailBodies = [];
+    stages.forEach(function (item, index) {
+      ensureStageDetailFields(item);
+      const detail = document.createElement('div');
+      detail.className = 'ps-stage-detail' + (openStageDetailIdx === index ? ' open' : '');
+      detail.innerHTML = '<div class="ps-stage-detail-header" role="button" tabindex="0" aria-expanded="' + (openStageDetailIdx === index) + '"><span class="ps-stage-detail-dot" style="background:' + solidShadeFor(color, index, stages.length) + ';"></span><span class="ps-stage-detail-name"></span><span class="ps-stage-detail-summary"></span><span class="ps-stage-detail-chevron"><span data-ds-icon="expand" data-size="12"></span></span></div><div class="ps-stage-detail-body"></div>';
+      detail.querySelector('.ps-stage-detail-name').textContent = item.label || 'Untitled stage';
+      detail.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(item);
+      const toggle = function () { openStageDetailIdx = openStageDetailIdx === index ? null : index; renderStageDetails(); };
+      detail.querySelector('.ps-stage-detail-header').addEventListener('click', toggle);
+      detail.querySelector('.ps-stage-detail-header').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+      detailBodies[index] = detail.querySelector('.ps-stage-detail-body');
+      wrap.appendChild(detail);
+    });
+    if (openStageDetailIdx === null || !stages[openStageDetailIdx]) return;
+    const i = openStageDetailIdx;
+    const stage = ensureStageDetailFields(stages[i]);
+    const editor = document.createElement('div');
+    editor.className = 'ps-stage-editor';
+    editor.innerHTML =
+      '<div class="ps-stage-editor-head">' +
+        '<span class="ps-stage-editor-dot" style="background:' + solidShadeFor(color, i, stages.length) + ';"></span>' +
+        '<span class="ps-stage-editor-title"></span>' +
+        '<span class="ps-stage-editor-meta"></span>' +
+      '</div>';
+    editor.querySelector('.ps-stage-editor-title').textContent = stage.label || 'Untitled stage';
+    const stageMeta = editor.querySelector('.ps-stage-editor-meta');
+    stageMeta.textContent = stageDetailSummary(stage);
+    editor.className = 'ps-stage-editor';
+    const addSection = function (title, hint) {
+      const section = document.createElement('section');
+      section.className = 'ps-stage-section';
+      section.innerHTML = '<div class="ps-stage-section-head"><div class="ps-stage-section-title"></div><div class="ps-stage-section-hint"></div></div>';
+      section.querySelector('.ps-stage-section-title').textContent = title;
+      section.querySelector('.ps-stage-section-hint').textContent = hint;
+      editor.appendChild(section);
+      return section;
+    };
+    const description = document.createElement('div');
+    description.className = 'ds-field';
+    description.innerHTML = '<label class="ds-field-label">Description</label><textarea class="ds-input ps-stage-textarea" placeholder="What does this stage mean? When should a record be here?"></textarea>';
+    const descriptionInput = description.querySelector('textarea');
+    descriptionInput.value = stage.description;
+    descriptionInput.addEventListener('input', function () { stage.description = descriptionInput.value; });
+    editor.appendChild(description);
 
-      const header = document.createElement('div');
-      header.className = 'ps-stage-detail-header';
-      header.innerHTML =
-        '<span class="ps-stage-detail-dot" style="background:' + solidShadeFor(color, i, stages.length) + ';"></span>' +
-        '<span class="ps-stage-detail-name"></span>' +
-        '<span class="ps-stage-detail-summary"></span>' +
-        '<span class="ps-stage-detail-chevron">' +
-          '<span data-ds-icon="expand" data-size="12"></span>' +
-        '</span>';
-      header.querySelector('.ps-stage-detail-name').textContent = stage.label || '—';
-      header.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(stage);
-      header.addEventListener('click', function () { toggleStageDetail(i); });
-      row.appendChild(header);
+    const entrySection = addSection('When a record arrives', 'runs once, on entry');
+    function actionRow(action, ai) {
+      const row = document.createElement('div'); row.className = 'ps-stage-row';
+      const remove = function () { stage.entry.splice(ai, 1); renderStageDetails(); };
+      if (action.type === 'task' && action.name) {
+        row.classList.add('ps-stage-row--compact');
+        row.innerHTML = '<span class="ps-task-pill"><span class="ps-task-pill-label"></span><button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm" title="Remove task"><span data-ds-icon="close" data-size="14"></span></button></span>';
+        row.querySelector('.ps-task-pill-label').textContent = 'Task: ' + action.name;
+        row.querySelector('.ds-btn').addEventListener('click', remove);
+        entrySection.appendChild(row);
+        return;
+      }
+      row.innerHTML = '<span class="ds-badge ds-badge--accent"></span><button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm ps-stage-row-remove" title="Remove action"><span data-ds-icon="close" data-size="14"></span></button>';
+      row.querySelector('.ds-badge').textContent = action.type === 'email' ? 'Send email' : 'Create task';
+      row.querySelector('.ps-stage-row-remove').addEventListener('click', remove);
+      if (action.type === 'email') {
+        const using = document.createElement('select'); using.className = 'ds-input'; using.innerHTML = '<option value="template">Email template</option><option value="sequence">Email sequence</option>'; using.value = action.using || 'template';
+        const value = document.createElement('select'); value.className = 'ds-input ps-entry-value';
+        const fill = function () { const opts = using.value === 'sequence' ? EMAIL_SEQUENCE_OPTIONS : EMAIL_TEMPLATE_OPTIONS; value.innerHTML = opts.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join(''); value.value = action.value || ''; if (value.value !== action.value) action.value = value.value; };
+        using.addEventListener('change', function () { action.using = using.value; action.value = ''; fill(); }); value.addEventListener('change', function () { action.value = value.value; }); fill(); row.insertBefore(using, row.lastChild); row.insertBefore(value, row.lastChild);
+      } else {
+        const name = document.createElement('input'); name.className = 'ds-input ps-action-text'; name.placeholder = 'e.g. Book a discovery call'; name.value = action.name || ''; name.addEventListener('input', function () { action.name = name.value; });
+        const due = document.createElement('input'); due.type = 'number'; due.min = '1'; due.className = 'ds-input ps-number'; due.value = action.due || 2; due.addEventListener('input', function () { action.due = Number(due.value) || 1; });
+        row.insertBefore(name, row.lastChild); row.insertBefore(document.createTextNode('due in'), row.lastChild); row.insertBefore(due, row.lastChild); row.insertBefore(document.createTextNode('days'), row.lastChild);
+        if (!action.name) { const add = document.createElement('button'); add.type = 'button'; add.className = 'ds-btn ds-btn--primary ds-btn--sm'; add.textContent = 'Add'; add.addEventListener('click', function () { if (!name.value.trim()) { name.focus(); return; } action.name = name.value.trim(); renderStageDetails(); }); row.insertBefore(add, row.lastChild); }
+      }
+      entrySection.appendChild(row);
+    }
+    stage.entry.forEach(actionRow);
+    const addAction = document.createElement('select'); addAction.className = 'ds-input ps-add-action'; addAction.innerHTML = '<option value="">Add an action…</option><option value="email">Send email</option><option value="task">Create task</option>';
+    addAction.addEventListener('change', function () { if (!addAction.value) return; stage.entry.push({ id: addAction.value + '-' + Date.now(), type: addAction.value, using: 'template', value: '', name: '', due: 2 }); renderStageDetails(); }); entrySection.appendChild(addAction);
 
-      const body = document.createElement('div');
-      body.className = 'ps-stage-detail-body';
+    const idleSection = addSection('If it goes quiet', 'nothing logged against the record');
+    const idleRow = document.createElement('label'); idleRow.className = 'ps-stage-row'; idleRow.innerHTML = '<input type="checkbox"> After <input type="number" class="ds-input ps-number" min="1"> days of no activity,';
+    const idleOn = idleRow.querySelector('input[type=checkbox]'), idleDays = idleRow.querySelector('input[type=number]'); idleOn.checked = stage.idle.on; idleDays.value = stage.idle.days; idleDays.disabled = !stage.idle.on;
+    const idleAction = document.createElement('select'); idleAction.className = 'ds-input'; idleAction.innerHTML = '<option value="remind">Remind me</option><option value="email">Send email</option><option value="task">Create task</option>'; idleAction.value = stage.idle.action; idleAction.disabled = !stage.idle.on; idleRow.appendChild(idleAction);
+    if (stage.idle.action === 'email') { const template = document.createElement('select'); template.className = 'ds-input ps-entry-value'; template.innerHTML = EMAIL_TEMPLATE_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join(''); template.value = stage.idle.template || ''; template.disabled = !stage.idle.on; template.addEventListener('change', function () { stage.idle.template = template.value; }); idleRow.appendChild(template); }
+    if (stage.idle.action === 'task') { const task = document.createElement('input'); task.className = 'ds-input ps-action-text'; task.placeholder = 'Task name'; task.value = stage.idle.taskName || ''; task.disabled = !stage.idle.on; task.addEventListener('input', function () { stage.idle.taskName = task.value; }); idleRow.appendChild(task); }
+    idleOn.addEventListener('change', function () { stage.idle.on = idleOn.checked; idleDays.disabled = !idleOn.checked; idleAction.disabled = !idleOn.checked; idleRow.querySelectorAll('select, input').forEach(function (control) { if (control !== idleOn) control.disabled = !idleOn.checked; }); }); idleDays.addEventListener('input', function () { stage.idle.days = Number(idleDays.value) || 1; }); idleAction.addEventListener('change', function () { stage.idle.action = idleAction.value; renderStageDetails(); }); idleSection.appendChild(idleRow);
+
+    const exitSection = addSection('Moving on to the next stage', 'whichever stage follows this one');
+    const radios = document.createElement('div'); radios.className = 'ps-stage-radio'; radios.innerHTML = '<label><input type="radio" name="ps-exit" value="manual"> Move it manually</label><label><input type="radio" name="ps-exit" value="auto"> Move it automatically</label>';
+    radios.querySelector('input[value="' + stage.exit.mode + '"]').checked = true; radios.querySelectorAll('input').forEach(function (radio) { radio.addEventListener('change', function () { stage.exit.mode = radio.value; if (radio.value === 'auto' && !stage.exit.rules.length) stage.exit.rules.push({ id: 'rule-' + Date.now(), when: 'task', task: '', field: RECORD_FIELD_OPTIONS[0].value, days: 7 }); renderStageDetails(); }); }); exitSection.appendChild(radios);
+    if (stage.exit.mode === 'auto') stage.exit.rules.forEach(function (rule, ri) { const row = document.createElement('div'); row.className = 'ps-stage-row'; row.innerHTML = '<span>' + (ri ? 'or when' : 'Move it when') + '</span><select class="ds-input"><option value="task">A task is completed</option><option value="field">Data is added for a field</option><option value="days">Days pass in this stage</option></select><button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm ps-stage-row-remove" title="Remove condition"><span data-ds-icon="close" data-size="14"></span></button>'; const when = row.querySelector('select'); when.value = rule.when; const detail = document.createElement(rule.when === 'days' ? 'input' : 'select'); detail.className = 'ds-input ' + (rule.when === 'days' ? 'ps-number' : ''); if (rule.when === 'days') { detail.type = 'number'; detail.value = rule.days || 7; detail.addEventListener('input', function () { rule.days = Number(detail.value) || 1; }); } else { const source = rule.when === 'task' ? stage.entry.filter(function (x) { return x.type === 'task'; }).map(function (x) { return x.name; }) : RECORD_FIELD_OPTIONS; detail.disabled = rule.when === 'task' && !source.length; detail.innerHTML = rule.when === 'task' ? '<option value="">Select action</option>' + source.map(function (x) { return '<option value="' + escHtml(x) + '">' + escHtml(x) + '</option>'; }).join('') : source.map(function (x) { return '<option value="' + escHtml(x.value) + '">' + escHtml(x.label) + '</option>'; }).join(''); detail.value = rule[rule.when] || ''; detail.addEventListener('change', function () { rule[rule.when] = detail.value; }); } row.insertBefore(detail, row.lastChild); when.addEventListener('change', function () { rule.when = when.value; renderStageDetails(); }); row.querySelector('.ps-stage-row-remove').addEventListener('click', function () { stage.exit.rules.splice(ri, 1); renderStageDetails(); }); exitSection.appendChild(row); });
+    if (stage.exit.mode === 'auto' && stage.exit.rules.some(function (rule) { return rule.when === 'task'; }) && !stage.entry.some(function (x) { return x.type === 'task'; })) { const note = document.createElement('div'); note.className = 'ps-stage-empty'; note.textContent = 'Add a task above and it will show up here.'; exitSection.appendChild(note); }
+    const addRule = document.createElement('button'); addRule.type = 'button'; addRule.className = 'ds-btn ds-btn--secondary ds-btn--sm'; addRule.innerHTML = '<span data-ds-icon="plus" data-size="14"></span> Add another condition'; addRule.addEventListener('click', function () { stage.exit.rules.push({ id: 'rule-' + Date.now(), when: 'task', task: '', field: RECORD_FIELD_OPTIONS[0].value, days: 7 }); renderStageDetails(); }); if (stage.exit.mode === 'auto') exitSection.appendChild(addRule);
+    detailBodies[i].appendChild(editor);
+    return;
+    const body = document.createElement('div');
+    body.className = 'ps-stage-grid';
 
       // Description
       const descField = document.createElement('div');
-      descField.className = 'ps-stage-field';
+      descField.className = 'ps-stage-field ps-stage-field--wide';
       descField.innerHTML =
         '<div class="ps-stage-field-label">Description</div>' +
-        '<textarea class="ps-stage-textarea" placeholder="What does this stage mean? When should a record be here?"></textarea>';
+        '<textarea class="ds-input ps-stage-textarea" placeholder="What does this stage mean? When should a record be here?"></textarea>';
       const descInput = descField.querySelector('textarea');
       descInput.value = stage.description;
       descInput.addEventListener('input', function () { stage.description = descInput.value; });
@@ -653,8 +840,8 @@
         const addTaskRow = document.createElement('div');
         addTaskRow.className = 'ps-task-add-row';
         addTaskRow.innerHTML =
-          '<input class="ps-stage-input" type="text" placeholder="e.g. Send intro email">' +
-          '<button class="ps-task-add-btn" type="button">Add</button>';
+          '<input class="ds-input" type="text" placeholder="e.g. Send intro email">' +
+          '<button class="ds-btn ds-btn--primary" type="button">Add</button>';
         const addTaskInput = addTaskRow.querySelector('input');
         const commitAddTask = function () {
           const v = addTaskInput.value.trim();
@@ -662,7 +849,7 @@
           taskAddOpenForIdx = null;
           renderStageDetails();
         };
-        addTaskRow.querySelector('.ps-task-add-btn').addEventListener('click', commitAddTask);
+        addTaskRow.querySelector('.ds-btn').addEventListener('click', commitAddTask);
         addTaskInput.addEventListener('keydown', function (e) {
           if (e.key === 'Enter') { e.preventDefault(); commitAddTask(); }
           else if (e.key === 'Escape') { taskAddOpenForIdx = null; renderStageDetails(); }
@@ -684,11 +871,11 @@
         '<div class="ps-stage-field-label">Send email</div>' +
         '<div class="ps-inline-row">' +
           '<span class="ps-inline-label">Send using</span>' +
-          '<select class="ps-stage-select ps-send-using">' +
+          '<select class="ds-input ps-send-using">' +
             '<option value="template">Email template</option>' +
             '<option value="sequence">Email sequence</option>' +
           '</select>' +
-          '<select class="ps-stage-select ps-send-value"></select>' +
+          '<select class="ds-input ps-send-value"></select>' +
         '</div>';
       const sendUsing = emailField.querySelector('.ps-send-using');
       const sendValue = emailField.querySelector('.ps-send-value');
@@ -713,7 +900,7 @@
         '<div class="ps-stage-field-label">Follow-up reminder</div>' +
         '<label class="ps-reminder-row">' +
           '<input type="checkbox" class="ps-reminder-toggle"> Remind me after' +
-          '<input type="number" class="ps-stage-input ps-reminder-days" min="1" max="365"> days of inactivity' +
+          '<input type="number" class="ds-input ps-reminder-days" min="1" max="365"> days of inactivity' +
         '</label>';
       const reminderToggle = reminderField.querySelector('.ps-reminder-toggle');
       const reminderDays = reminderField.querySelector('.ps-reminder-days');
@@ -723,7 +910,7 @@
       reminderToggle.addEventListener('change', function () {
         stage.reminderEnabled = reminderToggle.checked;
         reminderDays.disabled = !stage.reminderEnabled;
-        header.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(stage);
+        stageMeta.textContent = stageDetailSummary(stage);
       });
       reminderDays.addEventListener('input', function () {
         stage.reminderDays = Number(reminderDays.value) || 1;
@@ -739,11 +926,11 @@
       advanceField.innerHTML =
         '<div class="ps-stage-field-label">Move to next stage when</div>' +
         '<div class="ps-inline-row ps-advance-row">' +
-          '<select class="ps-stage-select ps-advance-mode">' +
+          '<select class="ds-input ps-advance-mode">' +
             '<option value="manual">Manually</option>' +
             '<option value="auto">Automatically when</option>' +
           '</select>' +
-          '<select class="ps-stage-select ps-advance-condition">' +
+          '<select class="ds-input ps-advance-condition">' +
             ADVANCE_CONDITION_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') +
           '</select>' +
           '<div class="ps-advance-sub-control"></div>' +
@@ -769,7 +956,7 @@
             return;
           }
           const sel = document.createElement('select');
-          sel.className = 'ps-stage-select';
+          sel.className = 'ds-input';
           sel.innerHTML = stage.tasks.map(function (t) { return '<option value="' + escHtml(t) + '">' + escHtml(t) + '</option>'; }).join('');
           sel.value = stage.advanceTaskName && stage.tasks.indexOf(stage.advanceTaskName) !== -1 ? stage.advanceTaskName : stage.tasks[0];
           stage.advanceTaskName = sel.value;
@@ -777,7 +964,7 @@
           subControl.appendChild(sel);
         } else if (stage.advanceCondition === 'field-updated') {
           const sel = document.createElement('select');
-          sel.className = 'ps-stage-select';
+          sel.className = 'ds-input';
           sel.innerHTML = RECORD_FIELD_OPTIONS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('');
           sel.value = stage.advanceFieldKey;
           sel.addEventListener('change', function () { stage.advanceFieldKey = sel.value; });
@@ -785,7 +972,7 @@
         } else if (stage.advanceCondition === 'days-in-stage') {
           const row = document.createElement('div');
           row.className = 'ps-advance-days-row';
-          row.innerHTML = 'After <input type="number" class="ps-stage-input" min="1" max="365"> days in this stage';
+          row.innerHTML = 'After <input type="number" class="ds-input" min="1" max="365"> days in this stage';
           const input = row.querySelector('input');
           input.value = stage.advanceDays;
           input.addEventListener('input', function () { stage.advanceDays = Number(input.value) || 1; });
@@ -797,7 +984,7 @@
       modeSelect.addEventListener('change', function () {
         stage.advanceMode = modeSelect.value;
         applyAdvanceModeVisibility();
-        header.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(stage);
+        stageMeta.textContent = stageDetailSummary(stage);
       });
       conditionSelect.addEventListener('change', function () {
         stage.advanceCondition = conditionSelect.value;
@@ -805,9 +992,8 @@
       });
       body.appendChild(advanceField);
 
-      row.appendChild(body);
-      wrap.appendChild(row);
-    });
+    editor.appendChild(body);
+    wrap.appendChild(editor);
   }
 
   // Same integrations this prototype pretends to ingest from on the board's Sources
