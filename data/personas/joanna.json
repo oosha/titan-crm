@@ -650,7 +650,7 @@
       "cards": [
         {
           "id": 101,
-          "company": "",
+          "company": "Acme",
           "contact": "Lucy Mathews",
           "initials": "L",
           "deal": "Lucy's wedding bouquet",
@@ -692,7 +692,11 @@
           },
           "noteHistory": [],
           "upcomingActivities": [],
-          "autoLinkActivity": true
+          "autoLinkActivity": true,
+          "owner": {
+            "name": "Ella Henderson",
+            "email": "ella.henderson@avontechlabs.com"
+          }
         }
       ],
       "hiddenFields": [
