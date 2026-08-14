@@ -416,6 +416,7 @@
 </div>
 
 <script src="/design-system/components/icon.js"></script>
+<script src="/crm-status.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
 <script>
@@ -564,7 +565,21 @@
     return out;
   }
   function terminalKey(pl) { const s = pl.stages || []; return s.length ? s[s.length - 1].key : null; }
-  function isClosed(entry) { return entry.card.stage === terminalKey(entry.pipeline); }
+
+  // Outcome, not position. Stage is how far a record got; status is how it ended,
+  // and they are independent — a deal can sit in the last stage still open, and can
+  // be Lost from anywhere. This used to count "in the last stage" as finished, which
+  // scored a Closed-and-Lost deal as a win and left a Lost deal parked mid-board
+  // inflating the open pipeline. Read the outcome instead.
+  function toneOf(entry) {
+    const entity = entry.pipeline.entity;
+    return titanStatus.toneOf(entity, titanStatus.current(entry.card, entity));
+  }
+  function isOpen(entry) { return toneOf(entry) === 'open'; }
+  function isWon(entry)  { return toneOf(entry) === 'positive'; }
+  function isLost(entry) { return toneOf(entry) === 'negative'; }
+  // 'paused' (a project On hold) is deliberately none of the three: not active, not
+  // an outcome. It stays in totals and out of the rate rather than skewing either.
   function stageLabel(pl, key) {
     return (pl.stages || []).reduce(function (acc, s) { return s.key === key ? s.label : acc; }, key || '');
   }
@@ -608,12 +623,12 @@
   // two figures in their head to compare belongs in a chart below, not up here.
   function kpiTiles() {
     const all = scopedCards();
-    const open = all.filter(function (e) { return !isClosed(e); });
-    const closed = all.filter(isClosed);
+    const open = all.filter(isOpen);
+    const won = all.filter(isWon), lost = all.filter(isLost);
     const pl = scopedPipelines()[0];
-    // The last stage is the finish line, whatever this pipeline calls it —
-    // "Closed" on a sales board, "Hired" on a hiring one.
-    const endLabel = pl ? stageLabel(pl, terminalKey(pl)) : 'Closed';
+    // The winning outcome in this pipeline's own words — "Won" on a sales board,
+    // "Hired" on a hiring one, "Fulfilled" on orders.
+    const endLabel = titanStatus.positiveOf(pl && pl.entity);
 
     function kpi(o) {
       return '<div class="tile kpi" style="--accent:' + o.accent + '">' +
@@ -624,10 +639,14 @@
     // The completion rate as a number rather than a ring: "win rate" on a sales
     // board, "hire rate" on a hiring one. It replaced an Overdue count, which read
     // off a hand-authored boolean nothing in the app computes.
+    // Out of *settled* records, not out of every record — a full pipeline of live
+    // deals shouldn't drag the win rate down, since none of them have lost yet.
     const rateLabel = activeType().rateLabel;
-    const ratePct = all.length ? Math.round((closed.length / all.length) * 100) : 0;
+    const settled = won.length + lost.length;
+    const ratePct = settled ? Math.round((won.length / settled) * 100) : 0;
     const rateTile = kpi({ label: rateLabel, accent: C_RATE,
-      value: ratePct + '%', sub: closed.length + ' of ' + all.length + ' reached the end' });
+      value: settled ? ratePct + '%' : '—',
+      sub: settled ? won.length + ' of ' + settled + ' settled' : 'nothing settled yet' });
 
     if (!hasMoney()) {
       // No amounts on this kind of pipeline, so the headline is where records are.
@@ -640,7 +659,7 @@
         lastOpen ? kpi({ label: lastOpen.label, accent: C_AVG,
           value: String(inLast.length), sub: 'nearly there' }) : '',
         kpi({ label: endLabel, accent: C_WON,
-          value: String(closed.length), sub: 'reached the end' }),
+          value: String(won.length), sub: 'of ' + all.length + ' total' }),
         rateTile,
       ].join('');
     }
@@ -653,7 +672,7 @@
       kpi({ label: 'Open amount', accent: C_OPEN,
         value: moneyText(moneyByCurrency(open)), sub: open.length + ' open' }),
       kpi({ label: endLabel + ' amount', accent: C_WON,
-        value: moneyText(moneyByCurrency(closed)), sub: closed.length + ' ' + endLabel.toLowerCase() }),
+        value: moneyText(moneyByCurrency(won)), sub: won.length + ' ' + endLabel.toLowerCase() }),
       kpi({ label: 'Avg amount', accent: C_AVG,
         value: cur + avg.toLocaleString(), sub: 'per ' + noun(1) }),
       rateTile,
@@ -720,7 +739,7 @@
     const money = hasMoney();
     const title = money ? 'Open amount by pipeline' : 'Open ' + noun(2) + ' by pipeline';
     const segs = pls.map(function (pl) {
-      const open = (pl.cards || []).filter(function (c) { return c.stage !== terminalKey(pl); });
+      const open = (pl.cards || []).filter(function (c) { return isOpen({ card: c, pipeline: pl }); });
       return { name: pl.name, color: pl.color || C_OPEN,
         value: money ? open.reduce(function (a, c) { return a + (Number(c.value) || 0); }, 0) : open.length,
         cur: money ? ((open[0] && open[0].currency) || window.defaultCurrency()) : '' };
@@ -751,7 +770,7 @@
 
   // ── Amount histogram (open records) ─────────────────────────────────────────
   function distributionTile(span) {
-    const open = scopedCards().filter(function (e) { return !isClosed(e); });
+    const open = scopedCards().filter(isOpen);
     if (!open.length) return '';
     const cur = dominantCurrency(open);
     const buckets = [
@@ -882,7 +901,7 @@
   // waiting on you: overdue first, then furthest along.
   function topTile(span) {
     const money = hasMoney();
-    const open = scopedCards().filter(function (e) { return !isClosed(e); });
+    const open = scopedCards().filter(isOpen);
     if (!open.length) return '';
 
     let rows, title, max = 1;
@@ -1071,9 +1090,11 @@
   // the biggest amount on a sales board, the busiest stage on one without amounts.
   function aiRead() {
     const money = hasMoney();
-    const all = scopedCards(), open = all.filter(function (e) { return !isClosed(e); }), closed = all.filter(isClosed);
+    const all = scopedCards(), open = all.filter(isOpen);
+    const closed = all.filter(isWon), lost = all.filter(isLost);
     const overdue = open.filter(function (e) { return e.card.overdue; });
-    const rate = all.length ? Math.round((closed.length / all.length) * 100) : 0;
+    const settled = closed.length + lost.length;
+    const rate = settled ? Math.round((closed.length / settled) * 100) : 0;
     const top = money
       ? (open.slice().sort(function (a, b) { return (Number(b.card.value) || 0) - (Number(a.card.value) || 0); })[0] || null)
       : (overdue[0] || open[0] || null);
