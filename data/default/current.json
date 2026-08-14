@@ -153,7 +153,48 @@
           "contactEmail": "marcus.webb@lumenretail.com",
           "contactPhone": "+1 (312) 555-0187",
           "contactDesignation": "IT Director",
-          "website": "lumenretail.com"
+          "website": "lumenretail.com",
+          "noteHistory": [],
+          "upcomingActivities": [
+            {
+              "type": "followup",
+              "text": "Follow-up scheduled for 12 Feb",
+              "date": "12 Feb"
+            }
+          ],
+          "files": [
+            {
+              "name": "screencapture-titanmail-canny-io-feature-requests-p-export-backup-of-emails-2026-08-10-11_45_56.pdf",
+              "size": "11.0 MB",
+              "direction": "sent"
+            }
+          ],
+          "currency": "$",
+          "location": "",
+          "companyLinkedin": "",
+          "owner": {
+            "name": "Ella Henderson",
+            "email": "ella.henderson@avontechlabs.com"
+          },
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "autoLinkActivity": true,
+          "contacts": [
+            {
+              "name": "Marcus Webb",
+              "email": "marcus.webb@lumenretail.com",
+              "designation": "IT Director",
+              "phone": "+1 (312) 555-0187",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
         },
         {
           "id": 3,
