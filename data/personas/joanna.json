@@ -497,7 +497,7 @@
     },
     "p1": {
       "id": "p1",
-      "name": "Wedding flower preservation",
+      "name": "Company events",
       "entity": "Order",
       "plural": "orders",
       "color": "#ab5f74",
