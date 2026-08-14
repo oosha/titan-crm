@@ -176,6 +176,21 @@
   .ov-act-draft .ov-act-draft-text { flex: 1; min-width: 0; }
   .ov-act-draft .ov-act-draft-date { width: 140px; flex-shrink: 0; }
 
+  .ov-pick-search { width: 100%; margin-bottom: var(--space-150); }
+  .ov-pick-list { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; }
+  .ov-pick-row {
+    display: flex; align-items: center; gap: var(--space-125); width: 100%; text-align: left;
+    padding: var(--space-100); border: none; background: none; border-radius: 8px; cursor: pointer; font: inherit;
+  }
+  .ov-pick-row:hover { background: var(--surface-hover); }
+  .ov-pick-row:disabled { opacity: .45; cursor: default; }
+  .ov-pick-id { display: flex; flex-direction: column; gap: var(--space-025); min-width: 0; }
+  .ov-pick-name { font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-primary); }
+  .ov-pick-sub { font-size: var(--text-xs); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ov-pick-on { margin-left: auto; font-size: var(--text-2xs); color: var(--text-secondary); flex-shrink: 0; }
+  .ov-pick-empty { padding: var(--space-200); font-size: var(--text-sm); color: var(--text-secondary); text-align: center; }
+  .ov-contact-remove { margin-bottom: var(--space-100); }
+
   /* An upcoming item with no date can't be chased; say so rather than leave a gap. */
   .crm-activity-date.is-undated { color: var(--text-secondary); font-style: italic; }
 
@@ -724,6 +739,28 @@
 
 <!-- Email activity detail — shown when the email was logged by someone other than the
      current user (your own emails open for real in the mailclient instead). -->
+<!-- Adding a contact used to append a blank row, so the same person got retyped
+     onto every deal they touched and the spellings drifted. This offers everyone
+     already in the CRM first, and falls back to creating a new one. -->
+<div class="ov-modal-overlay" id="ov-pick-contact-modal" onclick="if(event.target===this) closeOvModal('ov-pick-contact-modal')">
+  <div class="ov-modal">
+    <div class="ov-modal-header">
+      <div>
+        <div class="ov-modal-title">Add a contact</div>
+        <div class="ov-modal-subtitle">Someone already in Titan, or a new person</div>
+      </div>
+      <span class="ov-modal-close" onclick="closeOvModal('ov-pick-contact-modal')">&times;</span>
+    </div>
+    <div class="ov-modal-body">
+      <input class="ds-input ov-pick-search" id="ov-pick-search" placeholder="Search contacts by name or email" oninput="renderContactPicker()">
+      <div class="ov-pick-list" id="ov-pick-list"></div>
+    </div>
+    <div class="ov-modal-footer">
+      <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="addBlankContact()">Create a new contact</button>
+    </div>
+  </div>
+</div>
+
 <div class="ov-modal-overlay" id="ov-email-modal" onclick="if(event.target===this) closeOvModal('ov-email-modal')">
   <div class="ov-modal">
     <div class="ov-modal-header">
@@ -1246,8 +1283,10 @@
             (i === 0 && schema && !schema.isPerson ? '<span class="ds-badge ds-badge--accent ds-badge--pill">Contact person</span>' : '') +
             '<span class="ov-contact-caret"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.5 6.5L8 10l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
           '</div>' +
-          (contactsEnabled && contacts.length > 1 ? '<span class="ov-contact-x" onclick="removeContact(' + i + ')" title="Remove">&times;</span>' : '') +
         '</div>' +
+        (contactsEnabled && contacts.length > 1
+          ? '<div class="ov-contact-grid ov-contact-remove"><button class="ds-btn ds-btn--destructive-quiet ds-btn--sm" type="button" onclick="removeContact(' + i + ')">Remove from this record</button></div>'
+          : '') +
         (nameHidden ? '' : '<div class="ov-contact-grid ov-contact-namerow"><input class="ds-input" placeholder="Name" value="' + esc(c.name) + '" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);"></div>') +
         '<div class="ov-contact-grid">' +
           (fieldHidden('contact-email') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-email')) + '" value="' + esc(c.email) + '" oninput="setContactField(' + i + ',\'email\',this.value)">') +
@@ -1265,13 +1304,80 @@
     // no "additional contact" to add. Company-subject only, like contact-name.
     if (addLink) addLink.style.display = (contactsEnabled && schema && !schema.isPerson) ? '' : 'none';
   }
-  function addContact() {
+  // Everyone on any record in this account, deduped on email — the same key
+  // contactKey() uses elsewhere, so "already added" means the same thing here as
+  // it does on the Contacts page.
+  function knownContacts() {
+    const seen = Object.create(null), out = [];
+    Object.keys(pipelines || {}).forEach(function (pid) {
+      (pipelines[pid].cards || []).forEach(function (c) {
+        (window.contactsOf ? window.contactsOf(c) : (c.contacts || [])).forEach(function (person) {
+          const key = String(person.email || person.name || '').trim().toLowerCase();
+          if (!key || seen[key]) return;
+          seen[key] = true;
+          out.push({ person: person, company: c.company || '' });
+        });
+      });
+    });
+    return out.sort(function (a, b) { return String(a.person.name || '').localeCompare(String(b.person.name || '')); });
+  }
+  function onThisRecord(person) {
+    const key = String(person.email || person.name || '').trim().toLowerCase();
+    return (contacts || []).some(function (c) {
+      return String(c.email || c.name || '').trim().toLowerCase() === key;
+    });
+  }
+
+  function renderContactPicker() {
+    const q = (document.getElementById('ov-pick-search').value || '').trim().toLowerCase();
+    const list = document.getElementById('ov-pick-list');
+    const rows = knownContacts().filter(function (e) {
+      return !q || (String(e.person.name || '') + ' ' + String(e.person.email || '')).toLowerCase().indexOf(q) !== -1;
+    });
+    list.innerHTML = rows.length ? rows.map(function (e, i) {
+      const already = onThisRecord(e.person);
+      const sub = [e.person.designation, e.person.email].filter(Boolean).join(' · ');
+      return '<button class="ov-pick-row" type="button"' + (already ? ' disabled' : '') +
+        ' onclick="pickContact(' + i + ')">' +
+        '<span class="crm-contact-avatar" style="width:28px;height:28px;border-radius:50%;background:#8a9099;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0;">' +
+          esc((e.person.name || '?').charAt(0).toUpperCase()) + '</span>' +
+        '<span class="ov-pick-id"><span class="ov-pick-name">' + esc(e.person.name || 'Unnamed') + '</span>' +
+        (sub ? '<span class="ov-pick-sub">' + esc(sub) + '</span>' : '') + '</span>' +
+        (already ? '<span class="ov-pick-on">Already added</span>'
+                 : (e.company ? '<span class="ov-pick-on">' + esc(e.company) + '</span>' : '')) +
+      '</button>';
+    }).join('') : '<div class="ov-pick-empty">No one matches that. Create a new contact below.</div>';
+    // Index into the same filtered list the buttons were built from.
+    pickerRows = rows;
+  }
+  let pickerRows = [];
+
+  function pickContact(i) {
+    const entry = pickerRows[i];
+    if (!entry || onThisRecord(entry.person)) return;
+    const p = entry.person;
+    contacts.push({ name: p.name || '', email: p.email || '', designation: p.designation || '',
+                    phone: p.phone || '', department: p.department || '', location: p.location || '',
+                    linkedin: p.linkedin || '' });
+    closeOvModal('ov-pick-contact-modal');
+    renderContacts();
+    onFieldChange();
+  }
+
+  function addBlankContact() {
+    closeOvModal('ov-pick-contact-modal');
     contacts.push({ name: '', email: '', designation: '', phone: '', department: '', location: '', linkedin: '' });
     renderContacts();
-    // A blank contact has nothing to summarise, so it opens straight into its fields.
     const rows = document.querySelectorAll('#ov-contacts .ov-contact');
     const last = rows[rows.length - 1];
     if (last) { last.classList.remove('is-collapsed'); const f = last.querySelector('input'); if (f) f.focus(); }
+  }
+
+  function addContact() {
+    document.getElementById('ov-pick-search').value = '';
+    renderContactPicker();
+    document.getElementById('ov-pick-contact-modal').classList.add('open');
+    setTimeout(function () { document.getElementById('ov-pick-search').focus(); }, 50);
   }
   function removeContact(i) { contacts.splice(i, 1); renderContacts(); onFieldChange(); }
 
@@ -1551,8 +1657,12 @@
   let driveToastTimer = null;
   function addToDrive(i) {
     const f = (card.files || [])[i];
+    showToast(f ? '"' + f.name + '" has been added to Drive' : 'Attachment has been added to Drive');
+  }
+  // The page already had one toast, hardcoded to Drive. Same element, any message.
+  function showToast(text) {
     const msg = document.getElementById('ov-drive-toast-msg');
-    if (msg) msg.textContent = f ? '"' + f.name + '" has been added to Drive' : 'Attachment has been added to Drive';
+    if (msg) msg.textContent = text;
     const t = document.getElementById('ov-drive-toast');
     t.classList.add('show');
     clearTimeout(driveToastTimer);
@@ -1651,10 +1761,11 @@
     mailTo('Time to talk about ' + (card.deal || card.company || 'this'),
       'Here is my booking link — grab whichever slot suits you:\n\nhttps://titan.email/book/' + slug + '\n');
   }
-  // No Calendar app exists in this prototype, so this cannot create a real invite.
-  // A dated call task is the honest version: it is the part we can actually keep.
+  // Placeholder until there is a Calendar app to book into — the app switcher
+  // lists one but nothing is built behind it. Says so rather than quietly doing
+  // something else, the same way the Drive button on this page does.
   function actCall() {
-    addActivity('call');
+    showToast('Calendar isn\u2019t connected yet — this will book a call.');
   }
   function actNote() {
     const input = document.getElementById('ov-note-input');
