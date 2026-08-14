@@ -2188,7 +2188,9 @@
        screen is mostly whitespace + rows, a hard line top and bottom read as
        an extra box around content that's already clearly bounded by the modal. */
     #np-step-3 .np-header, #np-step-3 .np-footer { border: none; }
-    .np-done-head { text-align: center; padding: 6px 0 22px; }
+    /* No top padding: .np-body already supplies the gap under the header, and a
+       second one pushed the headline too far down the panel. */
+    .np-done-head { text-align: center; padding: 0 0 22px; }
     .np-done-check {
       width: 46px; height: 46px; border-radius: 50%; margin: 0 auto 14px;
       display: flex; align-items: center; justify-content: center;
@@ -2216,7 +2218,7 @@
     .np-src-row:hover .np-src-icon { background: #e8eaed; color: #444; }
     .np-src-logo { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
     .np-src-text { flex: 1; min-width: 0; }
-    .np-src-name { display: block; font-size: 13px; font-weight: 650; color: #222; }
+    .np-src-name { display: block; font-size: 14.5px; font-weight: 650; color: #222; }
     .np-src-desc { display: block; font-size: 11.5px; color: #8b9096; line-height: 1.4; margin-top: 1px; }
     .np-src-tick {
       position: absolute; top: 50%; right: 14px; transform: translateY(-50%);
@@ -3000,9 +3002,8 @@
                it needs, no section heading duplicating it. -->
           <button type="button" class="np-src-row" id="np-src-form-card" onclick="npSourceForm()">
             <span class="np-src-tick"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-            <span class="np-src-icon">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="4.5" y="3" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M8 2.5h4a1 1 0 011 1V4a1 1 0 01-1 1H8a1 1 0 01-1-1V3.5a1 1 0 011-1z" fill="currentColor"/><path d="M7.5 8.5h5M7.5 11h5M7.5 13.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-            </span>
+            <!-- Same icon the sidebar uses for Forms, from the design system. -->
+            <span class="np-src-icon"><span data-ds-icon="forms" data-size="18"></span></span>
             <span class="np-src-text">
               <span class="np-src-name" id="np-source-form-name">Form</span>
               <span class="np-src-desc" id="np-source-form-desc">A form link you can add on your website, Instagram, share on WhatsApp, LinkedIn…</span>
@@ -3024,9 +3025,8 @@
                opening it goes one screen deeper to the individual tools. -->
           <button type="button" class="np-src-row" id="np-src-integrations-card" onclick="npShowStep(5)">
             <span class="np-src-tick"><svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-            <span class="np-src-icon">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1.3" stroke="currentColor" stroke-width="1.4"/><rect x="11" y="3" width="6" height="6" rx="1.3" stroke="currentColor" stroke-width="1.4"/><rect x="3" y="11" width="6" height="6" rx="1.3" stroke="currentColor" stroke-width="1.4"/><rect x="11" y="11" width="6" height="6" rx="1.3" stroke="currentColor" stroke-width="1.4"/></svg>
-            </span>
+            <!-- Same icon the sidebar uses for Integrations, from the design system. -->
+            <span class="np-src-icon"><span data-ds-icon="integrations" data-size="18"></span></span>
             <span class="np-src-text">
               <span class="np-src-name">Integrations</span>
               <span class="np-src-desc" id="np-source-integrations-desc">Connect a form tool you already use — Contact Form 7, WPForms, Elementor, Jetpack, HubSpot.</span>
@@ -3041,7 +3041,7 @@
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2.8v8.4M6.8 8l3.2 3.2L13.2 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 12.8v2.4a1.4 1.4 0 001.4 1.4h10.2a1.4 1.4 0 001.4-1.4v-2.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
             </span>
             <span class="np-src-text">
-              <span class="np-src-name">Import records</span>
+              <span class="np-src-name" id="np-source-import-name">Import records</span>
               <span class="np-src-desc" id="np-source-import-desc">Bring in records you already have from a spreadsheet or another CRM.</span>
             </span>
           </button>
@@ -5000,6 +5000,7 @@
         'A form link you can add on your website, share on WhatsApp, Instagram or LinkedIn — every submission becomes ' + npArticle(one) + ' ' + one + ' here.';
       document.getElementById('np-source-email-desc').textContent =
         'Describe what to look for and matching mail becomes ' + npArticle(one) + ' ' + one + '.';
+      document.getElementById('np-source-import-name').textContent = 'Import ' + many;
       document.getElementById('np-source-import-desc').textContent =
         'Bring in ' + many + ' you already have from a spreadsheet or another CRM.';
 
