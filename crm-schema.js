@@ -83,14 +83,16 @@
   };
   var STATE_NAME = { R: 'required', '+': 'on', '-': 'off', x: 'none' };
 
-  // Defaults. `{company}` interpolates that entity's own company label, so a
-  // projects pipeline says "Client website" without needing four more table rows.
   var BASE_LABELS = {
     'name': 'Record name', 'value': 'Value', 'stage': 'Record stage', 'status': 'Status',
     'close-date': 'Expected end date', 'source': 'Source', 'note': 'Note',
-    'company': 'Company', 'location': 'Location',
-    'website': '{company} website', 'company-linkedin': '{company} LinkedIn',
-    'instagram': '{company} Instagram',
+    // Always "Company ___", on every entity — the section heading is what says
+    // "Customer"/"Client" (see COMPANY_WORD below); a bare "Customer" as a
+    // *field* label reads as if it wants a person's name, right above a
+    // "Contact person" field that actually does.
+    'company': 'Company name', 'location': 'Location',
+    'website': 'Company website', 'company-linkedin': 'Company LinkedIn',
+    'instagram': 'Company Instagram',
     'contact': 'Contact person', 'contact-name': 'Contact name',
     'contact-email': 'Email', 'contact-phone': 'Phone',
     'contact-designation': 'Designation', 'contact-department': 'Department',
@@ -105,20 +107,25 @@
     },
     Project: {
       'name': 'Project name', 'value': 'Project budget', 'stage': 'Project stage',
-      'close-date': 'Expected launch date', 'company': 'Client',
+      'close-date': 'Expected launch date',
     },
     Order: {
       'name': 'Order name', 'value': 'Order total', 'stage': 'Order stage',
       'close-date': 'Expected delivery date', 'source': 'Order channel',
-      'company': 'Customer', 'location': 'Delivery address',
+      'location': 'Delivery address',
     },
     Candidate: {
       'name': 'Candidate name', 'stage': 'Candidate stage',
       'close-date': 'Expected start date', 'source': 'Applied via',
-      'company': 'Current employer', 'contact-designation': 'Current title',
+      'contact-designation': 'Current title',
     },
     Record: {},
   };
+
+  // The section heading's own word only — "Customer details", "Client
+  // details" — never the field label inside it (that's always "Company
+  // ___", from BASE_LABELS above).
+  var COMPANY_WORD = { Project: 'Client', Order: 'Customer' };
 
   // Applied on top of the entity layer when the pipeline's subject is a person.
   // The company fields don't vanish because a person can't have an employer — they
@@ -170,24 +177,21 @@
   }
 
   function labelFor(entity, subject, key) {
-    var label = (subject === 'person' && (PERSON_LABELS[entity] || {})[key]) ||
-                (LABELS[entity] || {})[key] || BASE_LABELS[key] || key;
-    if (label.indexOf('{company}') === -1) return label;
-    return label.replace('{company}', (LABELS[entity] || {}).company || BASE_LABELS.company);
+    return (subject === 'person' && (PERSON_LABELS[entity] || {})[key]) ||
+           (LABELS[entity] || {})[key] || BASE_LABELS[key] || key;
   }
 
   // Group headings, derived rather than tabled: the company section is named after
   // whatever that entity calls a company, so it reads "Client details" on projects.
   function headings(entity, subject) {
-    var company = (subject === 'person' && (PERSON_LABELS[entity] || {}).company) ||
-                  (LABELS[entity] || {}).company || BASE_LABELS.company;
+    var word = COMPANY_WORD[entity] || 'Company';
     return {
       record: entity + ' details',
       // "Client details" reads fine; "Current employer details" doesn't — so a
       // person-subject pipeline names the section outright instead of suffixing it.
       company: subject === 'person'
         ? (entity === 'Candidate' ? 'Current employer' : 'Employer')
-        : company + ' details',
+        : word + ' details',
       contact: 'Contact details',
     };
   }
@@ -230,9 +234,8 @@
       subjectLocked: subjectLocked(entity),
       headings: headings(entity, subject),
       fields: defs, byKey: byKey,
-      // Falls through labelFor rather than BASE_LABELS so a field this type doesn't
-      // offer still returns a finished string — reading BASE_LABELS raw would hand
-      // back the literal "{company} website".
+      // Falls through labelFor rather than BASE_LABELS so a field this type
+      // doesn't offer still returns its real label, entity overrides included.
       label: function (key) { return byKey[key] ? byKey[key].label : labelFor(entity, subject, key); },
       offered: function (key) { return !!byKey[key]; },
       on: function (key) { return !!byKey[key] && byKey[key].on; },
