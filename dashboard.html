@@ -1138,13 +1138,14 @@
   }
 
   // ── Action cards ────────────────────────────────────────────────────────────
-  // One card per change. Whether it has already happened is the server's call,
-  // not this function's: `done` arrives already written and the card's job is to
-  // show what changed and offer Undo, while `pending` means the target was
-  // ambiguous and nothing was saved. See the safety model in api/_assistant.js.
+  // One card per change. Changes arrive already written — the card shows what
+  // happened and offers Undo. See the safety model in api/_assistant.js for why
+  // nothing waits for approval.
   //
-  // Both look similar on purpose — the record and the fields read the same either
-  // way, so the only thing to take in is the footer.
+  // The `pending` branch below is no longer reachable from a new turn: the server
+  // stopped producing that state when the confirmation gate was removed. It stays
+  // because a transcript saved before then can still hold one, and sessionStorage
+  // outlives the deploy — a restored card with no footer would be a dead end.
   function actionCardHTML(m, idx) {
     const a = m.action;
     const isNote = a.type === 'add_note' || a.type === 'restore_note';
@@ -1187,6 +1188,7 @@
     } else if (s === 'failed') {
       foot = '<div class="ai-act-state err">' + esc(m.error || 'Couldn’t save that.') + '</div>';
     } else {
+      // Legacy only — see the note above this function.
       const busy = s === 'busy';
       foot =
         '<button class="ai-act-apply" type="button" data-apply="' + idx + '"' + (busy ? ' disabled' : '') + '>' +

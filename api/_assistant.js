@@ -9,39 +9,36 @@
 // callModel() below touches the wire format.
 //
 // ── The safety model ──────────────────────────────────────────────────────────
-// Three tiers, by how bad it is to get the action wrong:
+// Two tiers, by how bad it is to get the action wrong:
 //
-//   Reads          run immediately.
-//   Edits          apply immediately, and come back with an Undo button.
-//   Deletes        are not possible at all. See MANUAL_TASKS below.
+//   Reads and edits   run immediately. Edits come back with an Undo button.
+//   Deletes           are not possible at all. See MANUAL_TASKS below.
 //
-// Edits used to wait for a confirm click. They no longer do, because confirming
-// every "add a note" made the rail slower than typing into the form it exists to
-// replace — and a prompt that always appears stops being read. What replaces it
-// is narrower and, for a routine edit, stronger: every applied edit carries the
-// inverse action, so one click puts the record back exactly as it was.
+// Nothing waits for approval. There were two rounds of narrowing before it went
+// entirely: first every write needed a click, then only writes we could not
+// pin to one record. Both got in the way more than they helped, and the second
+// misfired — it keyed off a search returning several rows, so naming "FirstCry
+// on premise" tripped it merely because "Baby wear for FirstCry" also matched.
+// A prompt that fires on a clear instruction teaches people to click through it,
+// which is worse than not asking.
 //
-// Confirmation still fires where undo is not the right answer — when we cannot
-// be sure the change is landing on the record the user meant. Getting the
-// *record* wrong is the failure undo repairs badly: by the time anyone notices,
-// they are looking at two wrong records, not one.
+// So the safety property is now Undo alone: every applied edit carries its own
+// inverse, built from what the record actually held at write time, and one click
+// puts it back. That genuinely covers a wrong value. It covers a wrong *record*
+// less well — by the time anyone notices, two records are wrong — and that is a
+// known, accepted trade, made deliberately rather than overlooked. The model is
+// still told to ask which record when the words truly fit two, but that is a
+// question in the conversation, not a gate in the code, and nothing enforces it.
 //
-// Two gates, in needsConfirm() below: the model escalates anything it had to
-// guess at, and the server asks whether the user actually named the record. That
-// second test is deliberately about the user's words, not the search results. It
-// first asked "did a search match more than one row?", which punished the model
-// for searching sensibly — "move FirstCry on premise" makes any search for
-// firstcry return "Baby wear for FirstCry" as well, so a perfectly clear
-// instruction got a confirm card. Two rows is not the same as two candidates.
-//
-// Deletes are the exception with no undo path — there is no delete tool and
-// there must not be one. The stated use case is someone talking on a call, where
-// a misheard word is normal, and this document is shared, commit-backed and
-// carries no history. So the assistant hands over a link to the screen that owns
-// the control instead, and the person does it with the record in front of them.
+// Deletes stay impossible, and that exception is what makes the trade tolerable
+// — there is no delete tool and there must not be one. The stated use case is
+// someone talking on a call, where a misheard word is normal, and this document
+// is shared, commit-backed and carries no history. So the assistant hands over a
+// link to the screen that owns the control, and the person does it with the
+// record in front of them.
 
 // ANTHROPIC_BASE_URL exists so the tool loop can be exercised locally against a
-// stub — the loop, the field allowlist and the confirmation rule are worth
+// stub — the loop, the field allowlist and the write path are worth
 // testing without spending real tokens. Unset in production.
 const ANTHROPIC_URL = (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com') + '/v1/messages';
 const MODEL = 'claude-opus-5';
@@ -74,7 +71,7 @@ function userError(message) {
 
 // ── The fields the assistant is allowed to change ─────────────────────────────
 // An allowlist, not a passthrough. The model can only propose changes to fields
-// on this list — anything else is dropped before it ever reaches a confirm card.
+// on this list — anything else is dropped before it is ever written.
 // A write path that accepts arbitrary keys from a model is one that can quietly
 // corrupt a record.
 const EDITABLE = [
@@ -227,8 +224,9 @@ function toolDefs() {
         'Change a record\'s fields. Use this when the user states new information about ' +
         'a deal — a new amount, a stage move, a corrected email. Look the record up with find_records ' +
         'first so you have its id and can see what the values are now. ' +
-        'This saves straight away and the user gets an Undo button, so do not ask permission first ' +
-        'and do not ask afterwards whether they want it kept. Make the change once and stop.',
+        'This saves straight away and cannot be undone by asking — the user gets an Undo button ' +
+        'instead. Do not ask permission first and do not ask afterwards whether they want it kept. ' +
+        'Make the change once and stop.',
       input_schema: {
         type: 'object',
         properties: {
@@ -238,15 +236,6 @@ function toolDefs() {
             description:
               'The fields to change, as field name to new value. Allowed fields: ' +
               EDITABLE_KEYS.join(', ') + '. For stage, use the stage name as shown on the board.',
-          },
-          confirm: {
-            type: 'boolean',
-            description:
-              'Leave this out almost always. Set it true only when their words genuinely fit more ' +
-              'than one record, or when you would be inventing a value they never gave. Working ' +
-              'something out is not guessing: "move it to the next stage" is the next stage in that ' +
-              'pipeline\'s own order, and naming a record that search also returned near-misses for ' +
-              'is still naming it. Neither needs approval.',
           },
         },
         required: ['recordId', 'changes'],
@@ -265,12 +254,6 @@ function toolDefs() {
         properties: {
           recordId: { type: 'string', description: 'The record id from find_records.' },
           note: { type: 'string', description: 'The note text.' },
-          confirm: {
-            type: 'boolean',
-            description:
-              'Set true if you had to guess which record they meant. The note is then shown for ' +
-              'approval instead of saving.',
-          },
         },
         required: ['recordId', 'note'],
       },
@@ -375,8 +358,8 @@ function runPipelineOverview(data, input) {
 }
 
 // ── Validating a proposed write ───────────────────────────────────────────────
-// Runs on the server, before the change is ever shown to the user, so a confirm
-// card can never offer something the apply step would reject.
+// Runs on the server before anything is written, so the card the user sees can
+// never claim a change the apply step would have rejected.
 function buildProposedUpdate(data, input) {
   const entry = findCard(data, input.recordId);
   if (!entry) return { error: 'No record with id ' + input.recordId + '. Use find_records first.' };
@@ -416,7 +399,7 @@ function buildProposedUpdate(data, input) {
       label: fieldLabel(key),
       before: before == null ? '' : before,
       after: next,
-      // What the confirm card shows — stage keys are meaningless to a reader.
+      // What the card shows — stage keys are meaningless to a reader.
       beforeText: key === 'stage' ? stageLabel(entry.pipeline, before) : String(before == null ? '' : before),
       afterText: key === 'stage' ? stageLabel(entry.pipeline, next) : String(next),
     });
@@ -501,8 +484,9 @@ function systemPrompt(data, account) {
     'the one thing worth pausing over is whether you have the right record:',
     '- Their words genuinely fit two records and nothing separates them → ask which, and name both.',
     '- They asked for a change but never said to what ("bump the amount") → ask for the value.',
-    '- Close to sure but not certain → set confirm on the call rather than asking a question whose',
-    '  only content is "is this the right one?".',
+    '',
+    'Ask by replying, not by half-doing it — there is no "put it up for approval" any more. If you',
+    'act, it is saved.',
     '',
     'Everything else goes straight through. In particular these are NOT reasons to pause:',
     '- Working out a value from what is in front of you. "The next stage" is the next one in that',
@@ -557,62 +541,16 @@ async function callModel(body) {
 }
 
 // ── The tool loop ─────────────────────────────────────────────────────────────
-// Returns { reply, actions, links }. Each action carries `confirm`: false means
-// the caller should apply it now, true means the page must ask first. Nothing is
-// written here either way — this function has no file access, and keeping it
-// that way is what lets it be exercised against a stubbed model.
+// Returns { reply, actions, links }. Every action is meant to be applied by the
+// caller as soon as this returns — there is no approval step. Nothing is written
+// here, though: this function has no file access, and keeping it that way is
+// what lets the whole loop be exercised against a stubbed model.
 async function converse(data, history, account) {
   const messages = history.slice();
   const actions = [];
   const links = [];
   const tools = toolDefs();
 
-  // id → the other ids the same search turned up. A search returning several
-  // rows means the model chose from a list; whether that choice was actually
-  // uncertain is a separate question, answered by namedDistinctly() below.
-  const contested = Object.create(null);
-
-  // What the user last said, which is what "did they name it clearly?" has to be
-  // measured against — not what a search happened to return.
-  const lastUserText = (function () {
-    for (let i = history.length - 1; i >= 0; i--) {
-      if (history[i] && history[i].role === 'user') {
-        return String(history[i].content || '').toLowerCase();
-      }
-    }
-    return '';
-  })();
-
-  function nameOf(recordId) {
-    const e = findCard(data, recordId);
-    return e ? String(e.card.deal || e.card.company || '').trim().toLowerCase() : '';
-  }
-
-  // The gate used to fire on "a search matched more than one row", which punished
-  // the model for searching sensibly. Asking to move "FirstCry on premise" makes
-  // any search for firstcry return "Baby wear for FirstCry" too — two rows, but
-  // nothing ambiguous about what the user asked for.
-  //
-  // So the test is whether the user spelled this record out and did not also
-  // spell out a rival. That is the thing confirmation is actually for: they said
-  // something that fits two records, not the model cast a wide net.
-  function namedDistinctly(recordId) {
-    const rivals = contested[String(recordId)];
-    if (!rivals) return true;                       // nothing competed with it
-    const mine = nameOf(recordId);
-    // Short names match too easily inside ordinary prose to mean anything.
-    if (mine.length < 4 || lastUserText.indexOf(mine) === -1) return false;
-    return !rivals.some(function (id) {
-      if (String(id) === String(recordId)) return false;
-      const other = nameOf(id);
-      return other.length >= 4 && lastUserText.indexOf(other) !== -1;
-    });
-  }
-
-  function needsConfirm(input) {
-    if (input && input.confirm === true) return true;      // the model escalated
-    return !namedDistinctly(input && input.recordId);
-  }
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const response = await callModel({
@@ -649,15 +587,6 @@ async function converse(data, history, account) {
       let payload;
       if (tu.name === 'find_records') {
         payload = runFindRecords(data, tu.input || {});
-        const found = payload.matches || [];
-        if (found.length > 1) {
-          const ids = found.map(function (m) { return String(m.id); });
-          ids.forEach(function (id) { contested[id] = ids; });
-        } else if (found.length === 1) {
-          // A search that lands on exactly one record settles it, even if an
-          // earlier, broader search had it competing with others.
-          delete contested[String(found[0].id)];
-        }
       } else if (tu.name === 'pipeline_overview') {
         payload = runPipelineOverview(data, tu.input || {});
       } else if (tu.name === 'where_to_do_it') {
@@ -671,17 +600,11 @@ async function converse(data, history, account) {
         if (built.error) {
           payload = { error: built.error };
         } else {
-          const confirm = needsConfirm(input);
-          built.action.confirm = confirm;
           actions.push(built.action);
           payload = {
-            status: confirm
-              ? 'NOT saved. More than one record could have been the one they meant, so this is ' +
-                'waiting on the user to approve it. Tell them in one line that you have put it up ' +
-                'to check — do not list the fields, the interface shows them.'
-              : 'Saved. The interface is showing them what changed and an Undo button, so do not ' +
-                'list the fields again and do not ask whether they want to keep it. One short line ' +
-                'about what you did, then stop.',
+            status: 'Saved. The interface is showing them what changed and an Undo button, so do ' +
+                    'not list the fields again and do not ask whether they want to keep it. One ' +
+                    'short line about what you did, then stop.',
             skipped: built.skipped && built.skipped.length ? built.skipped : undefined,
           };
         }
@@ -707,7 +630,7 @@ async function converse(data, history, account) {
   };
 }
 
-// ── Applying a confirmed action ───────────────────────────────────────────────
+// ── Applying an action ────────────────────────────────────────────────────────
 // Mutates the document in place and returns a description of what changed.
 // Re-validates from scratch: the payload arrives from the browser, so the fact
 // that the server proposed it earlier proves nothing about what came back.

@@ -3,10 +3,10 @@
 // Body: { messages: [{ role: "user" | "assistant", content: "..." }] }
 // Returns: { reply, actions[], links[] }
 //
-// Each action comes back with a `state`: "done" if it was applied here (and then
-// it carries `undo`), or "pending" if the target was ambiguous enough that the
-// user has to approve it — those go to assistant-apply.js on a click. Which of
-// the two is decided in _assistant.js; see the safety model at the top of it.
+// Every action the model took is applied here, in one write, and comes back with
+// state "done" and the `undo` its card's button posts. There is no approval step
+// — see the safety model at the top of _assistant.js for what replaced it and
+// why. assistant-apply.js still exists: it is what Undo posts to.
 //
 // The conversation is stateless: the page sends the history each turn, the same
 // way the rest of this app avoids server-side session state.
@@ -48,7 +48,7 @@ module.exports = async function handler(req, res) {
     const account = req.body && typeof req.body.account === 'string' ? req.body.account.slice(0, 120) : '';
     const out = await converse(existing.json, messages, account);
 
-    const auto = (out.actions || []).filter(function (a) { return !a.confirm; });
+    const auto = out.actions || [];
     if (auto.length) {
       // One write for the whole turn, not one per action — every write is a
       // commit, and "set the amount and add a note" is a single thought.
@@ -75,16 +75,11 @@ module.exports = async function handler(req, res) {
         return a.type === 'add_note' ? 'add note' : 'update record';
       }).join(', '));
 
-      out.actions = (out.actions || []).map(function (a) {
-        if (a.confirm) return Object.assign({}, a, { state: 'pending' });
+      out.actions = auto.map(function (a) {
         const ok = applied.filter(function (x) { return x.action === a; })[0];
         if (ok) return Object.assign({}, a, { state: 'done', undo: ok.result.undo });
         const bad = failed.filter(function (x) { return x.action === a; })[0];
         return Object.assign({}, a, { state: 'failed', error: bad ? bad.message : 'Couldn’t save that.' });
-      });
-    } else {
-      out.actions = (out.actions || []).map(function (a) {
-        return Object.assign({}, a, { state: 'pending' });
       });
     }
 
