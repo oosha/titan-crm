@@ -22,11 +22,17 @@
 // inverse action, so one click puts the record back exactly as it was.
 //
 // Confirmation still fires where undo is not the right answer — when we cannot
-// be sure the change is landing on the record the user meant. Two gates, in
-// needsConfirm() below: the server flags a target it saw more than one candidate
-// for, and the model can escalate anything it had to guess at. Getting the
+// be sure the change is landing on the record the user meant. Getting the
 // *record* wrong is the failure undo repairs badly: by the time anyone notices,
 // they are looking at two wrong records, not one.
+//
+// Two gates, in needsConfirm() below: the model escalates anything it had to
+// guess at, and the server asks whether the user actually named the record. That
+// second test is deliberately about the user's words, not the search results. It
+// first asked "did a search match more than one row?", which punished the model
+// for searching sensibly — "move FirstCry on premise" makes any search for
+// firstcry return "Baby wear for FirstCry" as well, so a perfectly clear
+// instruction got a confirm card. Two rows is not the same as two candidates.
 //
 // Deletes are the exception with no undo path — there is no delete tool and
 // there must not be one. The stated use case is someone talking on a call, where
@@ -236,9 +242,11 @@ function toolDefs() {
           confirm: {
             type: 'boolean',
             description:
-              'Set true if you had to guess anything — which record they meant, or a value they ' +
-              'did not state outright. The change is then shown for approval instead of saving. ' +
-              'Leave it out when they were specific.',
+              'Leave this out almost always. Set it true only when their words genuinely fit more ' +
+              'than one record, or when you would be inventing a value they never gave. Working ' +
+              'something out is not guessing: "move it to the next stage" is the next stage in that ' +
+              'pipeline\'s own order, and naming a record that search also returned near-misses for ' +
+              'is still naming it. Neither needs approval.',
           },
         },
         required: ['recordId', 'changes'],
@@ -488,16 +496,20 @@ function systemPrompt(data, account) {
     '- Only change what they actually said.',
     '',
     '# When to stop and ask instead',
-    'Undo fixes a wrong value. It does not really fix a change written to the wrong record — by',
-    'the time anyone notices, two records are wrong. So when you are not sure the change is',
-    'landing where they meant, do not guess:',
-    '- Several records could be the one they mean → ask which, and name them. Do not pick the',
-    '  likeliest and proceed.',
-    '- They asked for a change but did not say to what ("bump the amount", "move it along") →',
-    '  ask for the value. Do not infer one.',
-    '- You are fairly sure but not certain → make the call with confirm set to true, which shows',
-    '  it for approval rather than saving. Use this instead of a question when the question would',
-    '  only be "is this the right one?".',
+    'This is a narrow exception, not a habit. Undo fixes a wrong value, but it does not really fix',
+    'a change written to the wrong record — by the time anyone notices, two records are wrong. So',
+    'the one thing worth pausing over is whether you have the right record:',
+    '- Their words genuinely fit two records and nothing separates them → ask which, and name both.',
+    '- They asked for a change but never said to what ("bump the amount") → ask for the value.',
+    '- Close to sure but not certain → set confirm on the call rather than asking a question whose',
+    '  only content is "is this the right one?".',
+    '',
+    'Everything else goes straight through. In particular these are NOT reasons to pause:',
+    '- Working out a value from what is in front of you. "The next stage" is the next one in that',
+    '  pipeline\'s list of stages; read it off and move the record.',
+    '- A search returning near-misses alongside the record they clearly named. "FirstCry on premise"',
+    '  is unambiguous even when searching turns up other FirstCry rows.',
+    '- The change being large, or final, or one you would double-check yourself. Undo covers it.',
     '',
     '# What you cannot do',
     'You have no way to delete anything, and no way to undo a deletion someone else makes.',
@@ -555,15 +567,51 @@ async function converse(data, history, account) {
   const links = [];
   const tools = toolDefs();
 
-  // Record ids that a search matched alongside others. If a write later targets
-  // one of these, the model picked from a list rather than being handed the
-  // record, and that is the case confirmation exists for. Populated as searches
-  // run, so it reflects this turn's actual ambiguity rather than a guess.
+  // id → the other ids the same search turned up. A search returning several
+  // rows means the model chose from a list; whether that choice was actually
+  // uncertain is a separate question, answered by namedDistinctly() below.
   const contested = Object.create(null);
 
+  // What the user last said, which is what "did they name it clearly?" has to be
+  // measured against — not what a search happened to return.
+  const lastUserText = (function () {
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i] && history[i].role === 'user') {
+        return String(history[i].content || '').toLowerCase();
+      }
+    }
+    return '';
+  })();
+
+  function nameOf(recordId) {
+    const e = findCard(data, recordId);
+    return e ? String(e.card.deal || e.card.company || '').trim().toLowerCase() : '';
+  }
+
+  // The gate used to fire on "a search matched more than one row", which punished
+  // the model for searching sensibly. Asking to move "FirstCry on premise" makes
+  // any search for firstcry return "Baby wear for FirstCry" too — two rows, but
+  // nothing ambiguous about what the user asked for.
+  //
+  // So the test is whether the user spelled this record out and did not also
+  // spell out a rival. That is the thing confirmation is actually for: they said
+  // something that fits two records, not the model cast a wide net.
+  function namedDistinctly(recordId) {
+    const rivals = contested[String(recordId)];
+    if (!rivals) return true;                       // nothing competed with it
+    const mine = nameOf(recordId);
+    // Short names match too easily inside ordinary prose to mean anything.
+    if (mine.length < 4 || lastUserText.indexOf(mine) === -1) return false;
+    return !rivals.some(function (id) {
+      if (String(id) === String(recordId)) return false;
+      const other = nameOf(id);
+      return other.length >= 4 && lastUserText.indexOf(other) !== -1;
+    });
+  }
+
   function needsConfirm(input) {
-    if (input && input.confirm === true) return true;           // the model escalated
-    return !!contested[String(input && input.recordId)];        // we saw rival candidates
+    if (input && input.confirm === true) return true;      // the model escalated
+    return !namedDistinctly(input && input.recordId);
   }
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
@@ -601,8 +649,14 @@ async function converse(data, history, account) {
       let payload;
       if (tu.name === 'find_records') {
         payload = runFindRecords(data, tu.input || {});
-        if ((payload.matches || []).length > 1) {
-          payload.matches.forEach(function (m) { contested[String(m.id)] = true; });
+        const found = payload.matches || [];
+        if (found.length > 1) {
+          const ids = found.map(function (m) { return String(m.id); });
+          ids.forEach(function (id) { contested[id] = ids; });
+        } else if (found.length === 1) {
+          // A search that lands on exactly one record settles it, even if an
+          // earlier, broader search had it competing with others.
+          delete contested[String(found[0].id)];
         }
       } else if (tu.name === 'pipeline_overview') {
         payload = runPipelineOverview(data, tu.input || {});
