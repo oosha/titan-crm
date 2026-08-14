@@ -157,9 +157,11 @@
   .ov-status-pill #ov-status-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ov-status-pill:hover { filter: brightness(0.97); }
   .ov-status-pill .caret { font-size: 16px; opacity: .8; margin-left: 3px; display: inline-block; transform: scaleX(1.4); }
-  .ov-status-wrap.inprogress .ov-status-pill { background: #eef0f2; color: #555; }
-  .ov-status-wrap.won .ov-status-pill { background: #e7f8ec; color: #15803d; }
-  .ov-status-wrap.lost .ov-status-pill { background: #fdecec; color: #dc2626; }
+  /* Keyed by tone, not by outcome word — "Won" and "Hired" are the same green. */
+  .ov-status-wrap.open .ov-status-pill { background: var(--surface-hover); color: var(--text-secondary); }
+  .ov-status-wrap.positive .ov-status-pill { background: var(--status-success-subtle); color: var(--status-success); }
+  .ov-status-wrap.negative .ov-status-pill { background: var(--status-danger-subtle); color: var(--status-danger); }
+  .ov-status-wrap.paused .ov-status-pill { background: var(--status-warning-subtle); color: var(--status-warning); }
   .ov-status-menu {
     position: absolute; top: calc(100% + 4px); right: 0; z-index: 40; display: none;
     background: #fff; border: 1px solid #e6e6e6; border-radius: 8px;
@@ -169,6 +171,10 @@
   .ov-status-item { display: flex; align-items: center; gap: 9px; padding: 7px 14px; font-size: 13px; color: #2b2f36; cursor: pointer; }
   .ov-status-item:hover { background: #f4f7fb; }
   .ov-status-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .ov-status-item .dot.open { background: var(--text-muted); }
+  .ov-status-item .dot.positive { background: var(--status-success); }
+  .ov-status-item .dot.negative { background: var(--status-danger); }
+  .ov-status-item .dot.paused { background: var(--status-warning); }
   .ov-status-item.active { font-weight: 600; }
 
   .crm-note {
@@ -412,27 +418,27 @@
 
           <div class="ov-field-grid">
             <div class="ov-field" data-field="location">
-              <div class="ov-field-label"><span class="crm-social-icon location"><span data-ds-icon="location" data-size="16"></span></span>Location</div>
+              <div class="ov-field-label"><span class="crm-social-icon location"><span data-ds-icon="location" data-size="16"></span></span><span class="ov-field-label-text">Location</span></div>
               <input class="ds-input" id="ov-location" placeholder="San Jose, US" oninput="onFieldChange()">
             </div>
             <div class="ov-field" data-field="website">
-              <div class="ov-field-label"><span class="crm-social-icon website"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M2 8h12M8 2c1.7 1.7 2.6 3.8 2.6 6s-.9 4.3-2.6 6c-1.7-1.7-2.6-3.8-2.6-6s.9-4.3 2.6-6Z" stroke="currentColor" stroke-width="1.2"/></svg></span>Website</div>
+              <div class="ov-field-label"><span class="crm-social-icon website"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M2 8h12M8 2c1.7 1.7 2.6 3.8 2.6 6s-.9 4.3-2.6 6c-1.7-1.7-2.6-3.8-2.6-6s.9-4.3 2.6-6Z" stroke="currentColor" stroke-width="1.2"/></svg></span><span class="ov-field-label-text">Website</span></div>
               <input class="ds-input" id="ov-website" placeholder="acme.com" oninput="onFieldChange()">
             </div>
             <div class="ov-field" data-field="company-linkedin">
-              <div class="ov-field-label"><span class="crm-social-icon linkedin"><svg viewBox="0 0 16 16" fill="none"><rect x="2.3" y="6.3" width="2.4" height="7" fill="currentColor"/><circle cx="3.5" cy="3.3" r="1.4" fill="currentColor"/><path d="M7 6.3h2.3v1.1c.5-.7 1.3-1.3 2.4-1.3 2 0 2.6 1.2 2.6 3.1v4.1h-2.4V9.7c0-.9-.3-1.5-1.1-1.5-.8 0-1.4.6-1.4 1.6v3.5H7V6.3Z" fill="currentColor"/></svg></span>Company LinkedIn</div>
+              <div class="ov-field-label"><span class="crm-social-icon linkedin"><svg viewBox="0 0 16 16" fill="none"><rect x="2.3" y="6.3" width="2.4" height="7" fill="currentColor"/><circle cx="3.5" cy="3.3" r="1.4" fill="currentColor"/><path d="M7 6.3h2.3v1.1c.5-.7 1.3-1.3 2.4-1.3 2 0 2.6 1.2 2.6 3.1v4.1h-2.4V9.7c0-.9-.3-1.5-1.1-1.5-.8 0-1.4.6-1.4 1.6v3.5H7V6.3Z" fill="currentColor"/></svg></span><span class="ov-field-label-text">Company LinkedIn</span></div>
               <input class="ds-input" id="ov-company-linkedin" placeholder="linkedin.com/company/acme" oninput="onFieldChange()">
             </div>
             <div class="ov-field" data-field="instagram">
-              <div class="ov-field-label"><span class="crm-social-icon instagram"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="3.2" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.3"/><circle cx="11.3" cy="4.7" r="0.8" fill="currentColor"/></svg></span>Instagram</div>
+              <div class="ov-field-label"><span class="crm-social-icon instagram"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="3.2" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.3"/><circle cx="11.3" cy="4.7" r="0.8" fill="currentColor"/></svg></span><span class="ov-field-label-text">Instagram</span></div>
               <input class="ds-input" id="ov-instagram" placeholder="instagram.com/acme" oninput="onFieldChange()">
             </div>
             <div class="ov-field" data-field="close-date">
-              <div class="ov-field-label" id="ov-close-label">Expected close date</div>
+              <div class="ov-field-label"><span class="ov-field-label-text" id="ov-close-label">Expected close date</span></div>
               <input class="ds-input" id="ov-close-date" type="date" oninput="onFieldChange()">
             </div>
             <div class="ov-field" data-field="source">
-              <div class="ov-field-label">Source</div>
+              <div class="ov-field-label"><span class="ov-field-label-text">Source</span></div>
               <input class="ds-input" id="ov-source" placeholder="e.g. Referral, Website" oninput="onFieldChange()">
             </div>
           </div>
@@ -446,17 +452,14 @@
               </div>
               <div class="crm-stage-menu" id="ov-stage-menu"></div>
             </div>
-            <!-- Sales-pipeline records only (pipeline.entity === 'Opportunity') — see renderStatus(). -->
-            <div class="ov-status-wrap" id="ov-status-wrap" style="display:none;">
+            <!-- Options are per record type and built by renderStatus() — an Order is
+                 Fulfilled, a Candidate is Hired. See crm-status.js. -->
+            <div class="ov-status-wrap" id="ov-status-wrap">
               <div class="ov-status-pill" id="ov-status-pill" onclick="toggleStatusMenu(event)">
                 <span id="ov-status-text">In progress</span>
                 <span class="caret">&#9662;</span>
               </div>
-              <div class="ov-status-menu" id="ov-status-menu">
-                <div class="ov-status-item" onclick="selectStatus('In progress')"><span class="dot" style="background:#9aa1a9;"></span>In progress</div>
-                <div class="ov-status-item" onclick="selectStatus('Won')"><span class="dot" style="background:#16a34a;"></span>Won</div>
-                <div class="ov-status-item" onclick="selectStatus('Lost')"><span class="dot" style="background:#dc2626;"></span>Lost</div>
-              </div>
+              <div class="ov-status-menu" id="ov-status-menu"></div>
             </div>
           </div>
 
@@ -623,6 +626,8 @@
 </div>
 <script src="/design-system/components/icon.js"></script>
 <script src="/crm-owner.js"></script>
+<script src="/crm-schema.js"></script>
+<script src="/crm-status.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script>
   // ── This page is reached from OUTSIDE Titan CRM (a mail client CRM-panel link),
@@ -715,14 +720,9 @@
   const requestedPipelineId = (pathSegs[0] === 'crm' && pathSegs[1] === 'pipeline') ? decodeURIComponent(pathSegs[2] || '') : '';
   const recordId = (pathSegs[3] === 'record') ? decodeURIComponent(pathSegs[4] || '') : '';
 
-  const ENTITY_LABELS = {
-    Opportunity: { name: 'Opportunity name', stage: 'Opportunity stage', close: 'Expected close date' },
-    Project:     { name: 'Project name',     stage: 'Project stage',     close: 'Expected launch date' },
-    Order:       { name: 'Order name',       stage: 'Order stage',       close: 'Expected completion date' },
-    Candidate:   { name: 'Candidate name',   stage: 'Candidate stage',   close: 'Expected close date' },
-    Record:      { name: 'Record name',      stage: 'Record stage',      close: 'Expected end date' },
-  };
-  function entityLabels(entity) { return ENTITY_LABELS[entity] || ENTITY_LABELS.Record; }
+  // Entity wording used to live here as a 3-key table (name/stage/close) that only
+  // this page could see. It's all of crm-schema.js now — 19 fields, both axes, one
+  // copy shared with the settings and add-record pages.
 
   let DATA = null;        // raw { currentPipelineId, pipelineSeq, pipelines } from the API
   let pipelines = null;   // shorthand for DATA.pipelines
@@ -731,7 +731,7 @@
   let card = null;
   let contacts = [];
   let customFieldValues = {};
-  let hiddenFields = [];       // pipeline.hiddenFields — same keys opportunity-settings.html toggles
+  let schema = null;           // titanSchema.resolve(pipeline) — set by renderRecord()
   let contactsEnabled = true;  // pipeline.contactsEnabled — "Add contacts" master toggle
 
   function goBack() {
@@ -788,11 +788,18 @@
 
   function renderRecord() {
     const entity = pipeline.entity || 'Opportunity';
-    const labels = entityLabels(entity);
+    // Field wording per record type and subject, from crm-schema.js. Anything the
+    // schema doesn't offer for this type is hidden below along with the user's own
+    // toggles, so an orders record has no Instagram row to leave blank.
+    schema = window.titanSchema.resolve(pipeline);
     document.title = (card.deal || entity) + ' — Titan CRM';
     document.getElementById('ov-top-title').textContent = entity;
-    document.getElementById('ov-name').placeholder = labels.name;
-    document.getElementById('ov-close-label').textContent = labels.close;
+    document.getElementById('ov-name').placeholder = schema.label('name');
+    document.getElementById('ov-company').placeholder = schema.label('company');
+    document.querySelectorAll('[data-field]').forEach(function (el) {
+      const text = el.querySelector('.ov-field-label-text');
+      if (text) text.textContent = schema.label(el.dataset.field);
+    });
 
     document.getElementById('ov-name').value = card.deal || '';
     document.getElementById('ov-company').value = card.company || '';
@@ -810,10 +817,11 @@
     document.getElementById('ov-autolink-entity').textContent = entity.toLowerCase();
     document.getElementById('ov-autolink').checked = card.autoLinkActivity !== false;
 
-    hiddenFields = pipeline.hiddenFields || [];
+    // One test covers both "the user turned this off" and "this record type never
+    // offers it" — schema.on() folds the stored toggles into the type's defaults.
     contactsEnabled = pipeline.contactsEnabled !== false;
     document.querySelectorAll('[data-field]').forEach(function (el) {
-      el.classList.toggle('ov-field-hidden', hiddenFields.indexOf(el.dataset.field) !== -1);
+      el.classList.toggle('ov-field-hidden', !schema.on(el.dataset.field));
     });
 
     renderStage();
@@ -925,18 +933,20 @@
     schedulePersist();
   }
 
-  // Status (In progress / Won / Lost) — sales pipelines only (pipeline.entity ===
-  // 'Opportunity'); shown next to Stage. Default "In progress" if the card has none yet.
+  // Status — how the record turned out, shown next to Stage. Every record type has
+  // one; the words differ per type (Won/Lost, Hired/Rejected, Fulfilled/Returned)
+  // and come from crm-status.js. Defaults to "In progress" if the card has none.
   function renderStatus() {
     const wrap = document.getElementById('ov-status-wrap');
-    if (pipeline.entity !== 'Opportunity') { wrap.style.display = 'none'; return; }
-    wrap.style.display = '';
-    const status = card.status || 'In progress';
-    wrap.className = 'ov-status-wrap ' + (status === 'Won' ? 'won' : status === 'Lost' ? 'lost' : 'inprogress');
+    const status = titanStatus.current(card, pipeline.entity);
+    wrap.className = 'ov-status-wrap ' + titanStatus.toneOf(pipeline.entity, status);
     document.getElementById('ov-status-text').textContent = 'Status: ' + status;
-    document.querySelectorAll('#ov-status-menu .ov-status-item').forEach(function (item) {
-      item.classList.toggle('active', item.textContent.trim() === status);
-    });
+    document.getElementById('ov-status-menu').innerHTML =
+      titanStatus.values(pipeline.entity).map(function (v) {
+        return '<div class="ov-status-item ' + (v.value === status ? 'active' : '') +
+          '" onclick="selectStatus(' + JSON.stringify(v.value).replace(/"/g, '&quot;') + ')">' +
+          '<span class="dot ' + v.tone + '"></span>' + v.value + '</div>';
+      }).join('');
   }
   function toggleStatusMenu(evt) {
     if (evt) evt.stopPropagation();
@@ -1013,12 +1023,13 @@
     const av = input.closest('.ov-contact').querySelector('.ov-contact-avatar');
     if (av) av.textContent = (input.value || '?').charAt(0).toUpperCase();
   }
-  // Field-visibility keys match opportunity-settings.html's STANDARD_FIELDS list.
+  // Field keys match crm-schema.js, which is also what the settings page toggles.
   // "Contact name" only hides for additional contacts (per that page's own comment:
   // "Add contacts" doesn't hide the primary contact-person's own info fields) — it's
   // auto-added to hiddenFields whenever contactsEnabled is off, which is also exactly
   // when there can only ever be one (primary) contact anyway.
-  function fieldHidden(key) { return hiddenFields.indexOf(key) !== -1; }
+  function fieldHidden(key) { return !schema || !schema.on(key); }
+  function fieldLabel(key) { return schema ? schema.label(key) : key; }
   function renderContacts() {
     const wrap = document.getElementById('ov-contacts');
     wrap.innerHTML = '';
@@ -1034,12 +1045,12 @@
           (contactsEnabled && contacts.length > 1 ? '<span class="ov-contact-x" onclick="removeContact(' + i + ')" title="Remove">&times;</span>' : '') +
         '</div>' +
         '<div class="ov-contact-grid">' +
-          (fieldHidden('contact-email') ? '' : '<input class="ds-input" placeholder="Email" value="' + esc(c.email) + '" oninput="setContactField(' + i + ',\'email\',this.value)">') +
-          (fieldHidden('contact-designation') ? '' : '<input class="ds-input" placeholder="Designation" value="' + esc(c.designation) + '" oninput="setContactField(' + i + ',\'designation\',this.value)">') +
-          (fieldHidden('contact-phone') ? '' : '<input class="ds-input" placeholder="Phone" value="' + esc(c.phone) + '" oninput="setContactField(' + i + ',\'phone\',this.value)">') +
-          (fieldHidden('contact-department') ? '' : '<input class="ds-input" placeholder="Department" value="' + esc(c.department) + '" oninput="setContactField(' + i + ',\'department\',this.value)">') +
-          (fieldHidden('contact-location') ? '' : '<input class="ds-input" placeholder="Location" value="' + esc(c.location) + '" oninput="setContactField(' + i + ',\'location\',this.value)">') +
-          (fieldHidden('contact-linkedin') ? '' : '<input class="ds-input" placeholder="LinkedIn" value="' + esc(c.linkedin) + '" oninput="setContactField(' + i + ',\'linkedin\',this.value)">') +
+          (fieldHidden('contact-email') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-email')) + '" value="' + esc(c.email) + '" oninput="setContactField(' + i + ',\'email\',this.value)">') +
+          (fieldHidden('contact-designation') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-designation')) + '" value="' + esc(c.designation) + '" oninput="setContactField(' + i + ',\'designation\',this.value)">') +
+          (fieldHidden('contact-phone') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-phone')) + '" value="' + esc(c.phone) + '" oninput="setContactField(' + i + ',\'phone\',this.value)">') +
+          (fieldHidden('contact-department') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-department')) + '" value="' + esc(c.department) + '" oninput="setContactField(' + i + ',\'department\',this.value)">') +
+          (fieldHidden('contact-location') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-location')) + '" value="' + esc(c.location) + '" oninput="setContactField(' + i + ',\'location\',this.value)">') +
+          (fieldHidden('contact-linkedin') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-linkedin')) + '" value="' + esc(c.linkedin) + '" oninput="setContactField(' + i + ',\'linkedin\',this.value)">') +
         '</div>' +
         '';
       wrap.appendChild(row);

@@ -66,6 +66,7 @@
 </head>
 <body data-subpage="opportunity-settings">
 <script src="/design-system/components/icon.js"></script>
+<script src="/crm-schema.js"></script>
 <script src="/titan-sidebar.js"></script>
 
 <div class="app-window">
@@ -83,18 +84,20 @@
 
     <div class="subpage-body">
       <div class="os-wrap">
+        <!-- Headings are filled in from titanSchema — a projects pipeline reads
+             "Client details", an orders one "Customer details". -->
         <div class="os-card">
-          <div class="os-card-title">Opportunity details</div>
-          <div class="os-chip-row" data-group="opportunity"></div>
+          <div class="os-card-title" id="os-heading-record">Record details</div>
+          <div class="os-chip-row" data-group="record"></div>
         </div>
 
-        <div class="os-card">
-          <div class="os-card-title">Company details</div>
+        <div class="os-card" id="os-card-company">
+          <div class="os-card-title" id="os-heading-company">Company details</div>
           <div class="os-chip-row" data-group="company"></div>
         </div>
 
         <div class="os-card">
-          <div class="os-card-title">Contact details</div>
+          <div class="os-card-title" id="os-heading-contact">Contact details</div>
           <div class="os-chip-row" style="margin-bottom:12px;" id="os-contact-first-row">
             <span class="os-chip" id="os-contacts-master" onclick="toggleContactsEnabled()"></span>
           </div>
@@ -152,33 +155,13 @@
   const ICON_TICK = '<span data-ds-icon="check" data-size="12"></span>';
   const ICON_X = '<span data-ds-icon="close" data-size="12"></span>';
 
-  // Same fields as the Add-opportunity form, in the same order. `key` matches
-  // that page's input id suffix (ao-<key>), so turning one off hides it there.
-  const STANDARD_FIELDS = [
-    { key: 'name', label: 'Opportunity name', required: true, group: 'opportunity' },
-    { key: 'value', label: 'Total value', required: true, group: 'opportunity' },
-    { key: 'stage', label: 'Pipeline stage', required: true, group: 'opportunity' },
-    { key: 'close-date', label: 'Expected close date', group: 'opportunity' },
-    { key: 'source', label: 'Source', group: 'opportunity' },
-    { key: 'note', label: 'Note', group: 'opportunity' },
-    { key: 'company', label: 'Company', group: 'company' },
-    { key: 'location', label: 'Location', group: 'company' },
-    { key: 'website', label: 'Company website', group: 'company' },
-    { key: 'company-linkedin', label: 'Company LinkedIn', group: 'company' },
-    { key: 'instagram', label: 'Company Instagram', group: 'company' },
-    { key: 'contact', label: 'Contact person', required: true, group: 'contact' },
-    { key: 'contact-name', label: 'Contact name', group: 'contact', dependsOnContacts: true },
-    { key: 'contact-email', label: 'Email', group: 'contact' },
-    { key: 'contact-phone', label: 'Phone', group: 'contact' },
-    { key: 'contact-designation', label: 'Designation', group: 'contact' },
-    { key: 'contact-department', label: 'Department', group: 'contact' },
-    { key: 'contact-location', label: 'Location', group: 'contact' },
-    { key: 'contact-linkedin', label: 'LinkedIn', group: 'contact' },
-  ];
+  // The field list, labels and headings all come from crm-schema.js now — this page
+  // used to hardcode 19 labels and three headings of its own, which is why an orders
+  // board showed "Opportunity name" under "Opportunity details". `key` still matches
+  // the Add-record form's input id suffix (ao-<key>), so turning one off hides it there.
 
   // Derived from `pipeline`, so they're filled in by applyPipeline() once it's known
   // rather than at parse time — on a cold deep link it isn't loaded yet.
-  const hidden = {};
   let customFieldDefs = [];
   let customFieldSeq = 0;
   let contactsEnabled = true;
@@ -189,8 +172,6 @@
     document.getElementById('os-title').textContent = osTitleText;
     document.title = osTitleText + ' — Titan CRM';
 
-    Object.keys(hidden).forEach(function (k) { delete hidden[k]; });
-    (pipeline && pipeline.hiddenFields ? pipeline.hiddenFields : []).forEach(function (k) { hidden[k] = true; });
     customFieldDefs = pipeline && pipeline.customFieldDefs
       ? pipeline.customFieldDefs.map(function (f) { return Object.assign({}, f); })
       : [];
@@ -224,9 +205,22 @@
 
   function renderStandardFields() {
     document.querySelectorAll('.os-chip-row[data-group]').forEach(function (wrap) { wrap.innerHTML = ''; });
+
+    // Which fields exist, what they're called, and which sections they sit in — all
+    // per record type and subject. A field the schema doesn't offer for this type
+    // isn't in schema.fields at all, so it never renders a chip to toggle.
+    const schema = window.titanSchema.resolve(pipeline);
+    document.getElementById('os-heading-record').textContent = schema.headings.record;
+    document.getElementById('os-heading-company').textContent = schema.headings.company;
+    document.getElementById('os-heading-contact').textContent = schema.headings.contact;
+    // A person-subject pipeline with nothing left in the company group would show an
+    // empty card, so drop the card rather than leave a heading over blank space.
+    const companyFields = schema.fields.filter(function (f) { return f.group === 'company'; });
+    document.getElementById('os-card-company').style.display = companyFields.length ? '' : 'none';
+
     // Non-editable (required) fields always read first within their group, in front
     // of the fields that can be turned off.
-    var ordered = STANDARD_FIELDS.slice().sort(function (a, b) {
+    var ordered = schema.fields.slice().sort(function (a, b) {
       return (b.required ? 1 : 0) - (a.required ? 1 : 0);
     });
     ordered.forEach(function (f) {
@@ -245,7 +239,10 @@
         if (existing) existing.remove();
       }
       const chip = document.createElement('span');
-      const off = !f.required && hidden[f.key];
+      // schema resolves the stored hiddenFields/shownFields against the type's own
+      // default, so a field that's off by default here starts off without anyone
+      // having hidden it.
+      const off = !f.required && !f.on;
       chip.className = 'os-chip' + (f.required ? ' locked' : '') + (off ? ' off' : '');
       chip.dataset.key = f.key;
       if (f.dependsOnContacts) chip.dataset.dependsOnContacts = '1';
@@ -324,15 +321,21 @@
     // any of them, including the contact-person's own info fields. The one exception is
     // "Contact name": it only applies to additional contacts, so it's treated as hidden
     // whenever "Add contacts" is off, regardless of its own chip state.
-    const hiddenFields = [];
+    // Both lists are written, not just the hidden one. Some fields now default to
+    // off per record type, so "not hidden" no longer implies "on" — shownFields is
+    // what makes turning one of those back on survive a reload.
+    const hiddenFields = [], shownFields = [];
     document.querySelectorAll('.os-chip-row .os-chip[data-key]').forEach(function (chip) {
-      if (chip.classList.contains('off')) hiddenFields.push(chip.dataset.key);
+      (chip.classList.contains('off') ? hiddenFields : shownFields).push(chip.dataset.key);
     });
     if (!contactsEnabled && hiddenFields.indexOf('contact-name') === -1) hiddenFields.push('contact-name');
 
     sessionStorage.setItem('titan-crm-commit-pipeline', JSON.stringify({
       pipelineKey: pipelineKey,
-      patch: { hiddenFields: hiddenFields, customFieldDefs: customFieldDefs, contactsEnabled: contactsEnabled },
+      patch: {
+        hiddenFields: hiddenFields, shownFields: shownFields,
+        customFieldDefs: customFieldDefs, contactsEnabled: contactsEnabled,
+      },
     }));
     goBack();
   }

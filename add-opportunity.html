@@ -57,6 +57,7 @@
 <body data-subpage="add-opportunity">
 <script src="/design-system/components/icon.js"></script>
 <script src="/crm-owner.js"></script>
+<script src="/crm-schema.js"></script>
 <script src="/titan-sidebar.js"></script>
 
 <div class="app-window">
@@ -75,7 +76,7 @@
     <div class="subpage-body">
   <div class="ao-wrap">
     <div class="ao-card">
-      <div class="ao-heading">Opportunity details</div>
+      <div class="ao-heading" id="ao-heading-record">Opportunity details</div>
       <div class="np-label" id="ao-name-label">Opportunity name</div>
       <input class="np-name-input" id="ao-name" placeholder="e.g. Acme Pro plan" style="margin-bottom:22px;">
 
@@ -118,8 +119,8 @@
       </div>
     </div>
 
-    <div class="ao-card">
-      <div class="ao-heading">Company details</div>
+    <div class="ao-card" id="ao-card-company">
+      <div class="ao-heading" id="ao-heading-company">Company details</div>
       <div class="ao-row">
         <div>
           <div class="np-label">Company</div>
@@ -147,7 +148,7 @@
     </div>
 
     <div class="ao-card">
-      <div class="ao-heading">Contact details</div>
+      <div class="ao-heading" id="ao-heading-contact">Contact details</div>
       <div class="np-label">Contact person</div>
       <input class="np-name-input" id="ao-contact" list="ao-contact-list" placeholder="Type a new name or pick existing" oninput="syncContactLabel()" style="margin-bottom:22px;">
       <datalist id="ao-contact-list"></datalist>
@@ -220,47 +221,56 @@
   try { addSource = JSON.parse(sessionStorage.getItem('titan-crm-add-opportunity-source') || 'null'); } catch (e) {}
   let allPipelines = (addSource && addSource.pipelines) || null;
   function goBack() { location.href = '/crm/pipeline/' + encodeURIComponent(pipelineKey) + location.search; }
-  const ENTITY_LABELS = {
-    Opportunity: { name: 'Opportunity name', stage: 'Opportunity stage', date: 'Expected close date' },
-    Project:     { name: 'Project name',     stage: 'Project stage',     date: 'Expected launch date' },
-    Order:       { name: 'Order name',       stage: 'Order stage',       date: 'Expected completion date' },
-    Candidate:   { name: 'Candidate name',   stage: 'Candidate stage',   date: 'Expected close date' },
-    Record:      { name: 'Record name',      stage: 'Record stage',      date: 'Expected end date' },
-  };
-  function entityLabels(entity) { return ENTITY_LABELS[entity] || ENTITY_LABELS.Record; }
   function esc(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
 
   let pipeline = null;
   let entity = 'Opportunity';
 
-  // Hide any field this pipeline's "Opportunity setting" turned off.
-  function hideDisabledFields() {
-    const hiddenKeys = (pipeline && pipeline.hiddenFields) || [];
-    hiddenKeys.forEach(function (key) {
+  // Every input here is `ao-<field key>`, so one pass over crm-schema.js both names
+  // the field and decides whether it appears. This used to read pipeline.hiddenFields
+  // alone and carry its own 3-key label table, which is why an orders form asked for
+  // an "Opportunity name" under "Opportunity details".
+  function applyFieldSchema() {
+    const schema = window.titanSchema.resolve(pipeline);
+    document.getElementById('ao-heading-record').textContent = schema.headings.record;
+    document.getElementById('ao-heading-company').textContent = schema.headings.company;
+    document.getElementById('ao-heading-contact').textContent = schema.headings.contact;
+
+    let companyShown = 0;
+    ['name', 'value', 'stage', 'close-date', 'source', 'note', 'company', 'location',
+     'website', 'company-linkedin', 'instagram', 'contact', 'contact-email', 'contact-phone',
+     'contact-designation', 'contact-department', 'contact-location', 'contact-linkedin',
+    ].forEach(function (key) {
       const el = document.getElementById('ao-' + key);
       if (!el) return;
-      const parent = el.parentElement;
-      if (parent && parent.children.length === 2 && parent.querySelector('.np-label')) {
-        parent.style.display = 'none';
-      } else {
-        const prev = el.previousElementSibling;
-        if (prev && prev.classList && prev.classList.contains('np-label')) prev.style.display = 'none';
-        el.style.display = 'none';
+      const def = schema.byKey[key];
+      // The label sits either directly before the input, or before the wrapper that
+      // holds it (the value field shares its row with the currency select).
+      let label = el.previousElementSibling;
+      if (!(label && label.classList && label.classList.contains('np-label'))) {
+        const gp = el.parentElement && el.parentElement.parentElement;
+        label = gp ? gp.querySelector(':scope > .np-label') : null;
       }
+      const on = !!def && def.on;
+      if (on && def.label && label) label.textContent = def.label;
+      const parent = el.parentElement;
+      const hideTarget = (parent && parent.children.length === 2 && parent.querySelector('.np-label')) ? parent : null;
+      if (hideTarget) { hideTarget.style.display = on ? '' : 'none'; }
+      else { if (label) label.style.display = on ? '' : 'none'; el.style.display = on ? '' : 'none'; }
+      if (on && schema.byKey[key] && schema.byKey[key].group === 'company') companyShown++;
     });
+    // Nothing left to ask about the company — drop the card rather than show a
+    // heading over an empty box.
+    document.getElementById('ao-card-company').style.display = companyShown ? '' : 'none';
   }
 
   function applyPipeline() {
   entity = (pipeline && pipeline.entity) || 'Opportunity';
-  hideDisabledFields();
+  applyFieldSchema();
   document.getElementById('ao-top-title').textContent = 'Add a new ' + entity.toLowerCase();
+  document.title = 'Add ' + entity.toLowerCase() + ' — Titan CRM';
   document.getElementById('ao-btn-entity').textContent = entity.toLowerCase();
   document.querySelector('.ao-btn-primary').style.background = (pipeline && pipeline.color) || '#2170f4';
-  const labels = entityLabels(entity);
-  document.getElementById('ao-name-label').textContent = labels.name;
-  document.getElementById('ao-stage-label').textContent = labels.stage;
-  document.getElementById('ao-close-date-label').textContent = labels.date;
-  document.getElementById('ao-name').placeholder = 'e.g. Acme Pro plan';
 
   // Close date: future dates only, capped at end of 2030.
   (function () {
