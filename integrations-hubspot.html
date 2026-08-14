@@ -149,17 +149,12 @@
     document.getElementById('int-status').textContent = 'Not connected';
     document.getElementById('int-body').innerHTML =
       (problem ? '<div class="int-alert">' + esc(problem) + '</div>' : '') +
-      '<p class="int-lede">When someone fills in your HubSpot form, Titan can add them here ' +
-      'as a record automatically — so nobody has to copy details across by hand.</p>' +
-      '<p class="int-lede">To link the two, HubSpot needs to give Titan permission. ' +
-      'It takes about a minute:</p>' +
+      '<p class="int-lede">Form submissions become records here automatically.</p>' +
       '<ol class="int-steps">' +
-        '<li>Open HubSpot. In the left-hand menu, click <strong>Development</strong>, then <strong>Keys</strong>.</li>' +
-        '<li>Open <strong>Service keys</strong> and click <strong>Create service key</strong>.</li>' +
-        '<li>Give it any name — “Titan” is fine.</li>' +
-        '<li>Click <strong>Add new scope</strong>, search for <strong>forms</strong>, and tick it.</li>' +
-        '<li>Click <strong>Create</strong>, then copy the key HubSpot shows you.</li>' +
-        '<li>Paste it below.</li>' +
+        '<li>In HubSpot, go to <strong>Development → Keys → Service keys</strong>.</li>' +
+        '<li><strong>Create service key</strong>, name it anything.</li>' +
+        '<li><strong>Add new scope</strong>, search <strong>forms</strong>, tick it.</li>' +
+        '<li><strong>Create</strong>, then copy the key.</li>' +
       '</ol>' +
       '<div class="int-row">' +
         '<div class="int-label">Paste from HubSpot</div>' +
@@ -211,6 +206,11 @@
       return;
     }
     await load();
+    // A key on its own imports nothing — the useful state is a form pointed at a
+    // pipeline with its fields matched up. On a first connection that is always
+    // the next step, so go straight there instead of showing an empty list and
+    // an "Add a form" button.
+    if (!(cfg.connections || []).length) openConnectionModal(null);
   }
 
   async function disconnect() {
@@ -247,17 +247,8 @@
           (last ? 'Last brought in ' + esc(ago(last)) : '') +
         '</span>' +
       '</div>' +
-      '<div class="int-note">Titan checks for new submissions on its own while you have it ' +
-      'open, so records appear without you doing anything. ' +
-      '<button class="int-linkbtn is-danger" id="int-disconnect" type="button">Disconnect HubSpot</button></div>' +
-      // Only when the key is living in the tab. Saying nothing would let someone
-      // set this up, close the browser and reasonably expect it to still be
-      // connected tomorrow.
-      (window.titanHubspotKey.get()
-        ? '<div class="int-note" style="color:#8a5a00;">This connection lasts until you close ' +
-          'the browser — this Titan hasn’t been set up to remember it yet. Your forms and ' +
-          'settings below are saved; only the HubSpot key needs re-entering next time.</div>'
-        : '');
+      '<div class="int-note">Checked automatically while Titan is open. ' +
+      '<button class="int-linkbtn is-danger" id="int-disconnect" type="button">Disconnect HubSpot</button></div>';
 
     document.getElementById('int-add').addEventListener('click', function () { openConnectionModal(null); });
     document.getElementById('int-disconnect').addEventListener('click', disconnect);
@@ -397,17 +388,13 @@
             '</select>' +
           '</div>';
         }).join('') +
-        '<div class="int-note">We’ve filled these in with our best guess — change any that look ' +
-        'wrong. If first name and last name both go to <strong>Contact name</strong>, they’re ' +
-        'joined into one. Anything set to <strong>Don’t import</strong> is left behind in HubSpot.</div>';
+        '<div class="int-note">Best guesses — change any that look wrong.</div>';
     }
 
     render();
 
     openModal({
       title: isNew ? 'Add a form' : 'Edit form',
-      note: 'Submissions to this form will be added to the pipeline you choose. ' +
-            'You can connect the same form to more than one pipeline.',
       body: body,
       confirmLabel: isNew ? 'Add form' : 'Save changes',
       onConfirm: async function (modal) {
