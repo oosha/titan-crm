@@ -39,6 +39,7 @@
   <link rel="stylesheet" href="/design-system/tokens.css">
   <link rel="stylesheet" href="/design-system/components.css">
   <script src="/design-system/components/icon.js"></script>
+  <script src="/design-system/components/menu.js"></script>
   <link rel="stylesheet" href="/titan-sidebar.css">
   <link rel="stylesheet" href="/form.css">
   <link rel="stylesheet" href="/form-builder.css">
@@ -64,37 +65,11 @@
       --selected-bg: #eff6ff;
       --selected-bg-strong: #e0ecfc;
     }
-    /* ── Reusable Titan Split Button Component ── */
-
-
-    .btn-content-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: inherit;
-      width: 100%;
-      height: 100%;
-
-    }
-
-    .split-btn-main:active .btn-content-wrapper,
-
-    /* ── Compose Button Sizing & Layout ── */
-
-
-    @keyframes border-ripple {
-      0% {
-        box-shadow: 0 0 0 0px rgba(33, 112, 244, 0.6);
-      }
-
-      100% {
-        box-shadow: 0 0 0 6px rgba(33, 112, 244, 0);
-      }
-    }
-
-    .ripple-active {
-      animation: border-ripple 0.4s cubic-bezier(0.1, 0.8, 0.3, 1);
-    }
+    /* A copy of the mailbox's split button used to sit here — .btn-content-wrapper,
+       .ripple-active and a @keyframes, none of them applied to any markup on this page.
+       It also left `.split-btn-main:active .btn-content-wrapper,` dangling on a comma,
+       which swallowed the keyframes that followed, so the ripple had never run. The real
+       thing is now ds-split; see the board header. */
     .account-email-id {
       display: flex;
       align-items: center;
@@ -2591,21 +2566,54 @@
             <p id="pipeline-total"></p>
           </div>
           <div class="board-header-actions">
-            <!-- Opens the same Sources screen as the three-dot menu's "Sources" item and
-                 pipeline settings' "Add records" link — one modal, three doors in. It was
-                 reachable only from the row's three-dot menu, which is not where you look
-                 for it while staring at the board. -->
-            <button type="button" id="board-form-btn" title="Set up how records arrive automatically" class="ds-btn ds-btn--soft" onclick="openAddRecordsFor(currentPipelineId)">
-              <span data-ds-icon="upload" data-size="16"></span>
-              <span id="board-form-dot" style="display:none; width:7px; height:7px; border-radius:50%; flex-shrink:0;"></span>
-              <span id="board-form-label">Sources</span>
-            </button>
+            <!-- Two settings screens exist and they are easy to confuse: the pipeline's
+                 (stages, colour, sources) and the record's (which fields a card carries).
+                 A menu names both, so the choice happens before the navigation rather than
+                 after a wrong page loads. -->
+            <div class="ds-menu-anchor">
+              <button type="button" id="board-settings-btn" class="ds-btn ds-btn--soft"
+                      data-ds-menu="board-settings-menu" aria-haspopup="menu" aria-expanded="false"
+                      title="Pipeline and record settings">
+                <span data-ds-icon="settings" data-size="16"></span>
+                Settings
+                <span class="ds-menu-caret" data-ds-icon="caret-down" data-size="12"></span>
+              </button>
+              <div class="ds-menu ds-menu--below-end" id="board-settings-menu" role="menu">
+                <button type="button" class="ds-menu__item" role="menuitem" onclick="openPipelineSettings(currentPipelineId, '/setting')">
+                  <span data-ds-icon="board" data-size="15"></span>
+                  <span>Pipeline settings</span>
+                </button>
+                <button type="button" class="ds-menu__item" role="menuitem" id="board-entity-setting-item" onclick="openPipelineSettings(currentPipelineId, '/record-setting')">
+                  <span data-ds-icon="list" data-size="15"></span>
+                  <span>Opportunity settings</span>
+                </button>
+              </div>
+            </div>
             <button type="button" title="Add team" class="ds-btn ds-btn--soft ds-btn--icon" onclick="openAddTeamModal(currentPipelineId)">
               <span data-ds-icon="add-person" data-size="17"></span>
             </button>
-            <button type="button" id="add-entity-btn" class="ds-btn ds-btn--primary" onclick="openAddOpportunityPage()">
-              <span data-ds-icon="plus" data-size="14"></span> Add <span id="add-entity-label">opportunity</span>
-            </button>
+            <!-- Split button: adding one record and importing a batch of them are the same
+                 intent at different scale, so they share one control rather than spending
+                 two slots of toolbar weight. The caret's item opens the same Sources screen
+                 the three-dot menu and pipeline settings both reach — one modal, three doors
+                 in. It used to be a button of its own here, which read as a peer of "Add
+                 opportunity" when it is really a rarer way to do the same thing. -->
+            <div class="ds-split" id="board-add-split">
+              <button type="button" id="add-entity-btn" class="ds-btn ds-btn--primary" onclick="openAddOpportunityPage()">
+                <span data-ds-icon="plus" data-size="14"></span> Add <span id="add-entity-label">opportunity</span>
+              </button>
+              <button type="button" id="board-add-more-btn" class="ds-btn ds-btn--primary"
+                      data-ds-menu="board-add-menu" aria-haspopup="menu" aria-expanded="false"
+                      title="Other ways to add records">
+                <span class="ds-menu-caret" data-ds-icon="caret-down" data-size="12"></span>
+              </button>
+              <div class="ds-menu ds-menu--below-end" id="board-add-menu" role="menu">
+                <button type="button" class="ds-menu__item" role="menuitem" onclick="openAddRecordsFor(currentPipelineId)">
+                  <span data-ds-icon="upload" data-size="15"></span>
+                  <span>Import records from a source</span>
+                </button>
+              </div>
+            </div>
             <div class="ds-segmented" role="group" aria-label="Board view">
               <button type="button" title="Kanban" aria-pressed="true">
                 <span data-ds-icon="board" data-size="17"></span>
@@ -3683,11 +3691,20 @@
       if (heading) heading.textContent = p.name;
       const addLabel = document.getElementById('add-entity-label');
       if (addLabel) addLabel.textContent = p.entity.toLowerCase();
-      const addBtn = document.getElementById('add-entity-btn');
-      // Branding, not theme: the primary action carries the pipeline's own colour. Set the
-      // border too, or .ds-btn--primary's accent edge stays blue around a tinted fill.
-      if (addBtn) { addBtn.style.background = CURRENT_PIPELINE_COLOR;
-                    addBtn.style.borderColor = CURRENT_PIPELINE_COLOR; }
+      // "Opportunity settings" is wrong on a hiring board — the record screen it opens is
+      // the Candidate's. Same rename the pipeline row's three-dot menu already does.
+      const entitySetting = document.querySelector('#board-entity-setting-item span:last-child');
+      if (entitySetting) entitySetting.textContent = p.entity + ' settings';
+      // Branding, not theme: the primary action carries the pipeline's own colour. Set it
+      // as a scoped --accent-primary on the split rather than as a background on one half,
+      // and every part follows — both buttons' fill, border and hover. Painting the main
+      // half directly is what left the caret sitting there in stock blue beside a purple
+      // button.
+      const addSplit = document.getElementById('board-add-split');
+      if (addSplit) {
+        addSplit.style.setProperty('--accent-primary', CURRENT_PIPELINE_COLOR);
+        addSplit.style.setProperty('--accent-hover', darken(CURRENT_PIPELINE_COLOR, 0.88));
+      }
       // The sidebar icon for the pipeline just switched to should always match its
       // current colour, including "Neo partnerships" — its icon is static markup, not
       // built from pl.color like persona pipelines' icons are.
@@ -3736,6 +3753,19 @@
       return '/crm/pipeline/' + encodeURIComponent(pipelineId) + (suffix || '') + location.search;
     }
 
+    // Two doors reach the settings page — the board header's Settings button and the
+    // pipeline row's three-dot menu — so the handoff lives in one place. The pipeline to
+    // edit travels via sessionStorage because navigating away drops this page's JS state;
+    // the settings page writes its changes back the same way. It also falls back to
+    // fetching the pipeline itself, so a cold deep link still works (see its init()).
+    function openPipelineSettings(pipelineKey, sub) {
+      const pl = PIPELINES[pipelineKey];
+      if (!pl) return;
+      sessionStorage.setItem('titan-crm-edit-pipeline',
+        JSON.stringify({ pipelineKey: pipelineKey, pipeline: pl }));
+      location.href = crmPath(pipelineKey, sub || '/setting');
+    }
+
     function pipelineNavMenuAction(kind) {
       const menu = document.getElementById('pipeline-nav-menu');
       const pipelineKey = menu.dataset.pipelineKey;
@@ -3746,8 +3776,7 @@
       // drops this page's JS state; the settings page writes its changes back the same
       // way before navigating back to /crm/pipeline/<id>.
       if (kind === 'pipeline-setting' || kind === 'entity-setting') {
-        sessionStorage.setItem('titan-crm-edit-pipeline', JSON.stringify({ pipelineKey: pipelineKey, pipeline: pl }));
-        location.href = crmPath(pipelineKey, kind === 'pipeline-setting' ? '/setting' : '/record-setting');
+        openPipelineSettings(pipelineKey, kind === 'entity-setting' ? '/record-setting' : '/setting');
         return;
       }
       // Editing happens over the board rather than on a separate page — the board is
@@ -3907,19 +3936,21 @@
       });
     }
 
-    // Label stays "Sources" always (see the Sources screen for what's actually
-    // configured) — just keep the tooltip honest about state, since that used to be
-    // the only place a submission count could live without changing the button's width.
+    // The import action lives behind the split button's caret now. Its state — whether a
+    // form is live, how many records came in through it — stays in the tooltip, which is
+    // where it already was. It is deliberately not a dot on the caret or a count beside the
+    // menu item: neither is something you act on from the board, and both spend attention
+    // the header needs for the record columns.
     function updateBoardFormBtn() {
-      const btn = document.getElementById('board-form-btn');
-      if (!btn) return;
+      const caret = document.getElementById('board-add-more-btn');
+      if (!caret) return;
       const pl = PIPELINES[currentPipelineId] || {};
       const f = pl.intakeForm;
-      if (!f) { btn.title = 'Set up how records arrive automatically'; return; }
+      if (!f) { caret.title = 'Set up how records arrive automatically'; return; }
       const n = (pl.cards || []).filter(function (c) {
         return c.createdBy === 'Form' || c.source === (f.sourceLabel || 'Form');
       }).length;
-      btn.title = f.enabled
+      caret.title = f.enabled
         ? 'Form accepting responses' + (n ? ' — ' + n + (n === 1 ? ' submission' : ' submissions') : '')
         : 'Form is not accepting responses';
     }
