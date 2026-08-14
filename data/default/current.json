@@ -1846,7 +1846,52 @@
           "label": "Closed"
         }
       ],
-      "cards": [],
+      "cards": [
+        {
+          "id": 215,
+          "company": "Hostpapa Inc.",
+          "contact": "jorge",
+          "initials": "J",
+          "deal": "Hostpapa",
+          "value": 100000,
+          "stage": "lead-0",
+          "lastActivity": "just now",
+          "activityType": "Email sent",
+          "overdue": false,
+          "createdBy": "Rahul Dwivedi",
+          "noteAuthor": "Rahul Dwivedi",
+          "location": "",
+          "website": "hostpapa.com",
+          "companyLinkedin": "Titan Email",
+          "instagram": "",
+          "currency": "$",
+          "closeDate": "2026-09-30",
+          "source": "outbound",
+          "note": "temp",
+          "owner": {
+            "name": "Ella Henderson",
+            "email": "ella.henderson@avontechlabs.com"
+          },
+          "contactEmail": "jorge@hostpapa.com",
+          "contactPhone": "+918971446168",
+          "contactDesignation": "CEO",
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "contacts": [
+            {
+              "name": "jorge",
+              "email": "jorge@hostpapa.com",
+              "phone": "+918971446168",
+              "designation": "CEO",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "customFieldValues": {}
+        }
+      ],
       "intakeForm": {
         "token": "default.592h1v0z4y",
         "enabled": true,
