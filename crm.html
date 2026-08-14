@@ -3978,6 +3978,11 @@
     // still in progress yields no pill, and the card shows last activity instead.
     function outcomePillHTML(card) {
       const pl = PIPELINES[currentPipelineId];
+      // A pipeline that doesn't offer status has no outcome to show — the card falls
+      // back to last activity, same as one still in progress.
+      if (!window.titanSchema.on(pl, 'status')) {
+        return '<span class="kanban-card-task">' + card.lastActivity + '</span>';
+      }
       const status = titanStatus.current(card, pl && pl.entity);
       const tone = titanStatus.toneOf(pl && pl.entity, status);
       if (tone === 'open') return '<span class="kanban-card-task">' + card.lastActivity + '</span>';

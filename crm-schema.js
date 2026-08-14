@@ -26,13 +26,14 @@
 
   // Field order is display order, and the groups are the settings page's sections.
   var ORDER = [
-    'name', 'value', 'stage', 'close-date', 'source', 'note',
+    'name', 'value', 'stage', 'status', 'close-date', 'source', 'note',
     'company', 'location', 'website', 'company-linkedin', 'instagram',
     'contact', 'contact-name', 'contact-email', 'contact-phone',
     'contact-designation', 'contact-department', 'contact-location', 'contact-linkedin',
   ];
   var GROUP = {
-    name: 'record', value: 'record', stage: 'record', 'close-date': 'record',
+    name: 'record', value: 'record', stage: 'record', status: 'record',
+    'close-date': 'record',
     source: 'record', note: 'record',
     company: 'company', location: 'company', website: 'company',
     'company-linkedin': 'company', instagram: 'company',
@@ -59,6 +60,10 @@
     'name':                      'RRRRR',
     'value':                     'R+Rx-',   // x on Candidate — a person has no deal size
     'stage':                     'RRRRR',
+    // The outcome axis (crm-status.js owns the words). Required where the outcome is
+    // the point of the record — a deal, an order — and optional elsewhere. Off by
+    // default on a custom pipeline, which may have no notion of finishing at all.
+    'status':                    'R+R+-',
     'close-date':                '+++++',
     'source':                    '+-++-',
     'note':                      '+++++',
@@ -81,7 +86,7 @@
   // Defaults. `{company}` interpolates that entity's own company label, so a
   // projects pipeline says "Client website" without needing four more table rows.
   var BASE_LABELS = {
-    'name': 'Record name', 'value': 'Value', 'stage': 'Record stage',
+    'name': 'Record name', 'value': 'Value', 'stage': 'Record stage', 'status': 'Status',
     'close-date': 'Expected end date', 'source': 'Source', 'note': 'Note',
     'company': 'Company', 'location': 'Location',
     'website': '{company} website', 'company-linkedin': '{company} LinkedIn',
@@ -223,8 +228,15 @@
     };
   }
 
+  // One field, without building the other nineteen. For hot paths — the board asks
+  // this per card, and the dashboard per record.
+  function onePipelineField(pipeline, key) {
+    var state = stateFor(entityOf(pipeline), subjectOf(pipeline), key);
+    return state !== 'none' && isOn(pipeline, { key: key, state: state });
+  }
+
   window.titanSchema = {
-    ENTITIES: ENTITIES, resolve: resolve,
+    ENTITIES: ENTITIES, resolve: resolve, on: onePipelineField,
     subjectOf: subjectOf, subjectLocked: subjectLocked, isPerson: isPerson,
     entityOf: entityOf,
   };

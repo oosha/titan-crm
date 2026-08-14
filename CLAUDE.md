@@ -388,7 +388,13 @@ record can sit in the last stage and still be open, and can be Lost from anywher
 vocabulary is per `entity` and lives in `crm-status.js` (Won/Lost, Hired/Rejected/Withdrawn,
 Fulfilled/Returned…). Never compare `card.status` to a literal: read it through
 `titanStatus.current(card, entity)` and colour it by `titanStatus.toneOf(...)`, or a hiring
-board silently loses its pills. Cards predating the field carry a `won` boolean instead,
+board silently loses its pills.
+
+Whether a pipeline *has* a status is a schema question, not a status one — check
+`titanSchema.on(pipeline, 'status')` first (required on Opportunity/Order, optional on
+Project/Candidate, off by default on Record). Anything reading status must honour it, or
+a card carrying a stale value from before the field was switched off will show an outcome
+the record page has already hidden. Cards predating the field carry a `won` boolean instead,
 which `current()` resolves to that entity's positive outcome.
 
 The dashboard's win/hire rate reads `card.status`, not the stage: `Won / (Won + Lost)`,

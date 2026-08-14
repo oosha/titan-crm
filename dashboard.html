@@ -416,6 +416,7 @@
 </div>
 
 <script src="/design-system/components/icon.js"></script>
+<script src="/crm-schema.js"></script>
 <script src="/crm-status.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
@@ -572,6 +573,9 @@
   // scored a Closed-and-Lost deal as a win and left a Lost deal parked mid-board
   // inflating the open pipeline. Read the outcome instead.
   function toneOf(entry) {
+    // A pipeline with the status field switched off has no outcomes, so its records
+    // all read as open rather than counting toward a rate they can't express.
+    if (!window.titanSchema.on(entry.pipeline, 'status')) return 'open';
     const entity = entry.pipeline.entity;
     return titanStatus.toneOf(entity, titanStatus.current(entry.card, entity));
   }

@@ -938,6 +938,10 @@
   // and come from crm-status.js. Defaults to "In progress" if the card has none.
   function renderStatus() {
     const wrap = document.getElementById('ov-status-wrap');
+    // Status is a schema field like any other now — required on deals and orders,
+    // optional on projects and candidates, off by default on a custom pipeline.
+    if (!schema.on('status')) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
     const status = titanStatus.current(card, pipeline.entity);
     wrap.className = 'ov-status-wrap ' + titanStatus.toneOf(pipeline.entity, status);
     document.getElementById('ov-status-text').textContent = 'Status: ' + status;
