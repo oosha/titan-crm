@@ -372,11 +372,6 @@
             },
             {
               "type": "task",
-              "text": "Send updated proposal deck",
-              "overdue": true
-            },
-            {
-              "type": "task",
               "text": "Schedule follow-up call",
               "date": "Mon, 5pm"
             },
@@ -387,6 +382,11 @@
             }
           ],
           "recentActivities": [
+            {
+              "type": "task",
+              "text": "Send updated proposal deck",
+              "date": "Just now"
+            },
             {
               "type": "note",
               "text": "AI capabilities are not clear to them yet and need a walkthrough",
