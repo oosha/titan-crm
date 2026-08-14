@@ -3764,10 +3764,16 @@
       alert('Prototype only: "Add filter view" for ' + (pl.name || pipelineKey) + ' is not wired up yet.');
     }
 
-    // ── Add team: invite a teammate from a dummy same-domain directory ──
-    // Dummy directory only (prototype has no real org roster) — same email domain as
-    // the signed-in account (avontechlabs.com, see account-active-email).
+    // ── Add team: invite a teammate from a dummy directory ──
+    // Dummy directory only (prototype has no real org roster). Mostly the signed-in
+    // account's own domain (avontechlabs.com, see account-active-email); Usha is the
+    // exception, for the reason noted on her entry.
     const TEAM_DIRECTORY = [
+      // Usha keeps the titan.email address she already has elsewhere in the app
+      // (she's the default record creator and note author, and an attendee on the
+      // record page's meetings). Owners are matched by email, so giving her a
+      // second @avontechlabs.com identity here would make those two people.
+      { name: 'Usha Loutongbam', email: 'usha@titan.email' },
       { name: 'Sam Mathews', email: 'sam.mathews@avontechlabs.com' },
       { name: 'Priya Nair', email: 'priya.nair@avontechlabs.com' },
       { name: 'Marcus Chen', email: 'marcus.chen@avontechlabs.com' },
