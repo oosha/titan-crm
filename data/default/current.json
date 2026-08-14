@@ -1846,7 +1846,54 @@
           "label": "Closed"
         }
       ],
-      "cards": []
+      "cards": [],
+      "intakeForm": {
+        "token": "default.592h1v0z4y",
+        "enabled": true,
+        "heading": "Get in touch about Rahu's Sales Pipeline",
+        "blurb": "",
+        "logoUrl": "",
+        "submitLabel": "Submit",
+        "thanks": "Thanks — we have your details and will be in touch.",
+        "recordTitle": "Rahu's Sales Pipeline",
+        "sourceLabel": "Form",
+        "fields": [
+          {
+            "key": "name",
+            "label": "Full name",
+            "type": "text",
+            "target": "name",
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "Email",
+            "type": "email",
+            "target": "email",
+            "required": true
+          },
+          {
+            "key": "company",
+            "label": "Company",
+            "type": "text",
+            "target": "company"
+          },
+          {
+            "key": "phone",
+            "label": "Phone",
+            "type": "tel",
+            "target": "phone",
+            "required": true
+          },
+          {
+            "key": "note",
+            "label": "What do you need?",
+            "type": "textarea",
+            "target": "note",
+            "placeholder": "A sentence or two about what you’re after"
+          }
+        ]
+      }
     }
   },
   "dashboard": {
