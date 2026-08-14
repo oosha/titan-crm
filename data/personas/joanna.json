@@ -1,6 +1,6 @@
 {
   "currentPipelineId": "p1",
-  "pipelineSeq": 1,
+  "pipelineSeq": 2,
   "pipelines": {
     "inquiries": {
       "id": "inquiries",
@@ -491,59 +491,169 @@
       ],
       "hiddenFields": [],
       "customFieldDefs": [],
-      "contactsEnabled": true
+      "contactsEnabled": true,
+      "subject": "person",
+      "defaultOwner": null
     },
     "p1": {
       "id": "p1",
-      "name": "Wedding flower preservation",
+      "name": "Company events",
       "entity": "Order",
       "plural": "orders",
       "color": "#ab5f74",
       "stages": [
         {
           "key": "booked-0",
-          "label": "Booked"
+          "label": "Booked",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "flower-drying-1",
-          "label": "Flower drying"
+          "label": "Flower drying",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "progress-update-2",
-          "label": "Progress update"
+          "label": "Progress update",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "design-3",
-          "label": "Design"
+          "label": "Design",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "design-proposal-4",
-          "label": "Design proposal"
+          "label": "Design proposal",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "design-picked-5",
-          "label": "Design picked"
+          "label": "Design picked",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "with-farmer-6",
-          "label": "With farmer"
+          "label": "With farmer",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "pickup-scheduled-7",
-          "label": "Pickup scheduled"
+          "label": "Pickup scheduled",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "delivered-8",
-          "label": "Delivered"
+          "label": "Delivered",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         }
       ],
       "cards": [
         {
           "id": 101,
-          "company": "",
+          "company": "Acme",
           "contact": "Lucy Mathews",
           "initials": "L",
-          "deal": "Lucy's wedding bouquet",
+          "deal": "Acme anniversary",
           "value": 500,
           "stage": "progress-update-2",
           "lastActivity": "just now",
@@ -582,7 +692,11 @@
           },
           "noteHistory": [],
           "upcomingActivities": [],
-          "autoLinkActivity": true
+          "autoLinkActivity": true,
+          "owner": {
+            "name": "Ella Henderson",
+            "email": "ella.henderson@avontechlabs.com"
+          }
         }
       ],
       "hiddenFields": [
@@ -601,7 +715,45 @@
           "type": "number"
         }
       ],
-      "contactsEnabled": true
+      "contactsEnabled": true,
+      "subject": "company",
+      "defaultOwner": null
+    },
+    "p2": {
+      "id": "p2",
+      "name": "Hiring Pipeline",
+      "entity": "Candidate",
+      "plural": "candidates",
+      "color": "#b5813f",
+      "type": "hiring",
+      "subject": "person",
+      "stages": [
+        {
+          "key": "applied-0",
+          "label": "Applied"
+        },
+        {
+          "key": "screen-1",
+          "label": "Screen"
+        },
+        {
+          "key": "interview-2",
+          "label": "Interview"
+        },
+        {
+          "key": "final-round-3",
+          "label": "Final Round"
+        },
+        {
+          "key": "offer-4",
+          "label": "Offer"
+        },
+        {
+          "key": "hired-5",
+          "label": "Hired"
+        }
+      ],
+      "cards": []
     }
   }
 }

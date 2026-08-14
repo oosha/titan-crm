@@ -20,13 +20,13 @@
 <style>
   .subpage-body { background: #f7f8fa; color: #222; }
   .ov-btn-primary {
-    background: #2170f4; color: #fff; border: none; border-radius: 7px; padding: 9px 18px;
-    font-size: 13.5px; font-weight: 600; cursor: pointer;
+    background: var(--accent-primary); color: var(--text-on-accent); border: none; border-radius: 7px; padding: var(--space-100) var(--space-200);
+    font-size: var(--text-sm); font-weight: var(--weight-semi); cursor: pointer;
   }
   .ov-btn-primary:hover { filter: brightness(1.05); }
   .ov-save-hint { font-size: 12px; color: #9a9fa7; margin-right: auto; padding-left: 14px; }
-  .ov-wrap { max-width: 1040px; margin: 0 auto; padding: 28px 24px 60px; }
-  .ov-not-found { text-align: center; padding: 60px 20px; color: #666; font-size: 14px; }
+  .ov-wrap { max-width: 1040px; margin: 0 auto; padding: var(--space-300) var(--space-300) var(--space-400); }
+  .ov-not-found { text-align: center; padding: var(--space-400) var(--space-300); color: var(--text-secondary); font-size: var(--text-md); }
   .ov-not-found a { color: #2170f4; text-decoration: none; }
 
   /* ── Editable variants of the mailclient CRM-panel look (see index.html's .crm-*
@@ -34,11 +34,11 @@
      instead of static text, since this page is meant to edit the record, not just
      display it. ── */
   .ov-title-input {
-    font-size: 20px; font-weight: 700; color: #1a1a1a; border: none; outline: none;
+    font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--text-primary); border: none; outline: none;
     flex: 1; min-width: 0; font-family: inherit; padding: 2px 0; background: transparent;
   }
   .ov-title-input::placeholder { color: #b3b7bd; }
-  .ov-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .ov-meta-row { display: flex; align-items: center; gap: var(--space-100); margin-top: var(--space-150); flex-wrap: wrap; }
   /* Company favicon-as-logo. The initial sits underneath as a styled fallback; the
      <img> covers it and removes itself if the favicon 404s (see companyLogoHTML),
      so unknown/fictional domains degrade to the initial. */
@@ -49,20 +49,20 @@
     width: 22px; height: 22px; font-size: 11px;
   }
   .company-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #fff; }
-  .ov-created-by { font-size: 11.5px; color: #9a9fa7; margin-top: 8px; }
-  .ov-company-input { font-size: 15px; font-weight: 600; width: 220px; }
-  .ov-value-label { font-size: 12.5px; color: #888; margin-right: 5px; }
+  .ov-created-by { font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-100); }
+  .ov-company-input { font-size: var(--text-lg); font-weight: var(--weight-semi); width: 220px; }
+  .ov-value-label { font-size: var(--text-xs); color: var(--text-secondary); margin-right: var(--space-050); }
   .ov-value-row { display: flex; align-items: center; gap: 0; }
-  .ov-currency-select { font-size: 12.5px; color: #888; width: 56px; padding-right: 2px; }
+  .ov-currency-select { font-size: var(--text-xs); color: var(--text-secondary); width: 56px; padding-right: var(--space-025); }
   /* Sized to its content rather than a fixed width — names vary a lot more than
      currency symbols do. */
-  .ov-owner-select { font-size: 12.5px; color: var(--text-primary); max-width: 180px; }
-  .ov-value-input { font-size: 12.5px; font-weight: 500; color: #888; width: 90px; padding-left: 2px; }
+  .ov-owner-select { font-size: var(--text-xs); color: var(--text-primary); max-width: 180px; }
+  .ov-value-input { font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--text-secondary); width: 90px; padding-left: var(--space-025); }
   .ov-dot { color: #ccc; }
 
-  .ov-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; margin-top: 16px; }
+  .ov-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-200) var(--space-300); margin-top: var(--space-300); }
   .ov-field { display: flex; flex-direction: column; }
-  .ov-field-label { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #9a9fa7; margin-bottom: 5px; }
+  .ov-field-label { display: flex; align-items: center; gap: var(--space-075); font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-075); }
   .ov-field-label .crm-social-icon { width: 15px; height: 15px; border-radius: 4px; }
   .ov-field-label .crm-social-icon svg { width: 9px; height: 9px; }
   [data-field].ov-field-hidden { display: none; }
@@ -70,8 +70,112 @@
   /* The component draws the panel (.ds-card--section); only its rhythm is local. */
   .ov-section { margin-bottom: var(--space-200); }
 
+  /* Company firmographics describe the company, not this deal — identical on every
+     other Meridian opportunity. Folded away so the deal's own fields lead. */
+  .ov-company-details { margin-top: var(--space-300); }
+  .ov-company-details > summary {
+    cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px;
+    font-size: var(--text-xs); font-weight: var(--weight-semi); color: var(--text-secondary); padding: var(--space-050) 0;
+  }
+  .ov-company-details > summary::-webkit-details-marker { display: none; }
+  .ov-company-details > summary::before { content: '\25B8'; font-size: var(--text-2xs); transition: transform var(--dur-fast, .12s) ease; }
+  .ov-company-details[open] > summary::before { transform: rotate(90deg); }
+  .ov-company-details > summary:hover { color: var(--text-accent); }
+  .ov-company-details .ov-field-grid { margin-top: var(--space-100); }
+
+  /* ── Key facts ────────────────────────────────────────────────────────────
+     The four things a rep changes most, at the top, editable where they are read.
+     This replaced a read-only strip that restated value and stage from controls
+     further down the card: one fact in two places, and the copy you saw first was
+     the one you couldn't touch. */
+  .ov-keys {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: var(--space-200) var(--space-300);
+    margin: var(--space-300) 0 var(--space-200);
+    padding: var(--space-200);
+    border: 1px solid var(--border-subtle); border-radius: 10px;
+    background: var(--surface-recessed);
+  }
+  .ov-key { display: flex; flex-direction: column; gap: var(--space-075); min-width: 0; }
+  .ov-key-label {
+    font-size: var(--text-2xs); font-weight: var(--weight-semi); letter-spacing: .055em;
+    text-transform: uppercase; color: var(--text-secondary);
+  }
+  /* Value is the number people scan for, so it carries the largest type on the
+     card after the record name — and it is a live input, not a restatement. */
+  .ov-key-money {
+    display: flex; align-items: center; gap: var(--space-050);
+    background: var(--surface-primary); border: 1px solid var(--border-subtle);
+    border-radius: 8px; padding: 0 var(--space-100);
+  }
+  .ov-key-money:focus-within { border-color: var(--border-focus); box-shadow: var(--focus-ring); }
+  .ov-currency-select {
+    border: none; background: transparent; outline: none; cursor: pointer;
+    font: inherit; font-size: var(--text-md); color: var(--text-secondary); padding: 0;
+  }
+  .ov-value-input {
+    flex: 1; min-width: 0; border: none; background: transparent; outline: none;
+    font: inherit; font-size: var(--text-2xl); font-weight: var(--weight-bold);
+    color: var(--text-primary); font-variant-numeric: tabular-nums;
+    padding: var(--space-100) 0;
+  }
+  .ov-key-input { width: 100%; }
+  /* .crm-ps-wrap still carries width: calc(50% - 10px) and a top margin from when
+     the stage pill sat in a two-column row of its own. In a key cell it should
+     just fill the column. */
+  .ov-key .crm-ps-wrap, .ov-key .ov-status-inner { position: relative; width: 100%; margin-top: 0; }
+  .ov-key .crm-pipeline-stage, .ov-key .ov-status-pill { width: 100%; box-sizing: border-box; }
+  /* The cell is already labelled STAGE, so the pipeline glyph was only competing
+     with the stage name for a narrow column. */
+  .ov-key .crm-pipeline-stage .pl-icon { display: none; }
+  .ov-key .crm-pipeline-stage > span:not(.caret),
+  .ov-key .ov-status-pill > span:not(.caret) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ov-key .crm-pipeline-stage .caret, .ov-key .ov-status-pill .caret { margin-left: auto; padding-left: var(--space-050); }
+  /* Position in the pipeline, under the control that changes it. */
+  .ov-stage-bar { display: flex; gap: var(--space-025); }
+  .ov-seg { flex: 1; height: 4px; border-radius: 2px; background: var(--border-subtle); }
+  .ov-seg.is-on { background: var(--accent-primary); }
+
+  /* display: contents so the custom fields become items of the deal's own field
+     grid rather than a nested grid that starts a fresh left column. */
+  .ov-fields-contents { display: contents; }
+
+  /* ── Contacts ─────────────────────────────────────────────────────────────
+     Name over email rather than one long line, and remove stays hidden until
+     you are actually on the row — a delete control does not belong in the
+     resting state of a list you mostly just read. */
+  .ov-contact.is-collapsed .ov-contact-grid { display: none; }
+  .ov-contact-namerow { margin-bottom: var(--space-100); }
+  .ov-contact-row { display: flex; align-items: center; gap: var(--space-125); min-width: 0; cursor: pointer; flex: 1; }
+  .ov-contact-id { display: flex; flex-direction: column; gap: var(--space-025); min-width: 0; }
+  .ov-contact-name { font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-primary); white-space: nowrap; }
+  .ov-contact-row:hover .ov-contact-name { color: var(--text-accent); }
+  .ov-contact-mail { font-size: var(--text-xs); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ov-contact-caret {
+    margin-left: auto; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 6px; color: var(--text-secondary);
+    transition: transform var(--dur-fast, .12s) ease, background var(--dur-fast, .12s) ease;
+  }
+  .ov-contact-row:hover .ov-contact-caret { background: var(--surface-hover); color: var(--text-primary); }
+  .ov-contact.is-collapsed .ov-contact-caret { transform: rotate(-90deg); }
+  .ov-contact-x { opacity: 0; transition: opacity var(--dur-fast, .12s) ease; }
+  .ov-contact:hover .ov-contact-x, .ov-contact-x:focus-visible { opacity: 1; }
+
+  /* Adding an activity used to go through two prompt() dialogs. A sandboxed frame
+     without allow-modals returns null from those silently, so the menu items did
+     nothing at all. This is an ordinary row in the list instead. */
+  .ov-act-draft {
+    display: flex; align-items: center; gap: var(--space-100);
+    padding: var(--space-100) 0; border-top: 1px solid var(--border-subtle);
+  }
+  .ov-act-draft .ov-act-draft-text { flex: 1; min-width: 0; }
+  .ov-act-draft .ov-act-draft-date { width: 140px; flex-shrink: 0; }
+
+  /* An upcoming item with no date can't be chased; say so rather than leave a gap. */
+  .crm-activity-date.is-undated { color: var(--text-secondary); font-style: italic; }
+
   .ov-heading {
-    font-size: 12px; font-weight: 500; color: #888; text-transform: uppercase;
+    font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;
     letter-spacing: 0.04em; margin-bottom: 12px;
   }
   .ov-contact { border: 1px solid #ececf0; border-radius: 9px; padding: 14px; margin-top: 12px; position: relative; }
@@ -88,14 +192,14 @@
     color: #b0b5bb; cursor: pointer; font-size: 16px; line-height: 1; border: 1px solid #e2e4e8;
   }
   .ov-contact-x:hover { color: #dc2626; border-color: #f0c6c6; background: #fdecec; }
-  .ov-add-link { font-size: 12.5px; font-weight: 600; color: #2170f4; cursor: pointer; display: inline-block; margin-top: 12px; }
+  .ov-add-link { font-size: var(--text-xs); font-weight: var(--weight-semi); color: var(--accent-primary); cursor: pointer; display: inline-block; margin-top: var(--space-150); }
   .ov-add-link:hover { text-decoration: underline; }
-  .ov-field-empty { font-size: 13px; color: #9aa1a9; }
+  .ov-field-empty { font-size: var(--text-sm); color: var(--text-secondary); }
   /* "Missing a field? Configure your <record> fields." — the question is quiet, the
      action next to it is the link. Page-local layout only; reads system tokens. */
   .ov-field-hint {
     display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
-    margin-top: var(--space-300, 12px); font-size: 12.5px; color: var(--text-muted);
+    margin-top: var(--space-300); font-size: var(--text-xs); color: var(--text-secondary);
   }
   .ov-field-hint .ov-add-link { margin-top: 0; }
 
@@ -105,7 +209,7 @@
   /* ── Copied from index.html's mailclient CRM panel (§ CRM panel styles) so this
      page reads as the same "record" surface, just full-page instead of a 360px
      side panel. ── */
-  .crm-opp-value { font-size: 12.5px; font-weight: 500; color: #888; }
+  .crm-opp-value { font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--text-secondary); }
   .crm-company-icon-row { display: flex; align-items: center; gap: 10px; margin-top: 13px; flex-wrap: wrap; }
   .crm-social-icon {
     width: 20px; height: 20px; border-radius: 6px; color: #fff; flex-shrink: 0;
@@ -119,14 +223,14 @@
 
   .crm-ps-wrap { position: relative; margin-top: 16px; width: calc(50% - 10px); }
   .crm-pipeline-stage {
-    display: flex; align-items: center; gap: 5px; cursor: pointer;
-    padding: 8px 12px 8px 10px; border-radius: 7px; font-size: 13.5px; font-weight: 500;
+    display: flex; align-items: center; gap: var(--space-050); cursor: pointer;
+    padding: var(--space-100) var(--space-150) var(--space-100) var(--space-125); border-radius: 7px; font-size: var(--text-sm); font-weight: var(--weight-medium);
     background: #2170f4; color: #fff; width: 100%;
   }
   .crm-pipeline-stage:hover { filter: brightness(1.06); }
   .crm-pipeline-stage .pl-icon { width: 14px; height: 14px; flex-shrink: 0; }
   .crm-pipeline-stage #ov-ps-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .crm-pipeline-stage .caret { font-size: 16px; opacity: .95; margin-left: 5px; flex-shrink: 0; display: inline-block; transform: scaleX(1.4); }
+  .crm-pipeline-stage .caret { font-size: var(--text-xl); opacity: .95; margin-left: var(--space-050); flex-shrink: 0; display: inline-block; transform: scaleX(1.4); }
   .crm-stage-menu {
     position: absolute; top: 100%; left: 0; z-index: 40; display: none;
     background: #fff; border: 1px solid #e6e6e6; border-top: none;
@@ -134,13 +238,13 @@
     box-shadow: 0 10px 24px rgba(0,0,0,0.14); padding: 6px 0; width: 100%; box-sizing: border-box;
   }
   .crm-stage-menu.open { display: block; }
-  .crm-stage-item { display: flex; align-items: center; gap: 9px; padding: 7px 14px; font-size: 13px; color: #2b2f36; cursor: pointer; }
+  .crm-stage-item { display: flex; align-items: center; gap: var(--space-100); padding: var(--space-100) var(--space-200); font-size: var(--text-sm); color: var(--text-primary); cursor: pointer; }
   .crm-stage-item:hover { background: #f4f7fb; }
   .crm-stage-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .crm-stage-item.active { font-weight: 600; }
 
   .ov-autolink-row {
-    display: flex; align-items: flex-start; gap: 8px; margin-top: 18px; font-size: 12.5px;
+    display: flex; align-items: flex-start; gap: var(--space-100); margin-top: var(--space-300); font-size: var(--text-xs);
     color: #6b7178; cursor: pointer; user-select: none;
   }
   .ov-autolink-row input[type="checkbox"] {
@@ -151,63 +255,65 @@
   /* ── Status (In progress / Won / Lost) — Sales pipelines only, shown next to Stage ── */
   .ov-status-wrap { position: relative; margin-top: 16px; width: calc(50% - 10px); }
   .ov-status-pill {
-    display: flex; align-items: center; gap: 5px; cursor: pointer; width: 100%;
-    padding: 8px 12px; border-radius: 7px; font-size: 13.5px; font-weight: 600;
+    display: flex; align-items: center; gap: var(--space-050); cursor: pointer; width: 100%;
+    padding: var(--space-100) var(--space-150); border-radius: 7px; font-size: var(--text-sm); font-weight: var(--weight-semi);
   }
   .ov-status-pill #ov-status-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ov-status-pill:hover { filter: brightness(0.97); }
   .ov-status-pill .caret { font-size: 16px; opacity: .8; margin-left: 3px; display: inline-block; transform: scaleX(1.4); }
-  .ov-status-wrap.inprogress .ov-status-pill { background: #eef0f2; color: #555; }
-  .ov-status-wrap.won .ov-status-pill { background: #e7f8ec; color: #15803d; }
-  .ov-status-wrap.lost .ov-status-pill { background: #fdecec; color: #dc2626; }
+  /* Keyed by tone, not by outcome word — "Won" and "Hired" are the same green. */
+  .ov-status-wrap.open .ov-status-pill { background: var(--surface-hover); color: var(--text-secondary); }
+  .ov-status-wrap.positive .ov-status-pill { background: var(--status-success-subtle); color: var(--status-success); }
+  .ov-status-wrap.negative .ov-status-pill { background: var(--status-danger-subtle); color: var(--status-danger); }
+  .ov-status-wrap.paused .ov-status-pill { background: var(--status-warning-subtle); color: var(--status-warning); }
   .ov-status-menu {
     position: absolute; top: calc(100% + 4px); right: 0; z-index: 40; display: none;
     background: #fff; border: 1px solid #e6e6e6; border-radius: 8px;
     box-shadow: 0 10px 24px rgba(0,0,0,0.14); padding: 6px 0; min-width: 140px;
   }
   .ov-status-menu.open { display: block; }
-  .ov-status-item { display: flex; align-items: center; gap: 9px; padding: 7px 14px; font-size: 13px; color: #2b2f36; cursor: pointer; }
+  .ov-status-item { display: flex; align-items: center; gap: var(--space-100); padding: var(--space-100) var(--space-200); font-size: var(--text-sm); color: var(--text-primary); cursor: pointer; }
   .ov-status-item:hover { background: #f4f7fb; }
   .ov-status-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .ov-status-item .dot.open { background: var(--text-muted); }
+  .ov-status-item .dot.positive { background: var(--status-success); }
+  .ov-status-item .dot.negative { background: var(--status-danger); }
+  .ov-status-item .dot.paused { background: var(--status-warning); }
   .ov-status-item.active { font-weight: 600; }
 
   .crm-note {
-    background: rgba(33,112,244,0.05); border-radius: 6px; padding: 12px 14px; font-size: 12.5px; color: #444; margin-bottom: 8px;
+    background: var(--accent-subtle); border-radius: 6px; padding: var(--space-150) var(--space-200); font-size: var(--text-xs); color: var(--text-primary); margin-bottom: var(--space-100);
   }
-  .crm-note .meta { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #999; margin-bottom: 10px; }
-  .crm-note .meta .note-ic { width: 12px; height: 12px; color: #b0b0b0; flex-shrink: 0; display: inline-flex; }
-  .crm-note #ov-last-note-text { display: block; font-size: 13px; color: #333; line-height: 1.6; }
+  .crm-note .meta { display: flex; align-items: center; gap: var(--space-050); font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-125); }
+  .crm-note .meta .note-ic { width: 12px; height: 12px; color: var(--text-secondary); flex-shrink: 0; display: inline-flex; }
+  .crm-note #ov-last-note-text { display: block; font-size: var(--text-sm); color: var(--text-primary); line-height: 1.6; }
   /* Older notes — same box as the latest note, greyed to read as history. */
-  .ov-note-old { background: #f3f4f6; border-radius: 6px; padding: 12px 14px; margin-bottom: 8px; }
-  .ov-note-old .meta { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #9a9fa7; margin-bottom: 8px; }
-  .ov-note-old .meta .note-ic { width: 12px; height: 12px; color: #b0b0b0; flex-shrink: 0; display: inline-flex; }
-  .ov-note-old .txt { display: block; font-size: 13px; color: #555; line-height: 1.6; }
   /* Local override of one value: textarea.ds-input is 96px min, right for a description
      and too tall for a note box. Everything else comes from the component. */
   .crm-note-add textarea.ds-input { min-height: 60px; }
   .crm-note-add textarea:focus { border-color: #2170f4; }
   .crm-note-add button {
     margin-top: 8px; background: #2170f4; color: #fff; border: none; border-radius: 6px;
-    padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    padding: var(--space-100) var(--space-200); font-size: var(--text-xs); font-weight: var(--weight-semi); cursor: pointer;
   }
   .crm-note-add button:hover { background: #1257c9; }
 
   .crm-activity-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
   .crm-activity-row:last-child { border-bottom: none; }
   .crm-activity-text { flex: 1; font-size: 13px; color: #333; }
-  .crm-activity-date { font-size: 11.5px; color: #999; }
-  .crm-activity-date.overdue { color: #dc2626; font-weight: 600; }
+  .crm-activity-date { font-size: var(--text-xs); color: var(--text-secondary); }
+  .crm-activity-date.overdue { color: var(--status-danger); font-weight: 600; }
   .crm-act-ic {
     width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; background: #f2f4f6; color: #667085;
     display: flex; align-items: center; justify-content: center;
   }
   .crm-act-ic svg { width: 14px; height: 14px; }
   .crm-empty-state { font-size: 13px; color: #9a9fa7; padding: 4px 0; }
-  .crm-activity-snippet { font-size: 13px; line-height: 1.5; color: #999; margin-top: 4px; }
+  .crm-activity-snippet { font-size: var(--text-sm); line-height: 1.5; color: var(--text-secondary); margin-top: var(--space-050); }
   /* AI summary sparkle only makes sense for emails (AI-summarized); calls, meetings,
      notes, tasks show their own plain text instead — same rule as the mailclient panel. */
   .crm-activity-row:has(.crm-act-ic.email) .crm-activity-snippet::before { content: '✦ '; color: #a9c8f5; }
-  .crm-snippet-link { display: flex; align-items: center; gap: 5px; }
+  .crm-snippet-link { display: flex; align-items: center; gap: var(--space-050); }
   .crm-snippet-link svg { flex-shrink: 0; color: #9a9fa7; }
 
   #ov-files { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -215,7 +321,7 @@
     display: flex; align-items: center; gap: 8px; padding: 8px 10px; min-width: 0;
     background: #f6f7f8; border-radius: 8px;
   }
-  .crm-file-name { flex: 1; min-width: 0; font-size: 12.5px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .crm-file-name { flex: 1; min-width: 0; font-size: var(--text-xs); color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .crm-file-icon {
     width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; color: #fff;
     display: flex; align-items: center; justify-content: center;
@@ -224,7 +330,7 @@
   .crm-file-icon.doc { background: #2170f4; }
   .crm-file-icon.zip { background: #9aa1a9; }
   .crm-file-right { position: relative; display: flex; align-items: center; justify-content: flex-end; min-width: 66px; flex-shrink: 0; }
-  .crm-file-meta { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #999; transition: opacity 0.15s ease; }
+  .crm-file-meta { display: flex; align-items: center; gap: var(--space-050); font-size: var(--text-xs); color: var(--text-secondary); transition: opacity 0.15s ease; }
   .crm-file-direction { display: inline-flex; flex-shrink: 0; }
   .crm-file-direction.sent { color: #7aa8f2; }
   .crm-file-direction.received { color: #6fcf8e; }
@@ -246,7 +352,7 @@
   .crm-file-action-btn[data-tip] { overflow: visible; }
   .crm-file-action-btn[data-tip]::after {
     content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
-    background: #1c1c1c; color: #fff; font-size: 11.5px; font-weight: 500; white-space: nowrap;
+    background: var(--surface-inverse); color: var(--text-on-inverse); font-size: var(--text-2xs); font-weight: var(--weight-medium); white-space: nowrap;
     padding: 6px 10px; border-radius: 6px; opacity: 0; pointer-events: none; transition: opacity 0.12s ease;
     box-shadow: 0 4px 14px rgba(0,0,0,0.22);
   }
@@ -278,13 +384,13 @@
   .ov-modal-overlay.open { display: flex; }
   .ov-modal { background: #fff; border-radius: 12px; width: 100%; max-width: 520px; max-height: 84vh;
     overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-  .ov-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 22px 16px; border-bottom: 1px solid #eee; }
-  .ov-modal-title { font-size: 16.5px; font-weight: 700; color: #1a1a1a; line-height: 1.35; }
-  .ov-modal-subtitle { font-size: 12.5px; color: #9a9fa7; margin-top: 4px; }
-  .ov-modal-close { color: #9a9fa7; cursor: pointer; font-size: 20px; line-height: 1; flex-shrink: 0; padding: 2px; }
+  .ov-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-150); padding: var(--space-300) var(--space-300) var(--space-200); border-bottom: 1px solid var(--border-subtle); }
+  .ov-modal-title { font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--text-primary); line-height: 1.35; }
+  .ov-modal-subtitle { font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-050); }
+  .ov-modal-close { color: var(--text-secondary); cursor: pointer; font-size: var(--text-2xl); line-height: 1; flex-shrink: 0; padding: var(--space-025); }
   .ov-modal-close:hover { color: #333; }
-  .ov-modal-body { padding: 18px 22px; }
-  .ov-modal-row { display: flex; gap: 10px; font-size: 12.5px; color: #555; padding: 5px 0; }
+  .ov-modal-body { padding: var(--space-200) var(--space-300); }
+  .ov-modal-row { display: flex; gap: var(--space-125); font-size: var(--text-xs); color: var(--text-secondary); padding: var(--space-050) 0; }
   .ov-modal-row .lbl { color: #9a9fa7; width: 46px; flex-shrink: 0; }
   .ov-modal-row .val { flex: 1; min-width: 0; }
   .ov-modal-divider { height: 1px; background: #eee; margin: 14px 0; }
@@ -296,13 +402,13 @@
      was overflowing into (and overlapping) the attendee chips next to it. */
   #ov-meeting-modal .ov-modal-row { align-items: flex-start; }
   #ov-meeting-modal .ov-modal-row .lbl { width: 68px; padding-top: 2px; }
-  .ov-modal-text { font-size: 13.5px; color: #333; line-height: 1.6; white-space: pre-wrap; }
+  .ov-modal-text { font-size: var(--text-sm); color: var(--text-primary); line-height: 1.6; white-space: pre-wrap; }
   .ov-modal-attendees { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
   .ov-modal-attendee { display: inline-flex; align-items: center; gap: 6px; background: #f2f4f6; border-radius: 999px; padding: 4px 10px 4px 4px; font-size: 12px; color: #333; }
-  .ov-modal-attendee .av { width: 18px; height: 18px; border-radius: 50%; background: #8a9099; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ov-modal-attendee .av { width: 22px; height: 22px; border-radius: 50%; background: #8a9099; color: #fff; font-size: var(--text-2xs); font-weight: var(--weight-bold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .ov-modal-zoom { display: inline-flex; align-items: center; gap: 6px; color: #2170f4; font-weight: 600; font-size: 13px; text-decoration: none; }
   .ov-modal-zoom:hover { text-decoration: underline; }
-  .ov-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid #eee; }
+  .ov-modal-footer { display: flex; justify-content: flex-end; gap: var(--space-125); padding: var(--space-200) var(--space-300); border-top: 1px solid var(--border-subtle); }
 
   /* Task activities: a real checkbox you can mark done (matches the mailclient CRM
      panel's .crm-act-check), except checking one here actually completes it — it moves
@@ -319,7 +425,7 @@
   .crm-act-check .box svg { width: 11px; height: 11px; display: none; }
 
   .crm-add-activity {
-    font-size: 12.5px; line-height: 16px; color: #2170f4; font-weight: 600; cursor: pointer;
+    font-size: var(--text-xs); line-height: 16px; color: var(--accent-primary); font-weight: var(--weight-semi); cursor: pointer;
     margin-top: 12px; display: inline-flex; align-items: center;
   }
   .crm-activity-menu {
@@ -327,21 +433,34 @@
     box-shadow: 0 6px 24px rgba(0,0,0,0.16); width: 214px; overflow: hidden; z-index: 600;
   }
   .crm-activity-menu.open { display: block; }
-  .cam2-bar { font-size: 12.5px; font-weight: 700; padding: 11px 12px; background: #eef0f2; color: #333; }
+  .cam2-bar { font-size: var(--text-xs); font-weight: var(--weight-bold); padding: var(--space-150); background: var(--surface-recessed); color: var(--text-primary); }
   .cam2-items { padding: 6px; }
-  .cam2-item { display: flex; align-items: center; gap: 9px; font-size: 13px; color: #333; padding: 8px 10px; border-radius: 6px; cursor: pointer; }
+  .cam2-item { display: flex; align-items: center; gap: var(--space-100); font-size: var(--text-sm); color: var(--text-primary); padding: var(--space-100) var(--space-125); border-radius: 6px; cursor: pointer; }
   .cam2-item:hover { background: #f4f6f8; }
   .cam2-item .ic { width: 15px; height: 15px; flex-shrink: 0; display: flex; color: #667085; }
   .cam2-item .ic svg { width: 15px; height: 15px; }
 
   /* ── AI summary toggle (matches the mailclient CRM panel's) ── */
-  .crm-ai-icon-btn {
-    width: 22px; height: 22px; border-radius: 50%; background: #eaf1ff; color: #2170f4;
-    display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  /* Was an unlabelled sparkle that revealed a bare paragraph — nothing said the
+     text was generated rather than typed by a colleague. The tint, the rule and
+     the "Written from this record" line are all doing that one job. */
+  .ov-ai-btn { flex-shrink: 0; }
+  .ov-ai-card {
+    display: none; margin-top: var(--space-150);
+    border: 1px solid var(--border-accent, var(--accent-primary));
+    border-radius: 10px; overflow: hidden;
+    background: linear-gradient(180deg, var(--accent-subtle), var(--surface-primary) 70%);
   }
-  .crm-ai-icon-btn:hover { background: #dbe9ff; }
-  .crm-ai-summary-text { font-size: 13px; color: #333; line-height: 1.5; margin-top: 10px; display: none; }
-  .crm-ai-summary-text.show { display: block; }
+  .ov-ai-card.show { display: block; }
+  .ov-ai-head {
+    display: flex; align-items: center; gap: var(--space-075);
+    padding: var(--space-125) var(--space-200) var(--space-100);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .ov-ai-spark { color: var(--accent-primary); flex-shrink: 0; }
+  .ov-ai-title { font-size: var(--text-2xs); font-weight: var(--weight-semi); letter-spacing: .06em; text-transform: uppercase; color: var(--text-accent); }
+  .ov-ai-note { margin-left: auto; font-size: var(--text-2xs); color: var(--text-secondary); }
+  .ov-ai-body { padding: var(--space-150) var(--space-200) var(--space-200); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); }
   .ov-title-row { display: flex; align-items: center; gap: 8px; }
 
   /* App switcher — opens from the top-left tab-switch button (this page reuses the
@@ -355,7 +474,7 @@
   .ov-appsw.open { display: block; }
   .ov-appsw-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .ov-appsw-item {
-    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    display: flex; flex-direction: column; align-items: center; gap: var(--space-075);
     padding: 12px 4px; border-radius: 9px; cursor: pointer;
   }
   .ov-appsw-item:hover { background: #f2f4f7; }
@@ -388,76 +507,92 @@
         <div class="ov-section ds-card ds-card--section">
           <div class="ov-title-row">
             <input class="ds-input ds-input--inline ov-title-input" id="ov-name" placeholder="Opportunity name" oninput="onFieldChange()">
-            <span class="crm-ai-icon-btn" onclick="toggleAiSummary()" title="AI summary">
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
-            </span>
+            <button class="ov-ai-btn ds-btn ds-btn--soft ds-btn--sm" id="ov-ai-btn" type="button"
+                    onclick="toggleAiSummary()" aria-expanded="false" aria-controls="ov-ai-card">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
+              AI summary
+            </button>
           </div>
-          <div class="crm-ai-summary-text" id="ov-ai-summary-text"></div>
+          <div class="ov-ai-card" id="ov-ai-card">
+            <div class="ov-ai-head">
+              <svg class="ov-ai-spark" width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
+              <span class="ov-ai-title">AI summary</span>
+              <span class="ov-ai-note">Written from this record</span>
+            </div>
+            <div class="ov-ai-body" id="ov-ai-summary-text"></div>
+          </div>
           <div class="ov-meta-row">
             <span id="ov-company-logo"></span>
             <input class="ds-input ds-input--inline ov-company-input" id="ov-company" data-field="company" placeholder="Company" oninput="onFieldChange()">
             <span class="ov-dot">&middot;</span>
-            <span class="ov-value-label">Total value:</span>
-            <div class="ov-value-row">
-              <select class="ds-input ds-input--inline ov-currency-select" id="ov-currency" onchange="onFieldChange()">
-                <option value="$">$</option><option value="€">€</option><option value="£">£</option><option value="AU$">AU$</option>
-              </select>
-              <input class="ds-input ds-input--inline ov-value-input" id="ov-value" type="text" inputmode="numeric" placeholder="0" oninput="onFieldChange()">
-            </div>
-            <span class="ov-dot">&middot;</span>
-            <span class="ov-value-label">Owner:</span>
+            <span class="ov-value-label">Owner</span>
             <select class="ds-input ds-input--inline ov-owner-select" id="ov-owner" onchange="onOwnerChange()"></select>
           </div>
           <div class="ov-created-by" id="ov-created-by"></div>
 
-          <div class="ov-field-grid">
-            <div class="ov-field" data-field="location">
-              <div class="ov-field-label"><span class="crm-social-icon location"><span data-ds-icon="location" data-size="16"></span></span>Location</div>
-              <input class="ds-input" id="ov-location" placeholder="San Jose, US" oninput="onFieldChange()">
+          <!-- The four things a rep changes most, at the top and editable in place.
+               This replaced a read-only summary strip that restated value and stage
+               from the controls further down: two places showing one fact, and the
+               one you read first was the one you couldn't touch. -->
+          <div class="ov-keys">
+            <div class="ov-key" data-field="value" id="ov-key-value">
+              <div class="ov-key-label"><span class="ov-field-label-text">Value</span></div>
+              <div class="ov-key-money">
+                <select class="ov-currency-select" id="ov-currency" onchange="onFieldChange()" aria-label="Currency">
+                  <option value="$">$</option><option value="€">€</option><option value="£">£</option><option value="AU$">AU$</option>
+                </select>
+                <input class="ov-value-input" id="ov-value" type="text" inputmode="numeric" placeholder="0"
+                       oninput="onFieldChange()" onfocus="unformatValue(this)" onblur="formatValue(this)" aria-label="Value">
+              </div>
             </div>
-            <div class="ov-field" data-field="website">
-              <div class="ov-field-label"><span class="crm-social-icon website"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M2 8h12M8 2c1.7 1.7 2.6 3.8 2.6 6s-.9 4.3-2.6 6c-1.7-1.7-2.6-3.8-2.6-6s.9-4.3 2.6-6Z" stroke="currentColor" stroke-width="1.2"/></svg></span>Website</div>
-              <input class="ds-input" id="ov-website" placeholder="acme.com" oninput="onFieldChange()">
+
+            <div class="ov-key" data-field="stage">
+              <div class="ov-key-label"><span class="ov-field-label-text">Stage</span></div>
+              <div class="crm-ps-wrap">
+                <div class="crm-pipeline-stage" id="ov-pipeline-stage" onclick="toggleStageMenu(event)" role="button" tabindex="0">
+                  <svg class="pl-icon" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="currentColor"/></svg>
+                  <span id="ov-ps-text">Stage</span>
+                  <span class="caret">&#9662;</span>
+                </div>
+                <div class="crm-stage-menu" id="ov-stage-menu"></div>
+              </div>
+              <div class="ov-stage-bar" id="ov-stage-bar"></div>
             </div>
-            <div class="ov-field" data-field="company-linkedin">
-              <div class="ov-field-label"><span class="crm-social-icon linkedin"><svg viewBox="0 0 16 16" fill="none"><rect x="2.3" y="6.3" width="2.4" height="7" fill="currentColor"/><circle cx="3.5" cy="3.3" r="1.4" fill="currentColor"/><path d="M7 6.3h2.3v1.1c.5-.7 1.3-1.3 2.4-1.3 2 0 2.6 1.2 2.6 3.1v4.1h-2.4V9.7c0-.9-.3-1.5-1.1-1.5-.8 0-1.4.6-1.4 1.6v3.5H7V6.3Z" fill="currentColor"/></svg></span>Company LinkedIn</div>
-              <input class="ds-input" id="ov-company-linkedin" placeholder="linkedin.com/company/acme" oninput="onFieldChange()">
+
+            <!-- Sales-pipeline records only (pipeline.entity === 'Opportunity') — see renderStatus(). -->
+            <div class="ov-key" id="ov-status-wrap" data-field="status" style="display:none;">
+              <div class="ov-key-label"><span class="ov-field-label-text">Status</span></div>
+              <div class="ov-status-inner" id="ov-status-inner">
+                <div class="ov-status-pill" id="ov-status-pill" onclick="toggleStatusMenu(event)" role="button" tabindex="0">
+                  <span id="ov-status-text">In progress</span>
+                  <span class="caret">&#9662;</span>
+                </div>
+                <!-- Built by renderStatus() from crm-status.js: the vocabulary is
+                     per record type, so this must not be a fixed list. -->
+                <div class="ov-status-menu" id="ov-status-menu"></div>
+              </div>
             </div>
-            <div class="ov-field" data-field="instagram">
-              <div class="ov-field-label"><span class="crm-social-icon instagram"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="3.2" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.3"/><circle cx="11.3" cy="4.7" r="0.8" fill="currentColor"/></svg></span>Instagram</div>
-              <input class="ds-input" id="ov-instagram" placeholder="instagram.com/acme" oninput="onFieldChange()">
-            </div>
-            <div class="ov-field" data-field="close-date">
-              <div class="ov-field-label" id="ov-close-label">Expected close date</div>
-              <input class="ds-input" id="ov-close-date" type="date" oninput="onFieldChange()">
-            </div>
-            <div class="ov-field" data-field="source">
-              <div class="ov-field-label">Source</div>
-              <input class="ds-input" id="ov-source" placeholder="e.g. Referral, Website" oninput="onFieldChange()">
+
+            <div class="ov-key" data-field="close-date">
+              <div class="ov-key-label"><span class="ov-field-label-text" id="ov-close-label">Expected close date</span></div>
+              <input class="ds-input ov-key-input" id="ov-close-date" type="date" oninput="onFieldChange()">
             </div>
           </div>
 
-          <div style="display:flex; align-items:flex-start; gap:20px;">
-            <div class="crm-ps-wrap">
-              <div class="crm-pipeline-stage" id="ov-pipeline-stage" onclick="toggleStageMenu(event)">
-                <svg class="pl-icon" viewBox="0 0 14 14" fill="none"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="currentColor"/></svg>
-                <span id="ov-ps-text">Stage</span>
-                <span class="caret">&#9662;</span>
-              </div>
-              <div class="crm-stage-menu" id="ov-stage-menu"></div>
+          <!-- Source and the pipeline's own custom fields are all deal attributes, so
+               they share one grid. Rendering the custom ones into a second grid of
+               their own left both stacked down the left with the right half empty. -->
+          <div class="ov-field-grid">
+            <div class="ov-field" data-field="source">
+              <div class="ov-field-label"><span class="ov-field-label-text">Source</span></div>
+              <input class="ds-input" id="ov-source" placeholder="e.g. Referral, Website" oninput="onFieldChange()">
             </div>
-            <!-- Sales-pipeline records only (pipeline.entity === 'Opportunity') — see renderStatus(). -->
-            <div class="ov-status-wrap" id="ov-status-wrap" style="display:none;">
-              <div class="ov-status-pill" id="ov-status-pill" onclick="toggleStatusMenu(event)">
-                <span id="ov-status-text">In progress</span>
-                <span class="caret">&#9662;</span>
-              </div>
-              <div class="ov-status-menu" id="ov-status-menu">
-                <div class="ov-status-item" onclick="selectStatus('In progress')"><span class="dot" style="background:#9aa1a9;"></span>In progress</div>
-                <div class="ov-status-item" onclick="selectStatus('Won')"><span class="dot" style="background:#16a34a;"></span>Won</div>
-                <div class="ov-status-item" onclick="selectStatus('Lost')"><span class="dot" style="background:#dc2626;"></span>Lost</div>
-              </div>
-            </div>
+            <div id="ov-custom-fields" class="ov-fields-contents"></div>
+          </div>
+          <div class="ov-field-empty" id="ov-custom-fields-empty" style="display:none;"></div>
+          <div class="ov-field-hint">
+            <span id="ov-configure-fields-lead">Missing a field?</span>
+            <span class="ov-add-link" id="ov-configure-fields" onclick="openRecordSettings()"></span>
           </div>
 
           <label class="ov-autolink-row">
@@ -466,10 +601,35 @@
           </label>
         </div>
 
+        <!-- The company's own details, in their own box. They describe Meridian Labs
+             rather than this deal and would read the same on every other Meridian
+             opportunity, so they sit beside the record rather than inside it. -->
+        <div class="ov-section ds-card ds-card--section">
+          <div class="ov-heading" id="ov-company-heading">Company</div>
+          <div class="ov-field-grid">
+            <div class="ov-field" data-field="location">
+              <div class="ov-field-label"><span class="crm-social-icon location"><span data-ds-icon="location" data-size="16"></span></span><span class="ov-field-label-text">Location</span></div>
+              <input class="ds-input" id="ov-location" placeholder="San Jose, US" oninput="onFieldChange()">
+            </div>
+            <div class="ov-field" data-field="website">
+              <div class="ov-field-label"><span class="crm-social-icon website"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M2 8h12M8 2c1.7 1.7 2.6 3.8 2.6 6s-.9 4.3-2.6 6c-1.7-1.7-2.6-3.8-2.6-6s.9-4.3 2.6-6Z" stroke="currentColor" stroke-width="1.2"/></svg></span><span class="ov-field-label-text">Website</span></div>
+              <input class="ds-input" id="ov-website" placeholder="acme.com" oninput="onFieldChange()">
+            </div>
+            <div class="ov-field" data-field="company-linkedin">
+              <div class="ov-field-label"><span class="crm-social-icon linkedin"><svg viewBox="0 0 16 16" fill="none"><rect x="2.3" y="6.3" width="2.4" height="7" fill="currentColor"/><circle cx="3.5" cy="3.3" r="1.4" fill="currentColor"/><path d="M7 6.3h2.3v1.1c.5-.7 1.3-1.3 2.4-1.3 2 0 2.6 1.2 2.6 3.1v4.1h-2.4V9.7c0-.9-.3-1.5-1.1-1.5-.8 0-1.4.6-1.4 1.6v3.5H7V6.3Z" fill="currentColor"/></svg></span><span class="ov-field-label-text">Company LinkedIn</span></div>
+              <input class="ds-input" id="ov-company-linkedin" placeholder="linkedin.com/company/acme" oninput="onFieldChange()">
+            </div>
+            <div class="ov-field" data-field="instagram">
+              <div class="ov-field-label"><span class="crm-social-icon instagram"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="3.2" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.3"/><circle cx="11.3" cy="4.7" r="0.8" fill="currentColor"/></svg></span><span class="ov-field-label-text">Instagram</span></div>
+              <input class="ds-input" id="ov-instagram" placeholder="instagram.com/acme" oninput="onFieldChange()">
+            </div>
+          </div>
+        </div>
+
         <div class="ov-section ds-card ds-card--section" data-field="note">
           <div class="ov-heading">Notes</div>
           <div class="crm-note" id="ov-last-note" style="display:none;">
-            <div class="meta"><span class="note-ic"><span data-ds-icon="drafts" data-size="16"></span></span>Last note added by <span id="ov-last-note-author"></span> on <span id="ov-last-note-date"></span></div>
+            <div class="meta"><span class="note-ic"><span data-ds-icon="drafts" data-size="16"></span></span>Last note added by <span id="ov-last-note-author"></span><span id="ov-last-note-on"> on <span id="ov-last-note-date"></span></span></div>
             <span id="ov-last-note-text"></span>
           </div>
           <div id="ov-note-history"></div>
@@ -477,12 +637,6 @@
             <textarea class="ds-input" id="ov-note-input" placeholder="Add a note..." oninput="toggleAddNoteBtn()"></textarea>
             <button id="ov-add-note-btn" onclick="addNote()" style="display:none;">Add note</button>
           </div>
-        </div>
-
-        <div class="ov-section ds-card ds-card--section">
-          <div class="ov-heading">Contacts</div>
-          <div id="ov-contacts"></div>
-          <span class="ov-add-link" id="ov-add-contact-link" onclick="addContact()">+ Add contact</span>
         </div>
 
         <div class="ov-section ds-card ds-card--section">
@@ -517,6 +671,13 @@
         </div>
 
         <div class="ov-section ds-card ds-card--section">
+          <div class="ov-heading">Contacts</div>
+          <div id="ov-contacts"></div>
+          <span class="ov-add-link" id="ov-add-contact-link" onclick="addContact()">+ Add contact</span>
+        </div>
+
+
+        <div class="ov-section ds-card ds-card--section">
           <div class="ov-heading">Recent activity</div>
           <div id="ov-recent-activity"></div>
         </div>
@@ -528,18 +689,6 @@
           <input type="file" id="ov-file-input" multiple style="display:none;" onchange="addFiles(this.files)">
         </div>
 
-        <!-- Which fields a record has is a per-pipeline setting, so this card is the
-             place to reach it from — it stays visible even with no custom fields yet,
-             since "there are none" is exactly when you'd want to add one. -->
-        <div class="ov-section ds-card ds-card--section" id="ov-custom-fields-card">
-          <div class="ov-heading" id="ov-custom-fields-heading">Custom fields</div>
-          <div id="ov-custom-fields"></div>
-          <div class="ov-field-empty" id="ov-custom-fields-empty" style="display:none;"></div>
-          <div class="ov-field-hint">
-            <span id="ov-configure-fields-lead">Missing a field?</span>
-            <span class="ov-add-link" id="ov-configure-fields" onclick="openRecordSettings()"></span>
-          </div>
-        </div>
       </div>
 
       <div class="ov-not-found" id="ov-not-found" style="display:none;"></div>
@@ -623,6 +772,8 @@
 </div>
 <script src="/design-system/components/icon.js"></script>
 <script src="/crm-owner.js"></script>
+<script src="/crm-schema.js"></script>
+<script src="/crm-status.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script>
   // ── This page is reached from OUTSIDE Titan CRM (a mail client CRM-panel link),
@@ -715,14 +866,9 @@
   const requestedPipelineId = (pathSegs[0] === 'crm' && pathSegs[1] === 'pipeline') ? decodeURIComponent(pathSegs[2] || '') : '';
   const recordId = (pathSegs[3] === 'record') ? decodeURIComponent(pathSegs[4] || '') : '';
 
-  const ENTITY_LABELS = {
-    Opportunity: { name: 'Opportunity name', stage: 'Opportunity stage', close: 'Expected close date' },
-    Project:     { name: 'Project name',     stage: 'Project stage',     close: 'Expected launch date' },
-    Order:       { name: 'Order name',       stage: 'Order stage',       close: 'Expected completion date' },
-    Candidate:   { name: 'Candidate name',   stage: 'Candidate stage',   close: 'Expected close date' },
-    Record:      { name: 'Record name',      stage: 'Record stage',      close: 'Expected end date' },
-  };
-  function entityLabels(entity) { return ENTITY_LABELS[entity] || ENTITY_LABELS.Record; }
+  // Entity wording used to live here as a 3-key table (name/stage/close) that only
+  // this page could see. It's all of crm-schema.js now — 19 fields, both axes, one
+  // copy shared with the settings and add-record pages.
 
   let DATA = null;        // raw { currentPipelineId, pipelineSeq, pipelines } from the API
   let pipelines = null;   // shorthand for DATA.pipelines
@@ -731,7 +877,7 @@
   let card = null;
   let contacts = [];
   let customFieldValues = {};
-  let hiddenFields = [];       // pipeline.hiddenFields — same keys opportunity-settings.html toggles
+  let schema = null;           // titanSchema.resolve(pipeline) — set by renderRecord()
   let contactsEnabled = true;  // pipeline.contactsEnabled — "Add contacts" master toggle
 
   function goBack() {
@@ -788,11 +934,24 @@
 
   function renderRecord() {
     const entity = pipeline.entity || 'Opportunity';
-    const labels = entityLabels(entity);
+    // Field wording per record type and subject, from crm-schema.js. Anything the
+    // schema doesn't offer for this type is hidden below along with the user's own
+    // toggles, so an orders record has no Instagram row to leave blank.
+    schema = window.titanSchema.resolve(pipeline);
     document.title = (card.deal || entity) + ' — Titan CRM';
-    document.getElementById('ov-top-title').textContent = entity;
-    document.getElementById('ov-name').placeholder = labels.name;
-    document.getElementById('ov-close-label').textContent = labels.close;
+    // The record's own name, not its type — 'Opportunity' told you nothing about
+    // which one you had open, including in the browser tab and history.
+    document.getElementById('ov-top-title').textContent = card.deal || card.company || entity;
+    document.getElementById('ov-name').placeholder = schema.label('name');
+    document.getElementById('ov-company').placeholder = schema.label('company');
+    // "Client details" on a project, "Current employer" when the record is about
+    // a person — the section name is the schema's, not this page's.
+    const companyHeading = document.getElementById('ov-company-heading');
+    if (companyHeading) companyHeading.textContent = schema.headings.company;
+    document.querySelectorAll('[data-field]').forEach(function (el) {
+      const text = el.querySelector('.ov-field-label-text');
+      if (text) text.textContent = schema.label(el.dataset.field);
+    });
 
     document.getElementById('ov-name').value = card.deal || '';
     document.getElementById('ov-company').value = card.company || '';
@@ -800,6 +959,7 @@
     renderOwner();
     document.getElementById('ov-currency').value = card.currency || '$';
     document.getElementById('ov-value').value = card.value || '';
+    formatValue(document.getElementById('ov-value'));
     document.getElementById('ov-location').value = card.location || '';
     document.getElementById('ov-website').value = card.website || '';
     document.getElementById('ov-company-linkedin').value = card.companyLinkedin || '';
@@ -810,10 +970,11 @@
     document.getElementById('ov-autolink-entity').textContent = entity.toLowerCase();
     document.getElementById('ov-autolink').checked = card.autoLinkActivity !== false;
 
-    hiddenFields = pipeline.hiddenFields || [];
+    // One test covers both "the user turned this off" and "this record type never
+    // offers it" — schema.on() folds the stored toggles into the type's defaults.
     contactsEnabled = pipeline.contactsEnabled !== false;
     document.querySelectorAll('[data-field]').forEach(function (el) {
-      el.classList.toggle('ov-field-hidden', hiddenFields.indexOf(el.dataset.field) !== -1);
+      el.classList.toggle('ov-field-hidden', !schema.on(el.dataset.field));
     });
 
     renderStage();
@@ -823,7 +984,9 @@
       document.getElementById('ov-last-note').style.display = '';
       document.getElementById('ov-last-note-text').textContent = card.note;
       document.getElementById('ov-last-note-author').textContent = card.noteAuthor || 'Usha';
-      document.getElementById('ov-last-note-date').textContent = card.noteDate || '';
+      // Drop the " on <date>" clause entirely when there is no date, rather than
+      // ending the sentence on a dangling "on".
+      setLastNoteDate(card.noteDate || '');
     } else {
       document.getElementById('ov-last-note').style.display = 'none';
     }
@@ -851,6 +1014,7 @@
 
     customFieldValues = Object.assign({}, card.customFieldValues || {});
     renderCustomFields();
+    renderStageBar();
   }
 
   // The mailclient CRM panel's AI summary is a fixed, hardcoded string regardless of
@@ -859,8 +1023,11 @@
   // value, latest note), which is both true parity (the same toggleable AI-summary
   // affordance) and "more" (it actually reflects the record you're looking at).
   function toggleAiSummary() {
-    const text = document.getElementById('ov-ai-summary-text');
-    if (text) text.classList.toggle('show');
+    const cardEl = document.getElementById('ov-ai-card');
+    const btn = document.getElementById('ov-ai-btn');
+    if (!cardEl) return;
+    const open = cardEl.classList.toggle('show');
+    if (btn) btn.setAttribute('aria-expanded', String(open));
   }
   function renderAiSummary() {
     const contact = contacts[0] || {};
@@ -895,7 +1062,7 @@
     const stageLabel = (stages.find(function (s) { return s.key === card.stage; }) || {}).label || card.stage || '';
     const el = document.getElementById('ov-pipeline-stage');
     el.style.background = color;
-    document.getElementById('ov-ps-text').textContent = pipeline.name + ': ' + stageLabel;
+    document.getElementById('ov-ps-text').textContent = stageLabel;
 
     const menu = document.getElementById('ov-stage-menu');
     menu.innerHTML = stages.map(function (s, i) {
@@ -920,23 +1087,33 @@
   function selectStage(key) {
     card.stage = key;
     renderStage();
+    renderStageBar();
     document.getElementById('ov-stage-menu').classList.remove('open');
     document.removeEventListener('click', outsideStageMenu);
     schedulePersist();
   }
 
-  // Status (In progress / Won / Lost) — sales pipelines only (pipeline.entity ===
-  // 'Opportunity'); shown next to Stage. Default "In progress" if the card has none yet.
+  // Status — how the record turned out, shown next to Stage. Every record type has
+  // one; the words differ per type (Won/Lost, Hired/Rejected, Fulfilled/Returned)
+  // and come from crm-status.js. Defaults to "In progress" if the card has none.
   function renderStatus() {
     const wrap = document.getElementById('ov-status-wrap');
-    if (pipeline.entity !== 'Opportunity') { wrap.style.display = 'none'; return; }
+    // Status is a schema field like any other now — required on deals and orders,
+    // optional on projects and candidates, off by default on a custom pipeline.
+    if (!schema.on('status')) { wrap.style.display = 'none'; return; }
     wrap.style.display = '';
-    const status = card.status || 'In progress';
-    wrap.className = 'ov-status-wrap ' + (status === 'Won' ? 'won' : status === 'Lost' ? 'lost' : 'inprogress');
-    document.getElementById('ov-status-text').textContent = 'Status: ' + status;
-    document.querySelectorAll('#ov-status-menu .ov-status-item').forEach(function (item) {
-      item.classList.toggle('active', item.textContent.trim() === status);
-    });
+    const status = titanStatus.current(card, pipeline.entity);
+    // The tone class goes on the inner wrapper: the cell itself carries .ov-key,
+    // which the key-facts grid needs, and assigning className here would drop it.
+    const inner = document.getElementById('ov-status-inner');
+    inner.className = 'ov-status-inner ov-status-wrap ' + titanStatus.toneOf(pipeline.entity, status);
+    document.getElementById('ov-status-text').textContent = status;
+    document.getElementById('ov-status-menu').innerHTML =
+      titanStatus.values(pipeline.entity).map(function (v) {
+        return '<div class="ov-status-item ' + (v.value === status ? 'active' : '') +
+          '" onclick="selectStatus(' + JSON.stringify(v.value).replace(/"/g, '&quot;') + ')">' +
+          '<span class="dot ' + v.tone + '"></span>' + v.value + '</div>';
+      }).join('');
   }
   function toggleStatusMenu(evt) {
     if (evt) evt.stopPropagation();
@@ -973,11 +1150,9 @@
     const text = input.value.trim();
     if (!text) return;
     const now = formatNoteDate(new Date());
-    // Previous note drops into the notes-section history (it shows the note text).
-    if (card.note) {
-      if (!card.noteHistory) card.noteHistory = [];
-      card.noteHistory.unshift({ text: card.note, author: card.noteAuthor || 'Usha', date: card.noteDate || 'Earlier' });
-    }
+    // The outgoing note is not copied into card.noteHistory: it is about to be
+    // logged to Recent Activity just below, and writing both is what produced the
+    // duplication this section used to show.
     // Log this note to Recent Activity as "Note added by <author>".
     if (!card.recentActivities) card.recentActivities = [];
     card.recentActivities.unshift({ type: 'note', text: text, author: NOTE_AUTHOR, date: now });
@@ -987,69 +1162,102 @@
     document.getElementById('ov-last-note').style.display = '';
     document.getElementById('ov-last-note-text').textContent = text;
     document.getElementById('ov-last-note-author').textContent = card.noteAuthor;
-    document.getElementById('ov-last-note-date').textContent = card.noteDate;
+    setLastNoteDate(card.noteDate);
     input.value = '';
     toggleAddNoteBtn();
     renderNotes();
     renderActivityAndFiles();
     schedulePersist();
   }
-  // Notes history under the Notes section: every past note (kept as note-type
-  // Recent Activity entries), greyed to distinguish from the current note above.
+  // The " on <date>" clause is optional — an undated note should read "added by
+  // Usha", not "added by Usha on".
+  function setLastNoteDate(date) {
+    const on = document.getElementById('ov-last-note-on');
+    const el = document.getElementById('ov-last-note-date');
+    if (el) el.textContent = date || '';
+    if (on) on.style.display = date ? '' : 'none';
+  }
+
+  // Past notes are NOT listed here. They are already in Recent activity as
+  // note-type entries — rendering card.noteHistory as well put the same two notes
+  // on the page twice, about a thousand pixels apart, with nothing to say whether
+  // they were one record or two. The timeline is the one home for history; this
+  // section is the pinned current note plus the box to add the next one.
   function renderNotes() {
     const wrap = document.getElementById('ov-note-history');
-    if (!wrap) return;
-    const olds = card.noteHistory || [];
-    wrap.innerHTML = olds.map(function (n) {
-      return '<div class="ov-note-old">' +
-        '<div class="meta"><span class="note-ic">' + actIconSvgOnly('note') + '</span>Note added by ' + esc(n.author || 'Usha') + ' on ' + esc(n.date || '') + '</div>' +
-        '<span class="txt">' + esc(n.text) + '</span>' +
-      '</div>';
-    }).join('');
+    if (wrap) wrap.innerHTML = '';
   }
 
   function setContactField(i, field, val) { if (contacts[i]) { contacts[i][field] = val; onFieldChange(); } }
   function updateContactAvatar(i, input) {
-    const av = input.closest('.ov-contact').querySelector('.ov-contact-avatar');
+    const wrap = input.closest('.ov-contact');
+    const av = wrap && wrap.querySelector('.ov-contact-avatar');
     if (av) av.textContent = (input.value || '?').charAt(0).toUpperCase();
+    const nm = wrap && wrap.querySelector('.ov-contact-name');
+    if (nm) nm.textContent = input.value || 'Unnamed contact';
   }
-  // Field-visibility keys match opportunity-settings.html's STANDARD_FIELDS list.
+  // Expand one contact into its fields. The remove "×" sits outside this row so it
+  // can't be hit by accident while opening one.
+  function toggleContact(i, evt) {
+    if (evt) evt.stopPropagation();
+    const rows = document.querySelectorAll('#ov-contacts .ov-contact');
+    if (rows[i]) rows[i].classList.toggle('is-collapsed');
+  }
+  // Field keys match crm-schema.js, which is also what the settings page toggles.
   // "Contact name" only hides for additional contacts (per that page's own comment:
   // "Add contacts" doesn't hide the primary contact-person's own info fields) — it's
   // auto-added to hiddenFields whenever contactsEnabled is off, which is also exactly
   // when there can only ever be one (primary) contact anyway.
-  function fieldHidden(key) { return hiddenFields.indexOf(key) !== -1; }
+  function fieldHidden(key) { return !schema || !schema.on(key); }
+  function fieldLabel(key) { return schema ? schema.label(key) : key; }
   function renderContacts() {
     const wrap = document.getElementById('ov-contacts');
     wrap.innerHTML = '';
     contacts.forEach(function (c, i) {
       const row = document.createElement('div');
-      row.className = 'ov-contact';
+      // Collapsed by default. Three contacts used to render eighteen always-editable
+      // inputs — a quarter of the whole page, most of them empty — which is a
+      // bulk-edit screen sitting where a summary belongs. The inputs are unchanged
+      // underneath; they just wait until you ask for them.
+      row.className = 'ov-contact is-collapsed';
       const nameHidden = i > 0 && fieldHidden('contact-name');
       row.innerHTML =
         '<div class="ov-contact-top">' +
-          '<div class="crm-contact-avatar ov-contact-avatar" style="width:28px;height:28px;border-radius:50%;background:#8a9099;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;">' + ((c.name || '?').charAt(0).toUpperCase()) + '</div>' +
-          (nameHidden ? '' : '<input class="ds-input" placeholder="Name" value="' + esc(c.name) + '" style="width:calc(50% - 43px); box-sizing:border-box; flex:0 0 auto; min-width:90px; border:1px solid #d9dce1; border-radius:7px; padding:7px 9px; font-size:13px; font-weight:600;" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);">') +
-          (i === 0 ? '<span class="ds-badge ds-badge--accent ds-badge--pill">Contact person</span>' : '') +
+          '<div class="ov-contact-row" onclick="toggleContact(' + i + ', event)">' +
+            '<div class="crm-contact-avatar ov-contact-avatar" style="width:32px;height:32px;border-radius:50%;background:#8a9099;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex-shrink:0;">' + ((c.name || '?').charAt(0).toUpperCase()) + '</div>' +
+            '<div class="ov-contact-id">' +
+              '<span class="ov-contact-name">' + esc(c.name || 'Unnamed contact') + '</span>' +
+              (c.email ? '<span class="ov-contact-mail">' + esc(c.email) + '</span>' : '') +
+            '</div>' +
+            (i === 0 && schema && !schema.isPerson ? '<span class="ds-badge ds-badge--accent ds-badge--pill">Contact person</span>' : '') +
+            '<span class="ov-contact-caret"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.5 6.5L8 10l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
+          '</div>' +
           (contactsEnabled && contacts.length > 1 ? '<span class="ov-contact-x" onclick="removeContact(' + i + ')" title="Remove">&times;</span>' : '') +
         '</div>' +
+        (nameHidden ? '' : '<div class="ov-contact-grid ov-contact-namerow"><input class="ds-input" placeholder="Name" value="' + esc(c.name) + '" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);"></div>') +
         '<div class="ov-contact-grid">' +
-          (fieldHidden('contact-email') ? '' : '<input class="ds-input" placeholder="Email" value="' + esc(c.email) + '" oninput="setContactField(' + i + ',\'email\',this.value)">') +
-          (fieldHidden('contact-designation') ? '' : '<input class="ds-input" placeholder="Designation" value="' + esc(c.designation) + '" oninput="setContactField(' + i + ',\'designation\',this.value)">') +
-          (fieldHidden('contact-phone') ? '' : '<input class="ds-input" placeholder="Phone" value="' + esc(c.phone) + '" oninput="setContactField(' + i + ',\'phone\',this.value)">') +
-          (fieldHidden('contact-department') ? '' : '<input class="ds-input" placeholder="Department" value="' + esc(c.department) + '" oninput="setContactField(' + i + ',\'department\',this.value)">') +
-          (fieldHidden('contact-location') ? '' : '<input class="ds-input" placeholder="Location" value="' + esc(c.location) + '" oninput="setContactField(' + i + ',\'location\',this.value)">') +
-          (fieldHidden('contact-linkedin') ? '' : '<input class="ds-input" placeholder="LinkedIn" value="' + esc(c.linkedin) + '" oninput="setContactField(' + i + ',\'linkedin\',this.value)">') +
+          (fieldHidden('contact-email') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-email')) + '" value="' + esc(c.email) + '" oninput="setContactField(' + i + ',\'email\',this.value)">') +
+          (fieldHidden('contact-designation') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-designation')) + '" value="' + esc(c.designation) + '" oninput="setContactField(' + i + ',\'designation\',this.value)">') +
+          (fieldHidden('contact-phone') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-phone')) + '" value="' + esc(c.phone) + '" oninput="setContactField(' + i + ',\'phone\',this.value)">') +
+          (fieldHidden('contact-department') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-department')) + '" value="' + esc(c.department) + '" oninput="setContactField(' + i + ',\'department\',this.value)">') +
+          (fieldHidden('contact-location') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-location')) + '" value="' + esc(c.location) + '" oninput="setContactField(' + i + ',\'location\',this.value)">') +
+          (fieldHidden('contact-linkedin') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-linkedin')) + '" value="' + esc(c.linkedin) + '" oninput="setContactField(' + i + ',\'linkedin\',this.value)">') +
         '</div>' +
         '';
       wrap.appendChild(row);
     });
     const addLink = document.getElementById('ov-add-contact-link');
-    if (addLink) addLink.style.display = contactsEnabled ? '' : 'none';
+    // A person-subject record has exactly one person — itself — so there's
+    // no "additional contact" to add. Company-subject only, like contact-name.
+    if (addLink) addLink.style.display = (contactsEnabled && schema && !schema.isPerson) ? '' : 'none';
   }
   function addContact() {
     contacts.push({ name: '', email: '', designation: '', phone: '', department: '', location: '', linkedin: '' });
     renderContacts();
+    // A blank contact has nothing to summarise, so it opens straight into its fields.
+    const rows = document.querySelectorAll('#ov-contacts .ov-contact');
+    const last = rows[rows.length - 1];
+    if (last) { last.classList.remove('is-collapsed'); const f = last.querySelector('input'); if (f) f.focus(); }
   }
   function removeContact(i) { contacts.splice(i, 1); renderContacts(); onFieldChange(); }
 
@@ -1066,6 +1274,42 @@
   };
   function actIcon(type) { return '<span class="crm-act-ic ' + (type || '') + '"><svg viewBox="0 0 16 16" fill="none">' + (ACT_ICONS[type] || ACT_ICONS.task) + '</svg></span>'; }
   function actIconSvgOnly(type) { return '<svg width="12" height="12" viewBox="0 0 16 16" fill="none">' + (ACT_ICONS[type] || ACT_ICONS.email) + '</svg>'; }
+
+  // ── Is this date already behind us? ───────────────────────────────────────
+  // Activity dates are display strings, not timestamps — CLAUDE.md is explicit
+  // that the CRM does no date arithmetic. So this parses only the one shape that
+  // carries a real day ("Jul 30", "Jul 30, 3:00 PM") and leaves everything else
+  // alone. "Thu" and "Mon, 5pm" are genuinely ambiguous and stay unflagged rather
+  // than guessed at.
+  //
+  // Worth doing anyway because the unflagged case was actively wrong: Meridian
+  // showed a Jul 30 meeting under "Upcoming" a fortnight after it passed, styled
+  // exactly like a future one.
+  const MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  function looksPast(dateStr) {
+    const m = String(dateStr || '').trim().match(/^([A-Za-z]{3})[a-z]*\s+(\d{1,2})\b/);
+    if (!m) return false;
+    const mi = MONTHS.indexOf(m[1].toLowerCase());
+    if (mi === -1) return false;
+    const now = new Date();
+    const when = new Date(now.getFullYear(), mi, parseInt(m[2], 10), 23, 59, 59);
+    // A month far ahead of today is last year's; one far behind is this year's.
+    if (mi - now.getMonth() > 6) when.setFullYear(now.getFullYear() - 1);
+    return when < now;
+  }
+
+  // Position in the pipeline, drawn under the control that changes it. One
+  // segment per stage, filled up to the current one.
+  function renderStageBar() {
+    const host = document.getElementById('ov-stage-bar');
+    if (!host) return;
+    const stages = pipeline.stages || [];
+    const at = stages.findIndex(function (st) { return st.key === card.stage; });
+    host.innerHTML = stages.map(function (st, i) {
+      return '<span class="ov-seg' + (at > -1 && i <= at ? ' is-on' : '') +
+        '" title="' + esc(st.label || st.key) + '"></span>';
+    }).join('');
+  }
 
   function formatNextActivity(next) {
     if (next.label) return next.label + (next.date ? ' · ' + next.date : '');
@@ -1109,7 +1353,9 @@
           return '<div class="crm-activity-row' + (isOpenable ? ' clickable' : '') + '"' +
             (isOpenable ? ' onclick="openActivityDetail(\'upcoming\',' + i + ')"' : '') + '>' + iconHTML +
             '<div class="crm-activity-text">' + esc(a.text) + '</div>' +
-            (a.date ? '<div class="crm-activity-date' + (a.overdue ? ' overdue' : '') + '">' + esc(a.date) + '</div>' : '') +
+            (a.date
+              ? '<div class="crm-activity-date' + ((a.overdue || looksPast(a.date)) ? ' overdue' : '') + '">' + esc(a.date) + '</div>'
+              : '<div class="crm-activity-date is-undated">No date</div>') +
             '</div>';
         }).join('')
       : '<div class="crm-empty-state">No upcoming activity.</div>';
@@ -1351,6 +1597,13 @@
     if (m) m.classList.remove('open');
     document.removeEventListener('click', outsideActivityMenu);
   }
+  const ACT_LABELS = { followup: 'Follow-up on email', call: 'Schedule a call',
+                       booking: 'Send a booking link', task: 'Create a task' };
+
+  // Was two prompt() calls. In a sandboxed frame without allow-modals prompt()
+  // returns null without asking anything, so every item in this menu silently did
+  // nothing — which is what "not working" looked like. A draft row in the list
+  // needs no modal permission and lets you see what you are adding.
   function addActivity(kind) {
     closeActivityMenu();
     if (kind === 'note') {
@@ -1358,11 +1611,39 @@
       if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); input.focus(); }
       return;
     }
-    const LABELS = { followup: 'Follow-up on email', call: 'Schedule a call', booking: 'Send a booking link', task: 'Create a task' };
-    const text = prompt('What should this ' + (kind === 'task' ? 'task' : 'activity') + ' say?', LABELS[kind] || '');
-    if (text === null) return;
-    const date = prompt('When is it due? (e.g. "Fri", "Aug 12, 3pm")', '') || '';
-    upcomingActivityList().push({ type: kind, text: text.trim() || LABELS[kind], date: date.trim() });
+    const host = document.getElementById('ov-upcoming-activity');
+    if (!host || document.getElementById('ov-act-draft')) return;
+    const row = document.createElement('div');
+    row.className = 'ov-act-draft';
+    row.id = 'ov-act-draft';
+    row.innerHTML =
+      actIcon(kind === 'call' ? 'phone' : kind === 'booking' ? 'meeting' : kind === 'task' ? 'task' : 'email') +
+      '<input class="ds-input ov-act-draft-text" id="ov-act-draft-text" value="' + esc(ACT_LABELS[kind] || '') + '">' +
+      '<input class="ds-input ov-act-draft-date" id="ov-act-draft-date" placeholder="When? e.g. Fri">' +
+      '<button class="ds-btn ds-btn--primary ds-btn--sm" type="button" onclick="commitActivity(\'' + kind + '\')">Add</button>' +
+      '<button class="ds-btn ds-btn--ghost ds-btn--sm" type="button" onclick="cancelActivity()">Cancel</button>';
+    host.appendChild(row);
+    const text = document.getElementById('ov-act-draft-text');
+    text.focus(); text.select();
+    text.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); commitActivity(kind); }
+      if (e.key === 'Escape') { e.preventDefault(); cancelActivity(); }
+    });
+  }
+
+  function cancelActivity() {
+    const row = document.getElementById('ov-act-draft');
+    if (row) row.remove();
+  }
+
+  function commitActivity(kind) {
+    const textEl = document.getElementById('ov-act-draft-text');
+    const dateEl = document.getElementById('ov-act-draft-date');
+    if (!textEl) return;
+    const text = (textEl.value || '').trim() || ACT_LABELS[kind] || 'Activity';
+    const date = (dateEl && dateEl.value || '').trim();
+    upcomingActivityList().push({ type: kind, text: text, date: date });
+    cancelActivity();
     renderActivityAndFiles();
     schedulePersist();
   }
@@ -1370,6 +1651,22 @@
   function setCustomFieldValue(key, val) { customFieldValues[key] = val; onFieldChange(); }
   function customFieldValueHTML(f) {
     const val = esc(customFieldValues[f.key]);
+    // A field with a fixed set of answers should offer them. Free text on something
+    // like Renewal Risk collects "High", "high" and "Elevated" as three different
+    // values, which no filter or report can group.
+    if (f.type === 'select') {
+      const opts = (f.options || []).filter(Boolean);
+      const raw = customFieldValues[f.key] || '';
+      // An existing value that isn't in the list is kept and shown, rather than
+      // silently reset to blank when someone edits the options later.
+      const extra = raw && opts.indexOf(raw) === -1 ? [raw] : [];
+      return '<select class="ds-input" onchange="setCustomFieldValue(\'' + f.key + '\',this.value)">' +
+        '<option value=""' + (raw ? '' : ' selected') + '>Not set</option>' +
+        extra.concat(opts).map(function (o) {
+          return '<option value="' + esc(o) + '"' + (raw === o ? ' selected' : '') + '>' + esc(o) + '</option>';
+        }).join('') +
+      '</select>';
+    }
     if (f.type === 'date') return '<input class="ds-input" type="date" value="' + val + '" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">';
     if (f.type === 'number') return '<input class="ds-input" type="text" inputmode="numeric" placeholder="0" value="' + val + '" oninput="setCustomFieldValue(\'' + f.key + '\',this.value)">';
     if (f.type === 'amount') {
@@ -1387,18 +1684,16 @@
     const defs = pipeline.customFieldDefs || [];
     const wrap = document.getElementById('ov-custom-fields');
     const emptyEl = document.getElementById('ov-custom-fields-empty');
-    // Named for what this pipeline tracks — "Order fields" on an orders board,
-    // "Candidate fields" on a hiring one — since that's what the settings page
-    // this links to actually configures.
+    // Named for what this pipeline tracks — "Configure your candidate fields" on a
+    // hiring board — since that's what the settings page this links to configures.
     const entity = pipeline.entity || 'Record';
-    document.getElementById('ov-custom-fields-heading').textContent = entity + ' fields';
     document.getElementById('ov-configure-fields').textContent =
       'Configure your ' + entity.toLowerCase() + ' fields.';
     emptyEl.style.display = defs.length ? 'none' : '';
     emptyEl.textContent = 'No custom fields on ' + (pipeline.name || 'this pipeline') + ' yet.';
-    // Render custom fields with the same label+input treatment as the standard
-    // fields (a 2-column .ov-field grid), not a bordered box with bare inputs.
-    wrap.className = 'ov-field-grid';
+    // Stays display: contents (see .ov-fields-contents) so these land in the deal's
+    // own field grid beside Source, rather than starting a second grid.
+    wrap.className = 'ov-fields-contents';
     wrap.innerHTML = '';
     defs.forEach(function (f) {
       const field = document.createElement('div');
@@ -1478,6 +1773,14 @@
     }
   }
   function onFieldChange() { schedulePersist(); }
+
+  // Value is the number people scan for, so it carries separators at rest and
+  // drops them the moment you start editing.
+  function unformatValue(el) { el.value = String(el.value || '').replace(/,/g, ''); }
+  function formatValue(el) {
+    const n = Number(String(el.value || '').replace(/[^0-9.\-]/g, ''));
+    el.value = (el.value && isFinite(n)) ? n.toLocaleString('en-US') : el.value;
+  }
 
   // App switcher: toggle from the tab-switch button; close on outside click.
   (function initAppSwitcher() {

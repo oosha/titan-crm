@@ -217,22 +217,20 @@
   }
   .ai-rail.is-hidden { display: none; }
   .ai-head { display: flex; align-items: center; gap: 11px; padding: 15px 16px; border-bottom: 1px solid var(--dir-hair); flex-shrink: 0; }
+  /* The one hex left in this rail. #7a6ba3 is the assistant's mark colour and the
+     design system has no token for it — no purple ramp, nothing matching it. That
+     needs a token added, which is the system owner's call, not something to
+     invent here. The blue stop is --accent-primary and reads it properly. */
   .ai-mark {
-    width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; color: #fff;
+    width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; color: var(--text-on-accent);
     display: inline-flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, #2170f4, #7a6ba3);
+    background: linear-gradient(135deg, var(--accent-primary), #7a6ba3);
   }
   .ai-id { flex: 1; min-width: 0; }
   .ai-name { font-size: 14px; font-weight: 700; color: var(--dir-ink); display: flex; align-items: center; gap: 7px; }
-  .ai-pill { font-size: 9.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #7a6ba3; background: color-mix(in srgb, #7a6ba3 14%, #fff); padding: 2px 6px; border-radius: 5px; }
   .ai-sub { font-size: 11.5px; color: var(--dir-muted); margin-top: 1px; }
-  .ai-close { flex-shrink: 0; width: 28px; height: 28px; border: none; background: transparent; border-radius: 7px; color: var(--dir-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
-  .ai-close:hover { background: var(--dir-hair); color: var(--dir-ink); }
-  /* Quiet until wanted: the transcript now persists, so this is the only way to
-     deliberately drop one, but it shouldn't compete with the conversation. */
-  .ai-new { flex-shrink: 0; border: none; background: transparent; border-radius: 7px;
-    padding: 5px 8px; font: inherit; font-size: 12px; color: var(--dir-muted); cursor: pointer; }
-  .ai-new:hover { background: var(--dir-hair); color: var(--dir-ink); }
+  /* Close and New chat are ds-btn ghosts in the markup. All that is left here is
+     whether they show — the rest is the component's. */
   .ai-new[hidden] { display: none; }
 
   .ai-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
@@ -240,7 +238,7 @@
   .ai-msg.bot { align-self: flex-start; color: var(--dir-body); }
   .ai-msg.bot .bubble { background: var(--dir-canvas); border: 1px solid var(--dir-hair); border-radius: 4px 13px 13px 13px; padding: 10px 13px; }
   .ai-msg.me { align-self: flex-end; }
-  .ai-msg.me .bubble { background: var(--dir-accent); color: #fff; border-radius: 13px 13px 4px 13px; padding: 10px 13px; }
+  .ai-msg.me .bubble { background: var(--dir-accent); color: var(--text-on-accent); border-radius: 13px 13px 4px 13px; padding: 10px 13px; }
   .bubble p { margin: 0; }
   .bubble p + p { margin-top: 7px; }
   .bubble b { font-weight: 700; }
@@ -292,41 +290,14 @@
   .ai-act-arrow { color: var(--dir-faint); margin: 0 5px; }
   .ai-act-note { font-size: 12.5px; line-height: 1.5; color: var(--dir-ink); white-space: pre-wrap; padding: 8px 0 2px; }
   .ai-act-foot { display: flex; align-items: center; gap: 8px; padding: 10px 13px; border-top: 1px solid var(--dir-hair); background: var(--dir-canvas); }
-  .ai-act-apply {
-    font: inherit; font-size: 12.5px; font-weight: 650; color: #fff; background: var(--dir-accent);
-    border: none; border-radius: 8px; padding: 7px 14px; cursor: pointer;
-  }
-  .ai-act-apply:hover { background: #1b5fd0; }
-  .ai-act-apply:disabled { opacity: 0.5; cursor: default; }
-  .ai-act-skip {
-    font: inherit; font-size: 12.5px; color: var(--dir-muted); background: none;
-    border: none; padding: 7px 4px; cursor: pointer;
-  }
-  .ai-act-skip:hover { color: var(--dir-ink); }
-  .ai-act-state { font-size: 12px; margin-left: auto; }
-  .ai-act-state.ok { color: #1f7a42; font-weight: 600; }
-  .ai-act-state.err { color: #b42318; }
-  .ai-act-card.is-done { border-left-color: #1f7a42; }
-  .ai-act-card.is-dropped { border-left-color: var(--dir-faint); opacity: 0.6; }
-  .ai-act-card.is-failed { border-left-color: #b42318; }
-  /* Undo is the safety net for a change that saved without asking, and View is
-     how you check it landed on the right record — both read as real controls,
-     not text links tucked under the card. Matched styling because they are a
-     pair; one is a button and the other a link only because of what they do. */
-  .ai-act-undo, .ai-act-view {
-    border: 1px solid var(--dir-line); background: var(--dir-surface); color: var(--dir-ink);
-    border-radius: 6px; padding: 5px 11px; font: inherit; font-size: 12.5px; font-weight: 600;
-    cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
-  }
-  .ai-act-undo:hover, .ai-act-view:hover { background: var(--dir-canvas); border-color: var(--dir-muted); }
+  /* Apply / Discard / Undo / View are ds-btn in the markup. What stays here is
+     where the status sits and what the stripe means — both page layout. */
+  .ai-act-state { margin-left: auto; }
+  .ai-act-card.is-done { border-left-color: var(--status-success); }
+  .ai-act-card.is-dropped { border-left-color: var(--border-default); opacity: 0.6; }
+  .ai-act-card.is-failed { border-left-color: var(--status-danger); }
   .ai-link { width: 100%; align-self: stretch; }
-  .ai-link-btn {
-    display: inline-block; text-decoration: none;
-    border: 1px solid var(--dir-line); background: var(--dir-surface); color: var(--dir-ink);
-    border-radius: 6px; padding: 6px 12px; font-size: 12.5px; font-weight: 600;
-  }
-  .ai-link-btn:hover { background: var(--dir-canvas); border-color: var(--dir-muted); }
-  .ai-link-steps { font-size: 12px; line-height: 1.5; color: var(--dir-muted); margin-top: 6px; }
+  .ai-link-steps { font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); margin-top: var(--space-075); }
 
   .ai-typing { display: inline-flex; gap: 4px; padding: 12px 14px; background: var(--dir-canvas); border: 1px solid var(--dir-hair); border-radius: 4px 13px 13px 13px; }
   .ai-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--dir-faint); animation: ai-blink 1.2s infinite both; }
@@ -335,17 +306,22 @@
   @keyframes ai-blink { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }
 
   .ai-chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 16px 12px; flex-shrink: 0; }
-  .ai-chip { font: inherit; font-size: 12px; font-weight: 600; color: var(--dir-body); background: var(--dir-surface); border: 1px solid var(--dir-line); border-radius: 999px; padding: 6px 11px; cursor: pointer; }
-  .ai-chip:hover { border-color: var(--dir-accent); color: var(--dir-accent); background: var(--dir-accent-soft); }
+  /* ds-btn--secondary + ds-btn--sm in the markup. A chip is that button with a
+     pill radius and room to wrap onto a second line — a call-site adjustment,
+     not a new control. */
+  /* min-height rather than height: a chip matches the other small buttons on one
+     line, but a long suggestion has to be able to wrap rather than overflow. */
+  .ai-chip { border-radius: 999px; white-space: normal; height: auto; min-height: var(--btn-height-sm);
+    padding-top: var(--space-050); padding-bottom: var(--space-050); }
 
   .ai-input { display: flex; align-items: flex-end; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--dir-hair); flex-shrink: 0; }
   .ai-input textarea {
     flex: 1; resize: none; font: inherit; font-size: 13px; color: var(--dir-body); line-height: 1.4;
     border: 1px solid var(--dir-line); border-radius: 11px; padding: 9px 12px; outline: none; max-height: 96px; background: var(--dir-surface);
   }
-  .ai-input textarea:focus { border-color: var(--dir-accent); box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
-  .ai-send { flex-shrink: 0; width: 38px; height: 38px; border: none; border-radius: 11px; background: var(--dir-accent); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
-  .ai-send:hover { background: #1b5fd0; }
+  .ai-input textarea:focus { border-color: var(--border-focus); box-shadow: var(--focus-ring); }
+  /* ds-btn--primary + ds-btn--icon in the markup; the softer radius is this rail's. */
+  .ai-send { border-radius: 11px; }
   .ai-send:disabled { opacity: 0.45; cursor: default; }
 
   /* Below this the rail would crush the bento, so it collapses to a floating
@@ -418,11 +394,11 @@
             </svg>
           </span>
           <div class="ai-id">
-            <div class="ai-name">Ask Titan <span class="ai-pill">Beta</span></div>
+            <div class="ai-name">Ask Titan <span class="ds-badge ds-badge--purple">Beta</span></div>
             <div class="ai-sub">Your pipeline copilot</div>
           </div>
-          <button class="ai-new" id="ai-new" type="button" title="Start a new chat">New chat</button>
-          <button class="ai-close" id="ai-close" type="button" aria-label="Hide assistant">
+          <button class="ai-new ds-btn ds-btn--ghost ds-btn--sm" id="ai-new" type="button" title="Start a new chat">New chat</button>
+          <button class="ai-close ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm" id="ai-close" type="button" aria-label="Hide assistant">
             <span data-ds-icon="close" data-size="13"></span>
           </button>
         </div>
@@ -430,7 +406,7 @@
         <div class="ai-chips" id="ai-chips"></div>
         <form class="ai-input" id="ai-form">
           <textarea id="ai-text" rows="1" placeholder="Ask about your pipeline…" aria-label="Message Titan"></textarea>
-          <button class="ai-send" id="ai-send" type="submit" aria-label="Send" disabled>
+          <button class="ai-send ds-btn ds-btn--primary ds-btn--icon" id="ai-send" type="submit" aria-label="Send" disabled>
             <span data-ds-icon="forward" data-size="16"></span>
           </button>
         </form>
@@ -440,6 +416,8 @@
 </div>
 
 <script src="/design-system/components/icon.js"></script>
+<script src="/crm-schema.js"></script>
+<script src="/crm-status.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
 <script>
@@ -588,7 +566,24 @@
     return out;
   }
   function terminalKey(pl) { const s = pl.stages || []; return s.length ? s[s.length - 1].key : null; }
-  function isClosed(entry) { return entry.card.stage === terminalKey(entry.pipeline); }
+
+  // Outcome, not position. Stage is how far a record got; status is how it ended,
+  // and they are independent — a deal can sit in the last stage still open, and can
+  // be Lost from anywhere. This used to count "in the last stage" as finished, which
+  // scored a Closed-and-Lost deal as a win and left a Lost deal parked mid-board
+  // inflating the open pipeline. Read the outcome instead.
+  function toneOf(entry) {
+    // A pipeline with the status field switched off has no outcomes, so its records
+    // all read as open rather than counting toward a rate they can't express.
+    if (!window.titanSchema.on(entry.pipeline, 'status')) return 'open';
+    const entity = entry.pipeline.entity;
+    return titanStatus.toneOf(entity, titanStatus.current(entry.card, entity));
+  }
+  function isOpen(entry) { return toneOf(entry) === 'open'; }
+  function isWon(entry)  { return toneOf(entry) === 'positive'; }
+  function isLost(entry) { return toneOf(entry) === 'negative'; }
+  // 'paused' (a project On hold) is deliberately none of the three: not active, not
+  // an outcome. It stays in totals and out of the rate rather than skewing either.
   function stageLabel(pl, key) {
     return (pl.stages || []).reduce(function (acc, s) { return s.key === key ? s.label : acc; }, key || '');
   }
@@ -632,12 +627,12 @@
   // two figures in their head to compare belongs in a chart below, not up here.
   function kpiTiles() {
     const all = scopedCards();
-    const open = all.filter(function (e) { return !isClosed(e); });
-    const closed = all.filter(isClosed);
+    const open = all.filter(isOpen);
+    const won = all.filter(isWon), lost = all.filter(isLost);
     const pl = scopedPipelines()[0];
-    // The last stage is the finish line, whatever this pipeline calls it —
-    // "Closed" on a sales board, "Hired" on a hiring one.
-    const endLabel = pl ? stageLabel(pl, terminalKey(pl)) : 'Closed';
+    // The winning outcome in this pipeline's own words — "Won" on a sales board,
+    // "Hired" on a hiring one, "Fulfilled" on orders.
+    const endLabel = titanStatus.positiveOf(pl && pl.entity);
 
     function kpi(o) {
       return '<div class="tile kpi" style="--accent:' + o.accent + '">' +
@@ -648,10 +643,14 @@
     // The completion rate as a number rather than a ring: "win rate" on a sales
     // board, "hire rate" on a hiring one. It replaced an Overdue count, which read
     // off a hand-authored boolean nothing in the app computes.
+    // Out of *settled* records, not out of every record — a full pipeline of live
+    // deals shouldn't drag the win rate down, since none of them have lost yet.
     const rateLabel = activeType().rateLabel;
-    const ratePct = all.length ? Math.round((closed.length / all.length) * 100) : 0;
+    const settled = won.length + lost.length;
+    const ratePct = settled ? Math.round((won.length / settled) * 100) : 0;
     const rateTile = kpi({ label: rateLabel, accent: C_RATE,
-      value: ratePct + '%', sub: closed.length + ' of ' + all.length + ' reached the end' });
+      value: settled ? ratePct + '%' : '—',
+      sub: settled ? won.length + ' of ' + settled + ' settled' : 'nothing settled yet' });
 
     if (!hasMoney()) {
       // No amounts on this kind of pipeline, so the headline is where records are.
@@ -664,7 +663,7 @@
         lastOpen ? kpi({ label: lastOpen.label, accent: C_AVG,
           value: String(inLast.length), sub: 'nearly there' }) : '',
         kpi({ label: endLabel, accent: C_WON,
-          value: String(closed.length), sub: 'reached the end' }),
+          value: String(won.length), sub: 'of ' + all.length + ' total' }),
         rateTile,
       ].join('');
     }
@@ -677,7 +676,7 @@
       kpi({ label: 'Open amount', accent: C_OPEN,
         value: moneyText(moneyByCurrency(open)), sub: open.length + ' open' }),
       kpi({ label: endLabel + ' amount', accent: C_WON,
-        value: moneyText(moneyByCurrency(closed)), sub: closed.length + ' ' + endLabel.toLowerCase() }),
+        value: moneyText(moneyByCurrency(won)), sub: won.length + ' ' + endLabel.toLowerCase() }),
       kpi({ label: 'Avg amount', accent: C_AVG,
         value: cur + avg.toLocaleString(), sub: 'per ' + noun(1) }),
       rateTile,
@@ -744,7 +743,7 @@
     const money = hasMoney();
     const title = money ? 'Open amount by pipeline' : 'Open ' + noun(2) + ' by pipeline';
     const segs = pls.map(function (pl) {
-      const open = (pl.cards || []).filter(function (c) { return c.stage !== terminalKey(pl); });
+      const open = (pl.cards || []).filter(function (c) { return isOpen({ card: c, pipeline: pl }); });
       return { name: pl.name, color: pl.color || C_OPEN,
         value: money ? open.reduce(function (a, c) { return a + (Number(c.value) || 0); }, 0) : open.length,
         cur: money ? ((open[0] && open[0].currency) || window.defaultCurrency()) : '' };
@@ -775,7 +774,7 @@
 
   // ── Amount histogram (open records) ─────────────────────────────────────────
   function distributionTile(span) {
-    const open = scopedCards().filter(function (e) { return !isClosed(e); });
+    const open = scopedCards().filter(isOpen);
     if (!open.length) return '';
     const cur = dominantCurrency(open);
     const buckets = [
@@ -906,7 +905,7 @@
   // waiting on you: overdue first, then furthest along.
   function topTile(span) {
     const money = hasMoney();
-    const open = scopedCards().filter(function (e) { return !isClosed(e); });
+    const open = scopedCards().filter(isOpen);
     if (!open.length) return '';
 
     let rows, title, max = 1;
@@ -1095,9 +1094,11 @@
   // the biggest amount on a sales board, the busiest stage on one without amounts.
   function aiRead() {
     const money = hasMoney();
-    const all = scopedCards(), open = all.filter(function (e) { return !isClosed(e); }), closed = all.filter(isClosed);
+    const all = scopedCards(), open = all.filter(isOpen);
+    const closed = all.filter(isWon), lost = all.filter(isLost);
     const overdue = open.filter(function (e) { return e.card.overdue; });
-    const rate = all.length ? Math.round((closed.length / all.length) * 100) : 0;
+    const settled = closed.length + lost.length;
+    const rate = settled ? Math.round((closed.length / settled) * 100) : 0;
     const top = money
       ? (open.slice().sort(function (a, b) { return (Number(b.card.value) || 0) - (Number(a.card.value) || 0); })[0] || null)
       : (overdue[0] || open[0] || null);
@@ -1179,7 +1180,7 @@
     // Navigating in place is fine now that the transcript survives a page load —
     // coming back leaves the conversation, and this card, where they were.
     const view = (a.pipelineId && a.recordId)
-      ? '<a class="ai-act-view" href="' + esc(window.crmPath('/crm/pipeline/' +
+      ? '<a class="ai-act-view ds-btn ds-btn--secondary ds-btn--sm" href="' + esc(window.crmPath('/crm/pipeline/' +
           encodeURIComponent(a.pipelineId) + '/record/' + encodeURIComponent(a.recordId))) + '">View</a>'
       : '';
 
@@ -1187,27 +1188,27 @@
     if (s === 'done') {
       // Undo is the whole reason this saved without asking, so it is a real
       // button rather than a quiet link.
-      foot = (a.undo ? '<button class="ai-act-undo" type="button" data-undo="' + idx + '">Undo</button>' : '') +
+      foot = (a.undo ? '<button class="ai-act-undo ds-btn ds-btn--secondary ds-btn--sm" type="button" data-undo="' + idx + '">Undo</button>' : '') +
         view +
         (m.error
-          ? '<div class="ai-act-state err">' + esc(m.error) + '</div>'
-          : '<div class="ai-act-state ok">Saved</div>');
+          ? '<div class="ai-act-state ds-badge ds-badge--danger">' + esc(m.error) + '</div>'
+          : '<div class="ai-act-state ds-badge ds-badge--success">Saved</div>');
     } else if (s === 'undoing') {
-      foot = '<div class="ai-act-state">Undoing…</div>';
+      foot = '<div class="ai-act-state ds-badge">Undoing…</div>';
     } else if (s === 'undone') {
-      foot = view + '<div class="ai-act-state">Undone</div>';
+      foot = view + '<div class="ai-act-state ds-badge">Undone</div>';
     } else if (s === 'dropped') {
-      foot = '<div class="ai-act-state">Discarded</div>';
+      foot = '<div class="ai-act-state ds-badge">Discarded</div>';
     } else if (s === 'failed') {
-      foot = '<div class="ai-act-state err">' + esc(m.error || 'Couldn’t save that.') + '</div>';
+      foot = '<div class="ai-act-state ds-badge ds-badge--danger">' + esc(m.error || 'Couldn’t save that.') + '</div>';
     } else {
       // Legacy only — see the note above this function.
       const busy = s === 'busy';
       foot =
-        '<button class="ai-act-apply" type="button" data-apply="' + idx + '"' + (busy ? ' disabled' : '') + '>' +
+        '<button class="ds-btn ds-btn--primary ds-btn--sm" type="button" data-apply="' + idx + '"' + (busy ? ' disabled' : '') + '>' +
           (busy ? 'Saving…' : (isNote ? 'Add note' : 'Apply change')) + '</button>' +
-        '<button class="ai-act-skip" type="button" data-skip="' + idx + '">Discard</button>' +
-        (m.error ? '<div class="ai-act-state err">' + esc(m.error) + '</div>' : '');
+        '<button class="ds-btn ds-btn--ghost ds-btn--sm" type="button" data-skip="' + idx + '">Discard</button>' +
+        (m.error ? '<div class="ai-act-state ds-badge ds-badge--danger">' + esc(m.error) + '</div>' : '');
     }
 
     return '<div class="ai-msg ai-act">' +
@@ -1232,7 +1233,7 @@
     // crmPath carries the ?u= persona through, which every CRM link here needs.
     const href = window.crmPath(link.path);
     return '<div class="ai-msg ai-link">' +
-      '<a class="ai-link-btn" href="' + esc(href) + '">' + esc(link.label) + ' →</a>' +
+      '<a class="ds-btn ds-btn--secondary ds-btn--sm" href="' + esc(href) + '">' + esc(link.label) + ' →</a>' +
       (link.steps ? '<div class="ai-link-steps">' + esc(link.steps) + '</div>' : '') +
       '</div>';
   }
@@ -1249,7 +1250,7 @@
   }
   function renderChips() {
     document.getElementById('ai-chips').innerHTML = CHIPS.map(function (c) {
-      return '<button class="ai-chip" type="button">' + esc(c) + '</button>';
+      return '<button class="ai-chip ds-btn ds-btn--secondary ds-btn--sm" type="button">' + esc(c) + '</button>';
     }).join('');
   }
   // Only the spoken turns go back to the model — the greeting is computed

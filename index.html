@@ -5480,6 +5480,7 @@
   </style>
 
   <script src="/crm-owner.js"></script>
+<script src="/crm-schema.js"></script>
   <script>
 
     // ── Company logo (favicon of the company's own domain) — mirrors crm.html ──
@@ -5511,9 +5512,31 @@
     }
     // Goes through our own /api/logo, which turns "no icon for this domain" into a
     // real 404 so the initial-fallback below actually fires (see api/logo.js).
+    // On a person-subject pipeline the company field is off, so the panel drops the
+    // logo/name/separator and keeps just the amount — otherwise the mailbox would
+    // still be showing a company the record page has already hidden.
+    function applyPanelSubject(rec) {
+      // Callers pass either a panel record (has .key) or a bare card, so fall back to
+      // panelRecord the way renderPanelOwner does.
+      const key = (rec && rec.key) || (panelRecord && panelRecord.key) || null;
+      const pl = (REAL_PIPELINES && key && REAL_PIPELINES[key]) || null;
+      const person = !!pl && window.titanSchema.isPerson(pl);
+      const row = document.querySelector('.crm-opp-meta-row');
+      if (row) {
+        const dot = row.querySelector('.dot');
+        if (dot) dot.style.display = person ? 'none' : '';
+      }
+      ['crm-company-logo', 'crm-company'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = person ? 'none' : '';
+      });
+      return person;
+    }
+
     function renderCompanyLogoPanel(rec) {
       const el = document.getElementById('crm-company-logo');
       if (!el) return;
+      if (applyPanelSubject(rec)) { el.innerHTML = ''; return; }
       const name = String((rec && rec.company) || '').trim();
       if (!name) { el.innerHTML = ''; return; }
       const domain = companyDomainFor(rec);
