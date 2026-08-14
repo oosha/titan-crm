@@ -3765,21 +3765,28 @@
     }
 
     // ── Add team: invite a teammate from a dummy directory ──
-    // Dummy directory only (prototype has no real org roster). Mostly the signed-in
-    // account's own domain (avontechlabs.com, see account-active-email); Usha is the
-    // exception, for the reason noted on her entry.
-    const TEAM_DIRECTORY = [
-      // Usha keeps the titan.email address she already has elsewhere in the app
-      // (she's the default record creator and note author, and an attendee on the
-      // record page's meetings). Owners are matched by email, so giving her a
-      // second @avontechlabs.com identity here would make those two people.
-      { name: 'Usha Loutongbam', email: 'usha@titan.email' },
+    // Dummy directory only (prototype has no real org roster) — each persona's
+    // colleagues are on that persona's own domain, since a roster is an org's, not
+    // the app's. teamDirectory() picks the right one for whoever is signed in.
+    const TEAM_DIRECTORY_DEFAULT = [
+      { name: 'Usha Loutongbam', email: 'usha.loutongbam@avontechlabs.com' },
       { name: 'Sam Mathews', email: 'sam.mathews@avontechlabs.com' },
       { name: 'Priya Nair', email: 'priya.nair@avontechlabs.com' },
       { name: 'Marcus Chen', email: 'marcus.chen@avontechlabs.com' },
       { name: 'Elena Rodriguez', email: 'elena.rodriguez@avontechlabs.com' },
       { name: 'Tariq Hassan', email: 'tariq.hassan@avontechlabs.com' },
     ];
+    // Personas whose colleagues aren't the default account's. A persona listed here
+    // replaces the list rather than adding to it — the default roster is Avontech
+    // Labs staff, who don't work at another persona's company.
+    const TEAM_DIRECTORY_BY_PERSONA = {
+      anon: [
+        { name: 'Rahul Dwivedi', email: 'rahul.dwivedi@neo.space' },
+      ],
+    };
+    function teamDirectory() {
+      return TEAM_DIRECTORY_BY_PERSONA[window.PERSONA_ID] || TEAM_DIRECTORY_DEFAULT;
+    }
     function atEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
     function atInitials(name) { return String(name || '?').trim().charAt(0).toUpperCase() || '?'; }
 
@@ -3810,7 +3817,7 @@
     function atRenderDropdown(q) {
       const pl = PIPELINES[atPipelineKey];
       const already = (pl.team || []).map(function (p) { return p.email; });
-      atCurrentMatches = TEAM_DIRECTORY.filter(function (p) {
+      atCurrentMatches = teamDirectory().filter(function (p) {
         if (already.indexOf(p.email) !== -1) return false;
         if (!q) return true;
         return p.name.toLowerCase().indexOf(q) !== -1 || p.email.toLowerCase().indexOf(q) !== -1;
