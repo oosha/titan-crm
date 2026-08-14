@@ -176,6 +176,27 @@
   .ov-act-draft .ov-act-draft-text { flex: 1; min-width: 0; }
   .ov-act-draft .ov-act-draft-date { width: 140px; flex-shrink: 0; }
 
+  /* Actions live top-right, beside the record's name — where you look to act on
+     the thing you just identified, not at the bottom of a list. */
+  .ov-title-actions { display: flex; align-items: center; gap: var(--space-075); flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .ov-more-wrap { position: relative; }
+  .ov-more-menu {
+    display: none; position: absolute; right: 0; top: calc(100% + var(--space-075));
+    min-width: 260px; z-index: 40; padding: var(--space-075);
+    background: var(--surface-primary); border: 1px solid var(--border-subtle);
+    border-radius: 10px; box-shadow: var(--elevation-menu);
+  }
+  .ov-more-menu.open { display: block; }
+  .ov-more-item {
+    display: flex; align-items: center; gap: var(--space-100); width: 100%; text-align: left;
+    padding: var(--space-100) var(--space-125); border: none; background: none; border-radius: 7px;
+    font: inherit; font-size: var(--text-sm); color: var(--text-primary); cursor: pointer;
+  }
+  .ov-more-item:hover { background: var(--surface-hover); }
+  .ov-more-check { cursor: pointer; }
+  .ov-more-check input { flex-shrink: 0; }
+  .ov-key .ov-owner-select { width: 100%; }
+
   .ov-pick-search { width: 100%; margin-bottom: var(--space-150); }
   .ov-pick-list { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; }
   .ov-pick-row {
@@ -527,11 +548,44 @@
         <div class="ov-section ds-card ds-card--section">
           <div class="ov-title-row">
             <input class="ds-input ds-input--inline ov-title-input" id="ov-name" placeholder="Opportunity name" oninput="onFieldChange()">
-            <button class="ov-ai-btn ds-btn ds-btn--soft ds-btn--sm" id="ov-ai-btn" type="button"
-                    onclick="toggleAiSummary()" aria-expanded="false" aria-controls="ov-ai-card">
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
-              AI summary
-            </button>
+            <div class="ov-title-actions">
+              <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actEmail()" title="Write an email to this record's contacts">
+                <span data-ds-icon="mail" data-size="15"></span> Email
+              </button>
+              <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actCall()" title="Schedule a call">
+                <span data-ds-icon="phone" data-size="15"></span> Call
+              </button>
+              <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actBooking()" title="Send a booking link">
+                <span data-ds-icon="calendar" data-size="15"></span> Booking link
+              </button>
+              <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actNote()">
+                <span data-ds-icon="drafts" data-size="15"></span> Note
+              </button>
+              <button class="ov-ai-btn ds-btn ds-btn--soft ds-btn--sm" id="ov-ai-btn" type="button"
+                      onclick="toggleAiSummary()" aria-expanded="false" aria-controls="ov-ai-card">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
+                AI summary
+              </button>
+              <!-- Settings-shaped things that were sitting in the middle of the record:
+                   a "Missing a field?" link between two field rows, and a checkbox
+                   about activity linking under everything. Neither is part of reading
+                   or editing this deal, so both live behind the overflow. -->
+              <div class="ov-more-wrap">
+                <button class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm" id="ov-more-btn" type="button"
+                        aria-label="More options" aria-expanded="false" onclick="toggleMoreMenu(event)">
+                  <span data-ds-icon="more" data-size="16"></span>
+                </button>
+                <div class="ov-more-menu" id="ov-more-menu">
+                  <button class="ov-more-item" type="button" onclick="openRecordSettings()">
+                    <span id="ov-configure-fields">Configure fields</span>
+                  </button>
+                  <label class="ov-more-item ov-more-check">
+                    <input type="checkbox" id="ov-autolink" checked onchange="onFieldChange()">
+                    <span>Auto-link contacts' activity to this <span id="ov-autolink-entity">opportunity</span></span>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="ov-ai-card" id="ov-ai-card">
             <div class="ov-ai-head">
@@ -544,10 +598,7 @@
           <div class="ov-meta-row">
             <span id="ov-company-logo"></span>
             <input class="ds-input ds-input--inline ov-company-input" id="ov-company" data-field="company" placeholder="Company" oninput="onFieldChange()">
-            <span class="ov-owner">
-              <span class="ov-value-label">Owner</span>
-              <select class="ds-input ds-input--inline ov-owner-select" id="ov-owner" onchange="onOwnerChange()"></select>
-            </span>
+
           </div>
           <div class="ov-created-by" id="ov-created-by"></div>
 
@@ -594,29 +645,17 @@
               </div>
             </div>
 
+            <!-- "Owner" beside a company name reads as who owns the company. This is
+                 the colleague carrying the deal, so it says so. -->
+            <div class="ov-key">
+              <div class="ov-key-label">Assigned to</div>
+              <select class="ds-input ov-key-input ov-owner-select" id="ov-owner" onchange="onOwnerChange()"></select>
+            </div>
+
             <div class="ov-key" data-field="close-date">
               <div class="ov-key-label"><span class="ov-field-label-text" id="ov-close-label">Expected close date</span></div>
               <input class="ds-input ov-key-input" id="ov-close-date" type="date" oninput="onFieldChange()">
             </div>
-          </div>
-
-          <!-- Things you DO, as opposed to fields you edit. They were buried in an
-               "+ Add activity" menu at the bottom of a list, which is the wrong
-               shape twice over: writing an email is not an entry in a to-do list,
-               and the list is not where you go looking to start one. -->
-          <div class="ov-actions" id="ov-actions">
-            <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actEmail()">
-              <span data-ds-icon="mail" data-size="15"></span> Email
-            </button>
-            <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actCall()">
-              <span data-ds-icon="phone" data-size="15"></span> Schedule a call
-            </button>
-            <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actBooking()">
-              <span data-ds-icon="calendar" data-size="15"></span> Send booking link
-            </button>
-            <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actNote()">
-              <span data-ds-icon="drafts" data-size="15"></span> Note
-            </button>
           </div>
 
           <!-- Source and the pipeline's own custom fields are all deal attributes, so
@@ -630,15 +669,6 @@
             <div id="ov-custom-fields" class="ov-fields-contents"></div>
           </div>
           <div class="ov-field-empty" id="ov-custom-fields-empty" style="display:none;"></div>
-          <div class="ov-field-hint">
-            <span id="ov-configure-fields-lead">Missing a field?</span>
-            <span class="ov-add-link" id="ov-configure-fields" onclick="openRecordSettings()"></span>
-          </div>
-
-          <label class="ov-autolink-row">
-            <input type="checkbox" id="ov-autolink" checked onchange="onFieldChange()">
-            <span>Automatically link all activity with contacts to this <span id="ov-autolink-entity">opportunity</span></span>
-          </label>
         </div>
 
         <!-- The company's own details, in their own box. They describe Meridian Labs
@@ -1064,6 +1094,25 @@
   // one-line summary from the record's own data instead (contact, company, stage,
   // value, latest note), which is both true parity (the same toggleable AI-summary
   // affordance) and "more" (it actually reflects the record you're looking at).
+  function toggleMoreMenu(evt) {
+    if (evt) evt.stopPropagation();
+    const m = document.getElementById('ov-more-menu');
+    const btn = document.getElementById('ov-more-btn');
+    const open = m.classList.toggle('open');
+    btn.setAttribute('aria-expanded', String(open));
+    if (open) setTimeout(function () { document.addEventListener('click', outsideMoreMenu); }, 0);
+    else document.removeEventListener('click', outsideMoreMenu);
+  }
+  function outsideMoreMenu(e) {
+    const m = document.getElementById('ov-more-menu');
+    // The checkbox inside the menu must not close it out from under the click.
+    if (m && !m.contains(e.target)) {
+      m.classList.remove('open');
+      document.getElementById('ov-more-btn').setAttribute('aria-expanded', 'false');
+      document.removeEventListener('click', outsideMoreMenu);
+    }
+  }
+
   function toggleAiSummary() {
     const cardEl = document.getElementById('ov-ai-card');
     const btn = document.getElementById('ov-ai-btn');
@@ -1472,9 +1521,7 @@
             ? '<span class="crm-act-check" onclick="toggleActTask(' + i + ')" title="Mark done"><span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l2.6 2.6L11.8 5" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>'
             : actIcon(a.type);
           // Email/meeting rows open detail (mailclient, or a modal here) on click.
-          const isOpenable = a.type === 'email' || a.type === 'meeting';
-          return '<div class="crm-activity-row' + (isOpenable ? ' clickable' : '') + '"' +
-            (isOpenable ? ' onclick="openActivityDetail(\'upcoming\',' + i + ')"' : '') + '>' + iconHTML +
+          return '<div class="crm-activity-row clickable" onclick="openActivityDetail(\'upcoming\',' + i + ')">' + iconHTML +
             '<div class="crm-activity-text">' + esc(a.text) + '</div>' +
             (a.date
               ? '<div class="crm-activity-date' + ((a.overdue || looksPast(a.date)) ? ' overdue' : '') + '">' + esc(a.date) + '</div>'
@@ -1499,9 +1546,7 @@
             ? '<div class="crm-activity-snippet crm-snippet-link">' + actIconSvgOnly('email') + '<span>' + esc(a.snippetLink) + '</span></div>'
             : ((a.snippet || (isNote && a.text)) ? '<div class="crm-activity-snippet">' + esc(a.snippet || a.text) + '</div>' : '');
           // Email/meeting rows open detail (mailclient, or a modal here) on click.
-          const isOpenable = a.type === 'email' || a.type === 'meeting';
-          return '<div class="crm-activity-row' + (isOpenable ? ' clickable' : '') + '"' +
-            (isOpenable ? ' onclick="openActivityDetail(\'recent\',' + i + ')"' : '') + '>' + actIcon(a.type) +
+          return '<div class="crm-activity-row clickable" onclick="openActivityDetail(\'recent\',' + i + ')">' + actIcon(a.type) +
             '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + title + '</div>' + snippetHTML + '</div>' +
             (a.date ? '<div class="crm-activity-date">' + esc(a.date) + '</div>' : '') +
             '</div>';
@@ -1561,14 +1606,32 @@
     const list = listKind === 'upcoming' ? upcomingActivityList() : (card.recentActivities || []);
     const a = list[i];
     if (!a) return;
-    if (a.type === 'email') {
+    if (a.type === 'email' || a.type === 'followup') {
       // Own email -> go read it for real in the mailclient; someone else's -> show it
       // here instead of navigating away from the record.
       if (isCurrentUser(a.author)) location.href = '/mail' + location.search;
       else openEmailModal(a);
-    } else if (a.type === 'meeting') {
+    } else if (a.type === 'meeting' || a.type === 'booking') {
       openMeetingModal(a);
+    } else {
+      // Notes, calls and tasks had no detail view, so two thirds of the feed
+      // looked inert. They carry less than an email does, but "who, when, and
+      // what it said" is exactly what you click a log entry to find out.
+      openSimpleActivityModal(a);
     }
+  }
+
+  function openSimpleActivityModal(a) {
+    const isNote = a.type === 'note';
+    const kind = isNote ? 'Note' : a.type === 'phone' || a.type === 'call' ? 'Call' : 'Task';
+    const who = a.author || NOTE_AUTHOR;
+    document.getElementById('ov-email-modal-subject').textContent =
+      isNote ? 'Note' : (a.text || kind);
+    document.getElementById('ov-email-modal-meta').textContent =
+      (isNote ? 'Added by ' + who : who) + (a.date ? ' · ' + a.date : '');
+    document.getElementById('ov-email-modal-body').innerHTML =
+      '<div class="ov-modal-text">' + esc(a.snippet || a.text || '') + '</div>';
+    document.getElementById('ov-email-modal').classList.add('open');
   }
 
   function openEmailModal(a) {
@@ -1832,7 +1895,7 @@
     // hiring board — since that's what the settings page this links to configures.
     const entity = pipeline.entity || 'Record';
     document.getElementById('ov-configure-fields').textContent =
-      'Configure your ' + entity.toLowerCase() + ' fields.';
+      'Configure ' + entity.toLowerCase() + ' fields';
     emptyEl.style.display = defs.length ? 'none' : '';
     emptyEl.textContent = 'No custom fields on ' + (pipeline.name || 'this pipeline') + ' yet.';
     // Stays display: contents (see .ov-fields-contents) so these land in the deal's
