@@ -228,6 +228,12 @@
   .ai-sub { font-size: 11.5px; color: var(--dir-muted); margin-top: 1px; }
   .ai-close { flex-shrink: 0; width: 28px; height: 28px; border: none; background: transparent; border-radius: 7px; color: var(--dir-muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
   .ai-close:hover { background: var(--dir-hair); color: var(--dir-ink); }
+  /* Quiet until wanted: the transcript now persists, so this is the only way to
+     deliberately drop one, but it shouldn't compete with the conversation. */
+  .ai-new { flex-shrink: 0; border: none; background: transparent; border-radius: 7px;
+    padding: 5px 8px; font: inherit; font-size: 12px; color: var(--dir-muted); cursor: pointer; }
+  .ai-new:hover { background: var(--dir-hair); color: var(--dir-ink); }
+  .ai-new[hidden] { display: none; }
 
   .ai-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
   .ai-msg { max-width: 90%; font-size: 13px; line-height: 1.5; }
@@ -412,6 +418,7 @@
             <div class="ai-name">Ask Titan <span class="ai-pill">Beta</span></div>
             <div class="ai-sub">Your pipeline copilot</div>
           </div>
+          <button class="ai-new" id="ai-new" type="button" title="Start a new chat">New chat</button>
           <button class="ai-close" id="ai-close" type="button" aria-label="Hide assistant">
             <span data-ds-icon="close" data-size="13"></span>
           </button>
@@ -1017,7 +1024,7 @@
         typeOverride = btn.dataset.type;
         scopeOverride = 'all';            // a scope from the old tab means nothing here
         savePrefs({ type: typeOverride, scope: 'all' });
-        fillTabs(); fillScope(); render(); resetAssistant();
+        fillTabs(); fillScope(); render(); refreshGreeting();
       };
     });
   }
@@ -1031,7 +1038,7 @@
       pls.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>'; }).join('');
     sel.value = currentScope();
     sel.style.display = pls.length > 1 ? '' : 'none';
-    sel.onchange = function () { scopeOverride = sel.value; render(); resetAssistant(); };
+    sel.onchange = function () { scopeOverride = sel.value; render(); refreshGreeting(); };
   }
 
   // ── Customize modal ───────────────────────────────────────────────────────────
@@ -1282,6 +1289,8 @@
     } finally {
       aiBusy = false;
       renderMsgs(false);
+      saveChat();
+      syncNewChat();
     }
   }
 
@@ -1313,6 +1322,7 @@
       m.error = 'Couldn’t reach the server.';
     }
     renderMsgs(false);
+    saveChat();
   }
 
   // Undo posts the inverse action the server handed back with the change. It goes
@@ -1343,28 +1353,100 @@
       m.error = 'Couldn’t reach the server.';
     }
     renderMsgs(false);
+    saveChat();
   }
 
   function accountName() {
     const p = (window.TITAN_PERSONAS || {})[window.PERSONA_ID];
     return (p && p.account && p.account.name) || 'Ella Henderson';
   }
-  function resetAssistant() {
-    // Greeting re-derives from the current scope, so switching pipelines refreshes it.
+  // ── Keeping the transcript ──────────────────────────────────────────────────
+  // sessionStorage, which CLAUDE.md otherwise reserves for handing state between
+  // pages. The rule it sets out — don't put data here, fetch it from /api/data —
+  // is about CRM records, which have a server that owns them. A chat transcript
+  // has no such owner: it isn't in the document, and putting it there would make
+  // every message a commit and show one person's conversation to everyone else
+  // on the same ?u= link.
+  //
+  // Scoped per persona so switching accounts doesn't inherit someone else's
+  // thread, and per tab, which is what sessionStorage gives us — see the note in
+  // CLAUDE.md about what that does and doesn't survive.
+  const CHAT_KEY = 'titan-crm-chat:' + window.PERSONA_ID;
+  const CHAT_MAX = 60;          // messages kept, oldest dropped first
+  const CHAT_BYTES = 150000;    // well under the quota, which throws when hit
+
+  function saveChat() {
+    try {
+      // Skips everything marked `local`: the greeting, which is recomputed on
+      // load so storing it would resurrect stale figures, and the "couldn't
+      // reach the assistant" bubbles, which are about a moment rather than the
+      // conversation. Those are also the only messages carrying pre-rendered
+      // HTML, so what gets stored is plain text and plain data — nothing here
+      // comes back out through innerHTML unescaped.
+      let keep = aiMsgs.filter(function (m) { return !m.local; }).slice(-CHAT_MAX);
+      let blob = JSON.stringify(keep);
+      while (blob.length > CHAT_BYTES && keep.length > 1) {
+        keep = keep.slice(1);
+        blob = JSON.stringify(keep);
+      }
+      sessionStorage.setItem(CHAT_KEY, blob);
+    } catch (e) { /* private mode or quota — the rail still works, it just forgets */ }
+  }
+
+  function loadChat() {
+    try {
+      const raw = sessionStorage.getItem(CHAT_KEY);
+      if (!raw) return [];
+      const list = JSON.parse(raw);
+      if (!Array.isArray(list)) return [];
+      // A card left mid-flight when the page went away is not still in flight.
+      list.forEach(function (m) { if (m && m.state === 'busy') m.state = 'pending'; });
+      return list.filter(function (m) { return m && typeof m.role === 'string'; });
+    } catch (e) { return []; }
+  }
+
+  // Numbers in the greeting are read at render time, so it is rebuilt rather than
+  // restored — a transcript from an hour ago shouldn't open with figures that
+  // look current.
+  function greetingMsg() {
     const d = aiRead();
-    // `local` keeps the greeting out of the history sent to the model — it's
-    // computed here from the tiles' own numbers, so replaying it would just be
-    // the model reading its own summary back.
-    aiMsgs = [{ role: 'bot', local: true, html:
+    // `local` keeps it out of the history sent to the model — it's computed here
+    // from the tiles' own numbers, so replaying it would just be the model
+    // reading its own summary back. `greeting` marks it as the rebuilt one.
+    return { role: 'bot', local: true, greeting: true, html:
       '<p>Hi ' + esc(accountName().split(/\s+/)[0]) + ' — here’s a quick read on <b>' + esc(scopeName()) + '</b>.</p>' +
       (d.all.length ? aiTable(null, (d.money ? [['Open amount', d.openMoney]] : [['Active ' + noun(d.open.length), String(d.open.length)]])
         .concat([[activeType().rateLabel.replace(/^./, function (ch) { return ch.toUpperCase(); }), d.rate + '%'], ['Overdue', String(d.overdue.length)]])) : '') +
-      '<p>Ask me anything below, or tap a suggestion.</p>' }];
+      '<p>Ask me anything below, or tap a suggestion.</p>' };
+  }
+
+  // Swaps the greeting for one with current numbers and leaves the conversation
+  // alone. Changing the pipeline dropdown used to wipe the transcript, which is
+  // a lot to lose for glancing at another board — especially as the scope never
+  // constrained the assistant, which always sees every pipeline.
+  function refreshGreeting() {
+    const rest = aiMsgs.filter(function (m) { return !m.greeting; });
+    aiMsgs = [greetingMsg()].concat(rest);
     renderMsgs(false);
+  }
+
+  // The deliberate clear, behind the New chat button.
+  function resetAssistant() {
+    aiMsgs = [greetingMsg()];
+    saveChat();
+    renderMsgs(false);
+    syncNewChat();
+  }
+
+  function syncNewChat() {
+    const btn = document.getElementById('ai-new');
+    if (btn) btn.hidden = !aiMsgs.some(function (m) { return !m.greeting; });
   }
   function wireAssistant() {
     renderChips();
-    resetAssistant();
+    aiMsgs = [greetingMsg()].concat(loadChat());
+    renderMsgs(false);
+    syncNewChat();
     const text = document.getElementById('ai-text'), send = document.getElementById('ai-send'), form = document.getElementById('ai-form');
     function sync() { send.disabled = !text.value.trim(); text.style.height = 'auto'; text.style.height = Math.min(text.scrollHeight, 96) + 'px'; }
     text.addEventListener('input', sync);
@@ -1393,7 +1475,7 @@
       const skip = e.target.closest('[data-skip]');
       if (skip) {
         const m = aiMsgs[Number(skip.dataset.skip)];
-        if (m && m.state === 'pending') { m.state = 'dropped'; renderMsgs(false); }
+        if (m && m.state === 'pending') { m.state = 'dropped'; renderMsgs(false); saveChat(); }
       }
     });
 
@@ -1405,6 +1487,7 @@
     }
     toggle.addEventListener('click', function () { setOpen(rail.classList.contains('is-hidden')); });
     document.getElementById('ai-close').addEventListener('click', function () { setOpen(false); });
+    document.getElementById('ai-new').addEventListener('click', resetAssistant);
   }
 
   // ── Init ──────────────────────────────────────────────────────────────────────

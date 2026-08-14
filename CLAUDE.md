@@ -282,7 +282,24 @@ separate documents share no JS runtime:
 - `titan-crm-pipeline-nav:<persona>` — the sidebar's row **data** cache, so the nav paints
   before that page's own `/api/data` returns. Stale for one frame, then reconciled.
 
-Nothing is a source of truth. Don't add data to it; fetch from `/api/data` instead.
+Nothing there is a source of truth for CRM data. Don't cache records in it; fetch from
+`/api/data` instead.
+
+One key is not a courier, and it's the exception that proves the rule:
+
+- `titan-crm-chat:<persona>` — the Ask Titan transcript on the dashboard.
+
+It lives here because it has no server that owns it. It isn't CRM data, so `/api/data`
+is the wrong home twice over: every message would become a commit, and the document is
+shared, so one person's conversation would appear in everyone else's rail on the same
+`?u=` link. The transcript is per-tab and dies with it, which is the right lifetime for a
+chat rail and is *why* `sessionStorage` rather than `localStorage` — the "no localStorage"
+rule above still holds.
+
+Two things it deliberately does not store: the greeting, which is rebuilt on load so its
+figures aren't stale, and any rendered HTML — see below. Writes are capped by message
+count and byte size, and every access is wrapped, because `sessionStorage` throws on
+quota and in some private modes.
 
 Never stash *rendered HTML* here. The sidebar used to be handed between pages that way,
 which is why sub-pages showed a frozen copy of whatever the board looked like on the way
