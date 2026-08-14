@@ -1,5 +1,5 @@
 {
-  "currentPipelineId": "p2",
+  "currentPipelineId": "p1",
   "pipelineSeq": 2,
   "pipelines": {
     "inquiries": {
@@ -502,39 +502,147 @@
       "stages": [
         {
           "key": "booked-0",
-          "label": "Booked"
+          "label": "Booked",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "flower-drying-1",
-          "label": "Flower drying"
+          "label": "Flower drying",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "progress-update-2",
-          "label": "Progress update"
+          "label": "Progress update",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "design-3",
-          "label": "Design"
+          "label": "Design",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "design-proposal-4",
-          "label": "Design proposal"
+          "label": "Design proposal",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "design-picked-5",
-          "label": "Design picked"
+          "label": "Design picked",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "with-farmer-6",
-          "label": "With farmer"
+          "label": "With farmer",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "pickup-scheduled-7",
-          "label": "Pickup scheduled"
+          "label": "Pickup scheduled",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         },
         {
           "key": "delivered-8",
-          "label": "Delivered"
+          "label": "Delivered",
+          "description": "",
+          "tasks": [],
+          "sendUsing": "template",
+          "emailTemplate": "",
+          "emailSeqName": "",
+          "advanceMode": "manual",
+          "advanceCondition": "task-completed",
+          "advanceTaskName": "",
+          "advanceFieldKey": "value",
+          "advanceDays": 3,
+          "reminderEnabled": false,
+          "reminderDays": 3
         }
       ],
       "cards": [
@@ -601,7 +709,9 @@
           "type": "number"
         }
       ],
-      "contactsEnabled": true
+      "contactsEnabled": true,
+      "subject": "person",
+      "defaultOwner": null
     },
     "p2": {
       "id": "p2",
