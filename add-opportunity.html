@@ -56,6 +56,7 @@
 </head>
 <body data-subpage="add-opportunity">
 <script src="/design-system/components/icon.js"></script>
+<script src="/crm-owner.js"></script>
 <script src="/titan-sidebar.js"></script>
 
 <div class="app-window">
@@ -105,8 +106,16 @@
         </div>
       </div>
 
-      <div class="np-label">Note</div>
-      <input class="np-name-input" id="ao-note" placeholder="e.g. Met at conference" style="margin-bottom:0;">
+      <div class="ao-row" style="margin-bottom:0;">
+        <div>
+          <div class="np-label">Owner</div>
+          <select class="np-name-input" id="ao-owner"></select>
+        </div>
+        <div>
+          <div class="np-label">Note</div>
+          <input class="np-name-input" id="ao-note" placeholder="e.g. Met at conference">
+        </div>
+      </div>
     </div>
 
     <div class="ao-card">
@@ -284,6 +293,11 @@
   }
   document.getElementById('ao-currency').value = (addSource && addSource.currencySymbol) || '$';
 
+  // A new record starts owned by the pipeline's default (see pipeline settings),
+  // falling back to the account holder so it is never ownerless.
+  document.getElementById('ao-owner').innerHTML =
+    window.titanOwner.optionsHtml(pipeline, window.titanOwner.defaultOwner(pipeline), false);
+
   customFieldDefs = (pipeline && pipeline.customFieldDefs) || [];
   renderCustomFields();
   }
@@ -400,6 +414,7 @@
       closeDate: document.getElementById('ao-close-date').value,
       source: document.getElementById('ao-source').value,
       note: document.getElementById('ao-note').value.trim(),
+      owner: window.titanOwner.fromEmail(document.getElementById('ao-owner').value, pipeline),
       contactEmail: contactEmail, contactPhone: contactPhone, contactDesignation: contactDesignation,
       contactDepartment: contactDepartment, contactLocation: contactLocation, contactLinkedin: contactLinkedin,
       contacts: [{

@@ -2933,6 +2933,17 @@
       padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
     }
     .crm-note-add button:hover { background: #1257c9; }
+    /* Record owner, under the note box. The mailbox keeps its own chrome (it is
+       out of the design system's scope), so this matches the panel's own type
+       scale rather than importing ds-* here. */
+    .crm-owner-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+    .crm-owner-label { font-size: 12px; color: #888; flex-shrink: 0; }
+    .crm-owner-row select {
+      flex: 1; min-width: 0; border: 1px solid #ddd; border-radius: 6px;
+      padding: 6px 8px; font-size: 12.5px; font-family: inherit; color: #333;
+      background: #fff; outline: none; cursor: pointer;
+    }
+    .crm-owner-row select:focus { border-color: #2170f4; }
 
     /* ── Recent activity: AI snippet under the subject ── */
     .crm-activity-snippet { font-size: 13px; line-height: 1.5; color: #999; margin-top: 4px; }
@@ -4150,6 +4161,12 @@
               <div class="crm-note-add">
                 <textarea id="crm-note-input" placeholder="Add a note..." oninput="toggleAddNoteBtn()"></textarea>
                 <button id="crm-add-note-btn" onclick="addNote()" style="display:none;">Add note</button>
+              </div>
+              <!-- Who this record belongs to. Editable here so it can be reassigned
+                   without leaving the thread you're reading. -->
+              <div class="crm-owner-row" style="display:none;">
+                <span class="crm-owner-label">Owner</span>
+                <select id="crm-owner-select" onchange="onPanelOwnerChange()"></select>
               </div>
             </div>
 
@@ -5455,6 +5472,7 @@
     }
   </style>
 
+  <script src="/crm-owner.js"></script>
   <script>
 
     // ── Company logo (favicon of the company's own domain) — mirrors crm.html ──
@@ -6055,6 +6073,7 @@
       }
       document.getElementById('crm-company').textContent = rec.company;
       renderCompanyLogoPanel(rec);
+      renderPanelOwner(null, null);   // fillRealPanel re-shows it when there's a card
       document.getElementById('crm-contact-avatar').textContent = (rec.contact || rec.avatar || '?').charAt(0).toUpperCase();
       renderStageLabel(rec.key, rec.stage);
       buildStageMenu(rec.key, rec.stage);
@@ -6256,6 +6275,37 @@
       });
     }
 
+    // ── Record owner in the CRM panel ─────────────────────────────────────
+    // Only meaningful for a real saved record; a draft (recordId null) has no
+    // card to write to yet, so the row is hidden rather than shown inert.
+    // `pl` is optional: fillPersonaPanel() only has the card, so the pipeline is
+    // resolved from panelRecord when it isn't passed.
+    function renderPanelOwner(card, pl) {
+      const row = document.querySelector('.crm-owner-row');
+      const sel = document.getElementById('crm-owner-select');
+      if (!row || !sel) return;
+      if (!card) { row.style.display = 'none'; return; }
+      const pipeline = pl || (REAL_PIPELINES && panelRecord && REAL_PIPELINES[panelRecord.key]) || null;
+      row.style.display = '';
+      const owner = window.titanOwner.normalize(card.owner, pipeline) || window.titanOwner.defaultOwner(pipeline);
+      sel.innerHTML = window.titanOwner.optionsHtml(pipeline, owner, false);
+    }
+    function onPanelOwnerChange() {
+      if (!panelRecord) return;
+      const pl = REAL_PIPELINES && REAL_PIPELINES[panelRecord.key];
+      const owner = window.titanOwner.fromEmail(document.getElementById('crm-owner-select').value, pl);
+      // Still a draft: write it onto the pending card so the choice survives into
+      // the record when it's named, rather than the dropdown silently doing nothing.
+      if (panelRecord.recordId == null) {
+        if (pendingNameDraft && pendingNameDraft.card) pendingNameDraft.card.owner = owner;
+        return;
+      }
+      const card = pl && (pl.cards || []).find(function (c) { return String(c.id) === String(panelRecord.recordId); });
+      if (!card) return;
+      card.owner = owner;
+      persistRealData();
+    }
+
     async function persistRealData() {
       if (!REAL_DATA || !REAL_PIPELINES) return;
       try {
@@ -6379,6 +6429,7 @@
       const compEl = document.getElementById('crm-company');
       if (compEl) compEl.textContent = card.company || '';
       renderCompanyLogoPanel(card);
+      renderPanelOwner(card, pl);
 
       const iconRow = panel.querySelector('.crm-company-icon-row');
       if (iconRow) {
@@ -6483,6 +6534,8 @@
         // The record is being created *from* an inbound email (that's what's being
         // linked to a pipeline here), so the truthful default is "received", not "sent".
         lastActivity: 'just now', activityType: 'Email received', overdue: false,
+        // Same default a record created on the board gets (pipeline settings).
+        owner: window.titanOwner.defaultOwner(pl),
       };
       pendingNameDraft = { threadId: threadId, pipelineId: pipelineId, card: draftCard, host: host, mirror: mirror };
 
@@ -6898,6 +6951,7 @@
       var compEl = document.getElementById('crm-company');
       if (compEl) compEl.textContent = (card && card.company) || '';
       renderCompanyLogoPanel(card);
+      renderPanelOwner(card);
 
       // Company website / LinkedIn / Instagram / location — persona clients have none → hide.
       var iconRow = panel.querySelector('.crm-company-icon-row');

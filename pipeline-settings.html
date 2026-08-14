@@ -216,6 +216,7 @@
 </head>
 <body data-subpage="pipeline-settings">
 <script src="/design-system/components/icon.js"></script>
+<script src="/crm-owner.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/form-render.js"></script>
 <script src="/form-builder.js"></script>
@@ -242,6 +243,10 @@
 
           <div class="np-label">Colour</div>
           <div class="ps-color-row" id="ps-colors"></div>
+
+          <div class="np-label" id="ps-owner-label" style="margin-top:22px;">Default owner</div>
+          <div class="np-help" id="ps-owner-help">Who new records are assigned to. Anyone already on this pipeline can be picked.</div>
+          <select class="np-name-input" id="ps-default-owner"></select>
         </div>
 
         <div class="ps-card">
@@ -404,6 +409,7 @@
     renderColors();
     renderStages();
     renderIntakeCard();
+    renderDefaultOwner();
   }
 
   async function init() {
@@ -957,6 +963,17 @@
     psToastTimer = setTimeout(function () { t.classList.remove('show'); }, 3200);
   }
 
+  // The roster is the account holder plus whoever has been invited to this
+  // pipeline, so a pipeline with no team still offers a valid choice.
+  function renderDefaultOwner() {
+    const sel = document.getElementById('ps-default-owner');
+    if (!sel) return;
+    const many = ((pipeline && pipeline.plural) || 'records').toLowerCase();
+    document.getElementById('ps-owner-help').textContent =
+      'Who new ' + many + ' are assigned to. Anyone already on this pipeline can be picked.';
+    sel.innerHTML = window.titanOwner.optionsHtml(pipeline, pipeline && pipeline.defaultOwner, true);
+  }
+
   function saveSettings() {
     flushOpenEdit();
     const name = document.getElementById('ps-name').value.trim();
@@ -966,7 +983,11 @@
 
     sessionStorage.setItem('titan-crm-commit-pipeline', JSON.stringify({
       pipelineKey: pipelineKey,
-      patch: { name: name, color: color, stages: cleanStages },
+      patch: {
+        name: name, color: color, stages: cleanStages,
+        // "" means no default — new records then fall back to the account holder.
+        defaultOwner: window.titanOwner.fromEmail(document.getElementById('ps-default-owner').value, pipeline),
+      },
     }));
     goBack();
   }

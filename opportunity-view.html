@@ -54,6 +54,9 @@
   .ov-value-label { font-size: 12.5px; color: #888; margin-right: 5px; }
   .ov-value-row { display: flex; align-items: center; gap: 0; }
   .ov-currency-select { font-size: 12.5px; color: #888; width: 56px; padding-right: 2px; }
+  /* Sized to its content rather than a fixed width — names vary a lot more than
+     currency symbols do. */
+  .ov-owner-select { font-size: 12.5px; color: var(--text-primary); max-width: 180px; }
   .ov-value-input { font-size: 12.5px; font-weight: 500; color: #888; width: 90px; padding-left: 2px; }
   .ov-dot { color: #ccc; }
 
@@ -401,6 +404,9 @@
               </select>
               <input class="ds-input ds-input--inline ov-value-input" id="ov-value" type="text" inputmode="numeric" placeholder="0" oninput="onFieldChange()">
             </div>
+            <span class="ov-dot">&middot;</span>
+            <span class="ov-value-label">Owner:</span>
+            <select class="ds-input ds-input--inline ov-owner-select" id="ov-owner" onchange="onOwnerChange()"></select>
           </div>
           <div class="ov-created-by" id="ov-created-by"></div>
 
@@ -616,6 +622,7 @@
   </div>
 </div>
 <script src="/design-system/components/icon.js"></script>
+<script src="/crm-owner.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script>
   // ── This page is reached from OUTSIDE Titan CRM (a mail client CRM-panel link),
@@ -672,6 +679,22 @@
         : '') +
     '</span>';
   }
+  // ── Owner ─────────────────────────────────────────────────────────────────
+  // Who on the team this record belongs to. A record always has one: an existing
+  // record with none falls back to the pipeline's default rather than reading as
+  // unassigned, and that fallback is written on the next save.
+  function renderOwner() {
+    const sel = document.getElementById('ov-owner');
+    if (!sel || !card) return;
+    const owner = window.titanOwner.normalize(card.owner, pipeline) || window.titanOwner.defaultOwner(pipeline);
+    sel.innerHTML = window.titanOwner.optionsHtml(pipeline, owner, false);
+  }
+  function onOwnerChange() {
+    const sel = document.getElementById('ov-owner');
+    card.owner = window.titanOwner.fromEmail(sel.value, pipeline);
+    onFieldChange();
+  }
+
   // Re-rendered live as the company/website fields are edited, so the logo tracks
   // whatever domain the record currently points at.
   function renderCompanyLogo() {
@@ -774,6 +797,7 @@
     document.getElementById('ov-name').value = card.deal || '';
     document.getElementById('ov-company').value = card.company || '';
     renderCompanyLogo();
+    renderOwner();
     document.getElementById('ov-currency').value = card.currency || '$';
     document.getElementById('ov-value').value = card.value || '';
     document.getElementById('ov-location').value = card.location || '';
@@ -1415,6 +1439,9 @@
     card.location = document.getElementById('ov-location').value.trim();
     card.website = document.getElementById('ov-website').value.trim();
     card.companyLinkedin = document.getElementById('ov-company-linkedin').value.trim();
+    // Writes the fallback through: a record that had no owner is now explicitly
+    // owned by whoever the dropdown is showing, rather than staying blank in data.
+    card.owner = window.titanOwner.fromEmail(document.getElementById('ov-owner').value, pipeline);
     card.instagram = document.getElementById('ov-instagram').value.trim();
     renderCompanyLogo();   // company/website may have just changed
     card.closeDate = document.getElementById('ov-close-date').value;
