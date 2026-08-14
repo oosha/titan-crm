@@ -210,7 +210,35 @@
           "contactEmail": "grace.turner@northfieldgroup.com",
           "contactPhone": "+1 (503) 555-0119",
           "contactDesignation": "Growth Lead",
-          "website": "northfieldgroup.com"
+          "website": "northfieldgroup.com",
+          "noteHistory": [],
+          "upcomingActivities": [],
+          "currency": "$",
+          "location": "",
+          "companyLinkedin": "",
+          "owner": {
+            "name": "Ella Henderson",
+            "email": "ella.henderson@avontechlabs.com"
+          },
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "autoLinkActivity": true,
+          "contacts": [
+            {
+              "name": "Grace Turner",
+              "email": "grace.turner@northfieldgroup.com",
+              "designation": "Growth Lead",
+              "phone": "+1 (503) 555-0119",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
         },
         {
           "id": 4,
