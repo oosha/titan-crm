@@ -379,6 +379,11 @@
               "type": "task",
               "text": "Schedule follow-up call",
               "date": "Mon, 5pm"
+            },
+            {
+              "type": "call",
+              "text": "Schedule a call",
+              "date": "Friday at 1"
             }
           ],
           "recentActivities": [
