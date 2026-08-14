@@ -309,13 +309,16 @@
   .ai-act-card.is-done { border-left-color: #1f7a42; }
   .ai-act-card.is-dropped { border-left-color: var(--dir-faint); opacity: 0.6; }
   .ai-act-card.is-failed { border-left-color: #b42318; }
-  /* Undo is the safety net for a change that saved without asking, so it reads
-     as a real control — outlined, not a text link tucked under the card. */
-  .ai-act-undo {
+  /* Undo is the safety net for a change that saved without asking, and View is
+     how you check it landed on the right record — both read as real controls,
+     not text links tucked under the card. Matched styling because they are a
+     pair; one is a button and the other a link only because of what they do. */
+  .ai-act-undo, .ai-act-view {
     border: 1px solid var(--dir-line); background: var(--dir-surface); color: var(--dir-ink);
-    border-radius: 6px; padding: 5px 11px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    border-radius: 6px; padding: 5px 11px; font: inherit; font-size: 12.5px; font-weight: 600;
+    cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
   }
-  .ai-act-undo:hover { background: var(--dir-canvas); border-color: var(--dir-muted); }
+  .ai-act-undo:hover, .ai-act-view:hover { background: var(--dir-canvas); border-color: var(--dir-muted); }
   .ai-link { width: 100%; align-self: stretch; }
   .ai-link-btn {
     display: inline-block; text-decoration: none;
@@ -1171,18 +1174,28 @@
     else if (s === 'done' || s === 'undoing') kind = isNote ? 'Note added' : 'Record updated';
     else kind = isNote ? 'Add a note' : 'Update record';
 
+    // A real link, not a scripted button: the card summarises the change, but
+    // seeing it in place is the only way to check it landed on the right record.
+    // Navigating in place is fine now that the transcript survives a page load —
+    // coming back leaves the conversation, and this card, where they were.
+    const view = (a.pipelineId && a.recordId)
+      ? '<a class="ai-act-view" href="' + esc(window.crmPath('/crm/pipeline/' +
+          encodeURIComponent(a.pipelineId) + '/record/' + encodeURIComponent(a.recordId))) + '">View</a>'
+      : '';
+
     let foot;
     if (s === 'done') {
       // Undo is the whole reason this saved without asking, so it is a real
       // button rather than a quiet link.
       foot = (a.undo ? '<button class="ai-act-undo" type="button" data-undo="' + idx + '">Undo</button>' : '') +
+        view +
         (m.error
           ? '<div class="ai-act-state err">' + esc(m.error) + '</div>'
           : '<div class="ai-act-state ok">Saved</div>');
     } else if (s === 'undoing') {
       foot = '<div class="ai-act-state">Undoing…</div>';
     } else if (s === 'undone') {
-      foot = '<div class="ai-act-state">Undone</div>';
+      foot = view + '<div class="ai-act-state">Undone</div>';
     } else if (s === 'dropped') {
       foot = '<div class="ai-act-state">Discarded</div>';
     } else if (s === 'failed') {
