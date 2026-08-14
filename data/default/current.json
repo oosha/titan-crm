@@ -325,8 +325,8 @@
           "location": "San Jose, US",
           "closeDate": "",
           "source": "",
-          "note": "They did not seem interested the last time",
-          "noteDate": "14 Aug at 4:31 pm",
+          "note": "123",
+          "noteDate": "14 Aug at 5:13 pm",
           "contacts": [
             {
               "name": "Ryan Walker",
@@ -382,6 +382,12 @@
             }
           ],
           "recentActivities": [
+            {
+              "type": "note",
+              "text": "123",
+              "author": "Rahul Dwivedi",
+              "date": "14 Aug at 5:13 pm"
+            },
             {
               "type": "note",
               "text": "They did not seem interested the last time",
@@ -482,7 +488,7 @@
           "contactPhone": "+1 (415) 555-0134",
           "contactDesignation": "VP, Product",
           "contactLinkedin": "linkedin.com/in/ryanwalker",
-          "noteAuthor": "Usha",
+          "noteAuthor": "Rahul Dwivedi",
           "noteHistory": [
             {
               "text": "AI capabilities are not clear to them yet and need a walkthrough",
