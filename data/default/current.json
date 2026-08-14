@@ -1,6 +1,6 @@
 {
-  "currentPipelineId": "neo",
-  "pipelineSeq": 5,
+  "currentPipelineId": "p6",
+  "pipelineSeq": 6,
   "pipelines": {
     "neo": {
       "id": "neo",
@@ -1784,6 +1784,42 @@
       "plural": "opportunities",
       "color": "#ab5f74",
       "type": "sales",
+      "stages": [
+        {
+          "key": "lead-0",
+          "label": "Lead"
+        },
+        {
+          "key": "qualified-1",
+          "label": "Qualified"
+        },
+        {
+          "key": "demo-scheduled-2",
+          "label": "Demo Scheduled"
+        },
+        {
+          "key": "proposal-sent-3",
+          "label": "Proposal Sent"
+        },
+        {
+          "key": "negotiation-4",
+          "label": "Negotiation"
+        },
+        {
+          "key": "closed-5",
+          "label": "Closed"
+        }
+      ],
+      "cards": []
+    },
+    "p6": {
+      "id": "p6",
+      "name": "Rahu's Sales Pipeline",
+      "entity": "Opportunity",
+      "plural": "opportunities",
+      "color": "#3f8a7d",
+      "type": "sales",
+      "subject": "company",
       "stages": [
         {
           "key": "lead-0",
