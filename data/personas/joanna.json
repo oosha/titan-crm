@@ -1,5 +1,5 @@
 {
-  "currentPipelineId": "p1",
+  "currentPipelineId": "projects",
   "pipelineSeq": 2,
   "pipelines": {
     "inquiries": {
@@ -491,7 +491,9 @@
       ],
       "hiddenFields": [],
       "customFieldDefs": [],
-      "contactsEnabled": true
+      "contactsEnabled": true,
+      "subject": "person",
+      "defaultOwner": null
     },
     "p1": {
       "id": "p1",
