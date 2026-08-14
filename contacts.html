@@ -128,47 +128,16 @@
   // A contact row is derived from every card the person appears on, so a change
   // has to land on all of them or the next rebuild would resurrect the old value
   // from whichever card still had it.
-  const LEGACY_FLAT = {
-    name: 'contact', email: 'contactEmail', phone: 'contactPhone',
-    designation: 'contactDesignation', department: 'contactDepartment',
-    location: 'contactLocation', linkedin: 'contactLinkedin',
-  };
+  // Shared with the record page — see writeContactEverywhere() in crm-directory.js.
+  const LEGACY_FLAT = window.CONTACT_LEGACY_FLAT;
 
   // Older records store one contact in flat card fields instead of a contacts[]
   // array. Custom fields have nowhere to live there, so those cards are migrated
   // to an array on first write — the flat fields stay mirrored below for the
   // board and record pages, which still read them.
-  function ensureContactsArray(card) {
-    if (card.contacts && card.contacts.length) return card.contacts;
-    const seeded = {};
-    Object.keys(LEGACY_FLAT).forEach(function (k) { seeded[k] = card[LEGACY_FLAT[k]] || ''; });
-    card.contacts = (seeded.name || seeded.email) ? [seeded] : [];
-    return card.contacts;
-  }
-
-  function targetContactIn(card, row) {
-    const list = ensureContactsArray(card);
-    for (let i = 0; i < list.length; i++) {
-      const c = list[i];
-      if (row.matchEmail) {
-        if (String(c.email || '').trim().toLowerCase() === row.matchEmail) return c;
-      } else if (String(c.name || '').trim().toLowerCase() === row.matchName) {
-        return c;
-      }
-    }
-    return null;
-  }
-
   function writeContactField(row, key, value) {
-    row.records.forEach(function (entry) {
-      const card = entry.card;
-      const target = targetContactIn(card, row);
-      if (!target) return;
-      target[key] = value;
-      // Mirror the built-in seven onto the flat fields, which crm.html and
-      // opportunity-view.html still read.
-      if (LEGACY_FLAT[key] && card.contacts[0] === target) card[LEGACY_FLAT[key]] = value;
-    });
+    window.writeContactEverywhere(
+      row.records, { email: row.matchEmail, name: row.matchName }, key, value);
     row.values[key] = value;
     // The identity we match on has to follow the edit, or the next write to this
     // same row would look for a contact that no longer exists.

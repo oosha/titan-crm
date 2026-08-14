@@ -149,7 +149,10 @@
      Name over email rather than one long line, and remove stays hidden until
      you are actually on the row — a delete control does not belong in the
      resting state of a list you mostly just read. */
-  .ov-contact.is-collapsed .ov-contact-grid { display: none; }
+  /* Remove sits outside the field grid, so collapsing has to hide it explicitly —
+     otherwise a closed row offers a destructive action and nothing else. */
+  .ov-contact.is-collapsed .ov-contact-grid,
+  .ov-contact.is-collapsed .ov-contact-remove { display: none; }
   .ov-contact-namerow { margin-bottom: var(--space-100); }
   .ov-contact-row { display: flex; align-items: center; gap: var(--space-125); min-width: 0; cursor: pointer; flex: 1; }
   .ov-contact-id { display: flex; flex-direction: column; gap: var(--space-025); min-width: 0; }
@@ -163,8 +166,6 @@
   }
   .ov-contact-row:hover .ov-contact-caret { background: var(--surface-hover); color: var(--text-primary); }
   .ov-contact.is-collapsed .ov-contact-caret { transform: rotate(-90deg); }
-  .ov-contact-x { opacity: 0; transition: opacity var(--dur-fast, .12s) ease; }
-  .ov-contact:hover .ov-contact-x, .ov-contact-x:focus-visible { opacity: 1; }
 
   /* Adding an activity used to go through two prompt() dialogs. A sandboxed frame
      without allow-modals returns null from those silently, so the menu items did
@@ -210,7 +211,11 @@
   .ov-pick-sub { font-size: var(--text-xs); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ov-pick-on { margin-left: auto; font-size: var(--text-2xs); color: var(--text-secondary); flex-shrink: 0; }
   .ov-pick-empty { padding: var(--space-200); font-size: var(--text-sm); color: var(--text-secondary); text-align: center; }
-  .ov-contact-remove { margin-bottom: var(--space-100); }
+  /* Sits at the foot of the opened panel, right-aligned — destructive actions
+     belong after the thing they act on, not above it. */
+  .ov-contact-remove { display: flex; justify-content: flex-end; margin-top: var(--space-150); }
+  /* One field on a two-column row left half the width empty beside it. */
+  .ov-contact-namerow > .ds-input { grid-column: 1 / -1; }
 
   /* An upcoming item with no date can't be chased; say so rather than leave a gap. */
   .crm-activity-date.is-undated { color: var(--text-secondary); font-style: italic; }
@@ -219,20 +224,12 @@
     font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;
     letter-spacing: 0.04em; margin-bottom: 12px;
   }
-  .ov-contact { border: 1px solid #ececf0; border-radius: 9px; padding: 14px; margin-top: 12px; position: relative; }
+  .ov-contact { border: 1px solid var(--border-subtle); border-radius: 9px; padding: var(--space-200); margin-top: var(--space-150); }
   .ov-contact:first-of-type { margin-top: 0; }
-  .ov-contact-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .ov-contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .ov-contact-remove {
-    position: absolute; top: 12px; right: 14px; cursor: pointer; color: #c2c6cd; font-size: 18px; line-height: 1;
-  }
-  .ov-contact-remove:hover { color: #dc2626; }
-  .ov-contact-x {
-    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; margin-left: 4px;
-    display: flex; align-items: center; justify-content: center;
-    color: #b0b5bb; cursor: pointer; font-size: 16px; line-height: 1; border: 1px solid #e2e4e8;
-  }
-  .ov-contact-x:hover { color: #dc2626; border-color: #f0c6c6; background: #fdecec; }
+  .ov-contact-top { display: flex; align-items: center; gap: var(--space-125); }
+  .ov-contact:not(.is-collapsed) .ov-contact-top { margin-bottom: var(--space-200); }
+  .ov-contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-150); }
+  .ov-contact-grid + .ov-contact-grid { margin-top: var(--space-150); }
   .ov-add-link { font-size: var(--text-xs); font-weight: var(--weight-semi); color: var(--accent-primary); cursor: pointer; display: inline-block; margin-top: var(--space-150); }
   .ov-add-link:hover { text-decoration: underline; }
   .ov-field-empty { font-size: var(--text-sm); color: var(--text-secondary); }
@@ -849,6 +846,10 @@
 </div>
 <script src="/design-system/components/icon.js"></script>
 <script src="/crm-owner.js"></script>
+<!-- Shared CRM helpers. Pure IIFE, no auto-run DOM work; the four names it
+     shares with this page are redefined by the inline script below, which runs
+     after it. Needed here for writeContactEverywhere(). -->
+<script src="/crm-directory.js"></script>
 <script src="/crm-schema.js"></script>
 <script src="/crm-status.js"></script>
 <script src="/titan-sidebar.js"></script>
@@ -1295,7 +1296,29 @@
     if (wrap) wrap.innerHTML = '';
   }
 
-  function setContactField(i, field, val) { if (contacts[i]) { contacts[i][field] = val; onFieldChange(); } }
+  function setContactField(i, field, val) {
+    const person = contacts[i];
+    if (!person) return;
+    // Match on who they were BEFORE this keystroke, or renaming someone would
+    // stop matching them halfway through the edit.
+    const match = { email: String(person.email || '').trim().toLowerCase(),
+                    name: String(person.name || '').trim().toLowerCase() };
+    // Every card in the account, not just this one. A contact isn't stored
+    // centrally — they exist on each record they touch — so editing only this
+    // card left the same person spelled differently elsewhere, and the Contacts
+    // page would show whichever version it rebuilt from first.
+    const all = [];
+    Object.keys(pipelines || {}).forEach(function (pid) {
+      (pipelines[pid].cards || []).forEach(function (c) { all.push(c); });
+    });
+    window.writeContactEverywhere(all, match, field, val);
+    // Always write the local copy too. For a contact loaded with this record it is
+    // the same object the loop just touched, so this is a no-op; for one added
+    // from the picker it is a fresh copy that isn't on this card yet, and skipping
+    // it left the row you were typing into showing the old value until reload.
+    person[field] = val;
+    onFieldChange();
+  }
   function updateContactAvatar(i, input) {
     const wrap = input.closest('.ov-contact');
     const av = wrap && wrap.querySelector('.ov-contact-avatar');
@@ -1340,9 +1363,6 @@
             '<span class="ov-contact-caret"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.5 6.5L8 10l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
           '</div>' +
         '</div>' +
-        (contactsEnabled && contacts.length > 1
-          ? '<div class="ov-contact-grid ov-contact-remove"><button class="ds-btn ds-btn--destructive-quiet ds-btn--sm" type="button" onclick="removeContact(' + i + ')">Remove from this record</button></div>'
-          : '') +
         (nameHidden ? '' : '<div class="ov-contact-grid ov-contact-namerow"><input class="ds-input" placeholder="Name" value="' + esc(c.name) + '" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);"></div>') +
         '<div class="ov-contact-grid">' +
           (fieldHidden('contact-email') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-email')) + '" value="' + esc(c.email) + '" oninput="setContactField(' + i + ',\'email\',this.value)">') +
@@ -1352,7 +1372,9 @@
           (fieldHidden('contact-location') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-location')) + '" value="' + esc(c.location) + '" oninput="setContactField(' + i + ',\'location\',this.value)">') +
           (fieldHidden('contact-linkedin') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-linkedin')) + '" value="' + esc(c.linkedin) + '" oninput="setContactField(' + i + ',\'linkedin\',this.value)">') +
         '</div>' +
-        '';
+        (contactsEnabled && contacts.length > 1
+          ? '<div class="ov-contact-remove"><button class="ds-btn ds-btn--destructive-quiet ds-btn--sm" type="button" onclick="removeContact(' + i + ')">Remove from this record</button></div>'
+          : '');
       wrap.appendChild(row);
     });
     const addLink = document.getElementById('ov-add-contact-link');

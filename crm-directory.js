@@ -387,6 +387,69 @@
     '</div>';
   };
 
+  // ── Editing a contact, once ────────────────────────────────────────────────
+  // A person is not stored anywhere central: they exist as an entry in
+  // card.contacts[] on every record they touch. So an edit has to land on all of
+  // them, or the next rebuild resurrects the old value from whichever card still
+  // had it.
+  //
+  // This lives here because both surfaces that edit a contact need the same
+  // behaviour — the Contacts table and the record page. The record page used to
+  // write only its own card, so the same edit did different things depending on
+  // which screen you made it from.
+  window.CONTACT_LEGACY_FLAT = {
+    name: 'contact', email: 'contactEmail', phone: 'contactPhone',
+    designation: 'contactDesignation', department: 'contactDepartment',
+    location: 'contactLocation', linkedin: 'contactLinkedin',
+  };
+
+  // Older records store one contact in flat card fields instead of a contacts[]
+  // array. Custom fields have nowhere to live there, so those cards are migrated
+  // on first write; the flat fields stay mirrored for the board and record pages.
+  window.ensureContactsArray = function (card) {
+    if (card.contacts && card.contacts.length) return card.contacts;
+    var seeded = {};
+    Object.keys(window.CONTACT_LEGACY_FLAT).forEach(function (k) {
+      seeded[k] = card[window.CONTACT_LEGACY_FLAT[k]] || '';
+    });
+    card.contacts = (seeded.name || seeded.email) ? [seeded] : [];
+    return card.contacts;
+  };
+
+  // Email first, name only as a fallback — email is what contactKey() dedupes on.
+  window.matchContactIn = function (card, match) {
+    var list = window.ensureContactsArray(card);
+    for (var i = 0; i < list.length; i++) {
+      var c = list[i];
+      if (match.email) {
+        if (String(c.email || '').trim().toLowerCase() === match.email) return c;
+      } else if (String(c.name || '').trim().toLowerCase() === match.name) {
+        return c;
+      }
+    }
+    return null;
+  };
+
+  // cards: [{card}] or [card]. Returns the number of records actually touched, so
+  // a caller can tell the difference between "saved everywhere" and "matched
+  // nothing", which used to fail silently.
+  window.writeContactEverywhere = function (cards, match, key, value) {
+    var touched = 0;
+    (cards || []).forEach(function (entry) {
+      var card = entry && entry.card ? entry.card : entry;
+      if (!card) return;
+      var target = window.matchContactIn(card, match);
+      if (!target) return;
+      target[key] = value;
+      // Mirror the built-in seven onto the flat fields the board still reads.
+      if (window.CONTACT_LEGACY_FLAT[key] && card.contacts[0] === target) {
+        card[window.CONTACT_LEGACY_FLAT[key]] = value;
+      }
+      touched++;
+    });
+    return touched;
+  };
+
   // ── Detail panel ───────────────────────────────────────────────────────────
   // Opens beside the table rather than over it, so the list you were reading
   // stays on screen and the row you picked stays marked.
