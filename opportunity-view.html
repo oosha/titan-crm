@@ -58,7 +58,10 @@
      currency symbols do. */
   .ov-owner-select { font-size: var(--text-xs); color: var(--text-primary); max-width: 180px; }
   .ov-value-input { font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--text-secondary); width: 90px; padding-left: var(--space-025); }
-  .ov-dot { color: #ccc; }
+  .ov-dot { color: var(--border-strong); }
+  /* Anchored right rather than trailing the company name, where it read as
+     floating in the middle of the row. */
+  .ov-owner { margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-050); }
 
   .ov-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-200) var(--space-300); margin-top: var(--space-300); }
   .ov-field { display: flex; flex-direction: column; }
@@ -134,6 +137,8 @@
   /* Position in the pipeline, under the control that changes it. */
   .ov-stage-bar { display: flex; gap: var(--space-025); }
   .ov-seg { flex: 1; height: 4px; border-radius: 2px; background: var(--border-subtle); }
+  /* Filled segments take the pipeline's own colour, set in renderStageBar — the
+     pill above already does, and a purple pipeline with a blue bar read as a bug. */
   .ov-seg.is-on { background: var(--accent-primary); }
 
   /* display: contents so the custom fields become items of the deal's own field
@@ -524,9 +529,10 @@
           <div class="ov-meta-row">
             <span id="ov-company-logo"></span>
             <input class="ds-input ds-input--inline ov-company-input" id="ov-company" data-field="company" placeholder="Company" oninput="onFieldChange()">
-            <span class="ov-dot">&middot;</span>
-            <span class="ov-value-label">Owner</span>
-            <select class="ds-input ds-input--inline ov-owner-select" id="ov-owner" onchange="onOwnerChange()"></select>
+            <span class="ov-owner">
+              <span class="ov-value-label">Owner</span>
+              <select class="ds-input ds-input--inline ov-owner-select" id="ov-owner" onchange="onOwnerChange()"></select>
+            </span>
           </div>
           <div class="ov-created-by" id="ov-created-by"></div>
 
@@ -1141,15 +1147,24 @@
     const btn = document.getElementById('ov-add-note-btn');
     btn.style.display = input.value.trim() ? '' : 'none';
   }
+  const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   function formatNoteDate(d) {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return d.getDate() + ' ' + months[d.getMonth()];
+    return d.getDate() + ' ' + MONTH_ABBR[d.getMonth()];
+  }
+  // "5 Aug at 2:41 pm". A note is a record of when someone said something, so the
+  // hour matters as much as the day — two notes on one day used to be
+  // indistinguishable. Kept as a display string like the rest of this data.
+  function formatNoteStamp(d) {
+    let h = d.getHours(); const ampm = h >= 12 ? 'pm' : 'am';
+    h = h % 12 || 12;
+    const mins = String(d.getMinutes()).padStart(2, '0');
+    return formatNoteDate(d) + ' at ' + h + ':' + mins + ' ' + ampm;
   }
   function addNote() {
     const input = document.getElementById('ov-note-input');
     const text = input.value.trim();
     if (!text) return;
-    const now = formatNoteDate(new Date());
+    const now = formatNoteStamp(new Date());
     // The outgoing note is not copied into card.noteHistory: it is about to be
     // logged to Recent Activity just below, and writing both is what produced the
     // duplication this section used to show.
@@ -1305,9 +1320,12 @@
     if (!host) return;
     const stages = pipeline.stages || [];
     const at = stages.findIndex(function (st) { return st.key === card.stage; });
+    const color = pipeline.color || 'var(--accent-primary)';
     host.innerHTML = stages.map(function (st, i) {
-      return '<span class="ov-seg' + (at > -1 && i <= at ? ' is-on' : '') +
-        '" title="' + esc(st.label || st.key) + '"></span>';
+      const on = at > -1 && i <= at;
+      return '<span class="ov-seg' + (on ? ' is-on' : '') + '"' +
+        (on ? ' style="background:' + esc(color) + ';"' : '') +
+        ' title="' + esc(st.label || st.key) + '"></span>';
     }).join('');
   }
 
