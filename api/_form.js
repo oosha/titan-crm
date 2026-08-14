@@ -40,12 +40,30 @@ const TARGETS = {
 // can neither act on nor merge.
 const LOCKED_TARGETS = ['name', 'email'];
 
-const FIELD_TYPES = ['text', 'email', 'tel', 'url', 'textarea', 'select'];
+// The input types a form field may declare. `date` and `time` were missing, which made
+// "when do you need this by" / "preferred start date" unaskable — the commonest thing an
+// intake form wants after a name and a way to reach someone.
+const FIELD_TYPES = ['text', 'email', 'tel', 'url', 'textarea', 'select', 'date', 'time'];
 
 const LIMITS = { value: 2000, note: 4000, fields: 24, options: 24 };
 
 function isEmail(s) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || '').trim());
+}
+
+// A browser date input posts YYYY-MM-DD and a time input HH:MM, but the endpoint is public
+// and a POST need not come from the browser at all — so the shape is checked here rather
+// than trusted. Range is checked too: <input type="date"> happily posts 2024-13-45.
+function isDate(s) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || '').trim());
+  if (!m) return false;
+  const d = new Date(s + 'T00:00:00Z');
+  return !isNaN(d.getTime()) && d.getUTCFullYear() === +m[1]
+    && d.getUTCMonth() + 1 === +m[2] && d.getUTCDate() === +m[3];
+}
+function isTime(s) {
+  const m = /^(\d{2}):(\d{2})$/.exec(String(s || '').trim());
+  return !!m && +m[1] <= 23 && +m[2] <= 59;
 }
 
 // "default.8x2kq9" → "default". Anything malformed returns null rather than a
@@ -109,6 +127,12 @@ function validateSubmission(form, body) {
     }
     if (f.type === 'select' && Array.isArray(f.options) && f.options.indexOf(v) === -1) {
       return { error: 'Pick one of the listed options for ' + (f.label || f.key) + '.' };
+    }
+    if (f.type === 'date' && !isDate(v)) {
+      return { error: 'That date doesn\'t look right for ' + (f.label || f.key) + '.' };
+    }
+    if (f.type === 'time' && !isTime(v)) {
+      return { error: 'That time doesn\'t look right for ' + (f.label || f.key) + '.' };
     }
     values[f.key] = v;
   }

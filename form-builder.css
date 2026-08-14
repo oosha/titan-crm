@@ -2,142 +2,211 @@
    over the Forms tab, or mounted inline on /crm/pipeline/:id/form. Prefixed fb- so it
    can sit on top of any of those pages without colliding.
 
-   It relies on the --dir-* tokens from crm-directory.css, with fallbacks so it also
-   works on a page that only loads titan-sidebar.css. */
+   What is left here is layout: the modal shell, the two-column split, and the field row's
+   grid. The controls inside it are the design system's — .ds-btn, .ds-input, .ds-badge —
+   so this file no longer carries a button, an input or a chip of its own. It used to
+   define .fb-primary, .fb-ghost, .fb-add-btn, .fb-link-btn, .fb-input, .fb-select and
+   .fb-lock, which were the 15th button, the 16th, and so on.
+
+   Every value reads a semantic token. The old `var(--dir-x, #hex)` fallbacks are gone:
+   every page that mounts the builder links /design-system/tokens.css, so the fallback was
+   a second, quieter source of truth that nobody would have noticed going stale. */
 .fb-overlay {
   position: fixed; inset: 0; z-index: 3000;
   background: rgba(16, 24, 40, 0.45);
-  display: flex; align-items: center; justify-content: center; padding: 26px 20px;
-  animation: fb-fade 140ms ease;
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-300) var(--space-200);
+  animation: fb-fade var(--dur-base) var(--ease-standard);
 }
 @keyframes fb-fade { from { opacity: 0; } to { opacity: 1; } }
 body.fb-locked { overflow: hidden; }
 
 .fb-modal {
-  background: var(--dir-canvas, #f7f8fa); border-radius: 16px;
+  background: var(--surface-page); border-radius: var(--radius-xl);
   width: 100%; max-width: 1120px; max-height: 100%;
   display: flex; flex-direction: column; overflow: hidden;
-  box-shadow: 0 24px 64px rgba(16, 24, 40, 0.28);
+  box-shadow: var(--elevation-modal);
 }
 .fb-head {
-  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-  padding: 15px 18px; background: #fff; border-bottom: 1px solid var(--dir-line, #e8eaed);
+  display: flex; align-items: center; gap: var(--space-150); flex-shrink: 0;
+  padding: var(--space-150) var(--space-200);
+  background: var(--surface-primary); border-bottom: 1px solid var(--border-subtle);
 }
-.fb-title { font-size: 15px; font-weight: 700; color: var(--dir-ink, #1a1a1a); flex: 1; }
-.fb-close {
-  border: none; background: transparent; color: var(--dir-muted, #8b9096);
-  font-size: 22px; line-height: 1; cursor: pointer; width: 30px; height: 30px; border-radius: 8px;
+.fb-title {
+  font-size: var(--text-lg); font-weight: var(--weight-bold);
+  color: var(--text-heading); flex: 1;
 }
-.fb-close:hover { background: var(--dir-hair, #f2f4f6); color: var(--dir-ink, #1a1a1a); }
 
-.fb-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 18px; }
+.fb-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-200); }
 
 .fb-foot {
-  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
-  padding: 13px 18px; background: #fff; border-top: 1px solid var(--dir-line, #e8eaed);
+  display: flex; align-items: center; gap: var(--space-125); flex-shrink: 0;
+  padding: var(--space-150) var(--space-200);
+  background: var(--surface-primary); border-top: 1px solid var(--border-subtle);
 }
-.fb-err { flex: 1; font-size: 12.5px; color: #c0392b; }
-.fb-primary {
-  height: 36px; padding: 0 16px; border: 1px solid var(--dir-accent, #2170f4); border-radius: 10px;
-  background: var(--dir-accent, #2170f4); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
-}
-.fb-primary:hover:not(:disabled) { background: #1b5fd0; }
-.fb-primary:disabled { opacity: 0.6; cursor: default; }
+.fb-err { flex: 1; font-size: var(--text-xs); color: var(--status-danger); }
 
 /* ── The editor ─────────────────────────────────────────────────────────────── */
-.fb-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); gap: 18px; align-items: start; }
+.fb-cols {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+  gap: var(--space-200); align-items: start;
+}
 @media (max-width: 1000px) { .fb-cols { grid-template-columns: 1fr; } }
 
 .fb-card {
-  background: var(--dir-surface, #fff); border: 1px solid var(--dir-line, #e8eaed);
-  border-radius: 13px; padding: 15px 16px; margin-bottom: 12px;
+  background: var(--surface-primary); border: 1px solid var(--card-border);
+  border-radius: var(--card-radius); padding: var(--space-200);
+  margin-bottom: var(--space-150);
 }
 .fb-card:last-child { margin-bottom: 0; }
 .fb-card-title {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--dir-muted, #8b9096); margin-bottom: 13px;
+  font-size: var(--text-2xs); font-weight: var(--weight-bold);
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: var(--space-150);
 }
-.fb-row { display: grid; gap: 6px; margin-bottom: 13px; }
+.fb-row { display: grid; gap: var(--space-100); margin-bottom: var(--space-150); }
 .fb-row:last-child { margin-bottom: 0; }
-.fb-row label { font-size: 12.5px; font-weight: 600; color: var(--dir-ink, #1a1a1a); }
-.fb-row .hint { font-size: 11.5px; color: var(--dir-muted, #8b9096); font-weight: 400; }
-.fb-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 640px) { .fb-two { grid-template-columns: 1fr; } }
-
-.fb-input, .fb-select {
-  width: 100%; font: inherit; font-size: 13.5px; color: var(--dir-ink, #1a1a1a);
-  padding: 9px 11px; border: 1px solid var(--dir-line, #e8eaed); border-radius: 9px;
-  background: var(--dir-surface, #fff); outline: none;
+.fb-row label {
+  font-size: var(--text-xs); font-weight: var(--weight-semi); color: var(--text-heading);
 }
-.fb-input:focus, .fb-select:focus { border-color: var(--dir-accent, #2170f4); box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+.fb-row .hint { font-size: var(--text-2xs); color: var(--text-muted); font-weight: var(--weight-normal); }
 
-.fb-field { display: grid; grid-template-columns: 18px minmax(0,1fr) 116px auto auto; gap: 9px; align-items: center; padding: 8px 0; }
-.fb-field + .fb-field { border-top: 1px solid var(--dir-hair, #f2f4f6); }
-.fb-grip { color: var(--dir-faint, #b3b7bd); cursor: grab; text-align: center; font-size: 13px; user-select: none; }
+/* ── A field row ────────────────────────────────────────────────────────────────
+   Five columns: grip, what it asks, what it collects, whether it is required, remove.
+   The label and its destination stack in column two, so "Saved to company" sits under
+   the thing it describes rather than becoming a sixth column nobody has room for. */
+/* Every control sits on one grid row and the two captions get rows of their own beneath
+   it. Stacking the destination *inside* column two instead made that column taller than
+   the rest, so `align-items: center` measured against the stack and dropped the type
+   picker, the checkbox and the remove button below the input they belong to. */
+.fb-field {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 168px auto auto;
+  column-gap: var(--space-125); row-gap: var(--space-050);
+  align-items: center;
+  padding: var(--space-125) 0;
+}
+.fb-field + .fb-field { border-top: 1px solid var(--border-hairline); }
+
+/* Where the value lands on the record. A mapped field feeds the card's own column — and
+   through it the directory pages and contact dedupe — while a custom field is only stored.
+   The row looked identical either way before this.
+
+   Its own grid row, starting under the input it describes. */
+.fb-dest {
+  grid-column: 2 / -1;
+  font-size: var(--text-2xs); color: var(--text-muted);
+}
+
+.fb-grip {
+  color: var(--text-disabled); cursor: grab; text-align: center;
+  font-size: var(--text-sm); user-select: none;
+}
 .fb-field.is-locked .fb-grip { visibility: hidden; cursor: default; }
-.fb-lock {
-  font-size: 10.5px; color: var(--dir-muted, #8b9096); background: var(--dir-hair, #f2f4f6);
-  border-radius: 5px; padding: 3px 7px; white-space: nowrap; text-align: center;
+.fb-req {
+  display: inline-flex; align-items: center; gap: var(--space-075);
+  font-size: var(--text-xs); color: var(--text-secondary); white-space: nowrap;
 }
-.fb-req { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--dir-body, #333); white-space: nowrap; }
-.fb-req input { width: 14px; height: 14px; accent-color: var(--dir-accent, #2170f4); }
-.fb-del {
-  border: none; background: transparent; color: var(--dir-faint, #b3b7bd); cursor: pointer;
-  width: 26px; height: 26px; border-radius: 7px; font-size: 15px; line-height: 1;
+.fb-req input {
+  width: var(--checkbox-size); height: var(--checkbox-size);
+  accent-color: var(--checkbox-accent);
 }
-.fb-del:hover { background: #fdecec; color: #c0392b; }
+/* Name and Email have no type picker, so their badge lands in the picker's column and a
+   grid item stretches by default — which made a chip look like a disabled input sitting
+   where a control should be. */
+.fb-field > .ds-badge { justify-self: start; }
 .fb-field.is-locked .fb-del { visibility: hidden; }
-.fb-drag-over { box-shadow: inset 0 2px 0 var(--dir-accent, #2170f4); }
+.fb-drag-over { box-shadow: inset 0 2px 0 var(--accent-primary); }
 
-/* A full-width add row rather than a button tucked beside a picker: it is the one
-   action in this card, so it reads as the next thing to do. */
-.fb-add-btn {
-  width: 100%; margin-top: 14px; height: 40px;
-  border: 1px dashed #c9d6ea; border-radius: 10px;
-  background: transparent; font: inherit; font-size: 13px; font-weight: 600;
-  color: var(--dir-accent, #2170f4); cursor: pointer;
-}
-.fb-add-btn:hover {
-  border-color: var(--dir-accent, #2170f4); color: var(--dir-accent, #2170f4);
-  background: rgba(33,112,244,0.04);
+/* The options list for "Choose from a list". Spans from the label column to the end so it
+   reads as a continuation of the row above it, not a new field. */
+.fb-options { grid-column: 2 / -1; }
+
+.fb-note {
+  font-size: var(--text-xs); color: var(--text-muted);
+  margin-top: var(--space-125); line-height: 1.5;
 }
 
-.fb-ghost {
-  height: 36px; padding: 0 13px; border: 1px solid var(--dir-line, #e8eaed); border-radius: 9px;
-  background: var(--dir-surface, #fff); font: inherit; font-size: 13px; font-weight: 600;
-  color: var(--dir-body, #333); cursor: pointer;
-}
-.fb-ghost:hover { border-color: var(--dir-accent, #2170f4); color: var(--dir-accent, #2170f4); }
-.fb-note { font-size: 12px; color: var(--dir-muted, #8b9096); margin-top: 10px; line-height: 1.5; }
+/* Title and logo, side by side. The tile sits on the RIGHT: every other control in this
+   panel starts on the same left edge, and a 62px square in front of the title field broke
+   that column for the one row that has a picture in it.
 
-/* Logo: a small preview beside its two actions. Uploading is the only branding
-   control — the form has one image and one title, and that is the whole of it. */
-.fb-logo-row { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
-.fb-logo-prev {
-  width: 96px; height: 52px; border-radius: 10px; flex-shrink: 0;
-  border: 1px solid var(--dir-line, #e8eaed); background: var(--dir-canvas, #f7f8fa);
+   The tile IS the upload control. It used to be a dead preview with an "Upload logo"
+   button beside it, which made branding read as a second task rather than one field with
+   a picture in it. */
+.fb-title-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-150); align-items: stretch;
+}
+/* .fb-row carries a bottom margin for stacking, and it is not :last-child here — the file
+   input and the logo slot follow it — so that margin stayed, and aligning the tile to the
+   row's end put it 12px below the field it sits beside. */
+.fb-title-row .fb-row { margin-bottom: 0; }
+
+/* Its own positioning context, so the remove button pins to the tile rather than to the
+   row — the row's width changes with the panel, the tile's does not. */
+.fb-logo-slot { position: relative; display: flex; }
+.fb-logo-drop {
+  /* Fills the label + field column beside it, top to bottom, rather than picking a height
+     of its own — so the two line up whatever the label wraps to.
+     Blue and dashed, matching .ds-btn--add: this is an empty slot inviting a file, which
+     is the same thing that component says, and the product should only have one way of
+     saying it. */
+  box-sizing: border-box;
+  flex: 1; min-width: 96px; max-width: 132px;
+  padding: 0 var(--space-125);
+  border: 1px dashed var(--blue-200); border-radius: var(--input-radius);
+  background: var(--accent-subtle); cursor: pointer;
   display: flex; align-items: center; justify-content: center; overflow: hidden;
+  color: var(--text-accent); font: inherit;
+  transition: var(--motion-hover);
 }
-.fb-logo-prev img { max-width: 84px; max-height: 40px; display: block; }
-.fb-logo-prev.is-empty span { font-size: 11.5px; color: var(--dir-faint, #b3b7bd); }
-.fb-logo-acts { display: flex; align-items: center; gap: 10px; }
-.fb-link-btn {
-  border: none; background: transparent; padding: 0; cursor: pointer;
-  font: inherit; font-size: 12.5px; color: var(--dir-muted, #8b9096); text-decoration: underline;
+.fb-logo-drop:hover {
+  background: var(--accent-muted); border-color: var(--accent-primary);
 }
-.fb-link-btn:hover { color: #c0392b; }
+.fb-logo-drop:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.fb-logo-empty {
+  display: flex; align-items: center; gap: var(--space-075);
+  font-size: var(--text-xs); font-weight: var(--weight-medium); white-space: nowrap;
+}
+/* Filled, the tile is a preview rather than an invitation, so it drops both the dashed
+   edge and the blue — the logo is the thing to look at, not the box. */
+.fb-logo-drop.has-logo {
+  border-style: solid; border-color: var(--border-subtle);
+  background: var(--surface-primary); padding: var(--space-075);
+}
+.fb-logo-drop.has-logo:hover { border-color: var(--border-accent); background: var(--surface-primary); }
+.fb-logo-drop.has-logo .fb-logo-empty { display: none; }
+.fb-logo-drop img { max-width: 100%; max-height: 100%; display: block; object-fit: contain; }
 
-.fb-big { font-size: 14.5px; padding: 11px 13px; }
+/* Remove sits on the tile rather than beside it — it applies to the image, and a button
+   in the row would compete with the title field for the same line. */
+.fb-logo-clear {
+  position: absolute; right: -6px; top: -6px; z-index: 1;
+  width: 20px; height: 20px; padding: 0; border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle); background: var(--surface-primary);
+  color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--elevation-raise);
+}
+.fb-logo-clear:hover { color: var(--status-danger); border-color: var(--border-danger); }
+
+/* The form's title is the one field on this panel worth reading at a glance. */
+.fb-big { font-size: var(--text-lg); height: var(--btn-height-lg); }
 
 .fb-toggle {
-  display: flex; align-items: center; gap: 9px; font-size: 13px;
-  color: var(--dir-body, #333); padding: 2px 4px 4px;
+  display: flex; align-items: center; gap: var(--space-125); font-size: var(--text-sm);
+  color: var(--text-secondary); padding: var(--space-025) var(--space-050) var(--space-050);
 }
-.fb-toggle input { width: 16px; height: 16px; accent-color: var(--dir-accent, #2170f4); }
+.fb-toggle input {
+  width: var(--checkbox-size); height: var(--checkbox-size);
+  accent-color: var(--checkbox-accent);
+}
 
 .fb-preview { position: sticky; top: 0; }
 .fb-preview-head {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--dir-muted, #8b9096); margin-bottom: 11px;
+  font-size: var(--text-2xs); font-weight: var(--weight-bold);
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: var(--space-125);
 }
 .fb-preview .tf-sheet { max-width: 100%; }

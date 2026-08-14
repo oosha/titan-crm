@@ -240,9 +240,10 @@ pipeline)` hands the objects back and the caller decides what that means:
 
 `form-render.js` (+ `form.css`) draws the form's actual markup and is shared by the public
 page and the builder's preview. Keep it that way: a preview that drifts from the real form
-is worse than no preview. New forms start **paused**, and their default fields come from the
-pipeline's `type` (hiring asks for a portfolio link and why the role; sales for company and
-what they need).
+is worse than no preview. New forms start **accepting responses** — the token is random, so
+nothing is reachable until the link is shared, and a form that silently drops submissions is
+the worse of the two failures. Their default fields come from the pipeline's `type` (hiring
+asks for a portfolio link and why the role; sales for company and what they need).
 
 A logo is stored as a **data URI on the form**, downscaled to 320px and capped at 60KB.
 That cap is not cosmetic: the whole document is POSTed on every save and every save is a

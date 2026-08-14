@@ -33,9 +33,38 @@
     { target: 'linkedin',    label: 'LinkedIn',  type: 'url' },
     { target: 'note',        label: 'Message',   type: 'textarea' },
   ];
-  const TYPES = ['text', 'email', 'tel', 'url', 'textarea', 'select'];
+  // What a field collects, named the way the person building the form thinks about it.
+  //
+  // These used to be the raw HTML input types, lowercase, straight out of the markup —
+  // `text`, `tel`, `url`, `textarea`. Nobody setting up an intake form thinks "I need a
+  // tel"; they think "I need their phone number". The stored value is unchanged and still
+  // the input type, so this is a label map and nothing more; api/_form.js keeps validating
+  // the same strings.
+  //
+  // Ordered by how often a form needs them, not alphabetically: the two text fields first,
+  // then the three that describe a way of reaching someone, then the two about when.
+  const TYPES = [
+    { value: 'text',     label: 'Short text',        hint: 'One line' },
+    { value: 'textarea', label: 'Long text',         hint: 'A paragraph' },
+    { value: 'email',    label: 'Email address',     hint: 'Checked before it is accepted' },
+    { value: 'tel',      label: 'Phone number',      hint: '' },
+    { value: 'url',      label: 'Web link',          hint: '' },
+    { value: 'date',     label: 'Date',              hint: '' },
+    { value: 'time',     label: 'Time',              hint: '' },
+    { value: 'select',   label: 'Choose from a list', hint: 'You set the options' },
+  ];
+  const TYPE_LABEL = {};
+  TYPES.forEach(function (t) { TYPE_LABEL[t.value] = t.label; });
 
   function isLocked(f) { return f.target === 'name' || f.target === 'email'; }
+
+  // The record field a target writes to, in the words the record screen uses. `designation`
+  // and `note` are storage names; nobody reading this row calls them that.
+  const DEST_LABEL = {
+    name: 'name', email: 'email', phone: 'phone', designation: 'job title',
+    company: 'company', location: 'location', linkedin: 'LinkedIn', note: 'notes',
+  };
+  function destLabel(target) { return DEST_LABEL[target] || target; }
 
   function newTokenSuffix() {
     const bytes = new Uint8Array(6);
@@ -62,8 +91,10 @@
     ],
   };
 
-  // A form that hasn't been set up yet. Starts paused: a link should not be live
-  // while it is still being written.
+  // A form that hasn't been set up yet. It starts accepting responses: the token is random
+  // and unguessable, so nothing is reachable until someone shares the link — and setting a
+  // form up only to find it silently dropping submissions is the worse failure of the two.
+  // Untick "Accepting responses" to pause it.
   window.titanFormDefault = function (personaId, pipeline) {
     const pl = pipeline || {};
     const kind = pl.type === 'hiring' ? 'hiring' : 'sales';
@@ -72,7 +103,7 @@
       : '';
     return {
       token: (personaId || 'default') + '.' + newTokenSuffix(),
-      enabled: false,
+      enabled: true,
       heading: heading,
       blurb: '',
       logoUrl: '',
@@ -96,23 +127,33 @@
   const SHELL = '' +
     '<div class="fb-cols">' +
       '<div class="fb-edit">' +
+        // The logo tile is the upload control, not a preview beside one. A separate
+        // "Upload logo" button made branding look like a second task; here the thing you
+        // click is the thing you get, and it sits where it sits on the form itself —
+        // to the left of the title.
         '<div class="fb-card">' +
-          '<div class="fb-row"><label>Form title</label>' +
-            '<input class="fb-input fb-big" data-meta="heading" placeholder="e.g. Apply — Senior Frontend Engineer"></div>' +
-          '<div class="fb-logo-row">' +
-            '<div class="fb-logo-prev"></div>' +
-            '<div class="fb-logo-acts">' +
-              '<button type="button" class="fb-ghost fb-logo-pick">Upload logo</button>' +
-              '<button type="button" class="fb-link-btn fb-logo-clear">Remove</button>' +
-              '<input type="file" class="fb-logo-file" accept="image/*" hidden>' +
+          '<div class="fb-title-row">' +
+            '<div class="fb-row"><label for="fb-heading">Form title</label>' +
+              '<input class="ds-input fb-big" id="fb-heading" data-meta="heading" placeholder="e.g. Apply — Senior Frontend Engineer"></div>' +
+            '<div class="fb-logo-slot">' +
+              '<button type="button" class="fb-logo-drop" title="Add a logo">' +
+                '<span class="fb-logo-empty">' +
+                  (window.dsIcon ? window.dsIcon('upload', { size: 17 }) : '') +
+                  '<span>Logo</span>' +
+                '</span>' +
+              '</button>' +
+              '<button type="button" class="fb-logo-clear" title="Remove logo" aria-label="Remove logo">' +
+                (window.dsIcon ? window.dsIcon('close', { size: 11 }) : '&times;') +
+              '</button>' +
             '</div>' +
+            '<input type="file" class="fb-logo-file" accept="image/*" hidden>' +
           '</div>' +
         '</div>' +
 
         '<div class="fb-card">' +
           '<div class="fb-card-title">Fields</div>' +
           '<div class="fb-fields"></div>' +
-          '<button type="button" class="fb-add-btn">+ Add field</button>' +
+          '<button type="button" class="ds-btn ds-btn--add fb-add-btn">Add a field</button>' +
         '</div>' +
 
         '<label class="fb-toggle"><input type="checkbox" class="fb-enabled"> Accepting responses</label>' +
@@ -161,23 +202,27 @@
   const LOGO_MAX_BYTES = 60 * 1024;
 
   Builder.prototype.renderLogo = function () {
-    const prev = this.$('.fb-logo-prev');
+    const drop = this.$('.fb-logo-drop');
     const clear = this.$('.fb-logo-clear');
-    if (this.form.logoUrl) {
-      prev.innerHTML = '<img src="' + esc(this.form.logoUrl) + '" alt="">';
-      prev.classList.remove('is-empty');
-      clear.style.display = '';
-    } else {
-      prev.innerHTML = '<span>No logo</span>';
-      prev.classList.add('is-empty');
-      clear.style.display = 'none';
+    const has = !!this.form.logoUrl;
+    // The empty prompt stays in the markup and is hidden, rather than being rebuilt, so the
+    // icon inside it is hydrated once instead of on every keystroke in the title field.
+    drop.classList.toggle('has-logo', has);
+    drop.title = has ? 'Change logo' : 'Add a logo';
+    const img = drop.querySelector('img');
+    if (has) {
+      if (img) img.src = this.form.logoUrl;
+      else drop.insertAdjacentHTML('beforeend', '<img src="' + esc(this.form.logoUrl) + '" alt="">');
+    } else if (img) {
+      img.remove();
     }
+    clear.style.display = has ? '' : 'none';
   };
 
   Builder.prototype.wireLogo = function () {
     const self = this;
     const file = this.$('.fb-logo-file');
-    this.$('.fb-logo-pick').addEventListener('click', function () { file.click(); });
+    this.$('.fb-logo-drop').addEventListener('click', function () { file.click(); });
     this.$('.fb-logo-clear').addEventListener('click', function () {
       self.form.logoUrl = '';
       self.renderLogo(); self.renderPreview();
@@ -221,17 +266,40 @@
     const host = this.$('.fb-fields');
     host.innerHTML = this.form.fields.map(function (f, i) {
       const locked = isLocked(f);
+      // Where a value lands on the record, said out loud. "Company" writes to the card's
+      // company field — which is what the directory pages and contact dedupe read — while
+      // a custom field is only ever stored. Those are different things and the row used to
+      // look identical either way.
+      const dest = locked
+        ? (f.target === 'name' ? 'Always asked' : 'Always asked')
+        : (f.target === 'custom' ? 'Custom field' : 'Saved to ' + destLabel(f.target));
+      const isSelect = f.type === 'select';
       return '<div class="fb-field' + (locked ? ' is-locked' : '') + '" data-i="' + i + '"' + (locked ? '' : ' draggable="true"') + '>' +
         '<span class="fb-grip">⋮⋮</span>' +
-        '<input class="fb-input" value="' + esc(f.label || '') + '" data-act="label" placeholder="Label">' +
+        '<input class="ds-input" value="' + esc(f.label || '') + '" data-act="label" placeholder="What to ask for">' +
         (locked
-          ? '<span class="fb-lock">' + (f.target === 'name' ? 'Name' : 'Email') + '</span>'
-          : '<select class="fb-select" data-act="type">' +
-              TYPES.map(function (t) { return '<option value="' + t + '"' + (f.type === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') +
+          ? '<span class="ds-badge">' + (f.target === 'name' ? 'Name' : 'Email') + '</span>'
+          : '<select class="ds-input" data-act="type">' +
+              TYPES.map(function (t) {
+                return '<option value="' + t.value + '"' + (f.type === t.value ? ' selected' : '') + '>' + esc(t.label) + '</option>';
+              }).join('') +
             '</select>') +
         '<label class="fb-req"><input type="checkbox" data-act="req"' + (f.required || locked ? ' checked' : '') +
-          (locked ? ' disabled' : '') + '> required</label>' +
-        '<button type="button" class="fb-del" data-act="del" title="Remove field">×</button>' +
+          (locked ? ' disabled' : '') + '> Required</label>' +
+        '<button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm fb-del" data-act="del" title="Remove this field">' +
+          (window.dsIcon ? window.dsIcon('close', { size: 13 }) : '×') + '</button>' +
+        // Wraps onto its own grid row, under the label it describes — so the controls above
+        // it all sit on one line instead of centring against a two-line column.
+        '<span class="fb-dest">' + esc(dest) + '</span>' +
+        // "Choose from a list" is the one type that needs more than a name. It was offered
+        // in the picker with no way to enter the options, so picking it produced a dropdown
+        // containing only "Choose…" — a type that could not work.
+        (isSelect
+          ? '<div class="fb-options">' +
+              '<input class="ds-input" data-act="options" placeholder="Options, separated by commas" ' +
+                'value="' + esc((f.options || []).join(', ')) + '">' +
+            '</div>'
+          : '') +
       '</div>';
     }).join('');
 
@@ -251,7 +319,22 @@
         }
         self.renderPreview();
       });
-      on('type', 'change', function (e) { self.form.fields[i].type = e.target.value; self.renderPreview(); });
+      on('type', 'change', function (e) {
+        const f = self.form.fields[i];
+        f.type = e.target.value;
+        // Switching away from a list leaves its options behind as dead data on the stored
+        // form; switching back would silently resurrect them.
+        if (f.type !== 'select') delete f.options;
+        // The options input appears and disappears with the type, so this row is redrawn
+        // rather than patched.
+        self.renderFields();
+        self.renderPreview();
+      });
+      on('options', 'input', function (e) {
+        self.form.fields[i].options = e.target.value.split(',')
+          .map(function (s) { return s.trim(); }).filter(Boolean);
+        self.renderPreview();
+      });
       on('req', 'change', function (e) { self.form.fields[i].required = e.target.checked; self.renderPreview(); });
       on('del', 'click', function () {
         if (isLocked(self.form.fields[i])) return;
@@ -337,13 +420,14 @@
         '<div class="fb-modal" role="dialog" aria-modal="true">' +
           '<div class="fb-head">' +
             '<span class="fb-title">' + esc(opts.title || 'Form setup') + '</span>' +
-            '<button type="button" class="fb-close" aria-label="Close">&times;</button>' +
+            '<button type="button" class="ds-btn ds-btn--ghost ds-btn--icon fb-close" aria-label="Close">' +
+              (window.dsIcon ? window.dsIcon('close', { size: 15 }) : '&times;') + '</button>' +
           '</div>' +
           '<div class="fb-scroll"></div>' +
           '<div class="fb-foot">' +
             '<span class="fb-err"></span>' +
-            '<button type="button" class="fb-ghost fb-cancel">Cancel</button>' +
-            '<button type="button" class="fb-primary fb-save">' + esc(opts.saveLabel || 'Save form') + '</button>' +
+            '<button type="button" class="ds-btn ds-btn--ghost fb-cancel">Cancel</button>' +
+            '<button type="button" class="ds-btn ds-btn--primary fb-save">' + esc(opts.saveLabel || 'Save form') + '</button>' +
           '</div>' +
         '</div>';
       document.body.appendChild(wrap);
