@@ -2026,7 +2026,15 @@
       ]
     },
     "inbound": {
-      "connections": []
+      "connections": [
+        {
+          "id": "inmsx3bstz",
+          "token": "default.c93x16rbj5gxgvzlasarig",
+          "provider": "cf7",
+          "seen": [],
+          "name": "Contact Form 7"
+        }
+      ]
     }
   }
 }
