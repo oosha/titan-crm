@@ -52,7 +52,19 @@
     width: 22px; height: 22px; font-size: 11px;
   }
   .company-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #fff; }
-  .ov-created-by { font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-100); }
+  /* One line, one size. The contact half had no rule of its own, so it inherited
+     the page's body size while "Created by" sat at --text-xs — the two halves of
+     the same sentence rendering at different sizes. The size lives on the row now,
+     and only the name is emphasised. */
+  .ov-byline {
+    display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-075);
+    margin-top: var(--space-100);
+    font-size: var(--text-xs); line-height: 1.5; color: var(--text-secondary);
+  }
+  .ov-byline-sep { color: var(--border-strong); }
+  .ov-created-by { color: var(--text-secondary); }
+  .ov-contact-line { min-width: 0; }
+  .ov-contact-line strong { color: var(--text-primary); font-weight: var(--weight-semi); }
   .ov-company-input { font-size: var(--text-lg); font-weight: var(--weight-semi); width: 220px; }
   .ov-value-label { font-size: var(--text-xs); color: var(--text-secondary); margin-right: var(--space-050); }
   .ov-value-row { display: flex; align-items: center; gap: 0; }
