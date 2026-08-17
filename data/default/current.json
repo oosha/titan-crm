@@ -2097,7 +2097,67 @@
           "label": "Closed"
         }
       ],
-      "cards": []
+      "cards": [],
+      "customFieldDefs": [
+        {
+          "key": "cf1",
+          "name": "Go live",
+          "type": "date"
+        }
+      ],
+      "intakeForm": {
+        "token": "default.0z2x6c2606",
+        "enabled": true,
+        "heading": "Get in touch about My Pipeline",
+        "blurb": "",
+        "logoUrl": "",
+        "submitLabel": "Submit",
+        "thanks": "Thanks — we have your details and will be in touch.",
+        "recordTitle": "My Pipeline",
+        "sourceLabel": "Form",
+        "fields": [
+          {
+            "key": "name",
+            "label": "Full name",
+            "type": "text",
+            "target": "name",
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "Email",
+            "type": "email",
+            "target": "email",
+            "required": true
+          },
+          {
+            "key": "company",
+            "label": "Company",
+            "type": "text",
+            "target": "company"
+          },
+          {
+            "key": "phone",
+            "label": "Phone",
+            "type": "tel",
+            "target": "phone"
+          },
+          {
+            "key": "note",
+            "label": "What do you need?",
+            "type": "textarea",
+            "target": "note",
+            "placeholder": "A sentence or two about what you’re after"
+          },
+          {
+            "key": "cf1",
+            "label": "Go live",
+            "type": "date",
+            "target": "custom",
+            "required": false
+          }
+        ]
+      }
     }
   },
   "dashboard": {
