@@ -352,6 +352,21 @@
   }
   .crm-act-ic svg { width: 14px; height: 14px; }
   .crm-empty-state { font-size: var(--text-sm); color: var(--text-secondary); padding: var(--space-050) 0; }
+  .ov-addact-wrap { position: relative; display: inline-block; }
+  .ov-addact-menu {
+    display: none; position: absolute; left: 0; top: calc(100% + var(--space-075));
+    min-width: 200px; z-index: 30; padding: var(--space-075);
+    background: var(--surface-primary); border: 1px solid var(--border-subtle);
+    border-radius: 10px; box-shadow: var(--elevation-menu);
+  }
+  .ov-addact-menu.open { display: block; }
+  .ov-addact-item {
+    display: flex; align-items: center; gap: var(--space-100); width: 100%; text-align: left;
+    padding: var(--space-100) var(--space-125); border: none; background: none; border-radius: 7px;
+    font: inherit; font-size: var(--text-sm); color: var(--text-primary); cursor: pointer;
+  }
+  .ov-addact-item:hover { background: var(--surface-hover); }
+
   /* An empty queue should say what to do about it, not just that it is empty. */
   .ov-empty-add {
     border: none; background: none; padding: 0; font: inherit; font-size: var(--text-sm);
@@ -724,7 +739,26 @@
                what has. -->
           <div class="ov-heading">Upcoming activity</div>
           <div id="ov-upcoming-activity"></div>
-          <div class="crm-add-activity" id="ov-add-activity" onclick="addActivity('task')">+ Add activity</div>
+          <!-- The queue holds four kinds of pending thing, so adding to it asks which.
+               These schedule something for later; the buttons at the top of the
+               record do the same things now (open the composer, and so on). -->
+          <div class="ov-addact-wrap">
+            <div class="crm-add-activity" id="ov-add-activity" onclick="toggleAddActivityMenu(event)">+ Add activity</div>
+            <div class="ov-addact-menu" id="ov-addact-menu">
+              <button class="ov-addact-item" type="button" onclick="addActivity('task')">
+                <span data-ds-icon="check" data-size="15"></span> Task
+              </button>
+              <button class="ov-addact-item" type="button" onclick="addActivity('call')">
+                <span data-ds-icon="phone" data-size="15"></span> Call
+              </button>
+              <button class="ov-addact-item" type="button" onclick="addActivity('meeting')">
+                <span data-ds-icon="calendar" data-size="15"></span> Meeting
+              </button>
+              <button class="ov-addact-item" type="button" onclick="addActivity('followup')">
+                <span data-ds-icon="mail" data-size="15"></span> Follow-up email
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="ov-section ds-card ds-card--section">
@@ -1803,13 +1837,15 @@
   // wired to actually create the activity (that panel leaves it as a prototype-only
   // stub for everything except notes).
   const ACT_LABELS = { followup: 'Follow-up on email', call: 'Schedule a call',
-                       booking: 'Send a booking link', task: 'Create a task' };
+                       booking: 'Send a booking link', task: 'Create a task',
+                       meeting: 'Meeting' };
 
   // Was two prompt() calls. In a sandboxed frame without allow-modals prompt()
   // returns null without asking anything, so every item in this menu silently did
   // nothing — which is what "not working" looked like. A draft row in the list
   // needs no modal permission and lets you see what you are adding.
   function addActivity(kind) {
+    closeAddActivityMenu();
     if (kind === 'note') {
       const input = document.getElementById('ov-note-input');
       if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); input.focus(); }
@@ -1821,7 +1857,8 @@
     row.className = 'ov-act-draft';
     row.id = 'ov-act-draft';
     row.innerHTML =
-      actIcon(kind === 'call' ? 'phone' : kind === 'booking' ? 'meeting' : kind === 'task' ? 'task' : 'email') +
+      actIcon(kind === 'call' ? 'phone' : (kind === 'booking' || kind === 'meeting') ? 'meeting'
+              : kind === 'task' ? 'task' : 'email') +
       '<input class="ds-input ov-act-draft-text" id="ov-act-draft-text" value="' + esc(ACT_LABELS[kind] || '') + '">' +
       '<input class="ds-input ov-act-draft-date" id="ov-act-draft-date" type="datetime-local" aria-label="Due">' +
       '<button class="ds-btn ds-btn--primary ds-btn--sm" type="button" onclick="commitActivity(\'' + kind + '\')">Add</button>' +
@@ -1881,6 +1918,23 @@
   function actNote() {
     const input = document.getElementById('ov-note-input');
     if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); input.focus(); }
+  }
+
+  function toggleAddActivityMenu(evt) {
+    if (evt) evt.stopPropagation();
+    const m = document.getElementById('ov-addact-menu');
+    const open = m.classList.toggle('open');
+    if (open) setTimeout(function () { document.addEventListener('click', outsideAddActivityMenu); }, 0);
+    else document.removeEventListener('click', outsideAddActivityMenu);
+  }
+  function outsideAddActivityMenu(e) {
+    const m = document.getElementById('ov-addact-menu');
+    if (m && !m.contains(e.target)) closeAddActivityMenu();
+  }
+  function closeAddActivityMenu() {
+    const m = document.getElementById('ov-addact-menu');
+    if (m) m.classList.remove('open');
+    document.removeEventListener('click', outsideAddActivityMenu);
   }
 
   function cancelActivity() {
