@@ -229,6 +229,9 @@
       // "Contact person" is the field that identifies the contact, so it sits in the
       // same row as the "Add contacts" master toggle rather than with the rest of the
       // (optional) per-contact detail fields below.
+      // On a person-subject pipeline the record IS the person, so "Contact person"
+      // isn't a field to configure — it's the subject, named on the record itself.
+      if (f.key === 'contact' && schema.isPerson) return;
       const wrap = f.key === 'contact'
         ? document.getElementById('os-contact-first-row')
         : document.querySelector('.os-chip-row[data-group="' + f.group + '"]');
@@ -267,6 +270,11 @@
   function renderContactsMaster() {
     const chip = document.getElementById('os-contacts-master');
     if (!chip) return;
+    // Nothing to add contacts *to* when the record is itself a person — there is
+    // exactly one, and it's the subject. Hidden rather than switched off, so the
+    // stored contactsEnabled survives a pipeline being switched back to companies.
+    if (window.titanSchema.isPerson(pipeline)) { chip.style.display = 'none'; return; }
+    chip.style.display = '';
     chip.className = 'os-chip' + (contactsEnabled ? '' : ' off');
     chip.innerHTML = '<span class="os-chip-icon">' + (contactsEnabled ? ICON_TICK : ICON_X) + '</span><span class="os-chip-name">Add contacts</span>';
   }
