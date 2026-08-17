@@ -80,8 +80,10 @@
   }
   /* The row for the stage selected in the flow above, so clicking a chevron and
      landing here reads as one movement rather than a jump to an unmarked row. */
-  /* A ring rather than a fill: the row's background is the stage's own colour. */
-  .ps-stage-item.is-selected { border-color: var(--border-accent); box-shadow: 0 0 0 2px var(--accent-muted); }
+  /* Marked by a firmer edge in a neutral tone, not an accent ring: the row already
+     carries its stage's colour, and a blue outline on top of that read as a second,
+     competing highlight. */
+  .ps-stage-item.is-selected { border-color: var(--border-strong); }
   .ps-stage-item-head { display: flex; align-items: center; gap: var(--space-100); margin-bottom: var(--space-100); }
   .ps-stage-item-name { font-weight: 600; }
   .ps-stage-item textarea { min-height: 68px; resize: vertical; }
@@ -189,16 +191,34 @@
   /* Delete-pipeline confirmation. The name is the thing being verified, so it's set
      large and selectable-looking — but user-select is off so it can't be copy-pasted
      into the box, which would defeat the point of asking. */
+  /* One centred column: the whole modal is a single question, so nothing in it needs
+     scanning down a left edge. Sizes are type-scale tokens rather than the 13px the
+     surrounding modals use — this is the last thing read before records are destroyed
+     and it shouldn't be the smallest text on screen. */
+  .ps-del-body { text-align: center; }
+  .ps-del-title {
+    font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--text-heading);
+    margin: var(--space-200) 0 var(--space-300);
+  }
   .ps-del-warning {
-    font-size: 13.5px; line-height: 1.5; color: var(--text-primary);
+    font-size: var(--text-md); line-height: 1.5; color: var(--text-primary);
     background: var(--status-danger-subtle); border-radius: var(--radius-md);
     padding: var(--space-200) var(--space-250); margin-bottom: var(--space-300);
   }
-  .ps-del-name {
-    font-size: 24px; font-weight: var(--weight-bold); color: var(--text-heading);
-    margin: var(--space-100) 0 var(--space-150); word-break: break-word; user-select: none;
+  .ps-del-prompt {
+    font-size: var(--text-md); font-weight: var(--weight-semi); color: var(--text-primary);
   }
-  .ps-del-input { min-height: 0; }
+  /* Breathing room either side, so the name reads as the thing being checked rather
+     than as a heading for the input under it. */
+  .ps-del-name {
+    font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--text-heading);
+    margin: var(--space-300) 0; word-break: break-word; user-select: none;
+  }
+  .ps-del-field-label {
+    display: block; font-size: var(--text-sm); font-weight: var(--weight-medium);
+    color: var(--text-secondary); margin-bottom: var(--space-075);
+  }
+  .ps-del-input { min-height: 0; font-size: var(--text-md); text-align: center; }
   .np-toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px);
     display: flex; align-items: center; gap: 8px;
@@ -306,17 +326,22 @@
   /* Names the stage everything below it applies to, at the same weight as the card
      title above — without it the sections say "Lead" in their headings and nothing
      says which stage you actually picked. */
-  .ps-stage-editor-head { display: block; margin-top: var(--space-300); }
-  .ps-stage-editor-title { font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--text-heading); }
+  .ps-stage-editor-head {
+    display: block; margin-top: var(--space-150);
+    padding: var(--space-125) var(--space-150); border-radius: var(--radius-md);
+  }
+  .ps-stage-editor-title { font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--text-heading); }
   /* A rule after each section, so one block of settings ends before the next begins. */
-  .ps-stage-section { border-bottom: 1px solid var(--border-subtle); margin-top: var(--space-300); padding-bottom: var(--space-300); }
+  .ps-stage-section { border-bottom: 1px solid var(--border-subtle); margin-top: var(--space-400); padding-bottom: var(--space-300); }
   .ps-stage-section:last-of-type { border-bottom: 0; padding-bottom: 0; }
   /* Column, not row: the hint is a sentence describing the section, so it reads as
      a subtitle under the heading rather than a fragment trailing off beside it. */
-  .ps-stage-section-head { display: flex; flex-direction: column; gap: var(--space-025); margin-bottom: var(--space-200); }
-  .ps-stage-section-hint { max-width: 62ch; line-height: 1.5; }
+  .ps-stage-section-head { display: flex; flex-direction: column; gap: var(--space-050); margin-bottom: var(--space-200); }
+  /* Matches the body text in the controls below it (the "After N days of no activity"
+     row), so the sentence describing a section reads at the same size as the section. */
+  .ps-stage-section-hint { max-width: 62ch; line-height: 1.5; font-size: var(--text-md); }
   .ps-stage-editor .ds-field-label { font-size: var(--text-md); font-weight: var(--weight-semi); color: var(--text-heading); }
-  .ps-stage-section-title { font-size: var(--text-lg); font-weight: var(--weight-semi); color: var(--text-heading); }
+  .ps-stage-section-title { font-size: var(--text-2xl); font-weight: var(--weight-semi); color: var(--text-heading); }
   .ps-stage-field { display: grid; gap: var(--space-075); }
   .ps-stage-row { position: relative; display: flex; align-items: center; gap: var(--space-200); margin-top: var(--space-200); padding-right: calc(var(--btn-height-sm) + var(--space-100)); font-size: var(--text-md); color: var(--text-primary); }
   .ps-stage-row:first-of-type { margin-top: 0; }
@@ -505,14 +530,19 @@
      checked — you should be able to see what you're agreeing to destroy. -->
 <div class="np-overlay" id="ps-delete-overlay" onclick="if(event.target===this) closeDeletePipeline()">
   <div class="np-modal">
+    <!-- The title sits in the body, not the header: the header is a flex row built for a
+         left title against a right ×, and it's shared with the Sources modals, so it
+         can't centre one without moving theirs. The header keeps the ×. -->
     <div class="np-header">
-      <span class="np-title">Delete pipeline</span>
+      <span class="np-title"></span>
       <span class="np-close" onclick="closeDeletePipeline()">&times;</span>
     </div>
-    <div class="np-body">
+    <div class="np-body ps-del-body">
+      <div class="ps-del-title">Delete pipeline</div>
       <div class="ps-del-warning" id="ps-del-warning"></div>
-      <div class="np-rule-label">Type the pipeline name to confirm</div>
+      <div class="ps-del-prompt">Type the pipeline name to confirm:</div>
       <div class="ps-del-name" id="ps-del-name"></div>
+      <label class="ps-del-field-label" for="ps-del-input">Pipeline name</label>
       <input class="np-rule-input ps-del-input" id="ps-del-input" type="text"
              spellcheck="false" autocomplete="off" oninput="onDeleteNameInput()"
              onkeydown="if(event.key==='Enter'){event.preventDefault();confirmDeletePipeline();}">
@@ -1048,7 +1078,14 @@
     // and the summary restated settings that are visible in the sections below it.
     editor.innerHTML =
       '<div class="ps-stage-editor-head"><span class="ps-stage-editor-title"></span></div>';
-    editor.querySelector('.ps-stage-editor-title').textContent = stage.label || 'Untitled stage';
+    editor.querySelector('.ps-stage-editor-title').textContent =
+      'In stage: ' + (stage.label || 'Untitled stage');
+    // Tint plus a solid edge in the same stage colour. The tint alone starts at 0.06
+    // alpha for the first stage, indistinguishable from the card behind it — so the
+    // bar for "Lead" would have had no colour at all.
+    const headEl = editor.querySelector('.ps-stage-editor-head');
+    headEl.style.background = shadeFor(color, i, stages.length);
+    headEl.style.borderLeft = '4px solid ' + solidShadeFor(color, i, stages.length);
     const addSection = function (title, hint) {
       const section = document.createElement('section');
       section.className = 'ps-stage-section';
@@ -1529,12 +1566,13 @@
     const one = ((pipeline && pipeline.entity) || 'record').toLowerCase();
     const count = ((pipeline && pipeline.cards) || []).length;
     document.getElementById('ps-del-warning').textContent = count
-      ? 'This deletes the pipeline and its ' + count + ' ' + (count === 1 ? one : many) + '. This can’t be undone.'
-      : 'This deletes the pipeline. This can’t be undone.';
+      ? 'This deletes the pipeline and its ' + count + ' ' + (count === 1 ? one : many) + ', and can not be undone.'
+      : 'This deletes the pipeline, and can not be undone.';
     document.getElementById('ps-del-name').textContent = name;
     const input = document.getElementById('ps-del-input');
     input.value = '';
-    input.placeholder = name;
+    // No placeholder: it echoed the real name, handing over the answer to the very
+    // question being asked. The field has its own label instead.
     onDeleteNameInput();
     document.getElementById('ps-delete-overlay').classList.add('open');
     input.focus();
