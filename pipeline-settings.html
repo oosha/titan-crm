@@ -80,10 +80,10 @@
   }
   /* The row for the stage selected in the flow above, so clicking a chevron and
      landing here reads as one movement rather than a jump to an unmarked row. */
-  /* Marked by a firmer edge in a neutral tone, not an accent ring: the row already
-     carries its stage's colour, and a blue outline on top of that read as a second,
-     competing highlight. */
-  .ps-stage-item.is-selected { border-color: var(--border-strong); }
+  /* Deliberately unstyled: the row is already tinted with its stage's colour, and the
+     scroll that brings it into view is the feedback for picking it. Any outline on top
+     of that was a second highlight saying the same thing. The class stays because the
+     selection is still real state — it's just not drawn. */
   .ps-stage-item-head { display: flex; align-items: center; gap: var(--space-100); margin-bottom: var(--space-100); }
   .ps-stage-item-name { font-weight: 600; }
   .ps-stage-item textarea { min-height: 68px; resize: vertical; }
@@ -196,15 +196,26 @@
      surrounding modals use — this is the last thing read before records are destroyed
      and it shouldn't be the smallest text on screen. */
   .ps-del-body { text-align: center; }
+  /* Wider gutters and a deeper footer than the Sources modals, which are pick-a-thing
+     lists — this one is a single decision and reads better with room around it.
+     Scoped to .ps-del-modal because .np-body and .np-footer are shared. */
+  .ps-del-modal .np-body { padding: 4px var(--space-400) var(--space-400); }
+  .ps-del-modal .np-footer { padding: var(--space-200) var(--space-400) var(--space-300); }
   .ps-del-title {
     font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--text-heading);
-    margin: var(--space-200) 0 var(--space-300);
+    margin: var(--space-300) 0 var(--space-400);
   }
+  /* The alarm is carried by the icon, not by a tinted block behind the sentence — a
+     filled panel competes with the destructive button for the same "this is the
+     dangerous part" signal, and there is only one warning here to mark. inline-flex
+     keeps icon and text together as one centred unit; align-items:start so the icon
+     sits with the first line rather than floating to the middle of a wrapped one. */
   .ps-del-warning {
+    display: inline-flex; align-items: flex-start; gap: var(--space-125);
+    text-align: left; max-width: 42ch; margin-bottom: var(--space-400);
     font-size: var(--text-md); line-height: 1.5; color: var(--text-primary);
-    background: var(--status-danger-subtle); border-radius: var(--radius-md);
-    padding: var(--space-200) var(--space-250); margin-bottom: var(--space-300);
   }
+  .ps-del-warning-icon { color: var(--status-danger); flex-shrink: 0; margin-top: 1px; }
   .ps-del-prompt {
     font-size: var(--text-md); font-weight: var(--weight-semi); color: var(--text-primary);
   }
@@ -212,11 +223,7 @@
      than as a heading for the input under it. */
   .ps-del-name {
     font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--text-heading);
-    margin: var(--space-300) 0; word-break: break-word; user-select: none;
-  }
-  .ps-del-field-label {
-    display: block; font-size: var(--text-sm); font-weight: var(--weight-medium);
-    color: var(--text-secondary); margin-bottom: var(--space-075);
+    margin: var(--space-200) 0 var(--space-300); word-break: break-word; user-select: none;
   }
   .ps-del-input { min-height: 0; font-size: var(--text-md); text-align: center; }
   .np-toast {
@@ -232,6 +239,10 @@
   .ps-note { font-size: 12px; color: #9a9fa7; padding: 10px 22px; text-align: center; }
   .ps-note a { color: #2170f4; text-decoration: none; }
   .np-help { font-size: 11.5px; color: #9a9fa7; margin: 0 2px 10px; }
+  /* The screen's own subtext, directly under its title — it introduces the whole card,
+     so it reads at body size like the section descriptions further down, not at the
+     size of a field hint. */
+  .ps-card-title + .np-help { font-size: var(--text-md); line-height: 1.5; margin-bottom: var(--space-200); }
 
   /* Stages as interlocking chevrons — same visual language as the board. */
   .np-chev-chain {
@@ -343,6 +354,10 @@
   .ps-stage-editor .ds-field-label { font-size: var(--text-md); font-weight: var(--weight-semi); color: var(--text-heading); }
   .ps-stage-section-title { font-size: var(--text-2xl); font-weight: var(--weight-semi); color: var(--text-heading); }
   .ps-stage-field { display: grid; gap: var(--space-075); }
+  /* Main details had its gaps set field by field with inline margins, so it sat tighter
+     than every other screen. One block, one rhythm. */
+  .ps-field-block { margin-top: var(--space-400); }
+  .ps-field-block:first-of-type { margin-top: var(--space-300); }
   .ps-stage-row { position: relative; display: flex; align-items: center; gap: var(--space-200); margin-top: var(--space-200); padding-right: calc(var(--btn-height-sm) + var(--space-100)); font-size: var(--text-md); color: var(--text-primary); }
   .ps-stage-row:first-of-type { margin-top: 0; }
   .ps-stage-row--compact { padding-right: 0; }
@@ -439,16 +454,20 @@
         <div class="ps-pane is-active" data-pane="details">
         <div class="ps-card">
           <div class="ps-card-title">Main details</div>
-          <div class="np-label">Pipeline name</div>
-          <input class="np-name-input" id="ps-name" style="margin-bottom:22px;">
+          <div class="ps-field-block">
+            <div class="np-label">Pipeline name</div>
+            <input class="np-name-input" id="ps-name">
+          </div>
 
-          <div class="np-label">Colour</div>
-          <div class="ps-color-row" id="ps-colors"></div>
+          <div class="ps-field-block">
+            <div class="np-label">Colour</div>
+            <div class="ps-color-row" id="ps-colors"></div>
+          </div>
 
           <!-- Hidden on hiring pipelines, where a candidate is a person by definition
                rather than by preference — see titanSchema.subjectLocked(). -->
-          <div id="ps-subject-block">
-            <div class="np-label" id="ps-subject-label" style="margin-top:22px;">Records are about</div>
+          <div class="ps-field-block" id="ps-subject-block">
+            <div class="np-label" id="ps-subject-label">Records are about</div>
             <div class="np-help" id="ps-subject-help"></div>
             <div class="ds-segmented" role="group" id="ps-subject" aria-labelledby="ps-subject-label">
               <button type="button" data-subject="company" aria-pressed="true" onclick="psSetSubject('company')">Companies</button>
@@ -456,9 +475,11 @@
             </div>
           </div>
 
-          <div class="np-label" id="ps-owner-label" style="margin-top:22px;">Default owner</div>
-          <div class="np-help" id="ps-owner-help">Who new records are assigned to. Anyone already on this pipeline can be picked.</div>
-          <select class="np-name-input" id="ps-default-owner"></select>
+          <div class="ps-field-block">
+            <div class="np-label" id="ps-owner-label">Default owner</div>
+            <div class="np-help" id="ps-owner-help">Who new records are assigned to. Anyone already on this pipeline can be picked.</div>
+            <select class="np-name-input" id="ps-default-owner"></select>
+          </div>
         </div>
 
         </div><!-- /pane details -->
@@ -529,7 +550,7 @@
      dialog you'd stopped reading. The name is shown large because it's the thing being
      checked — you should be able to see what you're agreeing to destroy. -->
 <div class="np-overlay" id="ps-delete-overlay" onclick="if(event.target===this) closeDeletePipeline()">
-  <div class="np-modal">
+  <div class="np-modal ps-del-modal">
     <!-- The title sits in the body, not the header: the header is a flex row built for a
          left title against a right ×, and it's shared with the Sources modals, so it
          can't centre one without moving theirs. The header keeps the ×. -->
@@ -539,11 +560,13 @@
     </div>
     <div class="np-body ps-del-body">
       <div class="ps-del-title">Delete pipeline</div>
-      <div class="ps-del-warning" id="ps-del-warning"></div>
+      <div class="ps-del-warning">
+        <span class="ps-del-warning-icon" data-ds-icon="warning-circle" data-size="20" data-weight="fill"></span>
+        <span id="ps-del-warning"></span>
+      </div>
       <div class="ps-del-prompt">Type the pipeline name to confirm:</div>
       <div class="ps-del-name" id="ps-del-name"></div>
-      <label class="ps-del-field-label" for="ps-del-input">Pipeline name</label>
-      <input class="np-rule-input ps-del-input" id="ps-del-input" type="text"
+      <input class="np-rule-input ps-del-input" id="ps-del-input" type="text" placeholder="Pipeline name"
              spellcheck="false" autocomplete="off" oninput="onDeleteNameInput()"
              onkeydown="if(event.key==='Enter'){event.preventDefault();confirmDeletePipeline();}">
     </div>
