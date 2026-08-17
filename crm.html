@@ -2612,7 +2612,19 @@
               <div class="ds-menu ds-menu--below-end" id="board-add-menu" role="menu">
                 <button type="button" class="ds-menu__item" role="menuitem" onclick="openAddRecordsFor(currentPipelineId)">
                   <span data-ds-icon="upload" data-size="15"></span>
-                  <span>Import records from a source</span>
+                  <span id="board-import-label">Import opportunity from a file</span>
+                </button>
+                <button type="button" class="ds-menu__item" role="menuitem" onclick="openPipelineSource(currentPipelineId, 'form')">
+                  <span data-ds-icon="forms" data-size="15"></span>
+                  <span>Form</span>
+                </button>
+                <button type="button" class="ds-menu__item" role="menuitem" onclick="openPipelineSource(currentPipelineId, 'email')">
+                  <span data-ds-icon="mail" data-size="15"></span>
+                  <span>From incoming email</span>
+                </button>
+                <button type="button" class="ds-menu__item" role="menuitem" onclick="openPipelineSource(currentPipelineId, 'integrations')">
+                  <span data-ds-icon="integrations" data-size="15"></span>
+                  <span>Integrations</span>
                 </button>
               </div>
             </div>
@@ -3708,6 +3720,8 @@
       if (heading) heading.textContent = p.name;
       const addLabel = document.getElementById('add-entity-label');
       if (addLabel) addLabel.textContent = p.entity.toLowerCase();
+      const importLabel = document.getElementById('board-import-label');
+      if (importLabel) importLabel.textContent = 'Import ' + p.entity.toLowerCase() + ' from a file';
       // "Opportunity settings" is wrong on a hiring board — the record screen it opens is
       // the Candidate's. Same rename the pipeline row's three-dot menu already does.
       const entitySetting = document.querySelector('#board-entity-setting-item span:last-child');
@@ -4018,7 +4032,7 @@
       }
       const status = titanStatus.current(card, pl && pl.entity);
       const tone = titanStatus.toneOf(pl && pl.entity, status);
-      if (tone === 'open') return '<span class="kanban-card-task">' + card.lastActivity + '</span>';
+      if (titanStatus.isOpenTone(tone)) return '<span class="kanban-card-task">' + card.lastActivity + '</span>';
       return '<span class="ds-badge ' + titanStatus.badgeClass(tone) +
         ' ds-badge--pill kanban-outcome">' + status + '</span>';
     }
@@ -4484,7 +4498,13 @@
           body.style.background = '';
           const id = e.dataTransfer.getData('text/card-id');
           const card = CARDS.find(function (c) { return String(c.id) === String(id); });
-          if (card) { card.stage = stage.key; renderBoard(); schedulePersist(); }
+          if (card) {
+            card.stage = stage.key;
+            // Dragging a card out of the first column is work starting, so a record
+            // still marked New says so itself rather than waiting to be corrected.
+            titanStatus.syncToStage(card, PIPELINES[currentPipelineId]);
+            renderBoard(); schedulePersist();
+          }
         });
       });
 
@@ -5144,6 +5164,22 @@
       // back onto one so a reopened hiring board still suggests hiring examples.
       npState.type = pl.type === 'hiring' ? 'candidates' : 'sales';
       npShowDone(pl.name, pl.entity, pl.plural, false);
+    }
+
+    // The board's Add-menu offers the same intake paths as Pipeline settings,
+    // while taking the user directly to the relevant path for this pipeline.
+    function openPipelineSource(pipelineId, source) {
+      const pl = PIPELINES[pipelineId];
+      if (!pl) return;
+      npCreatedId = pipelineId;
+
+      if (source === 'form') { npSourceForm(); return; }
+      if (source === 'email') {
+        openAddRecordsFor(pipelineId);
+        npShowStep(4);
+        return;
+      }
+      if (source === 'integrations') { npGoIntegrations(); }
     }
     function npArticle(word) { return /^[aeiou]/i.test(word || '') ? 'an' : 'a'; }
 

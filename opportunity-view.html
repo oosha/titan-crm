@@ -303,6 +303,10 @@
   .ov-status-pill:hover { filter: brightness(0.97); }
   .ov-status-pill .caret { font-size: 16px; opacity: .8; margin-left: 3px; display: inline-block; transform: scaleX(1.4); }
   /* Keyed by tone, not by outcome word — "Won" and "Hired" are the same green. */
+  /* New reads as untouched rather than as a state you chose, so it takes the accent
+     rather than the same grey as In progress — a board of fresh leads should be
+     distinguishable from a board being worked. */
+  .ov-status-wrap.new .ov-status-pill { background: var(--surface-selected); color: var(--text-accent); }
   .ov-status-wrap.open .ov-status-pill { background: var(--surface-hover); color: var(--text-secondary); }
   .ov-status-wrap.positive .ov-status-pill { background: var(--status-success-subtle); color: var(--status-success); }
   .ov-status-wrap.negative .ov-status-pill { background: var(--status-danger-subtle); color: var(--status-danger); }
@@ -316,6 +320,7 @@
   .ov-status-item { display: flex; align-items: center; gap: var(--space-100); padding: var(--space-100) var(--space-200); font-size: var(--text-sm); color: var(--text-primary); cursor: pointer; }
   .ov-status-item:hover { background: #f4f7fb; }
   .ov-status-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .ov-status-item .dot.new { background: var(--accent-primary); }
   .ov-status-item .dot.open { background: var(--text-muted); }
   .ov-status-item .dot.positive { background: var(--status-success); }
   .ov-status-item .dot.negative { background: var(--status-danger); }
@@ -1177,6 +1182,8 @@
   }
   function selectStage(key) {
     card.stage = key;
+    // Off the first stage means work has started — clear a lingering New.
+    if (titanStatus.syncToStage(card, pipeline)) renderStatus();
     renderStage();
     renderStageBar();
     document.getElementById('ov-stage-menu').classList.remove('open');

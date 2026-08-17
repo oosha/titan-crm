@@ -5481,6 +5481,7 @@
 
   <script src="/crm-owner.js"></script>
 <script src="/crm-schema.js"></script>
+<script src="/crm-status.js"></script>
   <script>
 
     // ── Company logo (favicon of the company's own domain) — mirrors crm.html ──
@@ -6202,7 +6203,12 @@
       // Real record open (not just the local demo state) — write the stage back.
       if (panelRecord.recordId != null && REAL_PIPELINES) {
         const card = cardFor({ pipeline: panelRecord.key, recordId: panelRecord.recordId });
-        if (card) { card.stage = stageKeyFor(panelRecord.key, stage); persistRealData(); }
+        if (card) {
+          card.stage = stageKeyFor(panelRecord.key, stage);
+          // Same rule as the board and the record page — moving it on clears New.
+          titanStatus.syncToStage(card, REAL_PIPELINES[panelRecord.key]);
+          persistRealData();
+        }
       }
     }
 

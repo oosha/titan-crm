@@ -579,7 +579,7 @@
     const entity = entry.pipeline.entity;
     return titanStatus.toneOf(entity, titanStatus.current(entry.card, entity));
   }
-  function isOpen(entry) { return toneOf(entry) === 'open'; }
+  function isOpen(entry) { return titanStatus.isOpenTone(toneOf(entry)); }
   function isWon(entry)  { return toneOf(entry) === 'positive'; }
   function isLost(entry) { return toneOf(entry) === 'negative'; }
   // 'paused' (a project On hold) is deliberately none of the three: not active, not

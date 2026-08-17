@@ -58,6 +58,7 @@
 <script src="/design-system/components/icon.js"></script>
 <script src="/crm-owner.js"></script>
 <script src="/crm-schema.js"></script>
+<script src="/crm-status.js"></script>
 <script src="/titan-sidebar.js"></script>
 
 <div class="app-window">
@@ -98,20 +99,30 @@
 
       <div class="ao-row">
         <div>
+          <!-- Options come from the record type's own vocabulary (crm-status.js) and
+               default to New. Hidden entirely on a pipeline whose schema has status
+               off — see applyFieldSchema(). -->
+          <div class="np-label" id="ao-status-label">Status</div>
+          <select class="np-name-input" id="ao-status"></select>
+        </div>
+        <div>
           <div class="np-label" id="ao-close-date-label">Expected close date</div>
           <input class="np-name-input" id="ao-close-date" type="date">
         </div>
+      </div>
+
+      <div class="ao-row">
         <div>
           <div class="np-label">Source</div>
           <input class="np-name-input" id="ao-source" placeholder="e.g. Referral, Website">
         </div>
-      </div>
-
-      <div class="ao-row" style="margin-bottom:0;">
         <div>
           <div class="np-label">Owner</div>
           <select class="np-name-input" id="ao-owner"></select>
         </div>
+      </div>
+
+      <div class="ao-row" style="margin-bottom:0;">
         <div>
           <div class="np-label">Note</div>
           <input class="np-name-input" id="ao-note" placeholder="e.g. Met at conference">
@@ -237,7 +248,7 @@
     document.getElementById('ao-heading-contact').textContent = schema.headings.contact;
 
     let companyShown = 0;
-    ['name', 'value', 'stage', 'close-date', 'source', 'note', 'company', 'location',
+    ['name', 'value', 'stage', 'status', 'close-date', 'source', 'note', 'company', 'location',
      'website', 'company-linkedin', 'instagram', 'contact', 'contact-email', 'contact-phone',
      'contact-designation', 'contact-department', 'contact-location', 'contact-linkedin',
     ].forEach(function (key) {
@@ -294,6 +305,15 @@
   const stageSelect = document.getElementById('ao-stage');
   const stages = (pipeline && pipeline.stages) || [];
   stageSelect.innerHTML = stages.map(function (s) { return '<option value="' + s.key + '">' + s.label + '</option>'; }).join('');
+
+  // Status options in this record type's own words. A record being created hasn't
+  // been worked yet, so it starts at New — it promotes itself to In progress the
+  // first time the record moves off the opening stage (titanStatus.syncToStage).
+  const statusSelect = document.getElementById('ao-status');
+  statusSelect.innerHTML = window.titanStatus.values(entity).map(function (v) {
+    return '<option value="' + esc(v.value) + '"' +
+      (v.value === window.titanStatus.NEW ? ' selected' : '') + '>' + esc(v.value) + '</option>';
+  }).join('');
   ['ao-stage', 'ao-currency'].forEach(function (id) { document.getElementById(id).addEventListener('wheel', function () { this.blur(); }); });
 
   const contactList = document.getElementById('ao-contact-list');
@@ -422,6 +442,7 @@
     const card = {
       id: maxId + 1, company: company, contact: contact, initials: initials,
       deal: name, value: value, stage: stage, lastActivity: 'just now', activityType: 'Email sent',
+      status: document.getElementById('ao-status').value || window.titanStatus.NEW,
       overdue: false,
       // Record creator + note author: ?by=<name> overrides the defaults.
       createdBy: (new URLSearchParams(location.search).get('by') || '').trim() || 'Usha Loutongbam',

@@ -391,6 +391,17 @@ Fulfilled/Returned…). Never compare `card.status` to a literal: read it throug
 `titanStatus.current(card, entity)` and colour it by `titanStatus.toneOf(...)`, or a hiring
 board silently loses its pills.
 
+Every vocabulary opens `New → In progress → <outcome>`. **"Not finished" is two tones**,
+`new` and `open` — test with `titanStatus.isOpenTone(tone)`, never `tone === 'open'`, or
+every untouched record drops out of the open totals. New records are created with `New`
+(the add-record form defaults to it); a card with *no* stored status still reads as
+`In progress`, because a legacy record is in progress, not new.
+
+Anything that changes `card.stage` must call `titanStatus.syncToStage(card, pipeline)` —
+moving a record off the first stage clears a lingering `New`. It only ever promotes, so
+dragging a card back doesn't undo it. Three callers today: the board's drop handler, the
+record page's `selectStage`, and the mailbox panel's stage menu.
+
 Whether a pipeline *has* a status is a schema question, not a status one — check
 `titanSchema.on(pipeline, 'status')` first (required on Opportunity/Order, optional on
 Project/Candidate, off by default on Record). Anything reading status must honour it, or
