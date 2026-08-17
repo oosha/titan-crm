@@ -191,11 +191,13 @@
   /* Delete-pipeline confirmation. The name is the thing being verified, so it's set
      large and selectable-looking — but user-select is off so it can't be copy-pasted
      into the box, which would defeat the point of asking. */
-  /* One centred column: the whole modal is a single question, so nothing in it needs
-     scanning down a left edge. Sizes are type-scale tokens rather than the 13px the
-     surrounding modals use — this is the last thing read before records are destroyed
-     and it shouldn't be the smallest text on screen. */
-  .ps-del-body { text-align: center; }
+  /* Only the title is centred. Everything under it is a left-aligned column: an
+     icon-led warning and a labelled field both start at a left edge, and centring
+     them left every line beginning in a different place. Sizes are type-scale tokens
+     rather than the 13px the surrounding modals use — this is the last thing read
+     before records are destroyed and shouldn't be the smallest text on screen. */
+  .ps-del-body { text-align: left; }
+  .ps-del-title { text-align: center; }
   /* Wider gutters and a deeper footer than the Sources modals, which are pick-a-thing
      lists — this one is a single decision and reads better with room around it.
      Scoped to .ps-del-modal because .np-body and .np-footer are shared. */
@@ -211,8 +213,8 @@
      keeps icon and text together as one centred unit; align-items:start so the icon
      sits with the first line rather than floating to the middle of a wrapped one. */
   .ps-del-warning {
-    display: inline-flex; align-items: flex-start; gap: var(--space-125);
-    text-align: left; max-width: 42ch; margin-bottom: var(--space-400);
+    display: flex; align-items: flex-start; gap: var(--space-125);
+    margin-bottom: var(--space-400);
     font-size: var(--text-md); line-height: 1.5; color: var(--text-primary);
   }
   .ps-del-warning-icon { color: var(--status-danger); flex-shrink: 0; margin-top: 1px; }
@@ -225,7 +227,7 @@
     font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--text-heading);
     margin: var(--space-200) 0 var(--space-300); word-break: break-word; user-select: none;
   }
-  .ps-del-input { min-height: 0; font-size: var(--text-md); text-align: center; }
+  .ps-del-input { min-height: 0; font-size: var(--text-md); }
   .np-toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px);
     display: flex; align-items: center; gap: 8px;
