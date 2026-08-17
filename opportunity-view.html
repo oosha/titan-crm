@@ -376,6 +376,17 @@
   .ov-addact-item:hover { background: var(--surface-hover); }
 
   /* An empty queue should say what to do about it, not just that it is empty. */
+  /* Non-tasks still need a way out of the queue, but not one that looks like a
+     completion checkbox — it appears on the row you're pointing at. */
+  .ov-act-done {
+    opacity: 0; border: none; background: none; padding: 0 var(--space-100);
+    font: inherit; font-size: var(--text-2xs); font-weight: var(--weight-semi);
+    color: var(--text-secondary); cursor: pointer; flex-shrink: 0;
+    transition: opacity var(--dur-fast, .12s) ease;
+  }
+  .crm-activity-row:hover .ov-act-done, .ov-act-done:focus-visible { opacity: 1; }
+  .ov-act-done:hover { color: var(--text-accent); }
+
   .ov-empty-add {
     border: none; background: none; padding: 0; font: inherit; font-size: var(--text-sm);
     font-weight: var(--weight-semi); color: var(--accent-primary); cursor: pointer;
@@ -612,7 +623,14 @@
             <input class="ds-input ds-input--inline ov-company-input" id="ov-company" data-field="company" placeholder="Company" oninput="onFieldChange()">
 
           </div>
-          <div class="ov-created-by" id="ov-created-by"></div>
+          <!-- Who the deal is with, on the line that already says who made the
+               record — read-only here, because Contacts below is where people are
+               managed and two places to change one thing is how they drift. -->
+          <div class="ov-byline">
+            <span class="ov-created-by" id="ov-created-by"></span>
+            <span class="ov-byline-sep" id="ov-byline-sep">·</span>
+            <span class="ov-contact-line" id="ov-contact-line"></span>
+          </div>
 
           <!-- The four things a rep changes most, at the top and editable in place.
                This replaced a read-only summary strip that restated value and stage
@@ -657,14 +675,6 @@
               </div>
             </div>
 
-            <!-- Who the deal is actually with. It was only visible by scrolling to the
-                 Contacts section, which is a long way down for the thing you most
-                 often want to know — and it was read-only there. -->
-            <div class="ov-key" id="ov-key-contact">
-              <div class="ov-key-label">Contact</div>
-              <select class="ds-input ov-key-input" id="ov-primary-contact" onchange="onPrimaryContactChange()"></select>
-            </div>
-
             <div class="ov-key">
               <div class="ov-key-label">Owner</div>
               <select class="ds-input ov-key-input ov-owner-select" id="ov-owner" onchange="onOwnerChange()"></select>
@@ -674,6 +684,20 @@
               <div class="ov-key-label"><span class="ov-field-label-text" id="ov-close-label">Expected close date</span></div>
               <input class="ds-input ov-key-input" id="ov-close-date" type="date" oninput="onFieldChange()">
             </div>
+          </div>
+
+          <!-- High enough to be seen when you open the record. It decides what shows
+               up in Recent activity, and a colleague went looking for it under a ⋯
+               menu and concluded it had been deleted — twice-moved, now in the open. -->
+          <div class="ov-autolink-row">
+            <label class="ov-autolink-main">
+              <input type="checkbox" id="ov-autolink" checked onchange="onAutolinkChange()">
+              <span>Automatically link email to this <span id="ov-autolink-entity">opportunity</span></span>
+            </label>
+            <select class="ds-input ov-autolink-scope" id="ov-autolink-scope" onchange="onAutolinkChange()">
+              <option value="contact">from the contacts on this record</option>
+              <option value="domain">from anyone at their company's domain</option>
+            </select>
           </div>
 
           <!-- Source and the pipeline's own custom fields are all deal attributes, so
@@ -714,8 +738,14 @@
           </div>
         </div>
 
+        <div class="ov-section ds-card ds-card--section">
+          <div class="ov-heading">Contacts</div>
+          <div id="ov-contacts"></div>
+          <span class="ov-add-link" id="ov-add-contact-link" onclick="addContact()">+ Add contact</span>
+        </div>
+
         <div class="ov-section ds-card ds-card--section" data-field="note">
-          <div class="ov-heading">Notes</div>
+          <div class="ov-heading">Latest note</div>
           <div class="crm-note" id="ov-last-note" style="display:none;">
             <div class="meta"><span class="note-ic"><span data-ds-icon="drafts" data-size="16"></span></span>Last note added by <span id="ov-last-note-author"></span><span id="ov-last-note-on"> on <span id="ov-last-note-date"></span></span></div>
             <span id="ov-last-note-text"></span>
@@ -756,32 +786,13 @@
           </div>
         </div>
 
-        <div class="ov-section ds-card ds-card--section">
-          <div class="ov-heading">Contacts</div>
-          <div id="ov-contacts"></div>
-          <span class="ov-add-link" id="ov-add-contact-link" onclick="addContact()">+ Add contact</span>
-        </div>
+
 
 
         <div class="ov-section ds-card ds-card--section">
           <div class="ov-heading">Recent activity</div>
           <div id="ov-recent-activity"></div>
-          <!-- Sits with the activity it governs. It was in the ⋯ menu, where a
-               colleague went looking for it and couldn't find it — a switch that
-               decides what appears in this list belongs next to the list. -->
-          <div class="ov-autolink-row">
-            <label class="ov-autolink-main">
-              <input type="checkbox" id="ov-autolink" checked onchange="onAutolinkChange()">
-              <span>Automatically link email to this <span id="ov-autolink-entity">opportunity</span></span>
-            </label>
-            <!-- Two scopes, because "everyone at meridianlabs.com" and "the three
-                 people on this record" are very different amounts of mail, and which
-                 one is right depends on the deal. -->
-            <select class="ds-input ov-autolink-scope" id="ov-autolink-scope" onchange="onAutolinkChange()">
-              <option value="contact">from the contacts on this record</option>
-              <option value="domain">from anyone at their company's domain</option>
-            </select>
-          </div>
+
         </div>
 
         <div class="ov-section ds-card ds-card--section">
@@ -1339,9 +1350,6 @@
     if (wrap) wrap.innerHTML = '';
   }
 
-  // The record's people, with the primary one selected. Choosing another promotes
-  // them; the last option opens the picker rather than pretending the list is all
-  // the people who exist.
   function syncAutolinkScope() {
     const on = document.getElementById('ov-autolink').checked;
     document.getElementById('ov-autolink-scope').disabled = !on;
@@ -1365,8 +1373,7 @@
   // Mail that belongs to this record because of who it is with, rather than because
   // someone logged it here. Read from the persona's mailbox — the only thread data
   // this prototype has. The default persona's mailbox is static markup rather than
-  // data (CLAUDE.md, "the mailbox is the mocked half"), so nothing links there; a
-  // persona with mailbox.threads[] is where this shows.
+  // data (CLAUDE.md, "the mailbox is the mocked half"), so nothing links there.
   function linkedEmailActivity() {
     const box = document.getElementById('ov-autolink');
     if (!box || !box.checked) return [];
@@ -1395,36 +1402,35 @@
     });
   }
 
+  // Who the deal is with, on the byline. Read-only: Contacts below is where people
+  // are managed, and offering the same change in two places is how the two drift.
   function renderPrimaryContact() {
-    const sel = document.getElementById('ov-primary-contact');
-    const cell = document.getElementById('ov-key-contact');
-    if (!sel || !cell) return;
-    // A person-subject record IS the person — there is no separate contact to pick.
-    if (schema && schema.isPerson) { cell.style.display = 'none'; return; }
-    cell.style.display = '';
-    sel.innerHTML = (contacts.length
-      ? contacts.map(function (c, i) {
-          return '<option value="' + i + '"' + (i === 0 ? ' selected' : '') + '>' +
-            esc(c.name || c.email || 'Unnamed contact') + '</option>';
-        }).join('')
-      : '<option value="">No contact yet</option>') +
-      '<option value="add">＋ Add a contact…</option>';
+    const line = document.getElementById('ov-contact-line');
+    const sep = document.getElementById('ov-byline-sep');
+    if (!line || !sep) return;
+    const primary = (contacts || [])[0];
+    // A person-subject record IS the person, so naming a contact would restate the title.
+    const show = primary && !(schema && schema.isPerson);
+    sep.style.display = show ? '' : 'none';
+    line.style.display = show ? '' : 'none';
+    if (!show) return;
+    const who = primary.name || primary.email || 'Unnamed contact';
+    line.innerHTML = 'Contact: <strong>' + esc(who) + '</strong>' +
+      (primary.designation ? ' · ' + esc(primary.designation) : '');
   }
 
-  function onPrimaryContactChange() {
-    const sel = document.getElementById('ov-primary-contact');
-    if (sel.value === 'add') { renderPrimaryContact(); addContact(); return; }
-    const i = Number(sel.value);
+  // Promotion happens in the Contacts list, on the row you are looking at.
+  // Primary is position 0 — what contactsOf() and the flat card mirror both read —
+  // so this is a move, not a flag.
+  function makePrimaryContact(i) {
     if (!contacts[i] || i === 0) return;
-    // Primary is position 0 — that is what contactsOf() and the flat card mirror
-    // both read, so promoting is a move rather than a flag.
-    const [chosen] = contacts.splice(i, 1);
+    const chosen = contacts.splice(i, 1)[0];
     contacts.unshift(chosen);
     card.contact = chosen.name || '';
     card.contactEmail = chosen.email || '';
     card.contactPhone = chosen.phone || '';
-    renderPrimaryContact();
     renderContacts();
+    renderPrimaryContact();
     onFieldChange();
   }
 
@@ -1505,7 +1511,12 @@
           (fieldHidden('contact-linkedin') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-linkedin')) + '" value="' + esc(c.linkedin) + '" oninput="setContactField(' + i + ',\'linkedin\',this.value)">') +
         '</div>' +
         (contactsEnabled && contacts.length > 1
-          ? '<div class="ov-contact-remove"><button class="ds-btn ds-btn--destructive-quiet ds-btn--sm" type="button" onclick="removeContact(' + i + ')">Remove from this record</button></div>'
+          ? '<div class="ov-contact-remove">' +
+              (i > 0 && !(schema && schema.isPerson)
+                ? '<button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="makePrimaryContact(' + i + ')">Make contact person</button>'
+                : '') +
+              '<button class="ds-btn ds-btn--destructive-quiet ds-btn--sm" type="button" onclick="removeContact(' + i + ')">Remove from this record</button>' +
+            '</div>'
           : '');
       wrap.appendChild(row);
     });
@@ -1676,30 +1687,28 @@
     const upItems = (card.upcomingActivities && card.upcomingActivities.length) ? card.upcomingActivities : upcomingActivityList();
     up.innerHTML = upItems.length
       ? upItems.map(function (a, i) {
-          // Everything in this list is something still owed, so everything can be
-          // ticked off — not just rows that happen to be typed 'task'. A meeting
-          // you've held and a follow-up you've sent are as done as a task is, and
-          // there was no way to say so. The type icon moves in beside the text so
-          // it is still clear what kind of thing each row is.
-          const iconHTML =
-            '<span class="crm-act-check" onclick="event.stopPropagation(); toggleActTask(' + i + ')" title="Mark done">' +
-              '<span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l2.6 2.6L11.8 5" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
-            '</span>' + (a.type && a.type !== 'task' ? actIcon(a.type) : '');
+          // Only a task gets a checkbox. Giving one to a meeting or an email implied
+          // Titan could complete them, which it can't — those live in the calendar
+          // and the mail client, so their rows carry their own icon and open the
+          // place that actually owns them. Everything still leaves the queue, but
+          // by the route that matches what the thing is.
+          const isTask = a.type === 'task';
+          const iconHTML = isTask
+            ? '<span class="crm-act-check" onclick="event.stopPropagation(); toggleActTask(' + i + ')" title="Mark done">' +
+                '<span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l2.6 2.6L11.8 5" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
+              '</span>'
+            : actIcon(a.type);
           // Email/meeting rows open detail (mailclient, or a modal here) on click.
-          return '<div class="crm-activity-row clickable" onclick="openActivityDetail(\'upcoming\',' + i + ')">' + iconHTML +
+          return '<div class="crm-activity-row clickable" onclick="openUpcoming(' + i + ')">' + iconHTML +
             '<div class="crm-activity-text">' + esc(a.text) + '</div>' +
+            (isTask ? '' : '<button class="ov-act-done" type="button" title="Move to Recent activity" ' +
+              'onclick="event.stopPropagation(); toggleActTask(' + i + ')">Done</button>') +
             (a.date
               ? '<div class="crm-activity-date' + ((a.overdue || looksPast(a.date)) ? ' overdue' : '') + '">' + esc(a.date) + '</div>'
               : '<div class="crm-activity-date is-undated">No date</div>') +
             '</div>';
         }).join('')
-      : '<div class="crm-empty-state">No upcoming activity. ' +
-        '<button class="ov-empty-add" type="button" onclick="addActivity(\'task\')">Add an activity</button></div>';
-
-    // The empty state already offers the action, so the standing link underneath
-    // would be the same offer twice.
-    const addLink = document.getElementById('ov-add-activity');
-    if (addLink) addLink.style.display = upItems.length ? '' : 'none';
+      : '<div class="crm-empty-state">Nothing scheduled yet.</div>';
 
     const recent = document.getElementById('ov-recent-activity');
     const logged = (card.recentActivities && card.recentActivities.length)
@@ -1920,6 +1929,32 @@
   // Checking off a task actually completes it here (unlike the mailclient CRM panel's
   // toggleActTask, which is purely a visual .done toggle) — it's removed from Upcoming
   // and logged into Recent activity, and persisted.
+  // A pending row opens the thing that owns it, rather than a read-only modal
+  // describing it. A task is the exception: Titan owns tasks, so its row is the
+  // task, and clicking it does nothing beyond the checkbox already offered.
+  function openUpcoming(i) {
+    const a = upcomingActivityList()[i];
+    if (!a) return;
+    if (a.type === 'task') return;
+    if (a.type === 'followup' || a.type === 'email') {
+      mailTo(a.text || ('Following up on ' + (card.deal || '')), '');
+      return;
+    }
+    if (a.type === 'meeting' || a.type === 'booking') {
+      // Same honest placeholder the Call action uses — there is no Calendar app
+      // behind the switcher entry to open an event in.
+      showToast('Calendar isn\u2019t connected yet — this will open the event.');
+      return;
+    }
+    if (a.type === 'call' || a.type === 'phone') {
+      const c = (contacts || [])[0];
+      showToast(c && c.phone ? 'Call ' + (c.name || 'contact') + ' on ' + c.phone
+                             : 'No phone number on this record yet.');
+      return;
+    }
+    openSimpleActivityModal(a);
+  }
+
   function toggleActTask(i) {
     const list = upcomingActivityList();
     const done = list.splice(i, 1)[0];
