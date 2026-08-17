@@ -379,6 +379,7 @@
   .ps-stage-radio { display: flex; align-items: center; gap: var(--space-300); margin-bottom: var(--space-300); font-size: var(--text-md); color: var(--text-primary); }
   .ps-stage-radio label { display: inline-flex; align-items: center; gap: var(--space-075); }
   .ps-stage-radio input { accent-color: var(--checkbox-accent); }
+  .ps-subject-radio { margin-bottom: 0; margin-top: var(--space-075); }
   .ps-stage-empty { font-size: var(--text-sm); color: var(--text-muted); margin-top: var(--space-100); margin-bottom: var(--space-200); }
   /* Added tasks render as slightly-rounded pills with the × inside on the right. */
   .ps-task-list { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -471,9 +472,13 @@
           <div class="ps-field-block" id="ps-subject-block">
             <div class="np-label" id="ps-subject-label">Records are about</div>
             <div class="np-help" id="ps-subject-help"></div>
-            <div class="ds-segmented" role="group" id="ps-subject" aria-labelledby="ps-subject-label">
-              <button type="button" data-subject="company" aria-pressed="true" onclick="psSetSubject('company')">Companies</button>
-              <button type="button" data-subject="person" aria-pressed="false" onclick="psSetSubject('person')">People</button>
+            <!-- Radios, not a segmented control: this is a standing property of the
+                 pipeline shown among other fields, so it should read like the rest of
+                 the form. Reuses .ps-stage-radio, the exit rules' pattern, rather than
+                 a second radio style. -->
+            <div class="ps-stage-radio ps-subject-radio" role="radiogroup" id="ps-subject" aria-labelledby="ps-subject-label">
+              <label><input type="radio" name="ps-subject" data-subject="company" onchange="psSetSubject('company')"> Companies</label>
+              <label><input type="radio" name="ps-subject" data-subject="person" onchange="psSetSubject('person')"> People</label>
             </div>
           </div>
 
@@ -1578,8 +1583,8 @@
     document.getElementById('ps-subject-label').textContent = 'Your ' + many + ' are for';
     document.getElementById('ps-subject-help').textContent =
       'Company fields are hidden when your ' + many + ' are for people. Nothing already saved is deleted.';
-    document.querySelectorAll('#ps-subject [data-subject]').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b.dataset.subject === subject));
+    document.querySelectorAll('#ps-subject input[data-subject]').forEach(function (radio) {
+      radio.checked = radio.dataset.subject === subject;
     });
   }
 
