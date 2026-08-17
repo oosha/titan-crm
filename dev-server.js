@@ -320,6 +320,7 @@ async function apiInboundConfig(req, res, query) {
     if (body.name !== undefined) conn.name = String(body.name || '').slice(0, 120);
     if (body.pipelineId !== undefined) conn.pipelineId = String(body.pipelineId || '');
     if (body.stage !== undefined) conn.stage = String(body.stage || '');
+    if (body.source !== undefined) conn.source = String(body.source || '').slice(0, 60);
     if (body.enabled !== undefined) conn.enabled = body.enabled !== false;
     if (body.map && typeof body.map === 'object') {
       const clean = {};

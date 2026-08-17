@@ -121,7 +121,34 @@ function guessMap(values) {
 // The mapping is {submissionFieldName: target}. buildCard() wants a form-shaped
 // object, so the connection's map is presented as one — which keeps every card
 // this creates identical to one from a Titan intake form.
-function formShapeFor(conn, values) {
+// Answers with no home in the CRM's fields. Dropping them loses the part of a
+// submission that is often the most useful — "how did you hear about us", a budget
+// range, a checkbox list — so they are appended to the note with their labels
+// kept, which is the only place free text can live on a card.
+const EXTRAS_SEP = '\n\n';
+function extrasNote(conn, values) {
+  const map = conn.map || {};
+  return Object.keys(values)
+    .filter(function (k) { return !map[k]; })
+    .filter(function (k) { return String(values[k]).trim(); })
+    .map(function (k) { return k + ': ' + values[k]; })
+    .join('\n');
+}
+
+// Returns the values to build from: the submission, with unmapped answers folded
+// into whichever field is pointed at the note.
+function valuesWithExtras(conn, values) {
+  const extras = extrasNote(conn, values);
+  if (!extras) return { values: values, noteKey: null };
+  const map = conn.map || {};
+  const noteKey = Object.keys(map).filter(function (k) { return map[k] === 'note'; })[0] || '__extras';
+  const out = Object.assign({}, values);
+  const existing = String(out[noteKey] || '').trim();
+  out[noteKey] = existing ? existing + EXTRAS_SEP + extras : extras;
+  return { values: out, noteKey: noteKey };
+}
+
+function formShapeFor(conn, values, extraNoteKey) {
   const map = conn.map || {};
   // buildCard falls back to the pipeline's name, which would title every lead
   // "Neo partnerships". Whoever submitted is the useful name for a record that is,
@@ -130,10 +157,12 @@ function formShapeFor(conn, values) {
   const who = (values && nameKey && values[nameKey]) || '';
   return {
     recordTitle: conn.recordTitle || who || (conn.name ? conn.name + ' enquiry' : 'Website enquiry'),
-    sourceLabel: conn.sourceLabel || conn.providerLabel || 'Web form',
+    sourceLabel: conn.source || conn.sourceLabel || 'Web form',
     fields: Object.keys(map).filter(function (k) { return map[k]; }).map(function (k) {
       return { key: k, label: k, target: map[k] };
-    }),
+    // When nothing was mapped to the note, the folded extras need a field of their
+    // own or buildCard has no route for them.
+    }).concat(extraNoteKey === '__extras' ? [{ key: '__extras', label: 'Other answers', target: 'note' }] : []),
   };
 }
 
@@ -166,7 +195,9 @@ function receive(doc, conn, body) {
   const pipeline = (doc.pipelines || {})[conn.pipelineId];
   if (!pipeline) return { status: 'no-pipeline', changed: false };
 
-  const card = F.buildCard(doc, pipeline, formShapeFor(conn, values), values);
+  const withExtras = valuesWithExtras(conn, values);
+  const card = F.buildCard(doc, pipeline,
+    formShapeFor(conn, withExtras.values, withExtras.noteKey), withExtras.values);
   if (conn.stage) card.stage = conn.stage;
   card.inboundKey = print;
   pipeline.cards = pipeline.cards || [];
@@ -181,6 +212,8 @@ function receive(doc, conn, body) {
 
 module.exports = {
   ENVELOPES: ENVELOPES,
+  extrasNote: extrasNote,
+  valuesWithExtras: valuesWithExtras,
   connectionsOf: connectionsOf,
   ensureInbound: ensureInbound,
   findByToken: findByToken,

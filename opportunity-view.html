@@ -4,14 +4,17 @@
 <meta charset="UTF-8">
 <title>Opportunity — Titan CRM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Persona loader: ?u=<id> only matters here to scope the /api/data fetch to that
-     persona's saved file — this page doesn't load personas/<id>.js itself (no mailbox/
-     account data is needed to view or edit a single record). -->
+<!-- Persona loader: ?u=<id> scopes the /api/data fetch to that persona's saved
+     file, and now also loads personas/<id>.js. This page used to skip that script
+     on the grounds that a single record needs no mailbox data — true until
+     auto-linking, which reads mailbox.threads[] to attach a contact's email to the
+     record. Same pattern as crm.html. -->
 <script>
   (function () {
     var raw = new URLSearchParams(location.search).get('u');
     var u = (raw && /^[a-z0-9_-]{1,32}$/.test(raw)) ? raw.toLowerCase() : null;
     window.PERSONA_ID = u || 'default';
+    if (u) document.write('<' + 'script src="/personas/' + u + '.js"><' + '/script>');
   })();
 </script>
 <link rel="stylesheet" href="/design-system/tokens.css">
@@ -190,6 +193,16 @@
 
   .ov-key .ov-owner-select { width: 100%; }
 
+  .ov-autolink-main { display: flex; align-items: center; gap: var(--space-100); cursor: pointer; }
+  .ov-autolink-scope { font-size: var(--text-xs); max-width: 300px; }
+  .ov-autolink-scope[disabled] { opacity: .5; }
+  /* Mail pulled in by that setting, rather than logged against the record. */
+  .crm-activity-row.is-linked .crm-activity-text::after {
+    content: 'Linked'; margin-left: var(--space-100); font-size: var(--text-2xs);
+    font-weight: var(--weight-semi); color: var(--text-secondary);
+    background: var(--surface-recessed); border-radius: 4px; padding: 1px 6px;
+  }
+
   .ov-pick-search { width: 100%; margin-bottom: var(--space-150); }
   .ov-pick-list { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; }
   .ov-pick-row {
@@ -274,7 +287,7 @@
   .crm-stage-item.active { font-weight: 600; }
 
   .ov-autolink-row {
-    display: flex; align-items: flex-start; gap: var(--space-100);
+    display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-100);
     margin-top: var(--space-200); padding-top: var(--space-150);
     border-top: 1px solid var(--border-subtle);
     font-size: var(--text-xs); color: var(--text-secondary);
@@ -644,10 +657,16 @@
               </div>
             </div>
 
-            <!-- "Owner" beside a company name reads as who owns the company. This is
-                 the colleague carrying the deal, so it says so. -->
+            <!-- Who the deal is actually with. It was only visible by scrolling to the
+                 Contacts section, which is a long way down for the thing you most
+                 often want to know — and it was read-only there. -->
+            <div class="ov-key" id="ov-key-contact">
+              <div class="ov-key-label">Contact</div>
+              <select class="ds-input ov-key-input" id="ov-primary-contact" onchange="onPrimaryContactChange()"></select>
+            </div>
+
             <div class="ov-key">
-              <div class="ov-key-label">Assigned to</div>
+              <div class="ov-key-label">Owner</div>
               <select class="ds-input ov-key-input ov-owner-select" id="ov-owner" onchange="onOwnerChange()"></select>
             </div>
 
@@ -750,10 +769,19 @@
           <!-- Sits with the activity it governs. It was in the ⋯ menu, where a
                colleague went looking for it and couldn't find it — a switch that
                decides what appears in this list belongs next to the list. -->
-          <label class="ov-autolink-row">
-            <input type="checkbox" id="ov-autolink" checked onchange="onFieldChange()">
-            <span>Automatically link contacts' activity to this <span id="ov-autolink-entity">opportunity</span></span>
-          </label>
+          <div class="ov-autolink-row">
+            <label class="ov-autolink-main">
+              <input type="checkbox" id="ov-autolink" checked onchange="onAutolinkChange()">
+              <span>Automatically link email to this <span id="ov-autolink-entity">opportunity</span></span>
+            </label>
+            <!-- Two scopes, because "everyone at meridianlabs.com" and "the three
+                 people on this record" are very different amounts of mail, and which
+                 one is right depends on the deal. -->
+            <select class="ds-input ov-autolink-scope" id="ov-autolink-scope" onchange="onAutolinkChange()">
+              <option value="contact">from the contacts on this record</option>
+              <option value="domain">from anyone at their company's domain</option>
+            </select>
+          </div>
         </div>
 
         <div class="ov-section ds-card ds-card--section">
@@ -1078,6 +1106,8 @@
 
     document.getElementById('ov-autolink-entity').textContent = entity.toLowerCase();
     document.getElementById('ov-autolink').checked = card.autoLinkActivity !== false;
+    document.getElementById('ov-autolink-scope').value = card.autoLinkScope === 'domain' ? 'domain' : 'contact';
+    syncAutolinkScope();
 
     // One test covers both "the user turned this off" and "this record type never
     // offers it" — schema.on() folds the stored toggles into the type's defaults.
@@ -1124,6 +1154,7 @@
     customFieldValues = Object.assign({}, card.customFieldValues || {});
     renderCustomFields();
     renderStageBar();
+    renderPrimaryContact();
   }
 
   // The mailclient CRM panel's AI summary is a fixed, hardcoded string regardless of
@@ -1308,6 +1339,95 @@
     if (wrap) wrap.innerHTML = '';
   }
 
+  // The record's people, with the primary one selected. Choosing another promotes
+  // them; the last option opens the picker rather than pretending the list is all
+  // the people who exist.
+  function syncAutolinkScope() {
+    const on = document.getElementById('ov-autolink').checked;
+    document.getElementById('ov-autolink-scope').disabled = !on;
+  }
+  function onAutolinkChange() {
+    syncAutolinkScope();
+    renderActivityAndFiles();     // this setting's whole effect is that list
+    onFieldChange();
+  }
+
+  function domainOf(email) {
+    const at = String(email || '').indexOf('@');
+    return at === -1 ? '' : String(email).slice(at + 1).toLowerCase();
+  }
+
+  // Free mailboxes would drag in every unrelated person who happens to use gmail,
+  // so widening to a domain only ever means a company's own domain.
+  const FREE_MAIL = { 'gmail.com': 1, 'outlook.com': 1, 'hotmail.com': 1, 'yahoo.com': 1,
+                      'icloud.com': 1, 'proton.me': 1, 'protonmail.com': 1 };
+
+  // Mail that belongs to this record because of who it is with, rather than because
+  // someone logged it here. Read from the persona's mailbox — the only thread data
+  // this prototype has. The default persona's mailbox is static markup rather than
+  // data (CLAUDE.md, "the mailbox is the mocked half"), so nothing links there; a
+  // persona with mailbox.threads[] is where this shows.
+  function linkedEmailActivity() {
+    const box = document.getElementById('ov-autolink');
+    if (!box || !box.checked) return [];
+    const persona = (window.TITAN_PERSONAS || {})[window.PERSONA_ID];
+    const threads = (persona && persona.mailbox && persona.mailbox.threads) || [];
+    if (!threads.length) return [];
+
+    const scope = document.getElementById('ov-autolink-scope').value;
+    const emails = {}, domains = {};
+    (contacts || []).forEach(function (c) {
+      const e = String(c.email || '').trim().toLowerCase();
+      if (!e) return;
+      emails[e] = true;
+      const d = domainOf(e);
+      if (d && !FREE_MAIL[d]) domains[d] = true;
+    });
+
+    return threads.filter(function (t) {
+      const e = String(t.email || '').trim().toLowerCase();
+      if (!e) return false;
+      if (emails[e]) return true;
+      return scope === 'domain' && !!domains[domainOf(e)];
+    }).map(function (t) {
+      return { type: 'email', text: t.subject || 'Email', snippet: t.from || t.email,
+               date: t.date || '', author: t.from || '', linked: true };
+    });
+  }
+
+  function renderPrimaryContact() {
+    const sel = document.getElementById('ov-primary-contact');
+    const cell = document.getElementById('ov-key-contact');
+    if (!sel || !cell) return;
+    // A person-subject record IS the person — there is no separate contact to pick.
+    if (schema && schema.isPerson) { cell.style.display = 'none'; return; }
+    cell.style.display = '';
+    sel.innerHTML = (contacts.length
+      ? contacts.map(function (c, i) {
+          return '<option value="' + i + '"' + (i === 0 ? ' selected' : '') + '>' +
+            esc(c.name || c.email || 'Unnamed contact') + '</option>';
+        }).join('')
+      : '<option value="">No contact yet</option>') +
+      '<option value="add">＋ Add a contact…</option>';
+  }
+
+  function onPrimaryContactChange() {
+    const sel = document.getElementById('ov-primary-contact');
+    if (sel.value === 'add') { renderPrimaryContact(); addContact(); return; }
+    const i = Number(sel.value);
+    if (!contacts[i] || i === 0) return;
+    // Primary is position 0 — that is what contactsOf() and the flat card mirror
+    // both read, so promoting is a move rather than a flag.
+    const [chosen] = contacts.splice(i, 1);
+    contacts.unshift(chosen);
+    card.contact = chosen.name || '';
+    card.contactEmail = chosen.email || '';
+    card.contactPhone = chosen.phone || '';
+    renderPrimaryContact();
+    renderContacts();
+    onFieldChange();
+  }
+
   function setContactField(i, field, val) {
     const person = contacts[i];
     if (!person) return;
@@ -1451,6 +1571,7 @@
                     linkedin: p.linkedin || '' });
     closeOvModal('ov-pick-contact-modal');
     renderContacts();
+    renderPrimaryContact();
     onFieldChange();
   }
 
@@ -1469,7 +1590,7 @@
     document.getElementById('ov-pick-contact-modal').classList.add('open');
     setTimeout(function () { document.getElementById('ov-pick-search').focus(); }, 50);
   }
-  function removeContact(i) { contacts.splice(i, 1); renderContacts(); onFieldChange(); }
+  function removeContact(i) { contacts.splice(i, 1); renderContacts(); renderPrimaryContact(); onFieldChange(); }
 
   // Same icon set as the mailclient CRM panel's activity rows (§ Recent activity type
   // icons in index.html) — kept neutral-colored (see .crm-act-ic rule) so the glyph is
@@ -1581,9 +1702,13 @@
     if (addLink) addLink.style.display = upItems.length ? '' : 'none';
 
     const recent = document.getElementById('ov-recent-activity');
-    const recentItems = (card.recentActivities && card.recentActivities.length)
+    const logged = (card.recentActivities && card.recentActivities.length)
       ? card.recentActivities
       : ((card.activityType || card.lastActivity) ? [{ type: 'email', text: card.activityType || 'Activity', date: card.lastActivity || '' }] : []);
+    // Logged entries first, then linked mail. Not interleaved by date: these dates
+    // are display strings, and sorting "6 May" against "just now" would be
+    // guesswork dressed as chronology.
+    const recentItems = logged.concat(linkedEmailActivity());
     recent.innerHTML = recentItems.length
       ? recentItems.map(function (a, i) {
           // A task whose snippet is really a reference to another activity (e.g. "Send
@@ -1596,7 +1721,8 @@
             ? '<div class="crm-activity-snippet crm-snippet-link">' + actIconSvgOnly('email') + '<span>' + esc(a.snippetLink) + '</span></div>'
             : ((a.snippet || (isNote && a.text)) ? '<div class="crm-activity-snippet">' + esc(a.snippet || a.text) + '</div>' : '');
           // Email/meeting rows open detail (mailclient, or a modal here) on click.
-          return '<div class="crm-activity-row clickable" onclick="openActivityDetail(\'recent\',' + i + ')">' + actIcon(a.type) +
+          return '<div class="crm-activity-row clickable' + (a.linked ? ' is-linked' : '') +
+            '" onclick="openActivityDetail(\'recent\',' + i + ')">' + actIcon(a.type) +
             '<div style="flex:1; min-width:0;"><div class="crm-activity-text">' + title + '</div>' + snippetHTML + '</div>' +
             (a.date ? '<div class="crm-activity-date">' + esc(a.date) + '</div>' : '') +
             '</div>';
@@ -1653,7 +1779,11 @@
   }
 
   function openActivityDetail(listKind, i) {
-    const list = listKind === 'upcoming' ? upcomingActivityList() : (card.recentActivities || []);
+    // Same list the rows were built from, or a linked row would open whichever
+    // logged entry happened to sit at its index.
+    const list = listKind === 'upcoming'
+      ? upcomingActivityList()
+      : (card.recentActivities || []).concat(linkedEmailActivity());
     const a = list[i];
     if (!a) return;
     if (a.type === 'email' || a.type === 'followup') {
@@ -2024,6 +2154,7 @@
     card.closeDate = document.getElementById('ov-close-date').value;
     card.source = document.getElementById('ov-source').value.trim();
     card.autoLinkActivity = document.getElementById('ov-autolink').checked;
+    card.autoLinkScope = document.getElementById('ov-autolink-scope').value;
     const cleanContacts = contacts.filter(function (c) { return (c.name || '').trim(); });
     card.contacts = cleanContacts;
     if (cleanContacts[0]) {
