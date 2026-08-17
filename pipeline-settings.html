@@ -303,16 +303,20 @@
   .ps-stage-detail.open .ps-stage-detail-chevron { transform: rotate(180deg); }
   .ps-stage-detail-body { display: none; padding: 0 var(--space-200) var(--space-200); border-top: 1px solid var(--border-hairline); }
   .ps-stage-detail.open .ps-stage-detail-body { display: block; }
-  .ps-stage-editor-head { display: none; }
-  .ps-stage-editor-dot { width: var(--space-100); height: var(--space-100); border-radius: var(--radius-full); flex-shrink: 0; }
-  .ps-stage-editor-meta, .ps-stage-section-hint { font-size: var(--text-xs); color: var(--text-muted); }
-  .ps-stage-editor-meta { margin-left: var(--space-100); }
-  .ps-stage-section { border-top: 1px solid var(--border-hairline); margin-top: var(--space-300); padding-top: var(--space-200); }
+  /* Names the stage everything below it applies to, at the same weight as the card
+     title above — without it the sections say "Lead" in their headings and nothing
+     says which stage you actually picked. */
+  .ps-stage-editor-head { display: block; margin-top: var(--space-300); }
+  .ps-stage-editor-title { font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--text-heading); }
+  /* A rule after each section, so one block of settings ends before the next begins. */
+  .ps-stage-section { border-bottom: 1px solid var(--border-subtle); margin-top: var(--space-300); padding-bottom: var(--space-300); }
+  .ps-stage-section:last-of-type { border-bottom: 0; padding-bottom: 0; }
   /* Column, not row: the hint is a sentence describing the section, so it reads as
      a subtitle under the heading rather than a fragment trailing off beside it. */
   .ps-stage-section-head { display: flex; flex-direction: column; gap: var(--space-025); margin-bottom: var(--space-200); }
   .ps-stage-section-hint { max-width: 62ch; line-height: 1.5; }
-  .ps-stage-section-title, .ps-stage-editor .ds-field-label { font-size: var(--text-md); font-weight: var(--weight-semi); color: var(--text-heading); }
+  .ps-stage-editor .ds-field-label { font-size: var(--text-md); font-weight: var(--weight-semi); color: var(--text-heading); }
+  .ps-stage-section-title { font-size: var(--text-lg); font-weight: var(--weight-semi); color: var(--text-heading); }
   .ps-stage-field { display: grid; gap: var(--space-075); }
   .ps-stage-row { position: relative; display: flex; align-items: center; gap: var(--space-200); margin-top: var(--space-200); padding-right: calc(var(--btn-height-sm) + var(--space-100)); font-size: var(--text-md); color: var(--text-primary); }
   .ps-stage-row:first-of-type { margin-top: 0; }
@@ -450,12 +454,10 @@
         </div><!-- /pane stages -->
 
         <div class="ps-pane" data-pane="automation">
-        <div class="ps-card ps-flow-card">
+        <div class="ps-card">
           <div class="ps-card-title">Stage actions &amp; automation</div>
           <div class="np-help">Pick a stage to define what happens on entry, while it sits there, and before it moves on.</div>
           <div class="np-chev-chain" id="ps-automation-flow"></div>
-        </div>
-        <div class="ps-card">
           <div id="ps-stage-details"></div>
         </div>
         </div><!-- /pane automation -->
@@ -1042,16 +1044,11 @@
     const stage = ensureStageDetailFields(stages[i]);
     const editor = document.createElement('div');
     editor.className = 'ps-stage-editor';
+    // Just the name. The dot repeated the colour the chevron above already carries,
+    // and the summary restated settings that are visible in the sections below it.
     editor.innerHTML =
-      '<div class="ps-stage-editor-head">' +
-        '<span class="ps-stage-editor-dot" style="background:' + solidShadeFor(color, i, stages.length) + ';"></span>' +
-        '<span class="ps-stage-editor-title"></span>' +
-        '<span class="ps-stage-editor-meta"></span>' +
-      '</div>';
+      '<div class="ps-stage-editor-head"><span class="ps-stage-editor-title"></span></div>';
     editor.querySelector('.ps-stage-editor-title').textContent = stage.label || 'Untitled stage';
-    const stageMeta = editor.querySelector('.ps-stage-editor-meta');
-    stageMeta.textContent = stageDetailSummary(stage);
-    editor.className = 'ps-stage-editor';
     const addSection = function (title, hint) {
       const section = document.createElement('section');
       section.className = 'ps-stage-section';
@@ -1061,13 +1058,8 @@
       editor.appendChild(section);
       return section;
     };
-    const description = document.createElement('div');
-    description.className = 'ds-field';
-    description.innerHTML = '<label class="ds-field-label">Description</label><textarea class="ds-input ps-stage-textarea" placeholder="What does this stage mean? When should a record be here?"></textarea>';
-    const descriptionInput = description.querySelector('textarea');
-    descriptionInput.value = stage.description;
-    descriptionInput.addEventListener('input', function () { stage.description = descriptionInput.value; });
-    editor.appendChild(description);
+    // No description field here: it lives on the stages screen now, and two inputs
+    // bound to one stage.description is how they drift.
 
     const entryType = ((pipeline && pipeline.entity) || 'record').toLowerCase();
     const entryArticle = /^[aeiou]/.test(entryType) ? 'an' : 'a';
