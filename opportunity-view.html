@@ -180,22 +180,14 @@
   /* Actions live top-right, beside the record's name — where you look to act on
      the thing you just identified, not at the bottom of a list. */
   .ov-title-actions { display: flex; align-items: center; gap: var(--space-075); flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
-  .ov-more-wrap { position: relative; }
-  .ov-more-menu {
-    display: none; position: absolute; right: 0; top: calc(100% + var(--space-075));
-    min-width: 260px; z-index: 40; padding: var(--space-075);
-    background: var(--surface-primary); border: 1px solid var(--border-subtle);
-    border-radius: 10px; box-shadow: var(--elevation-menu);
+  /* Sits at the very bottom, quiet — a way out to settings, not a section. */
+  .ov-page-foot {
+    display: flex; align-items: baseline; gap: var(--space-075);
+    margin-top: var(--space-300); padding: 0 var(--space-050);
+    font-size: var(--text-xs); color: var(--text-secondary);
   }
-  .ov-more-menu.open { display: block; }
-  .ov-more-item {
-    display: flex; align-items: center; gap: var(--space-100); width: 100%; text-align: left;
-    padding: var(--space-100) var(--space-125); border: none; background: none; border-radius: 7px;
-    font: inherit; font-size: var(--text-sm); color: var(--text-primary); cursor: pointer;
-  }
-  .ov-more-item:hover { background: var(--surface-hover); }
-  .ov-more-check { cursor: pointer; }
-  .ov-more-check input { flex-shrink: 0; }
+  .ov-page-foot .ov-add-link { margin-top: 0; border: none; background: none; padding: 0; cursor: pointer; }
+
   .ov-key .ov-owner-select { width: 100%; }
 
   .ov-pick-search { width: 100%; margin-bottom: var(--space-150); }
@@ -592,21 +584,6 @@
                 <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
                 AI summary
               </button>
-              <!-- Settings-shaped things that were sitting in the middle of the record:
-                   a "Missing a field?" link between two field rows, and a checkbox
-                   about activity linking under everything. Neither is part of reading
-                   or editing this deal, so both live behind the overflow. -->
-              <div class="ov-more-wrap">
-                <button class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm" id="ov-more-btn" type="button"
-                        aria-label="More options" aria-expanded="false" onclick="toggleMoreMenu(event)">
-                  <span data-ds-icon="more" data-size="16"></span>
-                </button>
-                <div class="ov-more-menu" id="ov-more-menu">
-                  <button class="ov-more-item" type="button" onclick="openRecordSettings()">
-                    <span id="ov-configure-fields">Configure fields</span>
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
           <div class="ov-ai-card" id="ov-ai-card">
@@ -784,6 +761,15 @@
           <div id="ov-files"></div>
           <span class="ov-add-link" onclick="document.getElementById('ov-file-input').click()">+ Add file</span>
           <input type="file" id="ov-file-input" multiple style="display:none;" onchange="addFiles(this.files)">
+        </div>
+
+        <!-- Page footer rather than a section: it configures the record type, not
+             this record, and you reach it after reading everything — which is when
+             you'd notice a field was missing. -->
+        <div class="ov-page-foot">
+          <span>Missing a field?</span>
+          <button class="ov-add-link" type="button" onclick="openRecordSettings()"
+                  id="ov-configure-fields">Configure fields</button>
         </div>
 
       </div>
@@ -1145,25 +1131,6 @@
   // one-line summary from the record's own data instead (contact, company, stage,
   // value, latest note), which is both true parity (the same toggleable AI-summary
   // affordance) and "more" (it actually reflects the record you're looking at).
-  function toggleMoreMenu(evt) {
-    if (evt) evt.stopPropagation();
-    const m = document.getElementById('ov-more-menu');
-    const btn = document.getElementById('ov-more-btn');
-    const open = m.classList.toggle('open');
-    btn.setAttribute('aria-expanded', String(open));
-    if (open) setTimeout(function () { document.addEventListener('click', outsideMoreMenu); }, 0);
-    else document.removeEventListener('click', outsideMoreMenu);
-  }
-  function outsideMoreMenu(e) {
-    const m = document.getElementById('ov-more-menu');
-    // The checkbox inside the menu must not close it out from under the click.
-    if (m && !m.contains(e.target)) {
-      m.classList.remove('open');
-      document.getElementById('ov-more-btn').setAttribute('aria-expanded', 'false');
-      document.removeEventListener('click', outsideMoreMenu);
-    }
-  }
-
   function toggleAiSummary() {
     const cardEl = document.getElementById('ov-ai-card');
     const btn = document.getElementById('ov-ai-btn');
