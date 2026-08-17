@@ -372,7 +372,7 @@ body.has-panel[data-subpage="companies"] .dir-table th:nth-child(5) { width: 30%
 
 /* ── Modal ───────────────────────────────────────────────────────────────── */
 .dir-modal-scrim {
-  position: fixed; inset: 0; z-index: 80; background: rgba(20,22,26,0.34);
+  position: fixed; inset: 0; z-index: 80; background: var(--modal-backdrop-bg);
   display: flex; align-items: center; justify-content: center; padding: 24px;
   opacity: 0; pointer-events: none; transition: opacity 160ms;
 }

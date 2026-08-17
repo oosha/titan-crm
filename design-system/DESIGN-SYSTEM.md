@@ -18,13 +18,14 @@ you can see the whole system at once.
 
 ## The workbench
 
-`node dev-server.js`, then **http://localhost:8000/design-system/**. Five views, each on
+`node dev-server.js`, then **http://localhost:8000/design-system/**. Six views, each on
 its own hash so it can be linked and screenshotted:
 
 | `#overview` | The coverage ledger — one row per block in the inventory, bar = duplication absorbed, sorted by it. Click a row for the evidence. |
 | `#foundations` | Curated specimens (ramps, type, radius, space, elevation) **plus a complete token index parsed from `primitives.css` and `semantics.css`** — grouped by those files' own section comments, so a token you add shows up without editing the page. |
 | `#icons` | The whole set, filterable by name *or* alias; click to copy the call. |
 | `#components` | Every variant in every state. A registered component with no demo is called out by name. |
+| `#patterns` | Cross-page interaction and layout conventions composed from application structure and components. |
 | `#directions` | Each theme rendered live, side by side. |
 
 It is rendered **in its own system** — the dark rail is the product's real sidebar colour,
@@ -43,6 +44,30 @@ Three things it reads rather than restates, so it can't drift from the truth:
 - **`#directions` fetches each theme file and rewrites its `:root` to a wrapper class**,
   so every direction previews at once without its values being copied into this page.
   The override list under each preview is parsed from that same file.
+
+- **`#patterns` renders from `registry.json`**, including when to use a pattern, its
+  required structure, constraints and current examples. A pattern is not a component:
+  it coordinates routes, page ownership and component composition, and therefore does
+  not introduce a `ds-*` class.
+
+### Patterns are contracts
+
+Before deciding how a task opens or occupies the workspace, check the registry's
+`patterns` array or the `#patterns` workbench view. When a task matches a registered
+pattern, follow its structure and requirements. Reusing the right buttons and inputs
+inside the wrong screen behavior is not design-system adoption.
+
+The current choice is deliberate:
+
+| Pattern | Use it for | Do not use it for |
+|---|---|---|
+| **Modal dialog** | A short, bounded task that should retain the current page as context | Multi-section configuration, deep navigation, or anything needing a durable URL |
+| **Full-page settings** | Sustained or multi-section configuration with its own cold-loadable route | A quick confirmation or compact edit that should return directly to the current page |
+
+Patterns and components are independent layers. The Modal dialog behavior is registered
+even though its reusable `ds-*` component shell is still planned; pages must follow the
+behavioral contract and compose the closest existing controls without inventing a fake
+design-system component.
 
 Adding a direction is therefore one file in `themes/` plus one entry in the registry's
 `themes` array — the workbench picks up both the header control and the side-by-side

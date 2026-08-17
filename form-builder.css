@@ -1,6 +1,7 @@
-/* The form builder — the same editor whether it is a modal over the board, a modal
-   over the Forms tab, or mounted inline on /crm/pipeline/:id/form. Prefixed fb- so it
-   can sit on top of any of those pages without colliding.
+/* The form builder mounted inline on /crm/pipeline/:id/form. Prefixed fb- so its editor
+   layout cannot collide with the full-page shell around it. The legacy modal adapter's
+   shell remains at the top of this file for compatibility, but no product entry point
+   invokes it; form creation/editing follows the Full-page settings pattern.
 
    What is left here is layout: the modal shell, the two-column split, and the field row's
    grid. The controls inside it are the design system's — .ds-btn, .ds-input, .ds-badge —
@@ -13,7 +14,7 @@
    a second, quieter source of truth that nobody would have noticed going stale. */
 .fb-overlay {
   position: fixed; inset: 0; z-index: 3000;
-  background: rgba(16, 24, 40, 0.45);
+  background: var(--modal-backdrop-bg);
   display: flex; align-items: center; justify-content: center;
   /* Enough scrim that the tab never touches the viewport edge, without spending height the
      field list could use. */
@@ -156,10 +157,8 @@ body.fb-locked { overflow: hidden; }
   opacity: 0; transform: translateX(-40px);
   pointer-events: none;
 }
-/* The gap belongs to a two-column layout. Left in place it kept the published form 12px
-   right of centre — half a gap it no longer has a neighbour across. */
+/* The two-column gap disappears with the editor, keeping the published form truly centred. */
 .fb-cols.is-published { gap: 0; }
-
 /* Someone who has asked for less movement gets the same two states, arrived at instantly.
    The FLIP offset is still applied and released either way, so the end position is the same
    with or without the travel. */
@@ -390,8 +389,6 @@ body.fb-locked { overflow: hidden; }
   accent-color: var(--checkbox-accent);
 }
 
-/* Its own width, kept through the publish animation — the editor beside it is what
-   collapses, so the preview must not be the thing that flexes. */
 /* Its own width, kept through the publish animation — the editor beside it is what leaves,
    so the preview must not be the thing that flexes. The transform transition is the slide
    into the centre; slideTo() sets the starting offset and then clears it. */

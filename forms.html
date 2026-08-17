@@ -18,8 +18,6 @@
   <link rel="stylesheet" href="/design-system/components.css">
 <link rel="stylesheet" href="/titan-sidebar.css">
 <link rel="stylesheet" href="/crm-directory.css">
-<link rel="stylesheet" href="/form.css">
-<link rel="stylesheet" href="/form-builder.css">
 <style>
   /* Each pipeline is a folder tab; the card hanging off it is that pipeline's form.
      The tab carries the pipeline name so "which pipeline?" is answered before you
@@ -102,16 +100,6 @@
 <script src="/design-system/components/icon.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
-<!-- The builder labels each field's destination in the record's own words, which
-     crm-schema.js owns — without it the rows fall back to generic names. -->
-<script src="/crm-schema.js"></script>
-<script src="/form-render.js"></script>
-<!-- dsMenu drives the field-destination picker inside form-builder.js: one open at a
-     time, outside click, Escape, arrow keys. -->
-<script src="/design-system/components/menu.js"></script>
-<!-- Pipeline tag names the pipeline in the builder's destination picker. -->
-<script src="/design-system/components/pipeline-tag.js"></script>
-<script src="/form-builder.js"></script>
 <script>
   const esc = window.esc;
 
@@ -185,24 +173,15 @@
       '</div></div>';
   }
 
-  // Editing happens over this page — the list is the context you want back when you
-  // are done, and bouncing to a separate document loses it.
+  // Form creation/editing is a full-page settings task. The editor route owns the
+  // workspace and returns here when the user is done; `from` is an enum rather than a
+  // return URL so it cannot become an open redirect.
   let PIPELINES = {};
   function editForm(pipelineId) {
-    const pl = PIPELINES[pipelineId];
-    if (!pl) return;
-    window.titanFormBuilder.open({
-      pipeline: pl,
-      form: pl.intakeForm || null,
-      personaId: window.PERSONA_ID,
-      onSave: async function (form, pipeline) {
-        window.DATA.pipelines[pipelineId].intakeForm = form;
-        window.DATA.pipelines[pipelineId].customFieldDefs = pipeline.customFieldDefs || [];
-        await window.saveData();
-        render(window.DATA.pipelines);
-      },
-      onDelete: function () { return deleteForm(pipelineId); },
-    });
+    if (!PIPELINES[pipelineId]) return;
+    const q = new URLSearchParams(location.search);
+    q.set('from', 'forms');
+    location.href = '/crm/pipeline/' + encodeURIComponent(pipelineId) + '/form?' + q.toString();
   }
 
   // The delete itself, shared by the row's button and the builder's. Restores the form
@@ -223,12 +202,18 @@
     render(window.DATA.pipelines);
   }
 
-  // Confirmed with the same wording the builder uses, so deleting from the row and
-  // deleting from inside the editor are the same action, not two.
+  function confirmDeleteForm(pipelineName) {
+    return confirm('Delete the form on “' + (pipelineName || 'this pipeline') + '”?\n\n' +
+      'Its link stops working immediately and cannot be restored — a new form gets a new link. ' +
+      'Records that already came in through it stay where they are.');
+  }
+
+  // Confirmed with the same wording as the full-page editor, so deleting from the row
+  // and deleting inside the editor are the same action, not two.
   async function deleteFormFromRow(pipelineId) {
     const pl = PIPELINES[pipelineId];
     if (!pl) return;
-    if (!window.titanFormBuilder.confirmDelete(pl.name)) return;
+    if (!confirmDeleteForm(pl.name)) return;
     try { await deleteForm(pipelineId); }
     catch (e) {
       document.getElementById('fl-note').textContent =

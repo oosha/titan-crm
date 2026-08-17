@@ -79,6 +79,9 @@
   --elevation-card:  var(--shadow-card);
   --elevation-menu:  var(--shadow-menu);
   --elevation-modal: var(--shadow-modal);
+  /* The page-dimming layer behind modal dialogs. Kept separate from panel/drawer
+     scrims so modal emphasis can be tuned globally without changing navigation. */
+  --modal-backdrop-bg: rgba(16, 24, 40, 0.65);
   --focus-ring:      var(--ring-accent);
   --focus-ring-danger: var(--ring-danger);
 

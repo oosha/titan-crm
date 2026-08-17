@@ -40,13 +40,7 @@
   <link rel="stylesheet" href="/design-system/components.css">
   <script src="/design-system/components/icon.js"></script>
   <script src="/design-system/components/menu.js"></script>
-  <!-- Pipeline tag names the pipeline in the builder's destination picker. -->
-  <script src="/design-system/components/pipeline-tag.js"></script>
   <link rel="stylesheet" href="/titan-sidebar.css">
-  <link rel="stylesheet" href="/form.css">
-  <link rel="stylesheet" href="/form-builder.css">
-  <script src="/form-render.js"></script>
-  <script src="/form-builder.js"></script>
   <script src="/crm-schema.js"></script>
   <script src="/crm-status.js"></script>
   <script src="/titan-sidebar.js"></script>
@@ -1988,7 +1982,7 @@
 
     /* ── CRM: Pipeline picker modal ── */
     .pipeline-picker-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.25);
+      position: fixed; inset: 0; background: var(--modal-backdrop-bg);
       display: none; align-items: center; justify-content: center; z-index: 500;
     }
     .pipeline-picker-overlay.open { display: flex; }
@@ -2032,7 +2026,7 @@
 
     /* ── CRM: New Pipeline flow (§4.1–4.3) ── */
     .np-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.28);
+      position: fixed; inset: 0; background: var(--modal-backdrop-bg);
       display: none; align-items: center; justify-content: center; z-index: 600;
     }
     .np-overlay.open { display: flex; }
@@ -3813,8 +3807,7 @@
         openPipelineSettings(pipelineKey, kind === 'entity-setting' ? '/record-setting' : '/setting');
         return;
       }
-      // Editing happens over the board rather than on a separate page — the board is
-      // the context you want back afterwards.
+      // Form creation/editing follows the full-page settings pattern.
       if (kind === 'form') { openPipelineForm(pipelineKey); return; }
       if (kind === 'delete-pipeline') { deletePipeline(pipelineKey); return; }
       if (kind === 'add-team') { openAddTeamModal(pipelineKey); return; }
@@ -3950,30 +3943,15 @@
 
     // Add opportunity needs every pipeline's cards (for cross-pipeline contact
     // autocomplete), not just the current one, so all of PIPELINES is handed off.
-    // The intake form for a pipeline, in the shared builder. Saving writes the whole
-    // document the same way every other editor here does.
+    // Form creation/editing owns the full workspace on its cold-loadable route. The
+    // `from` enum lets its Back action return to the board without accepting a URL.
     function openPipelineForm(pipelineKey) {
       const key = pipelineKey || currentPipelineId;
-      const pl = PIPELINES[key];
-      if (!pl) return;
-      window.titanFormBuilder.open({
-        pipeline: pl,
-        form: pl.intakeForm || null,
-        personaId: window.PERSONA_ID,
-        onSave: function (form, pipeline) {
-          pl.intakeForm = form;
-          if (pipeline && pipeline.customFieldDefs) pl.customFieldDefs = pipeline.customFieldDefs;
-          schedulePersist();
-          updateBoardFormBtn();
-        },
-        // The builder asks; unsetting it and persisting is ours. Records the form
-        // created are ordinary records and are left alone.
-        onDelete: function () {
-          delete pl.intakeForm;
-          schedulePersist();
-          updateBoardFormBtn();
-        },
-      });
+      if (!PIPELINES[key]) return;
+      const q = new URLSearchParams(location.search);
+      q.delete('intent');
+      q.set('from', 'board');
+      location.href = '/crm/pipeline/' + encodeURIComponent(key) + '/form?' + q.toString();
     }
 
     // The import action lives behind the split button's caret now. Its state — whether a
@@ -4740,12 +4718,19 @@
     let LOADED_DATA = null;
     function schedulePersist() { clearTimeout(persistTimer); persistTimer = setTimeout(persistNow, 600); }
     async function persistNow() {
+      clearTimeout(persistTimer);
+      persistTimer = null;
       try {
-        await fetch(apiUrl('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID)), {
+        const res = await fetch(apiUrl('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID)), {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(Object.assign({}, LOADED_DATA || {}, { currentPipelineId: currentPipelineId, pipelineSeq: pipelineSeq, pipelines: PIPELINES })),
         });
-      } catch (e) { console.error('titan-crm: failed to save — API unreachable.', e); }
+        if (!res.ok) throw new Error('Save failed (' + res.status + ')');
+        return true;
+      } catch (e) {
+        console.error('titan-crm: failed to save — API unreachable.', e);
+        return false;
+      }
     }
     async function resetToSampleData(pipelineIds) {
       const body = pipelineIds && pipelineIds.length ? { pipelineIds: pipelineIds } : {};
@@ -5237,29 +5222,18 @@
       }).join('');
     }
 
-    // Opens the same builder step 2 used to host, now saving straight onto the
-    // pipeline since it exists by this point.
-    function npSourceForm() {
+    // A just-created pipeline must land before its cold-loadable form route fetches it.
+    // Existing pipelines take the same path; persisting any pending board edit first
+    // means navigation cannot outrun the debounced whole-document save.
+    async function npSourceForm() {
       const pl = PIPELINES[npCreatedId];
       if (!pl) return;
-      window.titanFormBuilder.open({
-        pipeline: pl,
-        form: pl.intakeForm || null,
-        personaId: window.PERSONA_ID,
-        onSave: function (form, pipeline) {
-          pl.intakeForm = form;
-          if (pipeline && pipeline.customFieldDefs) pl.customFieldDefs = pipeline.customFieldDefs;
-          schedulePersist();
-          npRenderFormSlot();
-          npToast('Form published for “' + pl.name + '”.', true);
-        },
-        onDelete: function () {
-          delete pl.intakeForm;
-          schedulePersist();
-          npRenderFormSlot();
-          npToast('Form deleted.', true);
-        },
-      });
+      const saved = await persistNow();
+      if (!saved) {
+        npToast('Could not save “' + pl.name + '” before opening its form. Try again.');
+        return;
+      }
+      openPipelineForm(npCreatedId);
     }
 
     function npPickIntegration(id) {

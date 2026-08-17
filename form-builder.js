@@ -1,19 +1,15 @@
-// The intake-form builder, as one embeddable thing.
+// The intake-form builder, mounted inline by the standalone full-page route.
 //
-//   titanFormBuilder.open({ pipeline, form, onSave })   → in a modal, over whatever page
-//   titanFormBuilder.mount(hostEl, { … })               → inline, for the standalone route
+//   titanFormBuilder.mount(hostEl, { … }) → /crm/pipeline/:id/form
 //
-// It is used from three places — the new-pipeline modal (where the pipeline does not
-// exist yet), the Forms tab (editing a saved one), and /crm/pipeline/:id/form — so it
-// lives here rather than in any of them. A second copy of a field editor would drift
-// from the first, and the preview drifting from the real form is the one thing this
-// feature cannot afford.
+// Every product entry point navigates to that cold-loadable route. The older `open()`
+// modal adapter remains below only for compatibility with external prototype call sites;
+// nothing in this repo calls it, and form creation/editing must not reintroduce one.
+// Keeping the field editor here rather than in the route prevents a second copy from
+// drifting, especially the preview shared with the public form.
 //
-// It never saves anything itself. `onSave(form, pipeline)` hands the edited objects
-// back and the caller decides what that means: POST /api/data for an existing
-// pipeline, or hold it in memory until the pipeline is created. `onDelete()` is the
-// same contract for removal — the builder asks, the caller unsets `intakeForm` and
-// persists.
+// The mounted builder never saves anything itself. The full-page route collects its
+// output and persists the form and any custom-field definitions together.
 //
 // Requires form-render.js (the preview) and form.css + form-builder.css.
 (function () {
@@ -369,6 +365,45 @@
     this.renderPreview();
     this.renderLogo();
   }
+
+  // The mounted full-page route and the legacy modal share the same published-state
+  // movement. Keeping the FLIP transition on the builder prevents a route-specific save
+  // handler from silently losing the animation again.
+  Builder.prototype.setPublished = function (published) {
+    const cols = this.$('.fb-cols');
+    const editEl = cols && cols.querySelector('.fb-edit');
+    const previewEl = cols && cols.querySelector('.fb-preview');
+    if (!cols || !editEl || !previewEl) {
+      if (cols) cols.classList.toggle('is-published', published);
+      return;
+    }
+
+    const from = previewEl.getBoundingClientRect().left;
+    if (published) {
+      // Pinned before it leaves the flow: an absolutely-positioned flex item with no
+      // width of its own would collapse to its content and reflow while fading.
+      editEl.style.width = editEl.getBoundingClientRect().width + 'px';
+      cols.classList.add('is-published');
+    } else {
+      cols.classList.remove('is-published');
+      editEl.style.width = '';
+    }
+
+    const dx = Math.round(from - previewEl.getBoundingClientRect().left);
+    if (!dx) return;
+    previewEl.style.transition = 'none';
+    previewEl.style.transform = 'translateX(' + dx + 'px)';
+
+    let released = false;
+    const release = function () {
+      if (released) return;
+      released = true;
+      previewEl.style.transition = '';
+      previewEl.style.transform = '';
+    };
+    requestAnimationFrame(release);
+    setTimeout(release, 50);
+  };
 
   // Forms saved before the destination and the type were one choice can carry a custom
   // field with no definition on the pipeline, or one with no type — the record page then
@@ -814,6 +849,33 @@
       '</div>';
   }
 
+  // The stronger link treatment shown immediately after publish. This used to live only
+  // inside open(), which is why the full-page route regained the slide but not the green
+  // confirmation, centred URL or Copy action when the interaction pattern changed.
+  function publishedRowHTML(url) {
+    return '<div class="fb-published">' +
+      '<span class="fb-published-tick">' +
+        (window.dsIcon ? window.dsIcon('check', { size: 11 }) : '&check;') + '</span>' +
+      '<span class="fb-published-label">Form published</span>' +
+      '<span class="fb-published-url" tabindex="0">' + esc(url) + '</span>' +
+      '<button type="button" class="ds-btn ds-btn--secondary ds-btn--sm fb-published-copy">' +
+        (window.dsIcon ? window.dsIcon('copy', { size: 14 }) : '') + 'Copy</button>' +
+    '</div>';
+  }
+
+  function renderPublishedRow(host, token, origin, selectUrl) {
+    if (!host || !token) return;
+    const url = formUrl(origin, token);
+    host.innerHTML = publishedRowHTML(url);
+    wireCopy(host.querySelector('.fb-published-copy'), url);
+    if (!selectUrl) return;
+    const urlEl = host.querySelector('.fb-published-url');
+    const range = document.createRange();
+    range.selectNodeContents(urlEl);
+    const sel = window.getSelection();
+    sel.removeAllRanges(); sel.addRange(range);
+  }
+
   // One wording for "are you sure", wherever delete is offered. What it has to say is
   // the part people get wrong about this action: the link dies, the records don't.
   // Exported because /crm/pipeline/:id/form mounts the builder inline and owns its own
@@ -839,10 +901,11 @@
       host.innerHTML = linkRowHTML(url);
       wireCopy(host.querySelector('.fb-link-copy'), url);
     },
+    publishedRow: renderPublishedRow,
 
-    // ── Modal ────────────────────────────────────────────────────────────────
-    // Opened over the page it was launched from, so setting up a form never costs
-    // you your place — from the new-pipeline modal it stacks on top of it.
+    // ── Legacy modal adapter ─────────────────────────────────────────────────
+    // Kept for compatibility only. Current product entry points follow the registered
+    // Full-page settings pattern and use mount() above.
     open: function (opts) {
       const existing = !!(opts.form && opts.form.token);
       const canDelete = !!(opts.onDelete && existing);
@@ -878,7 +941,6 @@
 
       const builder = new Builder(wrap.querySelector('.fb-scroll'), opts);
       const head = wrap.querySelector('.fb-head');
-      const cols = wrap.querySelector('.fb-cols');
       const publishLabel = opts.saveLabel || 'Publish Form';
 
       function close() {
@@ -971,19 +1033,7 @@
         head.innerHTML =
           '<button type="button" class="ds-btn ds-btn--secondary ds-btn--sm fb-reopen">' +
             (window.dsIcon ? window.dsIcon('back', { size: 13 }) : '&lsaquo;') + 'Back to Editing</button>' +
-          // One container holding the whole result: the state, the link, and the way to take
-          // it with you. Split across three elements it read as three separate things, one
-          // of which happened to be a URL.
-          '<div class="fb-published">' +
-            '<span class="fb-published-tick">' +
-              (window.dsIcon ? window.dsIcon('check', { size: 11 }) : '&check;') + '</span>' +
-            '<span class="fb-published-label">Form published</span>' +
-            // Real text, selectable: this gets pasted into a bio, a message, a printed
-            // sign, so it has to be readable and retypable, not an href you can only click.
-            '<span class="fb-published-url" tabindex="0">' + esc(url) + '</span>' +
-            '<button type="button" class="ds-btn ds-btn--secondary ds-btn--sm fb-published-copy">' +
-              (window.dsIcon ? window.dsIcon('copy', { size: 14 }) : '') + 'Copy</button>' +
-          '</div>' +
+          publishedRowHTML(url) +
           '<button type="button" class="ds-btn ds-btn--primary fb-done">Done</button>';
 
         wireCopy(head.querySelector('.fb-published-copy'), url);
@@ -1000,49 +1050,9 @@
 
       // The published/editing switch, animated as one movement rather than two.
       //
-      // The layout change happens in a single frame — the editor is taken out of flow at its
-      // current width, so the preview's box jumps straight to the centre — and then the
-      // preview is put back where it was with a transform and released. It travels from its
-      // old position to its new one under one transition (FLIP), instead of being shoved
-      // along frame by frame by an animating max-width, which is what made it stutter.
-      const editEl = cols && cols.querySelector('.fb-edit');
-      const previewEl = cols && cols.querySelector('.fb-preview');
-
+      // Delegates to the builder so the mounted full-page route gets this same transition.
       function slideTo(published) {
-        if (!cols || !editEl || !previewEl) {
-          if (cols) cols.classList.toggle('is-published', published);
-          return;
-        }
-        const from = previewEl.getBoundingClientRect().left;
-
-        if (published) {
-          // Pinned before it leaves the flow: an absolutely-positioned flex item with no
-          // width of its own would collapse to its content and reflow while fading.
-          editEl.style.width = editEl.getBoundingClientRect().width + 'px';
-          cols.classList.add('is-published');
-        } else {
-          cols.classList.remove('is-published');
-          editEl.style.width = '';     // back in flow, flex decides again
-        }
-
-        const dx = Math.round(from - previewEl.getBoundingClientRect().left);
-        if (!dx) return;
-        previewEl.style.transition = 'none';
-        previewEl.style.transform = 'translateX(' + dx + 'px)';
-
-        // Released on the next frame — and by a timer as a backstop, because if the frame
-        // callback never runs the preview is stranded at its old position with no way back.
-        // Whichever fires first wins; the second call is a no-op.
-        let released = false;
-        const release = function () {
-          if (released) return;
-          released = true;
-          // Cleared rather than set, so the duration and easing stay in the stylesheet.
-          previewEl.style.transition = '';
-          previewEl.style.transform = '';
-        };
-        requestAnimationFrame(release);
-        setTimeout(release, 50);
+        builder.setPublished(published);
       }
 
       function backToEditing() {

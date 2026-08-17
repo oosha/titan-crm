@@ -2,6 +2,13 @@
 
 This document outlines the core UI aesthetics, design tokens, component specs, responsiveness patterns, and interactive behaviors developed for the **Titan Redesign**. It is formatted to serve as a complete system-prompt context or reference guide for any LLM working on this codebase.
 
+> **Current implementation contract:** Before building a CRM surface, read
+> `design-system/DESIGN-SYSTEM.md` and `design-system/registry.json`. Their registered
+> patterns are mandatory when a task matches them. In particular, use the Modal dialog
+> pattern for short bounded work that retains page context, and Full-page settings for
+> sustained or multi-section configuration with a cold-loadable route. This older visual
+> guide remains aesthetic ground truth but does not replace those application patterns.
+
 ---
 
 ## 1. Core Aesthetic Principles

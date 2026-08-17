@@ -181,6 +181,38 @@
   .legend.is-pie .legend-row { padding: 9px 0; }
   .legend.is-pie .legend-dot { width: 11px; height: 11px; border-radius: 50%; }
 
+  /* ── Email engagement funnel ───────────────────────────────────────────────
+     Sent → Opened → Replied is a nested set, not a partition: nothing is opened
+     that wasn't sent, and a reply implies an open. So it's three bars measured
+     against one shared baseline, not the stacked bar the stage tile uses — a
+     stack would claim these three are slices of a whole and that they sum. */
+  /* One grid for all three rows, not a grid per row: the value column is auto-width,
+     so per-row grids sized it to their own content — "1,240" is narrower than
+     "643 (52%)" — and the 1fr track column pocketed the difference, which made the
+     Sent bar's trough visibly longer than the two beneath it. `display: contents`
+     lifts the rows' cells into this grid so all three share one set of columns. */
+  .mail-fun {
+    flex: 1; display: grid; grid-template-columns: 90px 1fr auto;
+    align-content: center; align-items: center; gap: 14px 12px;
+  }
+  .mail-step { display: contents; }
+  .mail-name { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--dir-body); }
+  /* Square key, same as the bar charts' legend — the round one belongs to the pie. */
+  .mail-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  /* Both of these are display:block on purpose. They are spans inside a span, so
+     without it the fill stays inline and width/height are simply ignored — which
+     painted three empty tracks and no data at all. */
+  .mail-track { display: block; height: 24px; border-radius: 6px; background: var(--dir-hair); overflow: hidden; }
+  .mail-fill { display: block; height: 100%; border-radius: 6px; transition: width 620ms cubic-bezier(0.22,0.61,0.36,1); }
+  .mail-val { text-align: left; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  /* The count is the figure on every row, so the three are read against each other
+     on one scale; the rate follows in brackets as what the bar already shows. */
+  .mail-figure { font-size: 16px; font-weight: 740; color: var(--dir-ink); letter-spacing: -0.01em; }
+  .mail-rate { font-size: 12px; color: var(--dir-muted); margin-left: 6px; }
+  /* The figures are invented and not pipeline-scoped, neither of which a reader can
+     tell from three bars. The footnote is the disclosure, so it isn't decoration. */
+  .mail-foot { font-size: 11.5px; color: var(--dir-muted); margin-top: 15px; }
+
   /* ── Top opportunities ───────────────────────────────────────────────────── */
   .top-row { display: grid; grid-template-columns: 26px 1fr 132px auto; align-items: center; gap: 12px; padding: 9px 8px; margin: 0 -8px; border-radius: 10px; text-decoration: none; color: inherit; }
   .top-row + .top-row { border-top: 1px solid var(--dir-hair); }
@@ -330,7 +362,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .bento > .tile { animation: none; }
-    .ring-val, .donut-seg, .stack-seg, .pie-seg, .top-bar-fill, .hcol-bar { transition: none; }
+    .ring-val, .donut-seg, .stack-seg, .pie-seg, .top-bar-fill, .mail-fill, .hcol-bar { transition: none; }
     .ai-typing i { animation: none; }
   }
 
@@ -501,6 +533,7 @@
     { id: 'breakdown', name: 'Pipeline breakdown', desc: 'Where records sit, stage by stage.' },
     { id: 'distribution', name: 'Amount spread',   desc: 'How open records cluster by amount.', money: true },
     { id: 'sources',   name: 'By source',          desc: 'Where records came from (hidden until sources are set).' },
+    { id: 'mail',      name: 'Email engagement',   desc: 'Sent, open rate and response rate across the mailbox.' },
     { id: 'top',       name: 'Focus list',         desc: 'The records worth opening first.' },
   ];
   function widgetsForType() {
@@ -899,6 +932,58 @@
     return tile({ span: span, accent: PIE[0], title: title, body: body });
   }
 
+  // ── Email engagement ─────────────────────────────────────────────────────────
+  // The one tile here whose figures are not computed from the records, because
+  // nothing in this app tracks a send, an open or a reply. `card.activityType` is
+  // the *type of the last touch* rather than a log, and there is no open signal at
+  // all — so these are hand-authored demo figures, the way `card.overdue` already
+  // is. Wiring it to something real means replacing MAIL_STATS with a fetch; the
+  // rest of the tile reads whatever shape this object has.
+  //
+  // They are workspace-wide, which means they deliberately do NOT answer the
+  // pipeline tabs or the scope selector above. That is the cost of a single mock
+  // block, and the tile discloses it in its meta and its footnote rather than
+  // redrawing the same three numbers under a new heading and implying they moved.
+  // Per-pipeline figures would need a counter on each card instead.
+  const MAIL_STATS = { sent: 1240, opened: 643, replied: 221, period: 'last 30 days' };
+
+  // Three distinct hues rather than the ordinal ramp of one, which is the exception
+  // to the note at the top of this section: a 3-step ramp of a single hue came out
+  // too close to read, and these steps aren't just ordered, they carry a direction —
+  // mail goes out (blue), gets attention (amber), comes back (green). The colour is
+  // doing the same work as the label, which is the point.
+  //
+  // Both rates are shares of *sent*: "response rate" measured against opens would
+  // flatter itself, and the two percentages would stop being comparable.
+  function mailTile(span) {
+    const sent = Math.max(0, Number(MAIL_STATS.sent) || 0);
+    if (!sent) return '';
+    // Clamped: a mock claiming more opens than sends would otherwise draw a bar past
+    // the end of its track and report 118%.
+    const steps = [
+      { name: 'Sent', n: sent, color: C_OPEN, base: true },
+      { name: 'Opened', n: Math.min(Math.max(0, Number(MAIL_STATS.opened) || 0), sent), color: C_AVG },
+      { name: 'Replied', n: Math.min(Math.max(0, Number(MAIL_STATS.replied) || 0), sent), color: C_WON },
+    ];
+    const pct = function (st) { return Math.round((st.n / sent) * 100); };
+    const rows = steps.map(function (st) {
+      // Sent gets no bracket: it is the denominator, so "(100%)" of itself is noise.
+      const rate = st.base ? '' : '<span class="mail-rate">(' + pct(st) + '%)</span>';
+      return '<div class="mail-step">' +
+        '<span class="mail-name"><span class="mail-dot" style="background:' + st.color + '"></span>' + esc(st.name) + '</span>' +
+        '<span class="mail-track"><span class="mail-fill" style="width:' + pct(st) + '%;background:' + st.color + '"></span></span>' +
+        '<span class="mail-val"><span class="mail-figure">' + st.n.toLocaleString() + '</span>' + rate + '</span>' +
+      '</div>';
+    }).join('');
+    const spoken = steps.map(function (st) {
+      return st.n.toLocaleString() + ' ' + st.name.toLowerCase() + (st.base ? '' : ' (' + pct(st) + '%)');
+    }).join(', ');
+    const body = '<div class="mail-fun" role="img" aria-label="Email engagement: ' + esc(spoken) + '">' + rows + '</div>' +
+      '<div class="mail-foot">Mock data for now.</div>';
+    return tile({ span: span, accent: C_OPEN, title: 'Email engagement',
+      meta: 'All mail · ' + MAIL_STATS.period, body: body });
+  }
+
   // ── Focus list ───────────────────────────────────────────────────────────────
   // What to open first. Where records carry an amount that's the biggest ones,
   // ranked with a bar. Where they don't, size means nothing — so it's the ones
@@ -965,6 +1050,7 @@
     if (isShown('breakdown')) charts.push(breakdownTile);
     if (isShown('distribution')) charts.push(distributionTile);
     if (isShown('sources')) charts.push(function (s) { return sourcePieTile('By source', 'source', s, { min: 2 }); });
+    if (isShown('mail')) charts.push(mailTile);
     const rendered = charts.map(function (fn) { return { fn: fn, html: fn(2) }; }).filter(function (r) { return r.html; });
     if (rendered.length % 2 === 1) {
       const last = rendered[rendered.length - 1];
@@ -992,7 +1078,7 @@
 
   function animateBars(host) {
     requestAnimationFrame(function () {
-      host.querySelectorAll('.top-bar-fill').forEach(function (el) {
+      host.querySelectorAll('.top-bar-fill, .mail-fill').forEach(function (el) {
         const w = el.style.width; el.style.width = '0%'; requestAnimationFrame(function () { el.style.width = w; });
       });
       // The stacked bar grows out of the left edge.

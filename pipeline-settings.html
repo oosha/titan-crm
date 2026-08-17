@@ -7,8 +7,6 @@
 <link rel="stylesheet" href="/design-system/tokens.css">
 <link rel="stylesheet" href="/design-system/components.css">
 <link rel="stylesheet" href="/titan-sidebar.css">
-<link rel="stylesheet" href="/form.css">
-<link rel="stylesheet" href="/form-builder.css">
 <style>
   .subpage-body { background: #f7f8fa; color: #222; }
   .ps-btn-primary {
@@ -21,10 +19,9 @@
   /* ── The pipeline settings rail ────────────────────────────────────────────
      This screen drops the CRM sidebar: it's a screen you go *into*, and the app
      nav alongside it invites you to leave mid-edit with unsaved changes. The
-     page opts out by simply not rendering #sidebar-mount — titan-sidebar.js
-     guards on it — so the component keeps its "pages don't own sidebar markup"
-     rule and nothing here overrides it. Its stylesheet still loads: it also owns
-     .app-window / .main-area / .subpage-*, the shell this page sits in.
+     page follows the Full-page settings pattern by omitting both #sidebar-mount and
+     titan-sidebar.js. Its stylesheet still loads because it also owns .app-window /
+     .main-area / .subpage-*, the shell this page sits in.
 
      Page-local, not ds-*: the system has no vertical nav component, and inventing
      a ds- one here would be inventing a component nobody designed. Reads tokens
@@ -118,9 +115,8 @@
   .ps-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; flex-shrink: 0; }
   .ps-swatch.selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px currentColor; }
   /* Same flat row list as the board's Sources screen (crm.html's .np-src-*).
-     Clicking a row opens its screen right here — Form via the shared form
-     builder, From incoming email and Integrations via the small modal below
-     — rather than sending the user off to the board. No border at rest, just
+     Clicking Form navigates to its registered full-page editor; From incoming email
+     and Integrations use the small modal below. No border at rest, just
      a rounded gray hover, same as every other clickable row list in the app
      (e.g. crm.html's .np-radio). */
   .np-src-row {
@@ -150,7 +146,7 @@
   /* Small in-place modal for From incoming email / Integrations — same shell
      as the board's New Pipeline / Add records modal (crm.html's .np-*). */
   .np-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.28);
+    position: fixed; inset: 0; background: var(--modal-backdrop-bg);
     display: none; align-items: center; justify-content: center; z-index: 600;
   }
   .np-overlay.open { display: flex; }
@@ -416,20 +412,9 @@
 <script src="/design-system/components/icon.js"></script>
 <script src="/crm-owner.js"></script>
 <script src="/crm-schema.js"></script>
-<script src="/titan-sidebar.js"></script>
-<script src="/form-render.js"></script>
-<!-- dsMenu drives the field-destination picker inside form-builder.js: one open at a
-     time, outside click, Escape, arrow keys. -->
-<script src="/design-system/components/menu.js"></script>
-<!-- Pipeline tag names the pipeline in the builder's destination picker. -->
-<script src="/design-system/components/pipeline-tag.js"></script>
-<script src="/form-builder.js"></script>
-
 <div class="app-window">
-  <!-- No #sidebar-mount on purpose: this screen replaces the CRM nav with its own
-       rail (see .ps-side). titan-sidebar.js guards on the element, so leaving it out
-       is the supported way to opt out — the page still loads the component's
-       stylesheet for .app-window / .main-area / .subpage-*. -->
+  <!-- Full-page settings replaces the CRM nav with its own section rail (see .ps-side).
+       titan-sidebar.css still owns the shared .app-window / .main-area / .subpage-* shell. -->
   <div class="main-area">
 
     <div class="subpage-top">
@@ -1447,36 +1432,15 @@
     });
   }
 
-  // Each row opens straight to its own screen, right here — no trip to the
-  // board and no intermediate list screen to skip past first.
+  // Each row opens straight to its own task. Form creation/editing takes the registered
+  // full-page route; the smaller email and integration tasks remain modal dialogs.
   function openSourceOption(kind) {
     if (kind === 'form') {
-      window.titanFormBuilder.open({
-        pipeline: pipeline,
-        form: pipeline.intakeForm || null,
-        personaId: window.PERSONA_ID,
-        onSave: function (form, pl) {
-          pipeline.intakeForm = form;
-          if (pl && pl.customFieldDefs) pipeline.customFieldDefs = pl.customFieldDefs;
-          renderIntakeCard();
-          psPersistPatch({ intakeForm: pipeline.intakeForm, customFieldDefs: pipeline.customFieldDefs }).then(function (ok) {
-            psToast(ok ? ('Form published for “' + pipeline.name + '”.') : 'Could not publish — try again.', ok);
-          });
-        },
-        // psPersistPatch Object.assigns onto the stored pipeline, so the key has to be
-        // sent as null to clear it — omitting it would leave the saved form in place.
-        // Every reader guards with `intakeForm && intakeForm.token`, null included.
-        onDelete: async function () {
-          // Persisted first, local state second: psPersistPatch re-reads the document
-          // and patches it independently of this copy, so a failed write must leave the
-          // page still showing the form it failed to remove.
-          const ok = await psPersistPatch({ intakeForm: null });
-          if (!ok) { psToast('Could not delete — try again.', false); throw new Error('save failed'); }
-          delete pipeline.intakeForm;
-          renderIntakeCard();
-          psToast('Form deleted.', true);
-        },
-      });
+      if (!pipeline) return;
+      stashSettingsDraft();
+      const q = new URLSearchParams(location.search);
+      q.set('from', 'pipeline-settings');
+      location.href = '/crm/pipeline/' + encodeURIComponent(pipeline.id) + '/form?' + q.toString();
     } else if (kind === 'email') {
       openEmailSourceModal();
     } else if (kind === 'integrations') {
@@ -1635,20 +1599,36 @@
     location.href = '/crm' + location.search;
   }
 
-  function saveSettings() {
+  function currentSettingsPatch() {
     flushOpenEdit();
-    const name = document.getElementById('ps-name').value.trim();
-    if (!name) { alert('Prototype only: pipeline name is required.'); return; }
-    const cleanStages = stages.filter(function (s) { return (s.label || '').trim(); });
-    if (!cleanStages.length) { alert('Prototype only: at least one stage is required.'); return; }
+    return {
+      name: document.getElementById('ps-name').value.trim(),
+      color: color,
+      stages: stages.filter(function (s) { return (s.label || '').trim(); }),
+      subject: subject,
+      // "" means no default — new records then fall back to the account holder.
+      defaultOwner: window.titanOwner.fromEmail(document.getElementById('ps-default-owner').value, pipeline),
+    };
+  }
+
+  // The full-page form editor is a separate document. Preserve this page's unsaved
+  // fields in the existing settings courier so Back restores the draft exactly; this
+  // is navigation state, not a second source of truth for persisted CRM data.
+  function stashSettingsDraft() {
+    sessionStorage.setItem('titan-crm-edit-pipeline', JSON.stringify({
+      pipelineKey: pipelineKey,
+      pipeline: Object.assign({}, pipeline, currentSettingsPatch()),
+    }));
+  }
+
+  function saveSettings() {
+    const patch = currentSettingsPatch();
+    if (!patch.name) { alert('Prototype only: pipeline name is required.'); return; }
+    if (!patch.stages.length) { alert('Prototype only: at least one stage is required.'); return; }
 
     sessionStorage.setItem('titan-crm-commit-pipeline', JSON.stringify({
       pipelineKey: pipelineKey,
-      patch: {
-        name: name, color: color, stages: cleanStages, subject: subject,
-        // "" means no default — new records then fall back to the account holder.
-        defaultOwner: window.titanOwner.fromEmail(document.getElementById('ps-default-owner').value, pipeline),
-      },
+      patch: patch,
     }));
     goBack();
   }

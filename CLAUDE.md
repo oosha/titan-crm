@@ -56,13 +56,21 @@ only it owns.
 
 **Before writing any UI, read [`design-system/DESIGN-SYSTEM.md`](design-system/DESIGN-SYSTEM.md)
 and [`design-system/registry.json`](design-system/registry.json).** The registry lists
-every component, its props and its states; the doc has the rules.
+every component, its props and states, and every screen-level pattern; the doc has the rules.
 
 `design-system/index.html` is the workbench: **http://localhost:8000/design-system/**,
-five hash-routed views — `#overview` (the coverage ledger), `#foundations`, `#icons`,
-`#components`, `#directions`. Screenshot the relevant one after any visual change. It
+six hash-routed views — `#overview` (the coverage ledger), `#foundations`, `#icons`,
+`#components`, `#patterns`, `#directions`. Screenshot the relevant one after any visual change. It
 renders straight from the registry and `dsIcon` rather than restating them, so it is the
 fastest way to see what exists before you build — and the place a visual regression shows up.
+
+**Patterns are requirements, not inspiration.** Before choosing whether a task opens in
+a modal, drawer or full page, check `registry.json.patterns` / `#patterns`. If the task
+matches a registered pattern, follow its route, structure, accessibility and state rules.
+The current contracts are Modal dialog (short, bounded work that retains page context)
+and Full-page settings (sustained or multi-section configuration with a cold-loadable
+route). Using design-system components inside the wrong interaction pattern does not make
+the surface compliant.
 
 **Scope is the CRM and its modules — `index.html` is deliberately out.** The mailbox is the
 mocked half; it keeps its own chrome and is excluded from both measurement scripts (and from
@@ -111,7 +119,8 @@ rewrites the registry.
 Compose it from what already exists, and stay inside the existing language:
 
 1. **Shop the registry first.** `registry.json` is the index of every component, its props
-   and its states; the workbench shows them rendered. Build from those pieces.
+   and states, and every screen-level pattern; the workbench shows them rendered. Choose
+   the matching pattern first, then build it from the registered pieces.
 2. **Take the nearest fit over an invention.** A tags input is a `ds-input` with `ds-badge`
    children before it is a new component. A slightly-off button is `ds-btn` with a spacing
    token applied at the call site, not `ds-btn--myvariant`.
@@ -134,8 +143,15 @@ bridge block aliasing the old `--dir-*` names, so pages can move over one at a t
 
 ## The sidebar is a component
 
-`titan-sidebar.js` owns the CRM nav for **every** page — markup, account switcher,
+`titan-sidebar.js` owns the CRM nav for every regular CRM page — markup, account switcher,
 pipeline rows, three-dot menu, footer — and `titan-sidebar.css` owns every sidebar style.
+A page following the **Full-page settings** pattern is the deliberate exception: it does
+not mount or load the global sidebar, because the task owns the complete viewport. It may
+still link `titan-sidebar.css` for the shared `.app-window` / `.main-area` / `.subpage-*`
+shell, and a multi-section settings page may provide one page-local section rail below its
+full-width header.
+
+A regular page's entire involvement is:
 A page's entire involvement is:
 
 ```html
@@ -225,18 +241,19 @@ both `api/form.js` and `dev-server.js`, so what validates locally is what valida
 production. **`dev-server.js` hardcodes its API routes** — a new `api/*.js` works on Vercel
 and 404s locally until it's added there too.
 
-### The builder is one module, opened from four places
+### The builder is one module on one full-page route
 
-`form-builder.js` (+ `form-builder.css`) is the editor. `titanFormBuilder.open({…})` puts
-it in a modal; `.mount(host, {…})` renders it inline. It never saves — `onSave(form,
-pipeline)` hands the objects back and the caller decides what that means:
+`form-builder.js` (+ `form-builder.css`) is the editor. Every form creation/editing entry
+point navigates in place to `/crm/pipeline/:id/form`, following the Full-page settings
+pattern; `titanFormBuilder.mount(host, {…})` renders it inline there. The route fetches its
+own data on a cold load, replaces the global sidebar, preserves `?u=<persona>`, and saves via
+`saveData()`. A safe `?from=forms|board|pipeline-settings` enum controls Back without
+accepting an arbitrary return URL.
 
-| Where | How it saves |
-|---|---|
-| Board header **Form** button / pipeline three-dot menu | `schedulePersist()` |
-| `/crm/forms` **Edit** | `saveData()`, then re-render the row |
-| New-pipeline modal, step 2 "Lead form" | held in memory, attached in `npCreate()` so pipeline and form land in one write |
-| `/crm/pipeline/:id/form` | `saveData()` |
+The board's New Pipeline flow creates and persists the pipeline before navigating to the
+form route, because a full-page editor cannot fetch a pipeline that still exists only in
+the previous document's memory. Do not reintroduce `titanFormBuilder.open()` at a call site
+or stack the form editor over another modal.
 
 `form-render.js` (+ `form.css`) draws the form's actual markup and is shared by the public
 page and the builder's preview. Keep it that way: a preview that drifts from the real form

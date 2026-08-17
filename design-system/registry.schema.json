@@ -57,6 +57,75 @@
         }
       }
     },
+    "patterns": {
+      "type": "array",
+      "description": "Cross-page interaction and layout conventions. Patterns compose components and application structure; they do not ship a ds-* class.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "category",
+          "visual",
+          "summary",
+          "useWhen",
+          "route",
+          "structure",
+          "requirements",
+          "avoid",
+          "examples"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "visual": {
+            "type": "string",
+            "enum": [
+              "modal-overlay",
+              "sidebar-workspace"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "useWhen": {
+            "type": "string"
+          },
+          "route": {
+            "type": "string"
+          },
+          "structure": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "requirements": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "avoid": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "examples": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          }
+        }
+      }
+    },
     "components": {
       "type": "array",
       "items": {

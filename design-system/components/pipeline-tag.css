@@ -44,8 +44,8 @@
  *
  * Placement stays the caller's, as with every other component here — the tab has to be put
  * on the container's top edge (`translateY(-100%)`, flush to whichever side it belongs to,
- * and the container's matching corner squared). /crm/forms and the form builder's modal both
- * do that; this is the one definition of what the tab looks like when they do.
+ * and the container's matching corner squared). /crm/forms does that; this is the one
+ * definition of what the tab looks like when a caller uses the pattern.
  */
 .ds-pipeline-tag--tab {
   padding: var(--pipe-tag-tab-pad-y) var(--pipe-tag-tab-pad-x);

@@ -1,15 +1,15 @@
 {
   "$schema": "./registry.schema.json",
   "name": "Titan Design System Registry",
-  "version": "0.1.0",
-  "description": "Machine-readable index of the design system. An agent should read this before writing any UI, and update it in the same change that adds a component. Extracted from App Redesign/index_prodRedesign_interactions.html.",
+  "version": "0.2.0",
+  "description": "Machine-readable index of the design system's components, patterns and directions. An agent should read this before writing any UI and update it in the same change that adds a system primitive. Extracted from App Redesign/index_prodRedesign_interactions.html.",
   "conventions": {
     "idiom": "Plain CSS classes plus optional JS render modules — no build step, no framework, no TypeScript. A component is a stylesheet, and a function returning an HTML string where composition earns one. This is the same pattern titan-sidebar.js and form-render.js already use in production.",
     "consume": "<link> the two token files, then the component stylesheet, then <script> the module if there is one. Order matters: primitives, semantics, theme, components.",
     "classPrefix": "ds-",
     "variantClass": ".ds-<component>--<variant>",
     "tokensOnly": "A component stylesheet may not contain a raw hex or a raw px for anything themeable. If a value is missing, add a token to tokens/semantics.css rather than hardcoding it here.",
-    "workbench": "/design-system/index.html renders every component in every state with a live direction switcher. Screenshot it after any change."
+    "workbench": "/design-system/index.html renders every component in every state, every registered pattern, and a live direction switcher. Screenshot the relevant view after any change."
   },
   "tokens": {
     "primitives": "tokens/primitives.css",
@@ -29,6 +29,74 @@
       "name": "Soft",
       "file": "themes/soft.css",
       "description": "Rounder controls, borderless cards, elevation doing all the separating."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "modal-dialog",
+      "name": "Modal dialog",
+      "category": "Interaction & layout",
+      "visual": "modal-overlay",
+      "summary": "A temporary, focused layer over the current page. The originating context remains visible but inactive beneath the design-system-controlled backdrop.",
+      "useWhen": "Use for a short, bounded task that benefits from retaining the current page as context and can be completed or dismissed without navigating through multiple sections.",
+      "route": "No route — opens over the current page",
+      "structure": [
+        "A full-viewport backdrop dims and disables the originating page.",
+        "A focused panel contains a clear header, scrollable body when needed, and action footer.",
+        "The header names the task and provides an explicit close action.",
+        "The footer presents one primary action and only the secondary actions the task needs."
+      ],
+      "requirements": [
+        "Use --modal-backdrop-bg for the scrim; never introduce a page-specific black overlay.",
+        "Expose role=dialog, aria-modal=true, and an accessible name.",
+        "Move focus into the dialog, contain keyboard focus while open, and return focus to the trigger on close.",
+        "Support Escape to close unless closing would discard a destructive operation without confirmation.",
+        "Lock background scrolling and keep the page beneath non-interactive.",
+        "Keep controls inside the dialog on registered design-system components."
+      ],
+      "avoid": [
+        "Do not use for multi-section settings, deep navigation, or work that needs a durable URL.",
+        "Do not stack routine dialogs; move the task to a full-page pattern when it outgrows one layer.",
+        "Do not use a modal as a substitute for a cold-loadable destination."
+      ],
+      "examples": [
+        "crm.html — New pipeline and Add team",
+        "opportunity-view.html — email and meeting details",
+        "pipeline-settings.html — incoming-email and delete confirmations"
+      ]
+    },
+    {
+      "id": "full-page-settings",
+      "name": "Full-page settings",
+      "category": "Navigation & layout",
+      "visual": "sidebar-workspace",
+      "summary": "A standalone settings destination that replaces Titan's global CRM sidebar and owns the full task workspace at a durable route. It is never a modal, drawer, or layer over the originating screen.",
+      "useWhen": "Use for configuration with multiple sections, substantial editing, or its own navigation context—work that benefits from a durable URL and the full workspace width.",
+      "route": "/crm/pipeline/:id/setting",
+      "structure": [
+        "A full-width task header provides Back, the settings scope, status, and page actions.",
+        "The global CRM sidebar is absent so the settings task owns the complete viewport.",
+        "A multi-section task may add one local settings rail below the task header; a single-section task uses the full width.",
+        "Sections flow in the page rather than being split across stacked modals."
+      ],
+      "requirements": [
+        "The route must survive a cold load and preserve ?u=<persona>.",
+        "Fetch required data on the page; do not depend on a previous document having stashed it.",
+        "Do not mount or load titan-sidebar.js on the settings page; titan-sidebar.css may still provide the shared page shell.",
+        "If the task needs section navigation, keep it local to the settings page and below the full-width header.",
+        "Navigate in place. Do not depend on window.opener.",
+        "Keep page-specific CSS to workspace layout and compose controls from registered design-system components."
+      ],
+      "avoid": [
+        "Do not use a modal or drawer for multi-section settings that need sustained attention.",
+        "Do not leave the originating board or global CRM sidebar visible inside a full-page settings task.",
+        "Do not create a route that only works after visiting the board first."
+      ],
+      "examples": [
+        "pipeline-settings.html — /crm/pipeline/:id/setting",
+        "opportunity-settings.html — /crm/pipeline/:id/record-setting",
+        "form-settings.html — /crm/pipeline/:id/form; every form creation/editing entry point navigates here"
+      ]
     }
   ],
   "components": [
@@ -324,7 +392,7 @@
       "avoid": "Not for navigation — the sidebar's pipeline rows are titan-sidebar.css and stay there. Not a Badge variant: badge colours are fixed palette entries and a pipeline's colour is arbitrary. The tab variant does not position itself; a tab floating a hairline above its container is the tell that the caller skipped the overlap.",
       "variantNotes": {
         "sm": ".ds-pipeline-tag--sm — inline in a dense header or a line of text. Shape only; same colours and structure.",
-        "tab": "ds-pipeline-tag--tab — top corners rounded, bottom corners square, bottom border dropped, so the tag and the container below it read as one shape rather than a label parked on a box. Placement is the caller's, as with Menu: put it on the container's top edge (translateY(-100%), flush to the side it belongs to) and square that corner of the container. /crm/forms builds its rows this way and the form builder's modal wears one on its top edge."
+        "tab": "ds-pipeline-tag--tab — top corners rounded, bottom corners square, bottom border dropped, so the tag and the container below it read as one shape rather than a label parked on a box. Placement is the caller's, as with Menu: put it on the container's top edge (translateY(-100%), flush to the side it belongs to) and square that corner of the container. /crm/forms builds its rows this way."
       }
     }
   ],
@@ -413,11 +481,11 @@
         "category": "composites",
         "status": "planned",
         "component": "—",
-        "evidence": "64 CRM rules across 6 prefixes",
-        "whereToday": "np-overlay, fb-overlay, ov-modal, side-modal, app-switcher-dropdown, pipeline-picker …",
-        "note": "Overlay + panel + head/body/foot, Escape to close, scroll lock, focus trap. fb-overlay is the closest thing to a reference.",
-        "variants": 64,
-        "prefixes": 6
+        "evidence": "63 CRM rules across 5 prefixes",
+        "whereToday": "np-overlay, ov-modal, side-modal, app-switcher-dropdown, pipeline-picker …",
+        "note": "The Modal dialog pattern defines when and how to use the interaction. The reusable overlay + panel + head/body/foot component remains planned; modal scrims already share --modal-backdrop-bg. fb-overlay is legacy compatibility CSS and has no product call site.",
+        "variants": 63,
+        "prefixes": 5
       },
       {
         "name": "Section header / toolbar",
