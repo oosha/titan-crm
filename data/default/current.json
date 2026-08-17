@@ -2032,7 +2032,22 @@
           "token": "default.c93x16rbj5gxgvzlasarig",
           "provider": "cf7",
           "seen": [],
-          "name": "Contact Form 7"
+          "name": "Contact Form 7",
+          "sample": {
+            "values": {
+              "your-name": "Mercy Loyal",
+              "your-email": "mercy@apple.com",
+              "your-subject": "Partnership of $1000M",
+              "your-message": "Need to connect, lemme know a suitable slot."
+            },
+            "at": 1786962642445
+          },
+          "suggested": {
+            "your-name": "name",
+            "your-email": "email",
+            "your-subject": "",
+            "your-message": "note"
+          }
         }
       ]
     }
