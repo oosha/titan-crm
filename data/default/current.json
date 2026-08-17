@@ -1,6 +1,6 @@
 {
-  "currentPipelineId": "p10",
-  "pipelineSeq": 10,
+  "currentPipelineId": "neo",
+  "pipelineSeq": 7,
   "pipelines": {
     "neo": {
       "id": "neo",
@@ -1854,114 +1854,6 @@
         "enabled": true,
         "rule": "book sales meeting"
       }
-    },
-    "p8": {
-      "id": "p8",
-      "name": "My Sales Pipeline",
-      "entity": "Opportunity",
-      "plural": "opportunities",
-      "color": "#4f6d9e",
-      "type": "sales",
-      "subject": "company",
-      "stages": [
-        {
-          "key": "lead-0",
-          "label": "Lead"
-        },
-        {
-          "key": "qualified-1",
-          "label": "Qualified"
-        },
-        {
-          "key": "demo-scheduled-2",
-          "label": "Demo Scheduled"
-        },
-        {
-          "key": "proposal-sent-3",
-          "label": "Proposal Sent"
-        },
-        {
-          "key": "negotiation-4",
-          "label": "Negotiation"
-        },
-        {
-          "key": "closed-5",
-          "label": "Closed"
-        }
-      ],
-      "cards": []
-    },
-    "p9": {
-      "id": "p9",
-      "name": "My Sales Pipeline",
-      "entity": "Opportunity",
-      "plural": "opportunities",
-      "color": "#5e8a4e",
-      "type": "sales",
-      "subject": "company",
-      "stages": [
-        {
-          "key": "lead-0",
-          "label": "Lead"
-        },
-        {
-          "key": "qualified-1",
-          "label": "Qualified"
-        },
-        {
-          "key": "demo-scheduled-2",
-          "label": "Demo Scheduled"
-        },
-        {
-          "key": "proposal-sent-3",
-          "label": "Proposal Sent"
-        },
-        {
-          "key": "negotiation-4",
-          "label": "Negotiation"
-        },
-        {
-          "key": "closed-5",
-          "label": "Closed"
-        }
-      ],
-      "cards": []
-    },
-    "p10": {
-      "id": "p10",
-      "name": "My Sales Pipeline",
-      "entity": "Opportunity",
-      "plural": "opportunities",
-      "color": "#ab5f74",
-      "type": "sales",
-      "subject": "company",
-      "stages": [
-        {
-          "key": "lead-0",
-          "label": "Lead"
-        },
-        {
-          "key": "qualified-1",
-          "label": "Qualified"
-        },
-        {
-          "key": "demo-scheduled-2",
-          "label": "Demo Scheduled"
-        },
-        {
-          "key": "proposal-sent-3",
-          "label": "Proposal Sent"
-        },
-        {
-          "key": "negotiation-4",
-          "label": "Negotiation"
-        },
-        {
-          "key": "closed-5",
-          "label": "Closed"
-        }
-      ],
-      "cards": []
     }
   },
   "dashboard": {
