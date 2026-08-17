@@ -2582,7 +2582,7 @@
               </button>
               <div class="ds-menu ds-menu--below-end" id="board-settings-menu" role="menu">
                 <button type="button" class="ds-menu__item" role="menuitem" onclick="openPipelineSettings(currentPipelineId, '/setting')">
-                  <span data-ds-icon="board" data-size="15"></span>
+                  <span data-ds-icon="pipeline" data-size="15"></span>
                   <span>Pipeline settings</span>
                 </button>
                 <button type="button" class="ds-menu__item" role="menuitem" id="board-entity-setting-item" onclick="openPipelineSettings(currentPipelineId, '/record-setting')">
@@ -3761,7 +3761,8 @@
       if (wasOpenForThis) return;
       const rect = evt.currentTarget.getBoundingClientRect();
       const entity = (PIPELINES[pipelineKey] && PIPELINES[pipelineKey].entity) || 'Opportunity';
-      menu.querySelector('[data-action="entity-setting"]').textContent = entity + ' setting';
+      // Shared with the component so this copy of the menu can't drift from it.
+      window.titanSidebarMenuEntityLabels(menu, entity);
       menu.style.top = (rect.bottom + 4) + 'px';
       menu.style.left = Math.max(8, rect.right - 190) + 'px';
       menu.dataset.pipelineKey = pipelineKey;

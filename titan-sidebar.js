@@ -241,11 +241,17 @@
   // The board's full menu. The sub-pages used to render a reduced four-item copy
   // of it, so the same row offered different actions depending on where you were.
   function navMenuHtml() {
+    // Two groups: what you add to the pipeline, then who and how it's configured.
+    // The standalone "Form" item is gone — a form is one of the intake paths the
+    // Sources screen offers, so it was a second door into the same place (and the
+    // board header has its own Form button either way).
+    // Labels carrying data-action are rewritten per pipeline on open — see
+    // titanSidebarMenuEntityLabels.
     return '<div class="pipeline-nav-menu" id="pipeline-nav-menu">' +
-      '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'add-records\')">Sources</div>' +
-      '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'add-team\')">Add team</div>' +
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'filter\')">Add filter view</div>' +
-      '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'form\')">Form</div>' +
+      '<div class="pipeline-nav-menu-item" data-action="add-records" onclick="pipelineNavMenuAction(\'add-records\')">Add opportunity sources</div>' +
+      '<div class="pipeline-nav-menu-sep"></div>' +
+      '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'add-team\')">Invite team</div>' +
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'pipeline-setting\')">Pipeline setting</div>' +
       '<div class="pipeline-nav-menu-item" data-action="entity-setting" onclick="pipelineNavMenuAction(\'entity-setting\')">Opportunity setting</div>' +
       '<div class="pipeline-nav-menu-sep"></div>' +
@@ -423,6 +429,19 @@
     location.href = '/' + segs.join('/') + location.search;
   };
 
+  // Menu labels that name the record type, applied on open because one menu element is
+  // shared by every pipeline row. Exported because crm.html overrides
+  // togglePipelineNavMenu wholesale — without a single owner for the wording the board's
+  // copy and this one drift, which is the bug the shared sidebar exists to prevent.
+  window.titanSidebarMenuEntityLabels = function (menu, entity) {
+    if (!menu) return;
+    var one = entity || 'Opportunity';
+    var setting = menu.querySelector('[data-action="entity-setting"]');
+    if (setting) setting.textContent = one + ' setting';
+    var sources = menu.querySelector('[data-action="add-records"]');
+    if (sources) sources.textContent = 'Add ' + one.toLowerCase() + ' sources';
+  };
+
   window.togglePipelineNavMenu = function (evt, pipelineKey) {
     evt.stopPropagation();
     var menu = document.getElementById('pipeline-nav-menu');
@@ -433,8 +452,7 @@
     // The entity name comes from the pipeline list the sidebar already holds,
     // rather than reaching through window.opener for it.
     var pl = pipelines.filter(function (p) { return p.id === pipelineKey; })[0];
-    var entityItem = menu.querySelector('[data-action="entity-setting"]');
-    if (entityItem) entityItem.textContent = ((pl && pl.entity) || 'Opportunity') + ' setting';
+    window.titanSidebarMenuEntityLabels(menu, pl && pl.entity);
     var rect = evt.currentTarget.getBoundingClientRect();
     menu.style.top = (rect.bottom + 4) + 'px';
     menu.style.left = Math.max(8, rect.right - 190) + 'px';
@@ -466,7 +484,7 @@
       return;
     }
     if (kind === 'filter') { alert('Prototype only: "Add filter view" is not wired up yet.'); return; }
-    if (kind === 'add-team') { alert('Prototype only: "Add team" is not wired up yet.'); return; }
+    if (kind === 'add-team') { alert('Prototype only: "Invite team" is not wired up yet.'); return; }
     // Deleting needs the board's confirm-and-repersist path, which lives in crm.html.
     if (kind === 'delete-pipeline') { alert('Open this pipeline on the board to delete it.'); return; }
   };
