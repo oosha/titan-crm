@@ -30,24 +30,30 @@
      a ds- one here would be inventing a component nobody designed. Reads tokens
      throughout. The CRM sidebar's .nav-item is deliberately not reused — that's
      the dark app rail, a different surface with a different job. */
+  /* The rail sits *below* the Back/title/actions bar, not beside it, so that bar
+     spans the screen and the rail reads as navigation within it. */
+  .ps-body { display: flex; flex: 1; min-height: 0; }
   .ps-side {
-    width: 248px; flex-shrink: 0; background: var(--surface-primary);
+    width: 264px; flex-shrink: 0; background: var(--surface-primary);
     border-right: 1px solid var(--border-subtle);
-    padding: var(--space-200) var(--space-150); overflow-y: auto;
-  }
-  .ps-side-label {
-    font-size: var(--text-xs); font-weight: 600; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: .05em;
-    padding: 0 var(--space-100) var(--space-100);
+    /* Generous top padding so the first item sits clear of the header rather than
+       tucking under it — the rail reads as its own column, not a continuation. */
+    padding: var(--space-400) var(--space-150); overflow-y: auto;
   }
   .ps-nav { display: flex; flex-direction: column; gap: var(--space-025); }
   .ps-nav-item {
-    font: inherit; font-size: var(--text-sm); text-align: left; width: 100%;
-    background: none; border: 0; cursor: pointer; color: var(--text-secondary);
-    padding: var(--space-075) var(--space-100); border-radius: var(--radius-sm);
+    display: flex; align-items: center; gap: var(--space-100); width: 100%;
+    font: inherit; font-size: var(--text-md); text-align: left;
+    background: none; border: 0; cursor: pointer; color: var(--text-primary);
+    padding: var(--space-125) var(--space-150); border-radius: var(--radius-md);
   }
-  .ps-nav-item:hover { background: var(--surface-hover); color: var(--text-primary); }
-  .ps-nav-item.is-active { background: var(--surface-selected); color: var(--text-primary); font-weight: 600; }
+  .ps-nav-label { flex: 1; min-width: 0; }
+  /* The caret marks the open section rather than decorating every row, so the rail
+     reads as "you are here" instead of "these are all expandable". */
+  .ps-nav-caret { display: none; flex-shrink: 0; color: var(--text-secondary); }
+  .ps-nav-item:hover { background: var(--surface-hover); }
+  .ps-nav-item.is-active { background: var(--surface-selected); font-weight: 600; }
+  .ps-nav-item.is-active .ps-nav-caret { display: inline-flex; }
   /* Panes stay in the DOM when hidden — saveSettings() reads every field by id, so
      a section you never opened still saves. */
   .ps-pane { display: none; }
@@ -56,14 +62,15 @@
   /* Narrow: the rail becomes a strip of tabs above the content rather than eating
      a third of the width. */
   @media (max-width: 860px) {
-    .app-window { flex-direction: column; }
+    .ps-body { flex-direction: column; }
     .ps-side {
       width: auto; border-right: 0; border-bottom: 1px solid var(--border-subtle);
-      padding: var(--space-100) var(--space-150); overflow-x: auto;
+      padding: var(--space-100) var(--space-150); overflow-x: auto; flex-shrink: 0;
     }
-    .ps-side-label { display: none; }
     .ps-nav { flex-direction: row; flex-wrap: nowrap; }
     .ps-nav-item { white-space: nowrap; }
+    /* Reads as "you are here" down a column; across a strip the fill already says it. */
+    .ps-nav-item.is-active .ps-nav-caret { display: none; }
   }
   .ps-card { background: #fff; border: 1px solid #e8eaed; border-radius: 12px; padding: 22px 26px; margin-bottom: 20px; }
   /* Section header — matches .os-card-title on the opportunity settings page. */
@@ -329,16 +336,6 @@
        rail (see .ps-side). titan-sidebar.js guards on the element, so leaving it out
        is the supported way to opt out — the page still loads the component's
        stylesheet for .app-window / .main-area / .subpage-*. -->
-  <aside class="ps-side">
-    <div class="ps-side-label">Pipeline setting</div>
-    <nav class="ps-nav" id="ps-nav" aria-label="Pipeline settings sections">
-      <button type="button" class="ps-nav-item is-active" data-pane="details" onclick="psShowPane('details')">Pipeline details</button>
-      <button type="button" class="ps-nav-item" data-pane="stages" onclick="psShowPane('stages')">Pipeline stages</button>
-      <button type="button" class="ps-nav-item" data-pane="automation" onclick="psShowPane('automation')">Stage details &amp; automation</button>
-      <!-- Label carries the record type; set in renderIntakeCard(). -->
-      <button type="button" class="ps-nav-item" data-pane="sources" id="ps-nav-sources" onclick="psShowPane('sources')">Configure opportunity sources</button>
-    </nav>
-  </aside>
   <div class="main-area">
 
     <div class="subpage-top">
@@ -351,6 +348,15 @@
       <button class="ds-btn ds-btn--primary" onclick="saveSettings()">Save changes</button>
     </div>
 
+    <div class="ps-body">
+  <aside class="ps-side">
+    <nav class="ps-nav" id="ps-nav" aria-label="Pipeline settings sections">
+      <button type="button" class="ps-nav-item is-active" data-pane="details" onclick="psShowPane('details')"><span class="ps-nav-label">Pipeline details</span><span class="ps-nav-caret" data-ds-icon="caret-right" data-size="14"></span></button>
+      <button type="button" class="ps-nav-item" data-pane="stages" onclick="psShowPane('stages')"><span class="ps-nav-label">Pipeline stages</span><span class="ps-nav-caret" data-ds-icon="caret-right" data-size="14"></span></button>
+      <button type="button" class="ps-nav-item" data-pane="automation" onclick="psShowPane('automation')"><span class="ps-nav-label">Stage details &amp; automation</span><span class="ps-nav-caret" data-ds-icon="caret-right" data-size="14"></span></button>
+      <button type="button" class="ps-nav-item" data-pane="sources" id="ps-nav-sources" onclick="psShowPane('sources')"><span class="ps-nav-label">Configure opportunity sources</span><span class="ps-nav-caret" data-ds-icon="caret-right" data-size="14"></span></button>
+    </nav>
+  </aside>
     <div class="subpage-body">
       <div class="ps-wrap">
         <div class="ps-panes">
@@ -411,6 +417,7 @@
         <div class="ps-note" id="ps-opener-note"></div>
       </div>
     </div><!-- /subpage-body -->
+    </div><!-- /ps-body -->
   </div><!-- /main-area -->
 </div><!-- /app-window -->
 
@@ -1161,7 +1168,8 @@
     const entity = (pipeline && pipeline.entity) || 'Record';
     const many = ((pipeline && pipeline.plural) || 'records').toLowerCase();
     document.getElementById('ps-intake-title').textContent = entity + ' Sources';
-    const navSources = document.getElementById('ps-nav-sources');
+    // Write the label span, not the button: the button also holds the caret.
+    const navSources = document.querySelector('#ps-nav-sources .ps-nav-label');
     if (navSources) navSources.textContent = 'Configure ' + entity.toLowerCase() + ' sources';
     document.getElementById('ps-intake-help').textContent =
       'Set up your ' + many + ' to arrive on their own from a form, an existing form tool, or matching email.';
