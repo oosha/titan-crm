@@ -96,6 +96,41 @@
       ],
       "cards": [
         {
+          "id": 217,
+          "deal": "Mercy Loyal",
+          "stage": "lead",
+          "company": "",
+          "contact": "Mercy Loyal",
+          "initials": "ML",
+          "contactEmail": "mercy@apple.com",
+          "contactPhone": "",
+          "contactDesignation": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "contacts": [
+            {
+              "name": "Mercy Loyal",
+              "email": "mercy@apple.com",
+              "phone": "",
+              "designation": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "value": 0,
+          "currency": "$",
+          "source": "Web form",
+          "note": "Need to connect, lemme know a suitable slot.",
+          "noteAuthor": "Mercy Loyal",
+          "noteDate": "",
+          "lastActivity": "just now",
+          "activityType": "Form submission",
+          "overdue": false,
+          "createdBy": "Form",
+          "customFieldValues": {},
+          "inboundKey": "i:94bb67:141"
+        },
+        {
           "id": 216,
           "deal": "John Macker",
           "stage": "lead",
@@ -2031,23 +2066,19 @@
           "id": "inmsx3bstz",
           "token": "default.c93x16rbj5gxgvzlasarig",
           "provider": "cf7",
-          "seen": [],
+          "seen": [
+            "i:94bb67:141"
+          ],
           "name": "Contact Form 7",
-          "sample": {
-            "values": {
-              "your-name": "Mercy Loyal",
-              "your-email": "mercy@apple.com",
-              "your-subject": "Partnership of $1000M",
-              "your-message": "Need to connect, lemme know a suitable slot."
-            },
-            "at": 1786962642445
-          },
-          "suggested": {
+          "pipelineId": "neo",
+          "stage": "lead",
+          "map": {
             "your-name": "name",
             "your-email": "email",
-            "your-subject": "",
+            "your-subject": "note",
             "your-message": "note"
-          }
+          },
+          "lastAt": 1786962758986
         }
       ]
     }
