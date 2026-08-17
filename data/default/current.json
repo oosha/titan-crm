@@ -2026,26 +2026,7 @@
       ]
     },
     "inbound": {
-      "connections": [
-        {
-          "id": "inmsx2ot5h",
-          "token": "default.tebvzeliiwgwlwv12dax00",
-          "provider": "cf7",
-          "seen": [
-            "i:1rabukw:132"
-          ],
-          "name": "Contact Form 7",
-          "pipelineId": "neo",
-          "stage": "lead",
-          "map": {
-            "your-name": "name",
-            "your-email": "email",
-            "your-subject": "note",
-            "your-message": ""
-          },
-          "lastAt": 1786961798063
-        }
-      ]
+      "connections": []
     }
   }
 }
