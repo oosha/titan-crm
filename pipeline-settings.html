@@ -633,6 +633,12 @@
     history.replaceState(null, '', location.pathname + location.search + '#' + name);
   }
   psShowPane((location.hash || '').replace('#', ''));
+  // The pane is read from the hash once at load, which left .../setting#stages doing
+  // nothing at all when the page was already open — the browser changes the hash
+  // without reloading, so nothing re-read it. Also covers Back/Forward between panes.
+  window.addEventListener('hashchange', function () {
+    psShowPane((location.hash || '').replace('#', ''));
+  });
 
   const PIPELINE_COLORS = ['#4f6d9e', '#3f8a7d', '#5e8a4e', '#b5813f', '#ab5f74', '#7a6ba3', '#2170f4'];
 
