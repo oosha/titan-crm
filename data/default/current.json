@@ -1,6 +1,6 @@
 {
-  "currentPipelineId": "neo",
-  "pipelineSeq": 6,
+  "currentPipelineId": "p7",
+  "pipelineSeq": 7,
   "pipelines": {
     "neo": {
       "id": "neo",
@@ -2070,6 +2070,34 @@
         "enabled": true,
         "rule": "book sales meeting"
       }
+    },
+    "p7": {
+      "id": "p7",
+      "name": "My Pipeline",
+      "entity": "Record",
+      "plural": "records",
+      "color": "#4f6d9e",
+      "type": "sales",
+      "subject": "company",
+      "stages": [
+        {
+          "key": "new-0",
+          "label": "New"
+        },
+        {
+          "key": "processing-1",
+          "label": "Processing"
+        },
+        {
+          "key": "stage-3-2",
+          "label": "Stage 3"
+        },
+        {
+          "key": "closed-3",
+          "label": "Closed"
+        }
+      ],
+      "cards": []
     }
   },
   "dashboard": {
