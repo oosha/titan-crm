@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Upcoming activities — Titan CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Persona loader: ?u=<id> scopes the /api/data fetch, and loads personas/<id>.js
+     purely for the account's currency symbol (records don't all carry their own). -->
+<script>
+  (function () {
+    var raw = new URLSearchParams(location.search).get('u');
+    var u = (raw && /^[a-z0-9_-]{1,32}$/.test(raw)) ? raw.toLowerCase() : null;
+    if (u) document.write('<' + 'script src="/personas/' + u + '.js"><' + '/script>');
+  })();
+</script>
+<link rel="stylesheet" href="/design-system/tokens.css">
+<link rel="stylesheet" href="/design-system/components.css">
+<link rel="stylesheet" href="/titan-sidebar.css">
+<link rel="stylesheet" href="/crm-directory.css">
+<style>
+  /* Type icon in the row, tinted per kind — the same vocabulary the record page uses
+     for its own activity list, so a meeting reads as a meeting in both places. */
+  .act-icon {
+    width: 28px; height: 28px; border-radius: var(--radius-full); flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .act-icon.meeting { background: var(--label-purple-bg); color: var(--label-purple-fg); }
+  .act-icon.call    { background: var(--label-teal-bg);   color: var(--label-teal-fg); }
+  .act-icon.email   { background: var(--label-blue-bg);   color: var(--label-blue-fg); }
+  .act-icon.task,
+  .act-icon.followup { background: var(--surface-sunken); color: var(--text-secondary); }
+  .act-what { display: flex; align-items: center; gap: var(--space-125); }
+  .act-text { font-weight: var(--weight-medium); color: var(--text-heading); }
+  /* Dates here are display strings ("Thu", "Mon, 5pm"), never timestamps — see the
+     grouping note in the script below. Overdue is a stored flag, not a comparison. */
+  .act-when { white-space: nowrap; }
+  .act-when.overdue { color: var(--status-danger); font-weight: var(--weight-semi); }
+  .act-when.undated { color: var(--text-muted); }
+  .act-group-head {
+    font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-secondary);
+    padding: var(--space-300) 0 var(--space-100);
+  }
+  .act-pipeline-filter { width: auto; min-width: 170px; flex-shrink: 0; }
+  /* table-layout is fixed, so these are the real column proportions. Activity is the
+     line anyone actually reads, and it was being squeezed into the narrowest column
+     while Owner sat on whitespace — it gets the room instead. */
+  .col-type     { width: 15%; }
+  .col-activity { width: 28%; }
+  .col-record   { width: 17%; }
+  .col-contact  { width: 14%; }
+  .col-owner    { width: 13%; }
+  .col-when     { width: 13%; }
+  .act-type-label { color: var(--text-secondary); white-space: nowrap; }
+  /* Same checkbox as the record page's .crm-act-check. Everything in this list is
+     something still owed, so everything here can be ticked off — a meeting you've
+     held is as done as a task is. Ticking completes it for real: it moves out of
+     Upcoming and into the record's Recent activity, exactly as the record page does. */
+  .act-check {
+    width: 24px; height: 24px; flex-shrink: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .act-check .box {
+    width: 17px; height: 17px; box-sizing: border-box;
+    border: 1.6px solid var(--border-strong); border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard);
+  }
+  .act-check:hover .box { border-color: var(--accent-primary); }
+  .act-check .box svg { width: 11px; height: 11px; display: none; }
+  .act-check.done .box { background: var(--status-success); border-color: var(--status-success); }
+  .act-check.done .box svg { display: block; }
+  /* Ticked rows fade rather than vanish, so it's clear which one you just completed. */
+  tr.act-done { opacity: 0.45; }
+  .act-record-logo {
+    width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0;
+    object-fit: contain; background: var(--surface-primary);
+  }
+  .act-record-name { overflow: hidden; text-overflow: ellipsis; }
+  .col-owner, .act-owner { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+</head>
+<body data-subpage="activities" data-sidebar-data="page">
+
+<div class="app-window">
+  <!-- The sidebar is one component: titan-sidebar.js renders it and owns its
+       markup, rows and active state. Do not hand-maintain nav markup here. -->
+  <div id="sidebar-mount"></div>
+
+  <div class="main-area">
+    <div class="subpage-top">
+      <!-- No back link: a top-level destination, reached from the sidebar, which is
+           also how you leave. -->
+      <span class="subpage-title">Upcoming activities</span>
+    </div>
+
+    <div class="subpage-body">
+      <div class="dir-wrap">
+        <div class="dir-toolbar">
+          <input class="dir-search" id="k-search" type="search" placeholder="Search by activity, record, contact…">
+          <select class="ds-input act-pipeline-filter" id="k-pipeline" aria-label="Filter by pipeline"></select>
+          <span class="dir-count" id="k-count"></span>
+        </div>
+        <div class="dir-card">
+          <table class="dir-table">
+            <thead>
+              <tr>
+                <th class="col-type">Type</th>
+                <th class="col-activity">Activity</th>
+                <th class="col-record">Record</th>
+                <th class="col-contact">Contact</th>
+                <th class="col-owner">Owner</th>
+                <th class="col-when">When</th>
+              </tr>
+            </thead>
+            <tbody id="k-body"></tbody>
+          </table>
+          <div class="dir-empty" id="k-empty" style="display:none;"></div>
+        </div>
+        <div class="dir-note" id="k-note"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/design-system/components/icon.js"></script>
+<script src="/crm-owner.js"></script>
+<script src="/crm-schema.js"></script>
+<script src="/titan-sidebar.js"></script>
+<script src="/crm-directory.js"></script>
+<script>
+  // Every outstanding activity across every pipeline, flattened into one list, soonest
+  // first.
+  //
+  // Sorting means parsing, and there is nothing to parse but display strings someone
+  // typed: "12 Feb", "Thu", "Mon, 5pm", "Jul 30, 3:00 PM", "18 Aug at 3:51 am". No
+  // timestamps exist behind them, so whenReads() below is a heuristic and says so —
+  // it resolves what it recognises and gives up on the rest rather than inventing an
+  // order. Anything it can't read sorts last, where a wrong guess is visible instead
+  // of silently misplacing a meeting.
+  const WEEKDAYS = ['sun','mon','tue','wed','thu','fri','sat'];
+  const MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+
+  // Time-of-day only refines ordering within a day; a missing one means midnight.
+  function timeFrom(str) {
+    const m = String(str).match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
+    if (!m) return { h: 0, m: 0 };
+    let h = parseInt(m[1], 10) % 12;
+    if (/pm/i.test(m[3])) h += 12;
+    return { h: h, m: m[2] ? parseInt(m[2], 10) : 0 };
+  }
+
+  // A Date if the string can be read, else null. Two shapes cover the real data:
+  // a month-and-day ("Jul 30", "12 Feb") and a weekday ("Thu", "Mon, 5pm").
+  function whenReads(dateStr) {
+    const str = String(dateStr || '').trim();
+    if (!str) return null;
+    const now = new Date();
+    const t = timeFrom(str);
+
+    // "Jul 30" / "30 Jul" — year is inferred the same way looksPast() does it.
+    let md = str.match(/^([A-Za-z]{3})[a-z]*\s+(\d{1,2})\b/);
+    if (!md) {
+      const dm = str.match(/^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\b/);
+      if (dm) md = [dm[0], dm[2], dm[1]];
+    }
+    if (md) {
+      const mi = MONTHS.indexOf(md[1].toLowerCase());
+      if (mi !== -1) {
+        const d = new Date(now.getFullYear(), mi, parseInt(md[2], 10), t.h, t.m);
+        // A month far ahead of today belongs to last year; far behind, to this one.
+        if (mi - now.getMonth() > 6) d.setFullYear(now.getFullYear() - 1);
+        return d;
+      }
+    }
+
+    // A bare weekday means the next one coming up — that's what a person writing
+    // "Thu" on a to-do means, and it can't mean a Thursday already gone.
+    const wd = str.match(/^([A-Za-z]{3})/);
+    if (wd) {
+      const wi = WEEKDAYS.indexOf(wd[1].toLowerCase());
+      if (wi !== -1) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), t.h, t.m);
+        d.setDate(d.getDate() + ((wi - now.getDay() + 7) % 7));
+        return d;
+      }
+    }
+    return null;
+  }
+  // A tick would read as "done" on a list of things still owed, so a task takes the
+  // clipboard glyph instead.
+  const TYPE_ICON = { meeting: 'calendar-blank', call: 'phone', email: 'envelope', task: 'clipboard-text', followup: 'clock' };
+
+  function buildActivities(pipelines) {
+    const out = [];
+    allCards(pipelines).forEach(function (entry) {
+      const card = entry.card;
+      (card.upcomingActivities || []).forEach(function (a, i) {
+        out.push({ act: a, index: i, card: card, pipeline: entry.pipeline, pipelineId: entry.pipelineId });
+      });
+    });
+    out.forEach(function (r) {
+      const when = whenReads(r.act.date);
+      r.when = when ? when.getTime() : null;
+      // Flagged late, or dated before today — either way it's overdue, not upcoming.
+      r.overdue = !!r.act.overdue || (when ? when < new Date() : false);
+    });
+    // Soonest first, with two exceptions at either end. Something flagged overdue but
+    // carrying no date is still late, and belongs with the late things rather than in
+    // the undated tail — a red row at the bottom of the list reads as a mistake.
+    // Everything else undated or unreadable goes last, rather than being guessed into
+    // the middle where a wrong guess is invisible.
+    function rank(r) {
+      if (r.when !== null) return r.when;
+      return r.overdue ? -Infinity : Infinity;
+    }
+    return out.sort(function (a, b) { return rank(a) - rank(b); });
+  }
+
+  const TYPE_LABEL = { meeting: 'Meeting', call: 'Phone', email: 'Email', task: 'Task', followup: 'Follow-up' };
+
+  // The shared recordChipHTML() leads with a dot in the pipeline's colour. Here the
+  // company's favicon is the more useful mark — you recognise a logo faster than you
+  // decode a colour. When there's no domain to fetch one from, or the fetch 404s, the
+  // img removes itself and the chip is just the record name: no placeholder square
+  // holding space for something that isn't coming.
+  function recordCellHTML(entry) {
+    const card = entry.card;
+    const href = crmPath('/crm/pipeline/' + encodeURIComponent(entry.pipelineId) + '/record/' + encodeURIComponent(card.id));
+    const domain = companyDomainFor(card);
+    return '<a class="dir-chip act-record" href="' + esc(href) + '" title="' + esc(entry.pipeline.name) + '">' +
+      (domain
+        ? '<img class="act-record-logo" src="/api/logo?domain=' + encodeURIComponent(domain) + '" alt="" onerror="this.remove()">'
+        : '') +
+      '<span class="act-record-name">' + esc(card.deal || 'Untitled') + '</span></a>';
+  }
+  function typeLabel(type) { return TYPE_LABEL[type] || 'Task'; }
+
+  // A task and a phone call are things you do and then tick; a meeting, an email or a
+  // follow-up are marked done where they actually happen, so those keep a plain type
+  // icon. The checkbox takes the icon's place rather than sitting next to it — two
+  // glyphs for one row said the same thing twice.
+  const CHECKABLE = { task: true, call: true };
+  function typeMarkHTML(type) {
+    if (!CHECKABLE[type]) return actIconHTML(type);
+    return '<span class="act-check" title="Mark done" data-done="0">' +
+      '<span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l2.6 2.6L11.8 5" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
+    '</span>';
+  }
+
+  function actIconHTML(type) {
+    const kind = TYPE_ICON[type] ? type : 'task';
+    return '<span class="act-icon ' + kind + '">' +
+      (window.dsIcon ? window.dsIcon(TYPE_ICON[kind], { size: 15 }) : '') + '</span>';
+  }
+
+  function renderActivities(rows) {
+    const body = document.getElementById('k-body');
+    const empty = document.getElementById('k-empty');
+    document.getElementById('k-count').textContent =
+      rows.length + (rows.length === 1 ? ' activity' : ' activities');
+    if (!rows.length) {
+      body.innerHTML = '';
+      empty.style.display = '';
+      empty.textContent = 'Nothing scheduled — activities you add to a record show up here.';
+      return;
+    }
+    empty.style.display = 'none';
+    body.innerHTML = rows.map(function (r) {
+      const a = r.act, card = r.card;
+      const contact = (contactsOf(card)[0] || {});
+      const owner = window.titanOwner.label(card.owner);
+      const href = crmPath('/crm/pipeline/' + encodeURIComponent(r.pipelineId) + '/record/' + encodeURIComponent(card.id));
+      const search = [typeLabel(a.type), a.text, a.date, card.deal, card.company, contact.name, contact.email, owner]
+        .filter(Boolean).join(' ').toLowerCase();
+      return '<tr tabindex="0" role="button" data-href="' + esc(href) + '"' +
+        ' data-pipeline="' + esc(r.pipelineId) + '" data-card="' + esc(card.id) + '"' +
+        ' data-text="' + esc(a.text || '') + '" data-search="' + esc(search) + '">' +
+        '<td><div class="act-what">' + typeMarkHTML(a.type) +
+          '<span class="act-type-label">' + esc(typeLabel(a.type)) + '</span></div></td>' +
+        '<td><span class="act-text">' + esc(a.text || 'Activity') + '</span></td>' +
+        '<td>' + recordCellHTML(r) + '</td>' +
+        '<td>' + (contact.name
+          ? '<div class="dir-name-cell">' + avatarHTML(contact.name) +
+            '<div class="dir-name-text"><div class="dir-name" style="font-weight:400;">' + esc(contact.name) + '</div></div></div>'
+          : '<span class="dir-muted">—</span>') + '</td>' +
+        '<td><span class="act-owner">' + esc(owner) + '</span></td>' +
+        // Overdue wins over undated: an activity flagged late says so even when it
+        // carries no date, or the only row that needs attention reads as the quietest.
+        '<td>' + (r.overdue
+          ? '<span class="act-when overdue">' + (a.date ? esc(a.date) : 'Overdue') + '</span>'
+          : (a.date
+            ? '<span class="act-when">' + esc(a.date) + '</span>'
+            : '<span class="act-when undated">No date</span>')) + '</td>' +
+      '</tr>';
+    }).join('');
+    // Clicking a row opens the record the activity belongs to — the only place it can
+    // actually be acted on.
+    body.querySelectorAll('.act-check').forEach(function (box) {
+      // stopPropagation, or ticking would also fire the row's open-the-record click.
+      box.addEventListener('click', function (e) { e.stopPropagation(); completeActivity(box); });
+    });
+    body.querySelectorAll('tr[data-href]').forEach(function (tr) {
+      tr.addEventListener('click', function () { location.href = tr.dataset.href; });
+      tr.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); location.href = tr.dataset.href; }
+      });
+    });
+  }
+
+  // Ticking one off completes it the same way the record page does: out of
+  // upcomingActivities, into recentActivities with today's stamp, keeping its original
+  // type — a held meeting should read as a meeting in the log, not be flattened into a
+  // task because that's how it got ticked. Matched by text rather than by index, since
+  // this list is re-ordered (overdue first) and indexes here don't map to the card's.
+  async function completeActivity(box) {
+    if (box.dataset.done === '1') return;
+    const tr = box.closest('tr');
+    const pl = (window.DATA.pipelines || {})[tr.dataset.pipeline];
+    const card = pl && (pl.cards || []).find(function (c) { return String(c.id) === tr.dataset.card; });
+    if (!card) return;
+    const list = card.upcomingActivities || [];
+    const i = list.findIndex(function (a) { return (a.text || '') === tr.dataset.text; });
+    if (i === -1) return;
+
+    box.dataset.done = '1';
+    box.classList.add('done');
+    tr.classList.add('act-done');
+
+    const done = list.splice(i, 1)[0];
+    if (done.overdue) card.overdue = false;
+    if (!card.recentActivities) card.recentActivities = [];
+    card.recentActivities.unshift({
+      type: done.type || 'task', text: done.text,
+      author: (new URLSearchParams(location.search).get('by') || '').trim() || 'Usha',
+      date: 'just now',
+    });
+    try {
+      await saveData();
+    } catch (e) {
+      // Put it back rather than leave a tick that didn't save.
+      list.splice(i, 0, done);
+      card.recentActivities.shift();
+      box.dataset.done = '0';
+      box.classList.remove('done');
+      tr.classList.remove('act-done');
+      console.error('activities: could not save', e);
+      alert('Couldn’t save that. Try again.');
+    }
+  }
+
+  // Search and the pipeline filter both decide whether a row shows, so they can't each
+  // own visibility the way the shared wireSearch() does — a row hidden by one would be
+  // un-hidden by the other. One pass applies both, and the count reflects the result.
+  function applyFilters() {
+    const q = (document.getElementById('k-search').value || '').trim().toLowerCase();
+    const pid = document.getElementById('k-pipeline').value;
+    let shown = 0;
+    document.querySelectorAll('#k-body tr').forEach(function (tr) {
+      const hit = (!q || (tr.dataset.search || '').indexOf(q) !== -1) &&
+                  (!pid || tr.dataset.pipeline === pid);
+      tr.style.display = hit ? '' : 'none';
+      if (hit) shown++;
+    });
+    document.getElementById('k-count').textContent = shown + (shown === 1 ? ' activity' : ' activities');
+    const empty = document.getElementById('k-empty');
+    empty.style.display = shown ? 'none' : '';
+    if (!shown) empty.textContent = 'No activities match that filter.';
+  }
+
+  // Only pipelines that actually have activities — offering an option that can only
+  // ever return nothing is a dead end dressed up as a choice.
+  function fillPipelineFilter(rows, pipelines) {
+    const seen = [];
+    rows.forEach(function (r) { if (seen.indexOf(r.pipelineId) === -1) seen.push(r.pipelineId); });
+    const sel = document.getElementById('k-pipeline');
+    sel.innerHTML = '<option value="">All pipelines</option>' + seen.map(function (id) {
+      return '<option value="' + esc(id) + '">' + esc((pipelines[id] || {}).name || id) + '</option>';
+    }).join('');
+    // Always shown, even with one pipeline in the list. Hiding a control because
+    // today's data doesn't need it means it vanishes and reappears as records move.
+  }
+
+  async function init() {
+    try {
+      // fetchPipelineData() parks the document on window.DATA, which is what saveData()
+      // posts back — completing an activity has to write the whole document.
+      const data = await fetchPipelineData();
+      const pipelines = data.pipelines || {};
+      const rows = buildActivities(pipelines);
+      renderActivities(rows);
+      fillPipelineFilter(rows, pipelines);
+      document.getElementById('k-search').addEventListener('input', applyFilters);
+      document.getElementById('k-pipeline').addEventListener('change', applyFilters);
+    } catch (e) {
+      document.getElementById('k-empty').style.display = '';
+      document.getElementById('k-empty').textContent = 'Couldn’t load activities. Reload to try again.';
+      console.error('activities:', e);
+    }
+  }
+  init();
+</script>
+</body>
+</html>

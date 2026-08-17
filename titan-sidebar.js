@@ -71,6 +71,7 @@
   function route() {
     var segs = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
     if (segs[0] !== 'crm') return { kind: 'other' };
+    if (segs[1] === 'activities') return { kind: 'activities' };
     if (segs[1] === 'dashboard') return { kind: 'dashboard' };
     if (segs[1] === 'contacts') return { kind: 'contacts' };
     if (segs[1] === 'companies') return { kind: 'companies' };
@@ -133,6 +134,7 @@
     return window.dsIcon ? window.dsIcon(name, { size: size || 15 }) : '';
   }
   var ICON = {
+    get activities() { return ico('clock'); },
     get dashboard() { return ico('dashboard'); },
     get contacts() { return ico('contacts'); },
     get companies() { return ico('companies'); },
@@ -203,6 +205,10 @@
 
         '<div class="sidebar-line"></div>' +
 
+        '<div class="nav-item' + on('activities') + '" onclick="titanSidebarGo(\'/crm/activities\')">' +
+          '<div class="nav-item-icon">' + ICON.activities + '</div>' +
+          '<span class="nav-item-label' + on('activities') + '">Upcoming activities</span>' +
+        '</div>' +
         '<div class="nav-item' + on('contacts') + '" onclick="titanSidebarGo(\'/crm/contacts\')">' +
           '<div class="nav-item-icon">' + ICON.contacts + '</div>' +
           '<span class="nav-item-label' + on('contacts') + '">Contacts</span>' +

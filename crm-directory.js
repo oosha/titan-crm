@@ -110,6 +110,26 @@
   // pipelines plus any top-level keys (contactFields) the other pages don't model.
   window.DATA = null;
 
+  // Does a display date read as already gone by? Activity dates in this app are
+  // strings a person typed ("Jul 30, 3:00 PM", "12 Feb") with no timestamp behind
+  // them, so this is a heuristic on the "Mon D" prefix and nothing more — it can
+  // only ever say "this looks past", never when.
+  //
+  // Duplicated from opportunity-view.html, which can't reach this file (it doesn't
+  // load crm-directory.js). Worth consolidating if that ever changes.
+  var LP_MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  window.looksPast = function (dateStr) {
+    var m = String(dateStr || '').trim().match(/^([A-Za-z]{3})[a-z]*\s+(\d{1,2})\b/);
+    if (!m) return false;
+    var mi = LP_MONTHS.indexOf(m[1].toLowerCase());
+    if (mi === -1) return false;
+    var now = new Date();
+    var when = new Date(now.getFullYear(), mi, parseInt(m[2], 10), 23, 59, 59);
+    // A month far ahead of today is last year's; one far behind is this year's.
+    if (mi - now.getMonth() > 6) when.setFullYear(now.getFullYear() - 1);
+    return when < now;
+  };
+
   window.fetchPipelineData = async function () {
     var res = await fetch('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID), { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to load data (' + res.status + ')');

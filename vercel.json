@@ -18,6 +18,14 @@
       "destination": "/dashboard.html"
     },
     {
+      "source": "/crm/activities",
+      "destination": "/activities.html"
+    },
+    {
+      "source": "/crm/activities/",
+      "destination": "/activities.html"
+    },
+    {
       "source": "/crm/contacts",
       "destination": "/contacts.html"
     },
