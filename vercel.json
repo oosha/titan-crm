@@ -42,6 +42,14 @@
       "destination": "/integrations-hubspot.html"
     },
     {
+      "source": "/crm/integrations/cf7",
+      "destination": "/integrations-cf7.html"
+    },
+    {
+      "source": "/crm/integrations/cf7/",
+      "destination": "/integrations-cf7.html"
+    },
+    {
       "source": "/crm/integrations",
       "destination": "/integrations.html"
     },

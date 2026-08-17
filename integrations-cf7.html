@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Contact Form 7 — Titan CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+  (function () {
+    var raw = new URLSearchParams(location.search).get('u');
+    var u = (raw && /^[a-z0-9_-]{1,32}$/.test(raw)) ? raw.toLowerCase() : null;
+    if (u) document.write('<' + 'script src="/personas/' + u + '.js"><' + '/script>');
+  })();
+</script>
+<link rel="stylesheet" href="/design-system/tokens.css">
+<link rel="stylesheet" href="/design-system/components.css">
+<link rel="stylesheet" href="/titan-sidebar.css">
+<link rel="stylesheet" href="/crm-directory.css">
+<link rel="stylesheet" href="/integrations.css">
+<style>
+  /* The URL is the whole integration, so it gets read like one thing and copied
+     in one click — not selected by hand out of a paragraph. */
+  .cf7-url {
+    display: flex; align-items: center; gap: var(--space-100);
+    background: var(--surface-recessed); border: 1px solid var(--border-subtle);
+    border-radius: 8px; padding: var(--space-100) var(--space-150);
+    margin: var(--space-150) 0;
+  }
+  .cf7-url code {
+    flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: var(--text-xs); color: var(--text-primary);
+  }
+  .cf7-await {
+    display: flex; align-items: center; gap: var(--space-100);
+    background: var(--accent-subtle); border: 1px solid var(--border-accent, var(--accent-primary));
+    border-radius: 8px; padding: var(--space-150); margin-top: var(--space-150);
+    font-size: var(--text-sm); color: var(--text-primary);
+  }
+  .cf7-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent-primary);
+    flex-shrink: 0; animation: cf7-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes cf7-pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+</style>
+</head>
+<body data-subpage="integrations" data-sidebar-data="page">
+
+<div class="app-window">
+  <div id="sidebar-mount"></div>
+
+  <div class="main-area">
+    <div class="subpage-top">
+      <span class="subpage-back" onclick="location.href=crmPath('/crm/integrations')">
+        <span data-ds-icon="back" data-size="13"></span>
+        Integrations
+      </span>
+      <span class="subpage-title">Contact Form 7</span>
+    </div>
+
+    <div class="subpage-body">
+      <div class="int-wrap">
+        <div class="int-card">
+          <div class="int-head">
+            <div class="int-logo" style="background:#1a7efb;">C</div>
+            <div>
+              <div class="int-title">Contact Form 7</div>
+              <div class="int-sub">Turn form submissions into records automatically</div>
+            </div>
+            <span class="int-status off" id="int-status">Checking…</span>
+          </div>
+          <div id="int-body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/design-system/components/icon.js"></script>
+<script src="/titan-sidebar.js"></script>
+<script src="/crm-directory.js"></script>
+<script>
+  // ── Contact Form 7 ──────────────────────────────────────────────────────────
+  // Unlike HubSpot, nothing is fetched from the provider: CF7 is a WordPress
+  // plugin with no API and no account to log into. It pushes to us. So the whole
+  // setup is "here is your URL, paste it into WordPress", and the connection sits
+  // waiting until the first submission arrives.
+  //
+  // The server side is deliberately not CF7-specific — see api/_inbound.js. This
+  // page is a setup guide over a generic receiver, which is why Jetpack or
+  // Gravity Forms can be added later without touching the endpoint.
+  const esc = window.esc;
+  const crmPath = window.crmPath;
+
+  let connections = [];
+  let pipelinesById = {};
+
+  function webhookUrl(conn) {
+    return location.origin + '/api/inbound?token=' + encodeURIComponent(conn.token);
+  }
+
+  async function loadConnections() {
+    const res = await fetch('/api/inbound-config?persona=' + encodeURIComponent(window.PERSONA_ID), { cache: 'no-store' });
+    const body = await res.json().catch(function () { return {}; });
+    connections = (body.connections || []).filter(function (c) { return (c.provider || 'cf7') === 'cf7'; });
+    render();
+  }
+
+  function render() {
+    const status = document.getElementById('int-status');
+    const live = connections.filter(function (c) { return c.map && Object.keys(c.map).length; });
+    status.className = 'int-status ' + (live.length ? 'on' : 'off');
+    status.textContent = live.length ? 'Connected' : 'Not connected';
+
+    document.getElementById('int-body').innerHTML = connections.length
+      ? connectedHTML()
+      : setupHTML();
+    wire();
+  }
+
+  // First run: there is nothing to list, so the page is the instructions.
+  function setupHTML() {
+    return '<p class="int-lede">Submissions become records here automatically.</p>' +
+      '<ol class="int-steps">' +
+        '<li>In WordPress, install a webhook add-on for Contact Form 7 — ' +
+          '<strong>CF7 to Webhook</strong> is free.</li>' +
+        '<li>Edit your form and open its <strong>Webhook</strong> tab.</li>' +
+        '<li>Paste the URL Titan gives you below and save.</li>' +
+        '<li>Send yourself a test submission.</li>' +
+      '</ol>' +
+      '<div class="int-foot">' +
+        '<button class="dir-btn dir-btn-primary" id="cf7-create" type="button">Create a webhook URL</button>' +
+      '</div>';
+  }
+
+  function connectedHTML() {
+    return '<div class="int-label">Forms</div>' +
+      connections.map(rowHTML).join('') +
+      '<div class="int-foot">' +
+        '<button class="dir-btn dir-btn-primary" id="cf7-create" type="button">Add another form</button>' +
+      '</div>' +
+      '<div class="int-note">Records appear as soon as WordPress posts them — nothing to check or refresh.</div>';
+  }
+
+  function rowHTML(conn, i) {
+    const pipeline = pipelinesById[conn.pipelineId];
+    const mapped = conn.map && Object.keys(conn.map).length;
+    // Three states, and the middle one is the point: a URL that exists but has
+    // never been used looks identical to a broken one unless we say so.
+    const state = mapped
+      ? '<span class="int-conn-dest">' + esc((pipeline && pipeline.name) || 'No pipeline') + '</span>'
+      : conn.sample
+        ? '<span class="int-conn-dest">Ready to set up</span>'
+        : '<span class="int-conn-dest">Waiting for a submission</span>';
+    return '<div class="int-conn">' +
+      '<div class="int-conn-text">' +
+        '<div class="int-conn-form">' + esc(conn.name || 'Contact Form 7') + '</div>' + state +
+      '</div>' +
+      '<div class="int-conn-actions">' +
+        (conn.sample || mapped
+          ? '<button class="dir-btn" type="button" data-map="' + i + '">' + (mapped ? 'Edit' : 'Set up') + '</button>'
+          : '') +
+        '<button class="dir-btn" type="button" data-url="' + i + '">URL</button>' +
+        '<button class="dir-btn" type="button" data-del="' + i + '">Remove</button>' +
+      '</div>' +
+    '</div>' +
+    (conn.sample && !mapped
+      ? '<div class="cf7-await"><span class="cf7-dot"></span>' +
+        'A submission arrived with ' + Object.keys(conn.sample.values).length +
+        ' fields. Set it up to start creating records.</div>'
+      : '') +
+    (!conn.sample && !mapped
+      ? '<div class="cf7-url"><code>' + esc(webhookUrl(conn)) + '</code>' +
+        '<button class="dir-btn" type="button" data-copy="' + i + '">Copy</button></div>'
+      : '');
+  }
+
+  function wire() {
+    const create = document.getElementById('cf7-create');
+    if (create) create.addEventListener('click', createConnection);
+    document.querySelectorAll('[data-copy]').forEach(function (b) {
+      b.addEventListener('click', function () { copyUrl(connections[+b.dataset.copy], b); });
+    });
+    document.querySelectorAll('[data-url]').forEach(function (b) {
+      b.addEventListener('click', function () { copyUrl(connections[+b.dataset.url], b); });
+    });
+    document.querySelectorAll('[data-map]').forEach(function (b) {
+      b.addEventListener('click', function () { openMapping(connections[+b.dataset.map]); });
+    });
+    document.querySelectorAll('[data-del]').forEach(function (b) {
+      b.addEventListener('click', function () { removeConnection(connections[+b.dataset.del]); });
+    });
+  }
+
+  function copyUrl(conn, btn) {
+    const url = webhookUrl(conn);
+    const done = function () { const t = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = t; }, 1600); };
+    if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, function () {});
+    else done();
+  }
+
+  async function createConnection() {
+    await fetch('/api/inbound-config?persona=' + encodeURIComponent(window.PERSONA_ID), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: 'cf7', name: 'Contact Form 7' }),
+    });
+    await loadConnections();
+  }
+
+  async function removeConnection(conn) {
+    if (!confirm('Remove this webhook? The URL stops working immediately.')) return;
+    await fetch('/api/inbound-config?persona=' + encodeURIComponent(window.PERSONA_ID) +
+      '&id=' + encodeURIComponent(conn.id), { method: 'DELETE' });
+    await loadConnections();
+  }
+
+  // The mapping is built from the fields the form actually sent, not from a guess
+  // about what CF7 forms look like — that is the whole reason the first submission
+  // is held rather than imported.
+  function openMapping(conn) {
+    const fields = Object.keys((conn.sample && conn.sample.values) || conn.map || {});
+    const draft = { pipelineId: conn.pipelineId || '', stage: conn.stage || '',
+                    map: Object.assign({}, conn.suggested || {}, conn.map || {}) };
+    const targets = [['', 'Don’t import'], ['name', 'Contact name'], ['email', 'Contact email'],
+                     ['phone', 'Contact phone'], ['designation', 'Job title'], ['company', 'Company'],
+                     ['location', 'Location'], ['linkedin', 'LinkedIn'], ['note', 'Note']];
+
+    const body = document.createElement('div');
+    function draw() {
+      const pl = pipelinesById[draft.pipelineId];
+      body.innerHTML =
+        '<div class="int-row"><div class="int-label">Add new records to</div>' +
+          '<select class="int-text" id="cf7-pipeline">' +
+            '<option value="">Choose a pipeline</option>' +
+            Object.keys(pipelinesById).map(function (id) {
+              return '<option value="' + esc(id) + '"' + (draft.pipelineId === id ? ' selected' : '') + '>' +
+                esc(pipelinesById[id].name) + '</option>';
+            }).join('') +
+          '</select></div>' +
+        '<div class="int-row"><div class="int-label">Starting them in</div>' +
+          '<select class="int-text" id="cf7-stage"' + (pl ? '' : ' disabled') + '>' +
+            ((pl && pl.stages) || []).map(function (st) {
+              return '<option value="' + esc(st.key) + '"' + (draft.stage === st.key ? ' selected' : '') + '>' +
+                esc(st.label || st.key) + '</option>';
+            }).join('') +
+          '</select></div>' +
+        '<div class="int-label">Where should each answer go?</div>' +
+        '<div class="int-map-head"><span>Field on your form</span><span>Saved in Titan as</span></div>' +
+        fields.map(function (key) {
+          return '<div class="int-map-row"><div class="int-map-from">' + esc(key) + '</div>' +
+            '<select class="int-text" data-field="' + esc(key) + '">' +
+              targets.map(function (t) {
+                return '<option value="' + t[0] + '"' + (draft.map[key] === t[0] ? ' selected' : '') + '>' + t[1] + '</option>';
+              }).join('') +
+            '</select></div>';
+        }).join('') +
+        '<div class="int-note">Best guesses — change any that look wrong.</div>';
+
+      body.querySelector('#cf7-pipeline').onchange = function () {
+        draft.pipelineId = this.value;
+        const p = pipelinesById[draft.pipelineId];
+        draft.stage = (p && p.stages && p.stages[0] && p.stages[0].key) || '';
+        draw();
+      };
+      const stageSel = body.querySelector('#cf7-stage');
+      if (stageSel) stageSel.onchange = function () { draft.stage = this.value; };
+      body.querySelectorAll('[data-field]').forEach(function (sel) {
+        sel.onchange = function () { draft.map[sel.dataset.field] = sel.value; };
+      });
+    }
+    draw();
+
+    window.openModal({
+      title: 'Set up this form',
+      body: body,
+      confirmLabel: 'Save',
+      onConfirm: async function (modal) {
+        if (!draft.pipelineId) { modal.setStatus('Choose a pipeline first.', true); return; }
+        const targetsChosen = Object.keys(draft.map).map(function (k) { return draft.map[k]; });
+        if (targetsChosen.indexOf('email') === -1 && targetsChosen.indexOf('name') === -1) {
+          modal.setStatus('Point at least one field at a name or an email.', true);
+          return;
+        }
+        modal.setBusy(true);
+        try {
+          await fetch('/api/inbound-config?persona=' + encodeURIComponent(window.PERSONA_ID), {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: conn.id, pipelineId: draft.pipelineId, stage: draft.stage, map: draft.map }),
+          });
+          modal.close();
+          await loadConnections();
+        } catch (e) {
+          modal.setBusy(false);
+          modal.setStatus('Couldn’t save just now. Check your connection and try again.', true);
+        }
+      },
+    });
+  }
+
+  (async function () {
+    const data = await window.fetchPipelineData();
+    if (!data) {
+      document.getElementById('int-body').innerHTML =
+        '<div class="int-alert">Couldn’t load your pipelines. ' +
+        '<a class="dir-link" href="' + crmPath('/crm') + '">Open Titan CRM</a></div>';
+      document.getElementById('int-status').textContent = 'Unavailable';
+      return;
+    }
+    pipelinesById = data.pipelines || {};
+    window.titanSidebar.setPipelines(Object.keys(pipelinesById).map(function (id) { return pipelinesById[id]; }));
+    await loadConnections();
+    // A connection waiting on its first submission is the one state that changes
+    // without the user doing anything here, so this page checks while it is open.
+    setInterval(function () {
+      if (document.visibilityState === 'visible' &&
+          connections.some(function (c) { return !c.sample && !(c.map && Object.keys(c.map).length); })) {
+        loadConnections();
+      }
+    }, 8000);
+  })();
+</script>
+</body>
+</html>

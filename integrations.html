@@ -83,6 +83,34 @@
       if (!n) return 'Connected — no forms set up yet';
       return n === 1 ? '1 form connected' : n + ' forms connected';
     },
+  }, {
+    id: 'cf7',
+    name: 'Contact Form 7',
+    blurb: 'Turn form submissions into records automatically',
+    logo: 'C',
+    logoBg: '#1a7efb',
+    path: '/crm/integrations/cf7',
+    // No credential to check, unlike HubSpot: CF7 pushes to a URL we hand out, so
+    // "connected" is simply whether a webhook exists and knows where to put things.
+    checkConnected: async function () {
+      try {
+        const res = await fetch('/api/inbound-config?persona=' + encodeURIComponent(window.PERSONA_ID), { cache: 'no-store' });
+        if (!res.ok) return false;
+        const body = await res.json();
+        return (body.connections || []).some(function (c) {
+          return (c.provider || 'cf7') === 'cf7' && c.map && Object.keys(c.map).length;
+        });
+      } catch (e) { return false; }
+    },
+    summarise: function (data) {
+      const list = ((data.integrations && data.integrations.inbound && data.integrations.inbound.connections) || [])
+        .filter(function (c) { return (c.provider || 'cf7') === 'cf7'; });
+      const live = list.filter(function (c) { return c.map && Object.keys(c.map).length; }).length;
+      const waiting = list.length - live;
+      if (!live) return waiting ? 'Waiting for a first submission' : 'Connected — no forms set up yet';
+      return (live === 1 ? '1 form connected' : live + ' forms connected') +
+             (waiting ? ', ' + waiting + ' waiting' : '');
+    },
   }];
 
   function renderList(data, connectedById) {

@@ -265,6 +265,93 @@ async function apiHubspot(pathname, req, res, query) {
 // Only the storage differs: local files rather than GitHub.
 const assistant = require('./api/_assistant');
 
+// Local file I/O, shared model. The api/*.js handlers go through _github.js, so
+// requiring them here would try to reach GitHub — dev-server mirrors the route and
+// reuses api/_inbound.js for the actual behaviour, the same split apiForm() uses.
+const IN = require('./api/_inbound');
+
+async function apiInbound(pathname, req, res, query) {
+  if (pathname === '/api/inbound') return await apiInboundReceive(req, res, query);
+  return await apiInboundConfig(req, res, query);
+}
+
+async function apiInboundReceive(req, res, query) {
+  if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
+  const token = query.get('token') || '';
+  const personaId = F.personaFromToken(token);
+  if (!personaId || !isValidPersonaId(personaId)) return json(res, 404, { ok: false, status: 'unknown-token' });
+
+  const file = currentPathFor(personaId);
+  const doc = await readJson(file);
+  const conn = doc && IN.findByToken(doc, token);
+  if (!conn) return json(res, 404, { ok: false, status: 'unknown-token' });
+  if (conn.enabled === false) return json(res, 200, { ok: false, status: 'paused' });
+
+  const body = await readBody(req);
+  const outcome = IN.receive(doc, conn, body || {});
+  if (outcome.changed) await writeJson(file, doc);
+  console.log('  inbound ' + (conn.provider || 'webhook') + ' → ' + outcome.status +
+    (outcome.cardId ? ' (card #' + outcome.cardId + ')' : '') +
+    (outcome.fields ? ' [' + outcome.fields.join(', ') + ']' : ''));
+  return json(res, 200, Object.assign(
+    { ok: outcome.status === 'added' || outcome.status === 'sample', status: outcome.status },
+    outcome.fields ? { fields: outcome.fields } : {}));
+}
+
+async function apiInboundConfig(req, res, query) {
+  const personaId = isValidPersonaId(query.get('persona')) ? query.get('persona') : 'default';
+  const file = currentPathFor(personaId);
+  const doc = await readJson(file);
+  if (!doc) return json(res, 404, { error: 'Unknown persona: ' + personaId });
+
+  if (req.method === 'GET') return json(res, 200, { connections: IN.connectionsOf(doc) });
+
+  if (req.method === 'POST') {
+    const body = (await readBody(req)) || {};
+    const inbound = IN.ensureInbound(doc);
+    let conn = body.id ? inbound.connections.filter((c) => c.id === body.id)[0] : null;
+    if (!conn) {
+      let r = '';
+      for (let i = 0; i < 4; i++) r += Math.random().toString(36).slice(2, 8);
+      conn = { id: 'in' + Date.now().toString(36), token: personaId + '.' + r.slice(0, 22),
+               provider: String(body.provider || 'cf7').slice(0, 32), seen: [] };
+      inbound.connections.push(conn);
+    }
+    if (body.name !== undefined) conn.name = String(body.name || '').slice(0, 120);
+    if (body.pipelineId !== undefined) conn.pipelineId = String(body.pipelineId || '');
+    if (body.stage !== undefined) conn.stage = String(body.stage || '');
+    if (body.enabled !== undefined) conn.enabled = body.enabled !== false;
+    if (body.map && typeof body.map === 'object') {
+      const clean = {};
+      Object.keys(body.map).slice(0, 60).forEach((k) => {
+        const t = String(body.map[k] || '');
+        if (t && !Object.prototype.hasOwnProperty.call(F.TARGETS, t)) return;
+        clean[String(k).slice(0, 120)] = t;
+      });
+      conn.map = clean;
+    }
+    // The submission that taught us the shape becomes a record once the mapping exists.
+    if (conn.sample && IN.isMapped(conn)) {
+      const held = conn.sample.values;
+      delete conn.sample; delete conn.suggested;
+      IN.receive(doc, conn, held);
+    }
+    await writeJson(file, doc);
+    return json(res, 200, { ok: true, connection: conn });
+  }
+
+  if (req.method === 'DELETE') {
+    const id = query.get('id') || '';
+    const inbound = IN.ensureInbound(doc);
+    const before = inbound.connections.length;
+    inbound.connections = inbound.connections.filter((c) => c.id !== id);
+    const removed = inbound.connections.length !== before;
+    if (removed) await writeJson(file, doc);
+    return json(res, 200, { ok: true, removed: removed });
+  }
+  json(res, 405, { error: 'Method not allowed' });
+}
+
 async function apiAssistant(pathname, req, res, query) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
   const personaId = isValidPersonaId(query.get('persona')) ? query.get('persona') : 'default';
@@ -353,6 +440,13 @@ http.createServer(async (req, res) => {
     if (pathname === '/api/hubspot-forms' || pathname === '/api/hubspot-sync' || pathname === '/api/hubspot-key') {
       return await apiHubspot(pathname, req, res, url.searchParams);
     }
+    // Inbound webhooks. dev-server hardcodes its routes, so a new api/*.js works on
+    // Vercel and 404s here until it's added — which is exactly how you'd waste an
+    // afternoon testing a webhook that was never reachable.
+    if (pathname === '/api/inbound' || pathname === '/api/inbound-config') {
+      return await apiInbound(pathname, req, res, url.searchParams);
+    }
+
     if (pathname === '/api/assistant' || pathname === '/api/assistant-apply') {
       return await apiAssistant(pathname, req, res, url.searchParams);
     }
