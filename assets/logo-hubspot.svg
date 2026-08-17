@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="HubSpot">
+  <!-- HubSpot's sprocket on their orange. Geometric enough to draw exactly: a ring
+       with three nodes — upper-left on a diagonal arm, top on a vertical stem, and
+       lower-left on a short diagonal. -->
+  <rect width="100" height="100" fill="#ff5c35"/>
+  <g fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round">
+    <path d="M29 27 L57 51"/>
+    <path d="M63 27 L63 40"/>
+    <path d="M47 73 L54 66"/>
+  </g>
+  <circle cx="63" cy="55" r="18" fill="none" stroke="#ffffff" stroke-width="9"/>
+  <circle cx="27" cy="25" r="9"  fill="#ffffff"/>
+  <circle cx="63" cy="24" r="8"  fill="#ffffff"/>
+  <circle cx="44" cy="76" r="8"  fill="#ffffff"/>
+</svg>

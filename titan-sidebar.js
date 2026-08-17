@@ -196,12 +196,19 @@
           '<div class="nav-item-icon">' + ICON.dashboard + '</div>' +
           '<span class="nav-item-label' + on('dashboard') + '">Dashboard</span>' +
         '</div>' +
-        '<div class="nav-item" onclick="openNewPipeline()">' +
-          '<div class="nav-item-icon" style="color:#2170f4; font-weight:700; font-size:16px;">+</div>' +
-          '<span class="nav-item-label" style="color:#2170f4; font-weight:600;">New pipeline</span>' +
-        '</div>' +
+
+        // Dashboard is the whole account; the pipeline rows below it are the parts.
+        '<div class="sidebar-line"></div>' +
 
         '<div id="pipeline-nav-line" class="nav-anchor"></div>' +
+        '<div id="pipeline-nav-end" class="nav-anchor"></div>' +
+
+        // "New pipeline" sits after the list it adds to, so the rows read as a list
+        // rather than being interrupted by the button that extends them.
+        '<div class="nav-item" onclick="openNewPipeline()">' +
+          '<div class="nav-item-icon" style="color:var(--accent-primary); font-weight:700; font-size:16px;">+</div>' +
+          '<span class="nav-item-label" style="color:var(--accent-primary); font-weight:600;">New pipeline</span>' +
+        '</div>' +
 
         '<div class="sidebar-line"></div>' +
 
@@ -292,10 +299,11 @@
     if (sig === renderedSig) return;
     renderedSig = sig;
 
-    // Clear only what sits between the anchor and the next separator — never to
-    // the end of the container, which would take Contacts and Companies with it.
+    // Clear only what sits between the two anchors — never up to the next
+    // separator, which would take "New pipeline" with it now that it sits below
+    // the rows, and never to the end, which would take Contacts and Companies.
     var n = line.nextElementSibling, had = 0;
-    while (n && !n.classList.contains('sidebar-line')) {
+    while (n && n.id !== 'pipeline-nav-end' && !n.classList.contains('sidebar-line')) {
       var next = n.nextElementSibling; n.remove(); had++; n = next;
     }
     // Animate only rows genuinely arriving for the first time. Rows restored from

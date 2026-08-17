@@ -58,37 +58,10 @@
   // from here: this page should paint instantly and never fail because a third
   // party is slow or a key has been revoked.
   const PROVIDERS = [{
-    id: 'hubspot',
-    name: 'HubSpot Forms',
-    blurb: 'Turn form submissions into records automatically',
-    logo: 'H',
-    logoBg: '#ff7a59',
-    path: '/crm/integrations/hubspot',
-    // Whether a key exists is the one thing this page can't read from the data
-    // document, because credentials aren't kept there. One cheap call to the
-    // store; it never returns the key itself, only whether there is one.
-    checkConnected: async function () {
-      // A key held in this tab counts as connected too — see the note in
-      // titan-sidebar.js for why that fallback exists.
-      if (window.titanHubspotKey && window.titanHubspotKey.get()) return true;
-      try {
-        const res = await fetch('/api/hubspot-key?persona=' + encodeURIComponent(window.PERSONA_ID), { cache: 'no-store' });
-        return res.ok ? !!(await res.json()).hasKey : false;
-      } catch (e) { return false; }
-    },
-    summarise: function (data) {
-      const h = (data.integrations && data.integrations.hubspot) || {};
-      // Reads both shapes: v1 stored a single connection inline, v2 uses connections[].
-      const n = Array.isArray(h.connections) ? h.connections.length : (h.formGuid ? 1 : 0);
-      if (!n) return 'Connected — no forms set up yet';
-      return n === 1 ? '1 form connected' : n + ' forms connected';
-    },
-  }, {
     id: 'cf7',
     name: 'Contact Form 7',
     blurb: 'Turn form submissions into records automatically',
-    logo: 'C',
-    logoBg: '#1a7efb',
+    logo: '/assets/logo-cf7.svg',
     path: '/crm/integrations/cf7',
     // No credential to check, unlike HubSpot: CF7 pushes to a URL we hand out, so
     // "connected" is simply whether a webhook exists and knows where to put things.
@@ -111,13 +84,38 @@
       return (live === 1 ? '1 form connected' : live + ' forms connected') +
              (waiting ? ', ' + waiting + ' waiting' : '');
     },
+  }, {
+    id: 'hubspot',
+    name: 'HubSpot Forms',
+    blurb: 'Turn form submissions into records automatically',
+    logo: '/assets/logo-hubspot.svg',
+    path: '/crm/integrations/hubspot',
+    // Whether a key exists is the one thing this page can't read from the data
+    // document, because credentials aren't kept there. One cheap call to the
+    // store; it never returns the key itself, only whether there is one.
+    checkConnected: async function () {
+      // A key held in this tab counts as connected too — see the note in
+      // titan-sidebar.js for why that fallback exists.
+      if (window.titanHubspotKey && window.titanHubspotKey.get()) return true;
+      try {
+        const res = await fetch('/api/hubspot-key?persona=' + encodeURIComponent(window.PERSONA_ID), { cache: 'no-store' });
+        return res.ok ? !!(await res.json()).hasKey : false;
+      } catch (e) { return false; }
+    },
+    summarise: function (data) {
+      const h = (data.integrations && data.integrations.hubspot) || {};
+      // Reads both shapes: v1 stored a single connection inline, v2 uses connections[].
+      const n = Array.isArray(h.connections) ? h.connections.length : (h.formGuid ? 1 : 0);
+      if (!n) return 'Connected — no forms set up yet';
+      return n === 1 ? '1 form connected' : n + ' forms connected';
+    },
   }];
 
   function renderList(data, connectedById) {
     document.getElementById('int-list').innerHTML = PROVIDERS.map(function (p) {
       const on = !!connectedById[p.id];
       return '<div class="int-row-card">' +
-        '<div class="int-logo" style="background:' + esc(p.logoBg) + '">' + esc(p.logo) + '</div>' +
+        '<div class="int-logo"><img src="' + esc(p.logo) + '" alt=""></div>' +
         '<div class="int-row-text">' +
           '<div class="int-row-name">' + esc(p.name) + '</div>' +
           '<div class="int-row-blurb">' + esc(on ? p.summarise(data) : p.blurb) + '</div>' +

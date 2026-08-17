@@ -218,7 +218,7 @@
   .ov-pick-empty { padding: var(--space-200); font-size: var(--text-sm); color: var(--text-secondary); text-align: center; }
   /* Sits at the foot of the opened panel, right-aligned — destructive actions
      belong after the thing they act on, not above it. */
-  .ov-contact-remove { display: flex; justify-content: flex-end; margin-top: var(--space-150); }
+  .ov-contact-remove { display: flex; justify-content: flex-end; gap: var(--space-100); margin-top: var(--space-200); }
   /* One field on a two-column row left half the width empty beside it. */
   .ov-contact-namerow > .ds-input { grid-column: 1 / -1; }
 
@@ -1501,14 +1501,22 @@
             '<span class="ov-contact-caret"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.5 6.5L8 10l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
           '</div>' +
         '</div>' +
-        (nameHidden ? '' : '<div class="ov-contact-grid ov-contact-namerow"><input class="ds-input" placeholder="Name" value="' + esc(c.name) + '" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);"></div>') +
+        (nameHidden ? '' : '<div class="ov-contact-grid ov-contact-namerow">' +
+          '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-name')) + '</div>' +
+          '<input class="ds-input" placeholder="Name" value="' + esc(c.name) + '" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);"></div></div>') +
         '<div class="ov-contact-grid">' +
-          (fieldHidden('contact-email') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-email')) + '" value="' + esc(c.email) + '" oninput="setContactField(' + i + ',\'email\',this.value)">') +
-          (fieldHidden('contact-designation') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-designation')) + '" value="' + esc(c.designation) + '" oninput="setContactField(' + i + ',\'designation\',this.value)">') +
-          (fieldHidden('contact-phone') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-phone')) + '" value="' + esc(c.phone) + '" oninput="setContactField(' + i + ',\'phone\',this.value)">') +
-          (fieldHidden('contact-department') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-department')) + '" value="' + esc(c.department) + '" oninput="setContactField(' + i + ',\'department\',this.value)">') +
-          (fieldHidden('contact-location') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-location')) + '" value="' + esc(c.location) + '" oninput="setContactField(' + i + ',\'location\',this.value)">') +
-          (fieldHidden('contact-linkedin') ? '' : '<input class="ds-input" placeholder="' + esc(fieldLabel('contact-linkedin')) + '" value="' + esc(c.linkedin) + '" oninput="setContactField(' + i + ',\'linkedin\',this.value)">') +
+          (fieldHidden('contact-email') ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-email')) + '</div>' +
+            '<input class="ds-input" value="' + esc(c.email) + '" oninput="setContactField(' + i + ',\'email\',this.value)"></div>') +
+          (fieldHidden('contact-designation') ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-designation')) + '</div>' +
+            '<input class="ds-input" value="' + esc(c.designation) + '" oninput="setContactField(' + i + ',\'designation\',this.value)"></div>') +
+          (fieldHidden('contact-phone') ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-phone')) + '</div>' +
+            '<input class="ds-input" value="' + esc(c.phone) + '" oninput="setContactField(' + i + ',\'phone\',this.value)"></div>') +
+          (fieldHidden('contact-department') ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-department')) + '</div>' +
+            '<input class="ds-input" value="' + esc(c.department) + '" oninput="setContactField(' + i + ',\'department\',this.value)"></div>') +
+          (fieldHidden('contact-location') ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-location')) + '</div>' +
+            '<input class="ds-input" value="' + esc(c.location) + '" oninput="setContactField(' + i + ',\'location\',this.value)"></div>') +
+          (fieldHidden('contact-linkedin') ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-linkedin')) + '</div>' +
+            '<input class="ds-input" value="' + esc(c.linkedin) + '" oninput="setContactField(' + i + ',\'linkedin\',this.value)"></div>') +
         '</div>' +
         (contactsEnabled && contacts.length > 1
           ? '<div class="ov-contact-remove">' +
