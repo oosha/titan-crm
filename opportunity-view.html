@@ -282,8 +282,11 @@
   .crm-stage-item.active { font-weight: 600; }
 
   .ov-autolink-row {
-    display: flex; align-items: flex-start; gap: var(--space-100); margin-top: var(--space-300); font-size: var(--text-xs);
-    color: #6b7178; cursor: pointer; user-select: none;
+    display: flex; align-items: flex-start; gap: var(--space-100);
+    margin-top: var(--space-200); padding-top: var(--space-150);
+    border-top: 1px solid var(--border-subtle);
+    font-size: var(--text-xs); color: var(--text-secondary);
+    cursor: pointer; user-select: none;
   }
   .ov-autolink-row input[type="checkbox"] {
     margin-top: 1px; width: var(--checkbox-size); height: var(--checkbox-size);
@@ -602,10 +605,6 @@
                   <button class="ov-more-item" type="button" onclick="openRecordSettings()">
                     <span id="ov-configure-fields">Configure fields</span>
                   </button>
-                  <label class="ov-more-item ov-more-check">
-                    <input type="checkbox" id="ov-autolink" checked onchange="onFieldChange()">
-                    <span>Auto-link contacts' activity to this <span id="ov-autolink-entity">opportunity</span></span>
-                  </label>
                 </div>
               </div>
             </div>
@@ -771,6 +770,13 @@
         <div class="ov-section ds-card ds-card--section">
           <div class="ov-heading">Recent activity</div>
           <div id="ov-recent-activity"></div>
+          <!-- Sits with the activity it governs. It was in the ⋯ menu, where a
+               colleague went looking for it and couldn't find it — a switch that
+               decides what appears in this list belongs next to the list. -->
+          <label class="ov-autolink-row">
+            <input type="checkbox" id="ov-autolink" checked onchange="onFieldChange()">
+            <span>Automatically link contacts' activity to this <span id="ov-autolink-entity">opportunity</span></span>
+          </label>
         </div>
 
         <div class="ov-section ds-card ds-card--section">
