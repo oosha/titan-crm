@@ -1675,7 +1675,53 @@
           "noteDate": "4 Aug",
           "noteAuthor": "Usha"
         }
-      ]
+      ],
+      "intakeForm": {
+        "token": "default.2b6s2v2x3a",
+        "enabled": true,
+        "heading": "Apply — Engineering hiring",
+        "blurb": "",
+        "logoUrl": "",
+        "submitLabel": "Send application",
+        "thanks": "Thanks — your application is in. We’ll be in touch.",
+        "recordTitle": "Engineering hiring",
+        "sourceLabel": "Form",
+        "fields": [
+          {
+            "key": "name",
+            "label": "Full name",
+            "type": "text",
+            "target": "name",
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "Email",
+            "type": "email",
+            "target": "email",
+            "required": true
+          },
+          {
+            "key": "designation",
+            "label": "Phone",
+            "type": "text",
+            "target": "designation"
+          },
+          {
+            "key": "linkedin",
+            "label": "LinkedIn or portfolio",
+            "type": "url",
+            "target": "linkedin"
+          },
+          {
+            "key": "note",
+            "label": "Why this role?",
+            "type": "textarea",
+            "target": "note",
+            "placeholder": "A few lines is plenty"
+          }
+        ]
+      }
     },
     "p3": {
       "id": "p3",
