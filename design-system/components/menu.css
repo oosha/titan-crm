@@ -93,9 +93,20 @@
   background: var(--menu-sep-color); border: 0;
 }
 
-/* A heading above a group of items. */
+/* A heading above a group of items.
+ *
+ * A group that follows another is separated by SPACE, not by a rule — see --menu-group-gap
+ * below. A line between every group turns a list of choices into a stack of boxes, and it
+ * spends the strongest separator available on the weakest kind of boundary. __sep is for the
+ * case where a line is the point: an action that must not be mistaken for its neighbours,
+ * like Delete under a set of harmless ones. */
 .ds-menu__label {
-  padding: var(--space-075) var(--menu-item-pad-x) var(--space-050);
+  padding: var(--space-075) var(--menu-item-pad-x) var(--menu-label-gap);
   font-size: var(--text-2xs); font-weight: var(--weight-semi);
   color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;
 }
+
+/* Space above a group that follows items or a rule. A leading group stays tight to the top
+   of the panel — the panel's own padding is its air. */
+.ds-menu__item + .ds-menu__label,
+.ds-menu__sep + .ds-menu__label { margin-top: var(--menu-group-gap); }

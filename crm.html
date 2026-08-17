@@ -40,6 +40,8 @@
   <link rel="stylesheet" href="/design-system/components.css">
   <script src="/design-system/components/icon.js"></script>
   <script src="/design-system/components/menu.js"></script>
+  <!-- Pipeline tag names the pipeline in the builder's destination picker. -->
+  <script src="/design-system/components/pipeline-tag.js"></script>
   <link rel="stylesheet" href="/titan-sidebar.css">
   <link rel="stylesheet" href="/form.css">
   <link rel="stylesheet" href="/form-builder.css">
@@ -3958,10 +3960,16 @@
         pipeline: pl,
         form: pl.intakeForm || null,
         personaId: window.PERSONA_ID,
-        title: 'Form — ' + pl.name,
         onSave: function (form, pipeline) {
           pl.intakeForm = form;
           if (pipeline && pipeline.customFieldDefs) pl.customFieldDefs = pipeline.customFieldDefs;
+          schedulePersist();
+          updateBoardFormBtn();
+        },
+        // The builder asks; unsetting it and persisting is ours. Records the form
+        // created are ordinary records and are left alone.
+        onDelete: function () {
+          delete pl.intakeForm;
           schedulePersist();
           updateBoardFormBtn();
         },
@@ -3982,8 +3990,11 @@
       const n = (pl.cards || []).filter(function (c) {
         return c.createdBy === 'Form' || c.source === (f.sourceLabel || 'Form');
       }).length;
+      // Still reads f.enabled rather than assuming: pausing is parked in the editor
+      // (PAUSE_UI in form-builder.js), not removed from the endpoint, so a form stored
+      // as paused really is turning submissions away and the tooltip should say so.
       caret.title = f.enabled
-        ? 'Form accepting responses' + (n ? ' — ' + n + (n === 1 ? ' submission' : ' submissions') : '')
+        ? 'Form live' + (n ? ' — ' + n + (n === 1 ? ' submission' : ' submissions') : '')
         : 'Form is not accepting responses';
     }
 
@@ -5235,14 +5246,18 @@
         pipeline: pl,
         form: pl.intakeForm || null,
         personaId: window.PERSONA_ID,
-        title: 'Form — ' + pl.name,
-        saveLabel: 'Done',
         onSave: function (form, pipeline) {
           pl.intakeForm = form;
           if (pipeline && pipeline.customFieldDefs) pl.customFieldDefs = pipeline.customFieldDefs;
           schedulePersist();
           npRenderFormSlot();
-          npToast('Form saved for “' + pl.name + '”.', true);
+          npToast('Form published for “' + pl.name + '”.', true);
+        },
+        onDelete: function () {
+          delete pl.intakeForm;
+          schedulePersist();
+          npRenderFormSlot();
+          npToast('Form deleted.', true);
         },
       });
     }

@@ -28,7 +28,14 @@
   background: var(--surface-primary); color: var(--text-primary);
   border-color: var(--border-subtle);
 }
-.ds-btn--secondary:hover:not(:disabled) { border-color: var(--border-accent); color: var(--text-accent); }
+/* Hover fills, recolours, AND thickens. Ink and edge alone changed the button's colour
+   without making it feel pressable: the tint is what registers as a response, and the inset
+   ring doubles the 1px edge so the change is a weight change too, not only a hue shift.
+   A ring rather than a wider border because border-width moves the label inside the box. */
+.ds-btn--secondary:hover:not(:disabled) {
+  background: var(--accent-subtle); border-color: var(--border-accent); color: var(--text-accent);
+  box-shadow: inset 0 0 0 1px var(--border-accent);
+}
 
 /* Soft: a filled neutral control. Secondary is white with an edge and ghost has no fill at
    rest; a toolbar button needs to look like a button without competing with the primary

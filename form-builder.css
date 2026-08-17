@@ -15,88 +15,277 @@
   position: fixed; inset: 0; z-index: 3000;
   background: rgba(16, 24, 40, 0.45);
   display: flex; align-items: center; justify-content: center;
-  padding: var(--space-300) var(--space-200);
+  /* Enough scrim that the tab never touches the viewport edge, without spending height the
+     field list could use. */
+  padding: var(--space-200);
   animation: fb-fade var(--dur-base) var(--ease-standard);
 }
 @keyframes fb-fade { from { opacity: 0; } to { opacity: 1; } }
 body.fb-locked { overflow: hidden; }
 
+/* The frame is the modal plus the tab that sits on its edge, stacked. It carries the sizing
+   that used to be the modal's, and the modal takes whatever height is left after the tab.
+   The tab is in the flow rather than translated above the modal: absolutely positioned, it
+   needed space above the modal that nothing guaranteed, so at full height the viewport
+   clipped it — including the rounded corners that make it a tab. */
+.fb-frame {
+  position: relative; display: flex; flex-direction: column;
+  /* Wider than it was: the editor column carries a question, a destination picker holding
+     record-field names, a checkbox and a remove button on one line, beside a live preview
+     of the real form. At 1120px the question and the destination were both squeezed. */
+  width: 100%; max-width: 1240px; max-height: 100%;
+  /* The floor lives here now, so it covers the tab and the modal together. */
+  min-height: min(760px, 100%);
+}
+
+/* The pipeline as a folder tab above the modal's top edge — it names the whole thing, so it
+   sits on the outer border rather than inside the frame. Flush left so the tab's left edge
+   continues the modal's, and pulled down 1px so it overlaps that edge instead of hovering a
+   hairline above it. The modal's top-left corner is squared to meet it; that pair is what
+   makes the two read as one shape, the same way /crm/forms builds its rows. */
+.fb-modal-pipe {
+  align-self: flex-start; position: relative; z-index: 1;
+  margin-bottom: -1px; max-width: 100%;
+  display: flex; min-width: 0;
+}
+
 .fb-modal {
-  background: var(--surface-page); border-radius: var(--radius-xl);
-  width: 100%; max-width: 1120px; max-height: 100%;
+  background: var(--surface-page);
+  /* Top-left squared for the pipeline tab that sits on it — see .fb-modal-pipe. */
+  border-radius: 0 var(--radius-xl) var(--radius-xl) var(--radius-xl);
+  /* Fills the frame under the tab. The height floor is the frame's, so a short form still
+     opens tall instead of as a letterbox, and a short viewport shrinks this rather than
+     pushing the tab off the top of the screen. */
+  width: 100%; flex: 1 1 auto; min-height: 0;
   display: flex; flex-direction: column; overflow: hidden;
   box-shadow: var(--elevation-modal);
 }
+/* The header holds every control this modal has, in both states — see the note in open().
+   Editor:    [ Back ]  Title  · error ·            [ ⋯ ] [ Publish form ]
+   Published: [ Back to editing ]   ( Form published at … )   [ Done ] */
 .fb-head {
-  display: flex; align-items: center; gap: var(--space-150); flex-shrink: 0;
-  padding: var(--space-150) var(--space-200);
+  position: relative;              /* the pipeline tab hangs off this edge */
+  display: flex; align-items: center; gap: var(--space-200); flex-shrink: 0;
+  padding: var(--space-200) var(--space-300);
   background: var(--surface-primary); border-bottom: 1px solid var(--border-subtle);
 }
 .fb-title {
   font-size: var(--text-lg); font-weight: var(--weight-bold);
-  color: var(--text-heading); flex: 1;
+  color: var(--text-heading); line-height: 1.2;
+}
+/* Takes the slack, so the title stays beside Back and the actions stay right. */
+.fb-err { flex: 1; font-size: var(--text-xs); color: var(--status-danger); text-align: right; }
+
+/* ── Published ───────────────────────────────────────────────────────────────
+   The link takes the middle of the header — actually the middle, not the middle of what is
+   left between two buttons of different widths ("Back to editing" is twice "Done", which
+   pushed it 23px right). So the buttons sit at the edges and the link is centred against
+   the header itself. */
+.fb-head.is-published { justify-content: space-between; }
+/* The container is the box now — state, link and Copy inside one edge, Copy on the right. */
+.fb-published {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: var(--space-100);
+  min-width: 0; max-width: calc(100% - 380px);   /* clears both buttons */
+  padding: var(--space-050) var(--space-050) var(--space-050) var(--space-100);
+  background: var(--surface-sunken); border: 1px solid var(--border-subtle);
+  /* Rounded rectangle, like the Pipeline tag — a container holding a result, not a pill
+     reporting a state. The tick inside it stays a circle, because it is one. */
+  border-radius: var(--radius-control);
+  animation: fb-rise var(--dur-slow) var(--ease-decel) both;
+}
+/* Green disc, white tick. The one piece of ornament on this screen, and it is carrying the
+   message: the form exists now. */
+.fb-published-tick {
+  flex-shrink: 0; width: 17px; height: 17px; border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--status-success); color: var(--text-on-accent);
+}
+.fb-published-label {
+  font-size: var(--text-xs); font-weight: var(--weight-semi); color: var(--text-secondary);
+  white-space: nowrap;
+}
+.fb-published-url {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  /* Mono for a string that may be read back character by character. The system has no mono
+     token; flagged with the other page-local notes. */
+  font-family: monospace; font-size: var(--text-sm); color: var(--text-primary);
+  padding-left: var(--space-050); user-select: all;
+}
+.fb-published-url:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+/* translateX(-50%) is the centring, so the animation has to carry it rather than replace
+   it — `transform: none` here would snap the pill half its width to the right. */
+@keyframes fb-rise {
+  from { opacity: 0; transform: translate(-50%, -4px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
-.fb-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-200); }
-
-.fb-foot {
-  display: flex; align-items: center; gap: var(--space-125); flex-shrink: 0;
-  padding: var(--space-150) var(--space-200);
-  background: var(--surface-primary); border-top: 1px solid var(--border-subtle);
+/* The form's link, in the header of an editor for a form that already exists. Quiet: it is
+   reference, not the task. The URL is real text so it can be selected, and it truncates
+   rather than pushing the buttons off the row. */
+.fb-link { display: flex; align-items: center; gap: var(--space-075); min-width: 0; }
+.fb-link-url {
+  font-size: var(--text-xs); color: var(--text-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 320px;
 }
-.fb-err { flex: 1; font-size: var(--text-xs); color: var(--status-danger); }
 
-/* ── The editor ─────────────────────────────────────────────────────────────── */
+.fb-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-300); }
+
+/* ── The editor ───────────────────────────────────────────────────────────────
+   Flex rather than grid because publishing takes the editor out of the flow and the preview
+   has to end up centred on what is left — see .is-published below and slideTo(). */
 .fb-cols {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
-  gap: var(--space-200); align-items: start;
+  display: flex; justify-content: center; align-items: flex-start;
+  gap: var(--space-300);
+  position: relative;              /* the editor is pinned to this while it leaves */
 }
-@media (max-width: 1000px) { .fb-cols { grid-template-columns: 1fr; } }
+.fb-edit {
+  flex: 1 1 0; min-width: 0;
+  transition: opacity var(--dur-slow) var(--ease-decel),
+              transform var(--dur-slow) var(--ease-decel);
+}
+
+/* Publishing: the editor leaves the flow at its full width and fades out to the left, while
+   the preview travels into the middle.
+   Animating the editor's max-width to zero instead — which is what this used to do — meant
+   the preview was dragged along by relayout rather than moving, so it stuttered and there
+   was no slide to see. Now the layout change happens in one frame and the preview is
+   animated from where it was (see slideTo()), which is what makes it read as one movement. */
+.fb-cols.is-published .fb-edit {
+  position: absolute; top: 0; left: 0;
+  opacity: 0; transform: translateX(-40px);
+  pointer-events: none;
+}
+/* The gap belongs to a two-column layout. Left in place it kept the published form 12px
+   right of centre — half a gap it no longer has a neighbour across. */
+.fb-cols.is-published { gap: 0; }
+
+/* Someone who has asked for less movement gets the same two states, arrived at instantly.
+   The FLIP offset is still applied and released either way, so the end position is the same
+   with or without the travel. */
+@media (prefers-reduced-motion: reduce) {
+  .fb-edit, .fb-preview { transition: none; }
+  .fb-published { animation: none; }
+}
+/* "Preview" is the wrong word for it now: this is the form, published. */
+.fb-cols.is-published .fb-preview-badge { opacity: 0; }
+
+/* .ds-input does not declare box-sizing, and three of the four pages that mount this
+   builder have no `*` reset — so an input told to be 333px wide by its grid column painted
+   357px and sat 14px on top of the destination picker beside it. Scoped to the builder
+   because the fix belongs to whoever owns .ds-input, not to this file: flagged. */
+.fb-cols .ds-input { box-sizing: border-box; }
+/* Stacked when there isn't room for both: the preview keeps its width and drops under the
+   editor, and publishing still collapses the editor above it. */
+@media (max-width: 1000px) {
+  .fb-cols { flex-direction: column; align-items: stretch; }
+  .fb-preview { flex: 0 0 auto; width: 100%; position: static; }
+}
 
 .fb-card {
   background: var(--surface-primary); border: 1px solid var(--card-border);
-  border-radius: var(--card-radius); padding: var(--space-200);
-  margin-bottom: var(--space-150);
+  border-radius: var(--card-radius); padding: var(--space-300);
+  margin-bottom: var(--space-200);
 }
 .fb-card:last-child { margin-bottom: 0; }
 .fb-card-title {
   font-size: var(--text-2xs); font-weight: var(--weight-bold);
   letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--text-muted); margin-bottom: var(--space-150);
+  color: var(--text-muted); margin-bottom: var(--space-200);
 }
-.fb-row { display: grid; gap: var(--space-100); margin-bottom: var(--space-150); }
+.fb-row { display: grid; gap: var(--space-150); margin-bottom: var(--space-200); }
 .fb-row:last-child { margin-bottom: 0; }
+/* Same treatment as a card's own title ("FIELDS" in the box below): these label a section of
+   the editor, not a value, and two different label styles in adjacent boxes read as two
+   different kinds of thing. */
 .fb-row label {
-  font-size: var(--text-xs); font-weight: var(--weight-semi); color: var(--text-heading);
+  font-size: var(--text-2xs); font-weight: var(--weight-bold);
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-muted);
 }
 .fb-row .hint { font-size: var(--text-2xs); color: var(--text-muted); font-weight: var(--weight-normal); }
 
 /* ── A field row ────────────────────────────────────────────────────────────────
-   Five columns: grip, what it asks, what it collects, whether it is required, remove.
-   The label and its destination stack in column two, so "Saved to company" sits under
-   the thing it describes rather than becoming a sixth column nobody has room for. */
-/* Every control sits on one grid row and the two captions get rows of their own beneath
-   it. Stacking the destination *inside* column two instead made that column taller than
-   the rest, so `align-items: center` measured against the stack and dropped the type
-   picker, the checkbox and the remove button below the input they belong to. */
+   Five columns, one line: grip, what it asks, where it saves, whether it is required,
+   remove. There is no caption under it — the picker names the destination and the
+   destination carries the type, so a line restating both was the two-control confusion
+   returning as prose.
+   Only "Choose from a list" still adds a second grid row, for its options input. */
 .fb-field {
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) 168px auto auto;
-  column-gap: var(--space-125); row-gap: var(--space-050);
+  /* The destination column is wider than the type picker it replaced: it carries record
+     field names, which are the record's own wording ("Delivery address", "Current title")
+     rather than eight fixed words. */
+  grid-template-columns: 18px minmax(0, 1fr) 208px auto auto;
+  column-gap: var(--space-150); row-gap: var(--space-125);
   align-items: center;
-  padding: var(--space-125) 0;
+  /* Roomier than the controls strictly need: this is a list you read down to check what a
+     form asks, and at --space-125 the rows ran together into a block of inputs. */
+  padding: var(--space-150) 0;
 }
-.fb-field + .fb-field { border-top: 1px solid var(--border-hairline); }
+/* No rules between rows. Each row is already a line of bordered controls, so a hairline
+   under every one of them was a second grid drawn over the first. */
 
-/* Where the value lands on the record. A mapped field feeds the card's own column — and
-   through it the directory pages and contact dedupe — while a custom field is only stored.
-   The row looked identical either way before this.
-
-   Its own grid row, starting under the input it describes. */
-.fb-dest {
-  grid-column: 2 / -1;
-  font-size: var(--text-2xs); color: var(--text-muted);
+/* ── The destination picker ──────────────────────────────────────────────────
+   A ds-menu, because the list carries things a native <select> cannot: the pipeline it all
+   belongs to, group headings, and a tick per row. What is local here is the trigger (a
+   .ds-input styled as a value + caret — the registry has no select-like trigger) and the
+   panel's header. Flagged for the design system's owner. */
+.fb-dest-pick { position: relative; min-width: 0; }
+.fb-dest-trigger {
+  display: flex; align-items: center; gap: var(--space-100);
+  width: 100%; cursor: pointer; text-align: left;
 }
+.fb-dest-current {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.fb-dest-trigger .ds-menu-caret { flex-shrink: 0; color: var(--text-muted); display: flex; }
+/* It is shaped like a field but behaves like a button, so it answers like one: a tint, not
+   just an edge. .ds-input:hover only moves the border, which is right for something you type
+   into and too quiet for something you click. */
+.fb-dest-trigger:hover:not(:disabled) {
+  background: var(--accent-subtle); border-color: var(--border-accent); color: var(--text-accent);
+  box-shadow: inset 0 0 0 1px var(--border-accent);
+}
+.fb-dest-trigger:hover:not(:disabled) .ds-menu-caret { color: var(--text-accent); }
+/* "Save to" before anything is picked. Same colour .ds-input gives its own placeholder, so
+   an empty picker and an empty field read as the same kind of empty. */
+.fb-dest-trigger.is-empty .fb-dest-current { color: var(--text-placeholder); font-weight: var(--weight-normal); }
+/* Locked rows: the same control, permanently set. .ds-input:disabled supplies the fill and
+   the ink; the caret dims with it so nothing looks pressable. */
+.fb-dest-trigger:disabled { cursor: default; }
+.fb-dest-trigger:disabled .ds-menu-caret { color: var(--text-disabled); }
+
+/* Long field lists shouldn't run off the screen; the header stays put while they scroll.
+   Tall enough that "Add custom field" is in view on a pipeline with a few custom fields of
+   its own — at 340px the group you were looking for was the one below the fold. */
+.fb-dest-menu { max-height: 440px; overflow-y: auto; }
+
+/* Which record every name below belongs to, and nothing else — the two groups name
+   themselves. `align-items: start` keeps the tag its own width; stretched, a tag spanning
+   the panel stops looking like one object. */
+.fb-dest-head {
+  position: sticky; top: 0; z-index: 1;
+  display: flex; align-items: center; justify-content: flex-start;
+  padding: var(--space-125) var(--menu-item-pad-x) var(--space-150);
+  /* No rule under it either: the tag is a contained object and the space below it is what
+     sets it apart from the list. It stays opaque so items scroll behind it, not under a
+     line. */
+  background: var(--menu-bg);
+}
+/* Only reached when components/pipeline-tag.js is missing — see pipelineTag(). */
+.fb-dest-head-name {
+  font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-heading);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+}
+
+.fb-dest-label { overflow: hidden; text-overflow: ellipsis; }
+/* The current destination, marked by weight and fill rather than by a second tick — the
+   tick on the right already means "another question has this one". */
+.ds-menu__item.is-selected {
+  background: var(--surface-selected); font-weight: var(--weight-semi);
+}
+.fb-dest-tick { display: flex; align-items: center; color: var(--text-muted); }
 
 .fb-grip {
   color: var(--text-disabled); cursor: grab; text-align: center;
@@ -111,16 +300,14 @@ body.fb-locked { overflow: hidden; }
   width: var(--checkbox-size); height: var(--checkbox-size);
   accent-color: var(--checkbox-accent);
 }
-/* Name and Email have no type picker, so their badge lands in the picker's column and a
-   grid item stretches by default — which made a chip look like a disabled input sitting
-   where a control should be. */
-.fb-field > .ds-badge { justify-self: start; }
 .fb-field.is-locked .fb-del { visibility: hidden; }
 .fb-drag-over { box-shadow: inset 0 2px 0 var(--accent-primary); }
 
 /* The options list for "Choose from a list". Spans from the label column to the end so it
    reads as a continuation of the row above it, not a new field. */
 .fb-options { grid-column: 2 / -1; }
+
+.fb-add-btn { margin-top: var(--space-300); }
 
 .fb-note {
   font-size: var(--text-xs); color: var(--text-muted);
@@ -203,10 +390,22 @@ body.fb-locked { overflow: hidden; }
   accent-color: var(--checkbox-accent);
 }
 
-.fb-preview { position: sticky; top: 0; }
-.fb-preview-head {
-  font-size: var(--text-2xs); font-weight: var(--weight-bold);
-  letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--text-muted); margin-bottom: var(--space-125);
+/* Its own width, kept through the publish animation — the editor beside it is what
+   collapses, so the preview must not be the thing that flexes. */
+/* Its own width, kept through the publish animation — the editor beside it is what leaves,
+   so the preview must not be the thing that flexes. The transform transition is the slide
+   into the centre; slideTo() sets the starting offset and then clears it. */
+.fb-preview {
+  flex: 0 0 460px; max-width: 460px; position: sticky; top: 0;
+  /* `position: sticky` is already a positioning context, so the badge anchors to this. */
+  transition: transform var(--dur-slow) var(--ease-decel);
+}
+/* A .ds-badge--accent straddling the preview box's top-left corner. Positioning is this
+   file's job; the chip and its colours are the design system's — the accent variant's fill
+   is opaque, so the box's border passes behind it and appears to stop for it. */
+.fb-preview-badge {
+  position: absolute; z-index: 1; top: 0; left: var(--space-200);
+  transform: translateY(-50%);
+  transition: opacity var(--dur-base) var(--ease-standard);
 }
 .fb-preview .tf-sheet { max-width: 100%; }

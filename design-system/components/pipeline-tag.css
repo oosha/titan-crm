@@ -1,0 +1,61 @@
+/* Pipeline tag — a pipeline's mark and its name, as one object.
+ *
+ * For the surfaces that *name* a pipeline rather than navigate to it: the header of the
+ * form builder's destination picker ("save to → which record?"), a panel title, a
+ * confirmation that names what is about to change. The sidebar's rows are not this
+ * component — those are navigation and belong to titan-sidebar.css.
+ *
+ * Why it is not a .ds-badge variant: every badge colour is a fixed palette entry
+ * (accent/success/teal/…), and a pipeline's colour is data — whatever the person picked
+ * when they made it. So the fill and the edge are mixed from that colour, handed in as
+ * --pipe at the call site:
+ *
+ *   <span class="ds-pipeline-tag" style="--pipe: #7b5ea7">…</span>
+ *
+ * --pipe is the name crm-directory.css already uses for the same thing on the stage track,
+ * and it falls back to --accent-primary so the tag is never colourless.
+ *
+ * The mark is the pipeline glyph the product draws by hand in four places (index.html,
+ * titan-sidebar.js, forms.html, and the form builder). dsPipelineTag() in the module
+ * beside this file is the one copy of it.
+ */
+.ds-pipeline-tag {
+  display: inline-flex; align-items: center; gap: var(--pipe-tag-gap);
+  min-width: 0; max-width: 100%;
+  padding: var(--pipe-tag-pad-y) var(--pipe-tag-pad-x);
+  border-radius: var(--pipe-tag-radius);
+  background: color-mix(in srgb, var(--pipe, var(--accent-primary)) var(--pipe-tag-tint), var(--surface-primary));
+  border: 1px solid color-mix(in srgb, var(--pipe, var(--accent-primary)) var(--pipe-tag-line), var(--border-subtle));
+  font-size: var(--pipe-tag-font); font-weight: var(--weight-semi);
+  color: var(--text-heading); white-space: nowrap;
+}
+
+/* The mark carries the pipeline's colour at full strength — the fill behind it is the same
+   hue heavily diluted, so the two read as one object rather than a chip with a sticker. */
+.ds-pipeline-tag__mark { flex-shrink: 0; display: block; color: var(--pipe, var(--accent-primary)); }
+
+/* A long pipeline name truncates rather than widening the thing that contains the tag,
+   which is usually a panel sized by its list. */
+.ds-pipeline-tag__name { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+/* A folder tab, for a pipeline that names a whole container rather than sitting inside one:
+ * the top corners are rounded, the bottom ones are square, and the bottom border is dropped
+ * so the tab and the box below it read as one shape instead of a label parked on a box.
+ *
+ * Placement stays the caller's, as with every other component here — the tab has to be put
+ * on the container's top edge (`translateY(-100%)`, flush to whichever side it belongs to,
+ * and the container's matching corner squared). /crm/forms and the form builder's modal both
+ * do that; this is the one definition of what the tab looks like when they do.
+ */
+.ds-pipeline-tag--tab {
+  padding: var(--pipe-tag-tab-pad-y) var(--pipe-tag-tab-pad-x);
+  border-bottom: none;
+  border-radius: var(--pipe-tag-tab-radius) var(--pipe-tag-tab-radius) 0 0;
+}
+
+/* Inline in a line of text or a dense header. Shape only — same colours, same structure. */
+.ds-pipeline-tag--sm {
+  --pipe-tag-font: var(--text-xs);
+  --pipe-tag-pad-x: var(--space-075);
+  --pipe-tag-gap: var(--space-050);
+}

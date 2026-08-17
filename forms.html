@@ -72,6 +72,9 @@
   .fl-btn:hover { border-color: var(--dir-accent); color: var(--dir-accent); }
   .fl-btn.icon { width: 36px; padding: 0; }
   .fl-btn.icon.is-done { border-color: #1e8e3e; color: #1e8e3e; }
+  /* Quiet until you go for it: delete sits in a row of everyday actions, so it reads as
+     one of them and only turns red on hover. Same tokens as ds-btn--destructive-quiet. */
+  .fl-btn.danger:hover { border-color: var(--border-danger); color: var(--status-danger); background: var(--status-danger-subtle); }
   .fl-empty { font-size: 13.5px; color: var(--dir-muted); padding: 4px 0 10px; }
 </style>
 </head>
@@ -99,7 +102,15 @@
 <script src="/design-system/components/icon.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
+<!-- The builder labels each field's destination in the record's own words, which
+     crm-schema.js owns — without it the rows fall back to generic names. -->
+<script src="/crm-schema.js"></script>
 <script src="/form-render.js"></script>
+<!-- dsMenu drives the field-destination picker inside form-builder.js: one open at a
+     time, outside click, Escape, arrow keys. -->
+<script src="/design-system/components/menu.js"></script>
+<!-- Pipeline tag names the pipeline in the builder's destination picker. -->
+<script src="/design-system/components/pipeline-tag.js"></script>
 <script src="/form-builder.js"></script>
 <script>
   const esc = window.esc;
@@ -123,6 +134,7 @@
   const ICON_FORM = '<span data-ds-icon="forms" data-size="20"></span>';
   const ICON_OPEN = '<span data-ds-icon="open-external" data-size="15"></span>';
   const ICON_COPY = '<span data-ds-icon="copy" data-size="15"></span>';
+  const ICON_TRASH = '<span data-ds-icon="trash" data-size="15"></span>';
 
   // A pipeline and its form: the tab names the pipeline, the card is the form.
   function groupHTML(pl) {
@@ -152,8 +164,12 @@
         '<div class="fl-main">' +
           '<div class="fl-name">' + esc(f.heading || 'Untitled form') + '</div>' +
           '<div class="fl-meta">' +
-            '<span class="fl-state ' + (f.enabled ? 'on">Active' : 'off">Paused') + '</span>' +
-            '<span class="fl-sep">·</span>' +
+            // "Active" is gone with the pause control (see PAUSE_UI in form-builder.js):
+            // it is now the only state anyone can set, so labelling it said nothing. A
+            // form stored as paused still says so — otherwise the one form whose link
+            // 404s would be the one row that looked like all the others. Opening it in
+            // the editor and saving is what clears it.
+            (f.enabled ? '' : '<span class="fl-state off">Paused</span><span class="fl-sep">·</span>') +
             (n ? '<span><b>' + n + '</b> ' + (n === 1 ? 'submission' : 'submissions') + '</span>'
                : '<span>No submissions yet</span>') +
           '</div>' +
@@ -162,6 +178,9 @@
           '<button class="fl-btn icon" title="Copy link" onclick="copyLink(this, \'' + esc(f.token) + '\')">' + ICON_COPY + '</button>' +
           '<a class="fl-btn icon" title="Open the form" href="' + esc(formUrlFor(f.token)) + '" target="_blank" rel="noopener">' + ICON_OPEN + '</a>' +
           '<button class="fl-btn primary" onclick="editForm(\'' + esc(pl.id) + '\')">Edit</button>' +
+          // Last, and set apart, because it is the one action here that can't be undone.
+          '<button class="fl-btn icon danger" title="Delete this form" aria-label="Delete this form"' +
+            ' onclick="deleteFormFromRow(\'' + esc(pl.id) + '\')">' + ICON_TRASH + '</button>' +
         '</div>' +
       '</div></div>';
   }
@@ -176,14 +195,45 @@
       pipeline: pl,
       form: pl.intakeForm || null,
       personaId: window.PERSONA_ID,
-      title: 'Form — ' + pl.name,
       onSave: async function (form, pipeline) {
         window.DATA.pipelines[pipelineId].intakeForm = form;
         window.DATA.pipelines[pipelineId].customFieldDefs = pipeline.customFieldDefs || [];
         await window.saveData();
         render(window.DATA.pipelines);
       },
+      onDelete: function () { return deleteForm(pipelineId); },
     });
+  }
+
+  // The delete itself, shared by the row's button and the builder's. Restores the form
+  // if the write fails, so a failed delete leaves the row as it was rather than showing
+  // a form that is gone from the page but not from the document.
+  async function deleteForm(pipelineId) {
+    const pl = window.DATA.pipelines[pipelineId];
+    if (!pl || !pl.intakeForm) return;
+    const previous = pl.intakeForm;
+    delete pl.intakeForm;
+    try {
+      await window.saveData();
+    } catch (e) {
+      pl.intakeForm = previous;
+      render(window.DATA.pipelines);
+      throw e;
+    }
+    render(window.DATA.pipelines);
+  }
+
+  // Confirmed with the same wording the builder uses, so deleting from the row and
+  // deleting from inside the editor are the same action, not two.
+  async function deleteFormFromRow(pipelineId) {
+    const pl = PIPELINES[pipelineId];
+    if (!pl) return;
+    if (!window.titanFormBuilder.confirmDelete(pl.name)) return;
+    try { await deleteForm(pipelineId); }
+    catch (e) {
+      document.getElementById('fl-note').textContent =
+        'Couldn’t delete the form: ' + ((e && e.message) || e);
+    }
   }
 
   function copyLink(btn, token) {

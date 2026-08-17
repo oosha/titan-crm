@@ -79,6 +79,31 @@ only redefine semantic tokens; it may not add component rules or new raw values.
 That constraint is what makes exploring cheap: try it, look at the whole product,
 `git checkout` if you don't like it.
 
+### Three habits the tokens are there to break
+
+**Separate with space before you separate with a line.** A rule is the strongest divider
+available and most boundaries are not that strong. Groups inside a menu, sections inside a
+card, rows inside a list: space says "these are different" without drawing anything. Spend
+a line only where being missed would be a mistake — a destructive action under harmless
+ones. `--menu-group-gap` exists so a menu's groups can breathe *instead of* being ruled off,
+and `.ds-menu__sep` is deliberately narrower in purpose than it looks.
+
+**A hover must be felt, not just recoloured.** Swapping ink and edge to accent changes a
+control's colour; it doesn't make it feel pressable. An outlined control gets a tint as well
+(`.ds-btn--secondary:hover` → `--accent-subtle`) *and* an inset 1px ring that doubles its
+edge, because at 1px a hue shift alone is a hairline changing colour. Thicken with a ring,
+not `border-width`: a wider border moves the label inside the box, and `1.5px` snaps back to
+`1px` at dpr 1 — so it would land on some screens and not others. The same goes
+for a heading: `--menu-label-gap` sits below it so the group reads as *this label's* items
+rather than the next line down.
+
+**When something reads as cramped, go up the ramp, don't invent a value.** The scale is
+`--space-025` → `--space-400` (2, 4, 6, 8, 10, 12, 16, 24, 32) and it is complete; tight
+spacing is almost always a step chosen too low, not a missing step. The rule of thumb that
+holds across these screens: **24px between regions, 16px between things inside a region,
+8–12px only between parts of one control.** A `padding: 13px` is the tell that someone
+measured a screenshot instead.
+
 ---
 
 ## Trying a direction *(owner)*

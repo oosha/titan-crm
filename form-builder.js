@@ -11,10 +11,22 @@
 //
 // It never saves anything itself. `onSave(form, pipeline)` hands the edited objects
 // back and the caller decides what that means: POST /api/data for an existing
-// pipeline, or hold it in memory until the pipeline is created.
+// pipeline, or hold it in memory until the pipeline is created. `onDelete()` is the
+// same contract for removal — the builder asks, the caller unsets `intakeForm` and
+// persists.
 //
 // Requires form-render.js (the preview) and form.css + form-builder.css.
 (function () {
+  // Pausing a form is built and works end to end — `enabled: false` makes
+  // GET /api/form 404 exactly like a missing form (api/form.js) — but the control for
+  // it is parked: a tickbox in the editor was the wrong home for it. Flip this back to
+  // true to restore the checkbox and its wiring, both of which are kept below rather
+  // than deleted. Nothing about the stored shape changes while it is off.
+  //
+  // While it is off the builder forces `enabled: true` on whatever it loads, because a
+  // form stored as paused would otherwise have no way back — its link would 404 for
+  // good with no control on any screen to explain it or undo it.
+  const PAUSE_UI = false;
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
@@ -23,48 +35,196 @@
 
   // Where a submitted value lands on the card. Mirrors TARGETS in api/_form.js; the
   // server is what enforces it, this is what the builder offers.
+  //
+  // `type` is not a suggestion — it is the input type this destination implies, and the
+  // only one it can have. A question routed to the record's Phone collects a phone
+  // number; there is no version of that row where it collects a date. That is why the
+  // builder no longer has a type picker: choosing the destination IS choosing the type,
+  // and offering both invited a form that validated one thing into a record field
+  // declared as another.
+  //
+  // `field` is the key the same thing has in crm-schema.js, so the row can be labelled in
+  // the record's own words — "Current title" on a hiring board, "Delivery address" on an
+  // orders one — instead of from a table in here that disagrees with both.
   const TARGETS = [
-    { target: 'name',        label: 'Full name', type: 'text',     locked: true },
-    { target: 'email',       label: 'Email',     type: 'email',    locked: true },
-    { target: 'phone',       label: 'Phone',     type: 'tel' },
-    { target: 'designation', label: 'Job title', type: 'text' },
-    { target: 'company',     label: 'Company',   type: 'text' },
-    { target: 'location',    label: 'Location',  type: 'text' },
-    { target: 'linkedin',    label: 'LinkedIn',  type: 'url' },
-    { target: 'note',        label: 'Message',   type: 'textarea' },
+    { target: 'name',        label: 'Full name', type: 'text',     field: 'contact-name',        locked: true },
+    { target: 'email',       label: 'Email',     type: 'email',    field: 'contact-email',       locked: true },
+    { target: 'phone',       label: 'Phone',     type: 'tel',      field: 'contact-phone' },
+    { target: 'designation', label: 'Job title', type: 'text',     field: 'contact-designation' },
+    { target: 'company',     label: 'Company',   type: 'text',     field: 'company' },
+    { target: 'location',    label: 'Location',  type: 'text',     field: 'contact-location' },
+    { target: 'linkedin',    label: 'LinkedIn',  type: 'url',      field: 'contact-linkedin' },
+    { target: 'note',        label: 'Message',   type: 'textarea', field: 'note' },
   ];
-  // What a field collects, named the way the person building the form thinks about it.
+  const TARGET_BY = {};
+  TARGETS.forEach(function (t) { TARGET_BY[t.target] = t; });
+
+  // A question that isn't one of the record's own fields makes a new field on the record.
+  // That new field needs a type, and this is the only place a type is chosen directly —
+  // which is why the kinds live in the same list as the destinations above rather than in
+  // a second dropdown beside it. One choice: where the answer goes, and what it is.
   //
-  // These used to be the raw HTML input types, lowercase, straight out of the markup —
-  // `text`, `tel`, `url`, `textarea`. Nobody setting up an intake form thinks "I need a
-  // tel"; they think "I need their phone number". The stored value is unchanged and still
-  // the input type, so this is a label map and nothing more; api/_form.js keeps validating
-  // the same strings.
+  // `record` is the type the pipeline's customFieldDefs will carry, and it is a different
+  // vocabulary from the form's input type (opportunity-view.html renders from it:
+  // text | number | date | amount | select). Both halves are written from this one entry,
+  // because a form validating a date into a field declared `text` is the exact mismatch
+  // this list exists to make impossible.
   //
-  // Ordered by how often a form needs them, not alphabetically: the two text fields first,
-  // then the three that describe a way of reaching someone, then the two about when.
-  const TYPES = [
-    { value: 'text',     label: 'Short text',        hint: 'One line' },
-    { value: 'textarea', label: 'Long text',         hint: 'A paragraph' },
-    { value: 'email',    label: 'Email address',     hint: 'Checked before it is accepted' },
-    { value: 'tel',      label: 'Phone number',      hint: '' },
-    { value: 'url',      label: 'Web link',          hint: '' },
-    { value: 'date',     label: 'Date',              hint: '' },
-    { value: 'time',     label: 'Time',              hint: '' },
-    { value: 'select',   label: 'Choose from a list', hint: 'You set the options' },
+  // Only the kinds that survive the whole trip are offered. `time` is missing because the
+  // record has no renderer for it, and `number`/`amount` because api/_form.js has no
+  // validator for them — a question whose answer can't be shown or can't be checked is
+  // worse than one that isn't offered.
+  const CUSTOM_KINDS = [
+    { kind: 'text',     label: 'Short text',    type: 'text',     record: 'text' },
+    { kind: 'textarea', label: 'Long text',     type: 'textarea', record: 'text' },
+    { kind: 'date',     label: 'Date',          type: 'date',     record: 'date' },
+    { kind: 'select',   label: 'Choice list',   type: 'select',   record: 'select' },
   ];
-  const TYPE_LABEL = {};
-  TYPES.forEach(function (t) { TYPE_LABEL[t.value] = t.label; });
+  const KIND_BY_TYPE = {};
+  CUSTOM_KINDS.forEach(function (k) { KIND_BY_TYPE[k.type] = k; });
+
+  // The same correspondence read the other way, for pointing a question at a custom field
+  // the record already has: its stored type decides what the form may ask for, not the
+  // reverse. Types absent here (number, amount) have no form input that can be validated
+  // into them — see the filter in destinationsFor().
+  const RECORD_TO_FORM = { text: 'text', date: 'date', select: 'select' };
+
+  // What the visitor is being asked for, said plainly. Not a control any more — a caption,
+  // so the row can state the consequence of the one choice it does offer.
+  const TYPE_LABEL = {
+    text: 'Short text', textarea: 'Long text', email: 'Email address', tel: 'Phone number',
+    url: 'Web link', date: 'Date', time: 'Time', select: 'Choice list',
+  };
 
   function isLocked(f) { return f.target === 'name' || f.target === 'email'; }
 
-  // The record field a target writes to, in the words the record screen uses. `designation`
-  // and `note` are storage names; nobody reading this row calls them that.
-  const DEST_LABEL = {
-    name: 'name', email: 'email', phone: 'phone', designation: 'job title',
-    company: 'company', location: 'location', linkedin: 'LinkedIn', note: 'notes',
-  };
-  function destLabel(target) { return DEST_LABEL[target] || target; }
+  let BUILDER_SEQ = 0;
+
+  // Labels for the record's fields come from crm-schema.js, which is what owns them —
+  // three pages keeping their own tables is how an orders board came to show "Opportunity
+  // name". The fallback is for a page that forgot the script: the builder should render a
+  // slightly plainer row, not throw.
+  function schemaFor(pipeline) {
+    return (window.titanSchema && pipeline) ? window.titanSchema.resolve(pipeline) : null;
+  }
+  function fieldLabel(schema, t) {
+    return (schema && t.field && schema.byKey[t.field]) ? schema.label(t.field) : t.label;
+  }
+
+  // The destinations this pipeline can actually offer, in the order TARGETS lists them.
+  // A field the entity doesn't have at all (`none` in the schema — Instagram on a hiring
+  // board) is absent from schema.fields and so is never offered: the answer would land
+  // somewhere the record can't show. A field that merely defaults to off is still offered,
+  // with the row saying it is currently hidden — that one is a toggle away, not impossible.
+  function destinationsFor(pipeline, fields, current, created) {
+    const schema = schemaFor(pipeline);
+    const fresh = created || [];
+    const currentTarget = current && current.target;
+    const currentKey = current && current.key;
+    const used = {};
+    const usedKeys = {};
+    (fields || []).forEach(function (f) {
+      if (!f.target) return;
+      if (f.target === 'custom') {
+        // Custom destinations collide by key, not by target — every one of them shares
+        // the target 'custom'.
+        if (f.key && f.key !== currentKey) usedKeys[f.key] = true;
+      } else if (f.target !== currentTarget) {
+        used[f.target] = true;
+      }
+    });
+
+    const own = TARGETS.filter(function (t) {
+      if (t.locked) return false;
+      return !schema || !!schema.byKey[t.field];
+    }).map(function (t) {
+      return {
+        value: 'target:' + t.target,
+        label: fieldLabel(schema, t),
+        used: !!used[t.target],
+        hidden: !!(schema && !schema.on(t.field)),
+        selected: currentTarget === t.target,
+      };
+    });
+
+    // The pipeline's own custom fields, which the record already has and the record page
+    // already renders. Left out until now, so a question could not be pointed at a field
+    // that existed — "Add custom field" was the only route, and it minted a duplicate
+    // beside it. They are record fields for this pipeline, so they belong in that group.
+    const defs = ((pipeline && pipeline.customFieldDefs) || []).filter(function (d) {
+      // Fields this session invented are left out. Choosing "Save to a custom field" creates
+      // the field on the pipeline immediately and renames it from the label as you type — so
+      // listing it here meant your half-typed question appeared, letter by letter, in every
+      // other row's list of the record's fields. It is already represented by the row that
+      // made it, and two questions cannot usefully feed one new field anyway.
+      if (fresh.indexOf(d.key) !== -1) return false;
+      // `number` and `amount` are left out on purpose: api/_form.js has no validator for
+      // either, so a question pointed at one could put letters in a field the record
+      // renders as a number. Offering it would break the one guarantee this list makes —
+      // that what a destination accepts is what the form collects.
+      return RECORD_TO_FORM[d.type || 'text'];
+    });
+    const custom = defs.map(function (d) {
+      return {
+        value: 'existing:' + d.key,
+        label: d.name || d.key,
+        used: !!usedKeys[d.key],
+        hidden: false,
+        selected: currentTarget === 'custom' && currentKey === d.key,
+      };
+    });
+
+    return own.concat(custom);
+  }
+
+  // One row of the picker. A tick on the right for a destination another question already
+  // uses — the state, said once, in the place a list says states, instead of repeating
+  // "already asked" in every label. Ticked rows are unpickable: one record field holds one
+  // answer, and disabling it in place shows why rather than making it vanish.
+  function destItemHTML(d) {
+    const meta = d.used
+      ? '<span class="ds-menu__meta fb-dest-tick">' +
+          (window.dsIcon ? window.dsIcon('check', { size: 13 }) : '✓') + '</span>'
+      // Only when it isn't already spoken for: a row can't usefully say two things.
+      : (d.hidden ? '<span class="ds-menu__meta">Hidden</span>' : '');
+    return '<button type="button" role="menuitem"' +
+      ' class="ds-menu__item' + (d.selected ? ' is-selected' : '') + '"' +
+      ' data-pick="' + esc(d.value) + '"' +
+      (d.used ? ' aria-disabled="true"' : '') +
+      (d.selected ? ' aria-current="true"' : '') + '>' +
+      '<span class="fb-dest-label">' + esc(d.label) + '</span>' + meta +
+    '</button>';
+  }
+
+  // Viewport coordinates for a `--fixed` panel: under its trigger, aligned to its left
+  // edge, and flipped above when there isn't room below — a field near the bottom of a
+  // long form would otherwise open a list you can't see.
+  function placeMenu(trigger, panel) {
+    if (!trigger || !panel) return;
+    const r = trigger.getBoundingClientRect();
+    const gap = 6;
+    panel.style.minWidth = Math.max(r.width, 240) + 'px';
+    panel.style.left = Math.round(r.left) + 'px';
+    // Measured with the panel laid out but not shown, so `display: none` doesn't report 0.
+    panel.style.visibility = 'hidden';
+    panel.style.display = 'block';
+    const h = panel.offsetHeight;
+    panel.style.display = '';
+    panel.style.visibility = '';
+    const below = window.innerHeight - r.bottom;
+    if (below < h + gap && r.top > below) panel.style.top = Math.round(r.top - h - gap) + 'px';
+    else panel.style.top = Math.round(r.bottom + gap) + 'px';
+  }
+
+  // The pipeline the panel's fields belong to, as the design system's Pipeline tag — the
+  // one place that mark and that tint are now defined. The fallback is for a page that
+  // hasn't added components/pipeline-tag.js: a plain name still names the pipeline, which
+  // is the part that carries the meaning.
+  function pipelineTag(pipeline) {
+    const pl = pipeline || {};
+    if (window.dsPipelineTag) return window.dsPipelineTag({ name: pl.name, color: pl.color });
+    return '<span class="fb-dest-head-name">' + esc(pl.name || 'this pipeline') + '</span>';
+  }
 
   function newTokenSuffix() {
     const bytes = new Uint8Array(6);
@@ -94,7 +254,7 @@
   // A form that hasn't been set up yet. It starts accepting responses: the token is random
   // and unguessable, so nothing is reachable until someone shares the link — and setting a
   // form up only to find it silently dropping submissions is the worse failure of the two.
-  // Untick "Accepting responses" to pause it.
+  // Pausing is parked (see PAUSE_UI), so accepting is now the only state a form is in.
   window.titanFormDefault = function (personaId, pipeline) {
     const pl = pipeline || {};
     const kind = pl.type === 'hiring' ? 'hiring' : 'sales';
@@ -153,14 +313,17 @@
         '<div class="fb-card">' +
           '<div class="fb-card-title">Fields</div>' +
           '<div class="fb-fields"></div>' +
-          '<button type="button" class="ds-btn ds-btn--add fb-add-btn">Add a field</button>' +
+          '<button type="button" class="ds-btn ds-btn--add fb-add-btn">Add a new field</button>' +
         '</div>' +
 
-        '<label class="fb-toggle"><input type="checkbox" class="fb-enabled"> Accepting responses</label>' +
+        // Kept, not deleted — see PAUSE_UI at the top of this file.
+        (PAUSE_UI ? '<label class="fb-toggle"><input type="checkbox" class="fb-enabled"> Accepting responses</label>' : '') +
       '</div>' +
 
       '<div class="fb-preview">' +
-        '<div class="fb-preview-head">Preview</div>' +
+        // Sits on the box's own top-left edge rather than on a line above it: a heading
+        // there was a row of the layout, and this is a label on the thing it names.
+        '<span class="ds-badge ds-badge--accent fb-preview-badge">Form Preview</span>' +
         '<div class="tf-sheet"><div class="tf-card fb-body"></div></div>' +
       '</div>' +
     '</div>';
@@ -174,6 +337,13 @@
     this.form = JSON.parse(JSON.stringify(opts.form || window.titanFormDefault(opts.personaId, this.pipeline)));
     this.onSave = opts.onSave || function () {};
     this.origin = opts.origin || location.origin;
+    // Custom-field keys this session invented, so switching such a row to one of the
+    // record's own fields can take its definition back out again — see releaseCustom().
+    // Only these are ever removed; a field that existed before may carry values.
+    this.created = [];
+    // Menu panels are found by id, so two builders on one page (the inline route plus a
+    // modal over it) must not mint the same ones.
+    this.uid = 'fb' + (++BUILDER_SEQ);
 
     host.innerHTML = SHELL;
     this.$ = function (sel) { return host.querySelector(sel); };
@@ -184,15 +354,37 @@
       el.value = self.form[key] || '';
       el.addEventListener('input', function () { self.form[key] = el.value; self.renderPreview(); });
     });
-    this.$('.fb-enabled').checked = !!this.form.enabled;
-    this.$('.fb-enabled').addEventListener('change', function (e) { self.form.enabled = e.target.checked; });
+    if (PAUSE_UI) {
+      this.$('.fb-enabled').checked = !!this.form.enabled;
+      this.$('.fb-enabled').addEventListener('change', function (e) { self.form.enabled = e.target.checked; });
+    } else {
+      // No control means no way back out of a pause, so don't let one persist.
+      this.form.enabled = true;
+    }
     this.$('.fb-add-btn').addEventListener('click', function () { self.addField(); });
     this.wireLogo();
 
+    this.healCustomDefs();
     this.renderFields();
     this.renderPreview();
     this.renderLogo();
   }
+
+  // Forms saved before the destination and the type were one choice can carry a custom
+  // field with no definition on the pipeline, or one with no type — the record page then
+  // has nothing to render it from. Fixed on open, but conservatively: an existing name or
+  // type is left exactly as it is, because the record side is allowed to have set it.
+  Builder.prototype.healCustomDefs = function () {
+    const self = this;
+    (this.form.fields || []).forEach(function (f) {
+      if (f.target !== 'custom' || !f.key) return;
+      if (!Array.isArray(self.pipeline.customFieldDefs)) self.pipeline.customFieldDefs = [];
+      const def = self.pipeline.customFieldDefs.filter(function (d) { return d.key === f.key; })[0];
+      if (!def) { self.syncCustomDef(f); return; }
+      if (!def.type) def.type = (KIND_BY_TYPE[f.type] || CUSTOM_KINDS[0]).record;
+      if (!def.name) def.name = f.label || 'New field';
+    });
+  };
 
   // The logo is stored on the form as a data URI, so it travels with the pipeline
   // document and needs no upload endpoint or asset host. That document is POSTed
@@ -266,31 +458,111 @@
     const host = this.$('.fb-fields');
     host.innerHTML = this.form.fields.map(function (f, i) {
       const locked = isLocked(f);
-      // Where a value lands on the record, said out loud. "Company" writes to the card's
-      // company field — which is what the directory pages and contact dedupe read — while
-      // a custom field is only ever stored. Those are different things and the row used to
-      // look identical either way.
-      const dest = locked
-        ? (f.target === 'name' ? 'Always asked' : 'Always asked')
-        : (f.target === 'custom' ? 'Custom field' : 'Saved to ' + destLabel(f.target));
       const isSelect = f.type === 'select';
+      const dests = destinationsFor(self.pipeline, self.form.fields, f, self.created);
+      const menuId = self.uid + '-dest-' + i;
+      const schema = schemaFor(self.pipeline);
+
+      // Is this field's current destination one this list can offer? A form saved before
+      // the kinds were narrowed may hold something that isn't, and the select has to show
+      // what the field really is rather than defaulting to whatever sits at the top.
+      const selectedAbove = dests.filter(function (d) { return d.selected; })[0];
+      let staleValue = '';
+      let staleLabel = '';
+      if (!locked && !selectedAbove) {
+        if (f.target === 'custom' && !KIND_BY_TYPE[f.type]) {
+          staleValue = 'custom:' + f.type;
+          staleLabel = (TYPE_LABEL[f.type] || f.type) + ' — as saved';
+        } else if (f.target && f.target !== 'custom') {
+          staleValue = 'target:' + f.target;
+          staleLabel = ((TARGET_BY[f.target] || {}).label || f.target) + ' — not on this record type';
+        }
+      }
+
+      // What the closed control says: the destination's own name, because that is the whole
+      // decision this row carries. Until one is picked it says what it wants, the way the
+      // input beside it does.
+      const kindNow = KIND_BY_TYPE[f.type];
+      const chosen = selectedAbove ? selectedAbove.label
+        : (staleLabel || (f.target === 'custom' && kindNow ? kindNow.label + ' — new field' : ''));
+      const triggerLabel = chosen || 'Save to';
+
       return '<div class="fb-field' + (locked ? ' is-locked' : '') + '" data-i="' + i + '"' + (locked ? '' : ' draggable="true"') + '>' +
         '<span class="fb-grip">⋮⋮</span>' +
-        '<input class="ds-input" value="' + esc(f.label || '') + '" data-act="label" placeholder="What to ask for">' +
+        '<input class="ds-input" value="' + esc(f.label || '') + '" data-act="label" placeholder="Field label">' +
+        // One control, not two. "Saves to" is the whole decision: a record field carries
+        // its own type, and the kinds under "Add custom field" are the only case where a
+        // type is picked at all — so they belong in this list rather than in a second
+        // dropdown that could contradict it.
+        //
+        // A ds-menu rather than a <select>: the list needs a pipeline header, group
+        // headings and a tick per row, and a native select can carry none of those.
+        // dsMenu supplies the behaviour (one open at a time, outside click, Escape,
+        // arrow keys) so this is a picker's markup, not a picker's mechanics.
+        // Name and email are the same control as every other row's, permanently set and
+        // disabled. A chip in this column said "this row is a different kind of thing", when
+        // the truth is narrower: it is the same choice, already made and not yours to change.
         (locked
-          ? '<span class="ds-badge">' + (f.target === 'name' ? 'Name' : 'Email') + '</span>'
-          : '<select class="ds-input" data-act="type">' +
-              TYPES.map(function (t) {
-                return '<option value="' + t.value + '"' + (f.type === t.value ? ' selected' : '') + '>' + esc(t.label) + '</option>';
-              }).join('') +
-            '</select>') +
+          ? '<button type="button" class="ds-input fb-dest-trigger" disabled' +
+              ' title="' + esc(f.target === 'name'
+                  ? 'Always asked — every record is listed by name'
+                  : 'Always asked — email is how contacts are matched') + '">' +
+              '<span class="fb-dest-current">' +
+                esc(fieldLabel(schema, TARGET_BY[f.target])) + '</span>' +
+              '<span class="ds-menu-caret">' +
+                (window.dsIcon ? window.dsIcon('caret-down', { size: 12 }) : '▾') + '</span>' +
+            '</button>'
+          : '<div class="fb-dest-pick">' +
+              '<button type="button" class="ds-input fb-dest-trigger' +
+                (chosen ? '' : ' is-empty') + '" data-act="dest"' +
+                ' data-ds-menu="' + esc(menuId) + '" aria-haspopup="menu" aria-expanded="false">' +
+                '<span class="fb-dest-current">' + esc(triggerLabel) + '</span>' +
+                '<span class="ds-menu-caret">' +
+                  (window.dsIcon ? window.dsIcon('caret-down', { size: 12 }) : '▾') + '</span>' +
+              '</button>' +
+              '<div class="ds-menu ds-menu--fixed fb-dest-menu" id="' + esc(menuId) + '" role="menu">' +
+                // The pipeline alone, with no eyebrow over it: the control that opened this
+                // panel already says "Saves to", so repeating it here spent the top of the
+                // panel on a word. The field names still need the pipeline's name to mean
+                // anything — "Location" is meaningless until you know whose record it is on.
+                '<div class="fb-dest-head">' + pipelineTag(self.pipeline) + '</div>' +
+                // Both groups are named, and named for what choosing from them does: point
+                // the question at a field the record has, or make one it doesn't.
+                '<div class="ds-menu__label">Existing fields</div>' +
+                dests.map(function (d) { return destItemHTML(d); }).join('') +
+                // No rule between the groups — the label carries --menu-group-gap above it,
+                // which is the Menu component's way of separating them. See DESIGN-SYSTEM.md,
+                // "separate with space before you separate with a line".
+                '<div class="ds-menu__label">Create a new field</div>' +
+                CUSTOM_KINDS.map(function (k) {
+                  return destItemHTML({
+                    value: 'custom:' + k.kind, label: k.label,
+                    // Only when the current destination isn't already one of the record's
+                    // fields above: a custom field that exists is selected up there, and
+                    // ticking its kind down here as well would show two selections.
+                    selected: f.target === 'custom' && f.type === k.type && !selectedAbove,
+                  });
+                }).join('') +
+                // A stored field this list can't offer — a `time` question from before the
+                // kinds were narrowed, or a target the entity no longer has. Shown as
+                // itself so the row can't claim a destination the field doesn't have.
+                (staleValue
+                  ? '<div class="ds-menu__label">As saved</div>' +
+                    destItemHTML({ value: staleValue, label: staleLabel, selected: true })
+                  : '') +
+              '</div>' +
+            '</div>') +
         '<label class="fb-req"><input type="checkbox" data-act="req"' + (f.required || locked ? ' checked' : '') +
           (locked ? ' disabled' : '') + '> Required</label>' +
         '<button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm fb-del" data-act="del" title="Remove this field">' +
           (window.dsIcon ? window.dsIcon('close', { size: 13 }) : '×') + '</button>' +
-        // Wraps onto its own grid row, under the label it describes — so the controls above
-        // it all sit on one line instead of centring against a two-line column.
-        '<span class="fb-dest">' + esc(dest) + '</span>' +
+        // No caption under the row. The destination names itself in the control, and the
+        // type is the destination's — restating "Phone number · saved to the record's
+        // Phone" under a picker that says "Phone" was the old two-control confusion coming
+        // back as prose. What the caption alone used to carry — that a destination is
+        // switched off on this record type — is marked in the panel, where the choice is
+        // actually made.
+
         // "Choose from a list" is the one type that needs more than a name. It was offered
         // in the picker with no way to enter the options, so picking it produced a dropdown
         // containing only "Choose…" — a type that could not work.
@@ -314,25 +586,37 @@
         f.label = e.target.value;
         // A custom field's name on the pipeline is what the record page shows, so keep
         // the two in step rather than letting the form drift from the record.
-        if (f.target === 'custom') {
-          (self.pipeline.customFieldDefs || []).forEach(function (d) { if (d.key === f.key) d.name = e.target.value; });
-        }
+        self.syncCustomDef(f);
         self.renderPreview();
       });
-      on('type', 'change', function (e) {
-        const f = self.form.fields[i];
-        f.type = e.target.value;
-        // Switching away from a list leaves its options behind as dead data on the stored
-        // form; switching back would silently resurrect them.
-        if (f.type !== 'select') delete f.options;
-        // The options input appears and disappears with the type, so this row is redrawn
-        // rather than patched.
-        self.renderFields();
-        self.renderPreview();
+      // The panel is `--fixed`, so it needs viewport coordinates. Set on the trigger's own
+      // click, which runs before dsMenu's delegated one — so it is positioned by the time
+      // it opens, not a frame later. Fixed, rather than absolute, because .fb-scroll is a
+      // scrolling ancestor and would clip it (see the Menu component's note); dsMenu
+      // closes the panel on scroll, so it can't be left pointing at nothing.
+      const trigger = row.querySelector('[data-act="dest"]');
+      if (trigger) {
+        trigger.addEventListener('click', function () {
+          placeMenu(trigger, document.getElementById(trigger.getAttribute('data-ds-menu')));
+        });
+      }
+      row.querySelectorAll('[data-pick]').forEach(function (item) {
+        item.addEventListener('click', function () {
+          if (item.getAttribute('aria-disabled') === 'true') return;
+          // The options input and the caption both change with the destination, so the row
+          // is redrawn rather than patched.
+          self.setDestination(i, item.getAttribute('data-pick'));
+          self.renderFields();
+          self.renderPreview();
+        });
       });
       on('options', 'input', function (e) {
-        self.form.fields[i].options = e.target.value.split(',')
+        const f = self.form.fields[i];
+        f.options = e.target.value.split(',')
           .map(function (s) { return s.trim(); }).filter(Boolean);
+        // The record renders a choice field from its own def, so the two lists have to be
+        // the same list — otherwise the form offers options the record can't show back.
+        self.syncCustomDef(f);
         self.renderPreview();
       });
       on('req', 'change', function (e) { self.form.fields[i].required = e.target.checked; self.renderPreview(); });
@@ -377,27 +661,122 @@
   // are used up it adds a plain custom field, registered on the pipeline so the record
   // page can render it too. Rename or retype it in the row; nothing here is a
   // commitment.
-  Builder.prototype.addField = function () {
-    const used = this.form.fields.map(function (f) { return f.key; });
-    const next = TARGETS.filter(function (t) { return !t.locked && used.indexOf(t.target) === -1; })[0];
+  // ── Destination ──────────────────────────────────────────────────────────────
+  // The one write path for "where does this answer go", so the form field and the
+  // record's field definition can never be set from different places and disagree.
+  //
+  // Values are "target:<name>" for one of the record's own fields, "custom:<kind>" for a
+  // new one. Both come from the same select.
+  Builder.prototype.setDestination = function (i, value) {
+    const f = this.form.fields[i];
+    if (!f || isLocked(f)) return;
+    const bits = String(value || '').split(':');
 
-    if (next) {
-      this.form.fields.push({ key: next.target, label: next.label, type: next.type, target: next.target, required: false });
-    } else {
-      if (!Array.isArray(this.pipeline.customFieldDefs)) this.pipeline.customFieldDefs = [];
-      const taken = this.pipeline.customFieldDefs.map(function (d) { return d.key; });
-      let n = 1; while (taken.indexOf('cf' + n) !== -1) n++;
-      const key = 'cf' + n;
-      const label = 'New field';
-      this.pipeline.customFieldDefs.push({ key: key, name: label, type: 'text' });
-      this.form.fields.push({ key: key, label: label, type: 'text', target: 'custom', required: false });
+    if (bits[0] === 'target') {
+      const t = TARGET_BY[bits[1]];
+      if (!t) return;
+      this.releaseCustom(f);
+      f.target = t.target;
+      // Mapped fields key by their target, the way the presets and every stored form do.
+      f.key = t.target;
+      f.type = t.type;          // implied, never chosen — see TARGETS
+      delete f.options;
+      return;
     }
+
+    // A custom field the record already has: its stored type is the authority, so the
+    // question takes the input type that fits it rather than redefining the field.
+    if (bits[0] === 'existing') {
+      const def = ((this.pipeline.customFieldDefs) || [])
+        .filter(function (d) { return d.key === bits[1]; })[0];
+      if (!def) return;
+      this.releaseCustom(f);
+      f.target = 'custom';
+      f.key = def.key;
+      f.type = RECORD_TO_FORM[def.type || 'text'] || 'text';
+      if (f.type === 'select') f.options = (def.options || []).slice();
+      else delete f.options;
+      return;
+    }
+
+    const kind = CUSTOM_KINDS.filter(function (k) { return k.kind === bits[1]; })[0];
+    if (!kind) return;
+    if (f.target !== 'custom') {
+      f.key = this.newCustomKey();
+      f.target = 'custom';
+      this.created.push(f.key);
+    }
+    f.type = kind.type;
+    if (f.type !== 'select') delete f.options;
+    else if (!Array.isArray(f.options)) f.options = [];
+    this.syncCustomDef(f);
+  };
+
+  // The pipeline's own definition of a custom field: its name, its type in the record's
+  // vocabulary, and its choices. Written from the form field every time one changes, which
+  // is what stops a form that validates a date from feeding a field declared as text —
+  // the mismatch that existed while the type was a separate control.
+  Builder.prototype.syncCustomDef = function (f) {
+    if (!f || f.target !== 'custom') return;
+    if (!Array.isArray(this.pipeline.customFieldDefs)) this.pipeline.customFieldDefs = [];
+    const kind = KIND_BY_TYPE[f.type] || CUSTOM_KINDS[0];
+    let def = this.pipeline.customFieldDefs.filter(function (d) { return d.key === f.key; })[0];
+    if (!def) { def = { key: f.key }; this.pipeline.customFieldDefs.push(def); }
+    def.name = f.label || def.name || 'New field';
+
+    // `number` and `amount` can only have been chosen on the record side — this list
+    // doesn't offer them (no server-side validator). So don't flatten one back to `text`
+    // just because a form field defaults there; only an explicit Date or Choice overrides
+    // what the record already declares.
+    const recordOnly = def.type === 'number' || def.type === 'amount';
+    if (!recordOnly || kind.record !== 'text') def.type = kind.record;
+
+    if (def.type === 'select') def.options = (f.options || []).slice();
+    else delete def.options;
+  };
+
+  // Switching a field from "new field on the record" to one of the record's own leaves its
+  // definition behind. Dropped only if this session created it: a field that existed
+  // before may already carry values on records, and those would lose the column that
+  // renders them.
+  Builder.prototype.releaseCustom = function (f) {
+    if (!f || f.target !== 'custom') return;
+    const at = this.created.indexOf(f.key);
+    if (at === -1) return;
+    this.created.splice(at, 1);
+    const key = f.key;
+    this.pipeline.customFieldDefs = (this.pipeline.customFieldDefs || [])
+      .filter(function (d) { return d.key !== key; });
+  };
+
+  Builder.prototype.newCustomKey = function () {
+    const taken = (this.pipeline.customFieldDefs || []).map(function (d) { return d.key; });
+    let n = 1; while (taken.indexOf('cf' + n) !== -1) n++;
+    return 'cf' + n;
+  };
+
+  // A new row is blank: no question, no destination. It used to guess — the next record
+  // field still unasked — which meant the two things you have to decide arrived already
+  // decided, and wrongly more often than not. Both controls now show what they want
+  // ("Field label", "Save to") and collect() won't save a row that never answered.
+  Builder.prototype.addField = function () {
+    this.form.fields.push({ key: '', label: '', type: 'text', target: '', required: false });
     this.renderFields();
     this.renderPreview();
   };
 
   Builder.prototype.collect = function () {
     if (!String(this.form.heading || '').trim()) return { error: 'Give the form a title — it’s the first thing a reader sees.' };
+
+    // A row is blank when it is added, so saving has to be the thing that insists on both
+    // halves. Neither can be guessed: an unnamed field renders as its key on the public
+    // form, and one with no destination would collect an answer the record then drops.
+    const blank = this.form.fields.filter(function (f) { return !String(f.label || '').trim(); })[0];
+    if (blank) return { error: 'Give every field a label — one is still empty.' };
+    const homeless = this.form.fields.filter(function (f) { return !f.target; })[0];
+    if (homeless) {
+      return { error: 'Choose where “' + (homeless.label || 'the new field') + '” is saved.' };
+    }
     // The panel no longer asks for these, so they are filled in from what we know.
     if (!String(this.form.recordTitle || '').trim()) this.form.recordTitle = this.pipeline.name || 'New enquiry';
     if (!String(this.form.sourceLabel || '').trim()) this.form.sourceLabel = 'Form';
@@ -406,34 +785,101 @@
     return { form: this.form, pipeline: this.pipeline };
   };
 
+  // ── The link ─────────────────────────────────────────────────────────────────
+  // The form's whole output is a URL, so the builder shows it rather than leaving you to
+  // go and find it on /crm/forms.
+  function formUrl(origin, token) {
+    return (origin || location.origin) + '/f/' + encodeURIComponent(token || '');
+  }
+
+  // Copy, with the button reporting back on itself. No toast: the confirmation belongs on
+  // the control you pressed, and a toast is gone before you've pasted anything.
+  function wireCopy(btn, url) {
+    btn.addEventListener('click', function () {
+      const was = btn.textContent;
+      navigator.clipboard.writeText(url).then(function () {
+        btn.textContent = 'Copied';
+        setTimeout(function () { btn.textContent = was; }, 1400);
+      }).catch(function () { btn.textContent = 'Copy failed'; });
+    });
+  }
+
+  // The link as it appears while editing a form that already exists: one quiet line, the
+  // URL selectable in full. Not a share step — that is for the moment a form is created.
+  function linkRowHTML(url) {
+    return '<div class="fb-link">' +
+      '<span class="fb-link-url">' + esc(url) + '</span>' +
+      '<button type="button" class="ds-btn ds-btn--secondary ds-btn--sm fb-link-copy">Copy link</button>' +
+      '<a class="ds-btn ds-btn--secondary ds-btn--sm" href="' + esc(url) + '" target="_blank" rel="noopener">Open</a>' +
+      '</div>';
+  }
+
+  // One wording for "are you sure", wherever delete is offered. What it has to say is
+  // the part people get wrong about this action: the link dies, the records don't.
+  // Exported because /crm/pipeline/:id/form mounts the builder inline and owns its own
+  // footer, so it can't reuse the modal's button.
+  function confirmDelete(pipelineName) {
+    return confirm('Delete the form on “' + (pipelineName || 'this pipeline') + '”?\n\n' +
+      'Its link stops working immediately and cannot be restored — a new form gets a new link. ' +
+      'Records that already came in through it stay where they are.');
+  }
+
   // ── Inline mount ───────────────────────────────────────────────────────────
   window.titanFormBuilder = {
     mount: function (host, opts) { return new Builder(host, opts); },
+    confirmDelete: confirmDelete,
+    formUrl: formUrl,
+
+    // The same link row the modal header uses, for the inline route — which owns its own
+    // top bar and would otherwise hand-roll a second version of this.
+    linkRow: function (host, token, origin) {
+      if (!host) return;
+      if (!token) { host.innerHTML = ''; return; }
+      const url = formUrl(origin, token);
+      host.innerHTML = linkRowHTML(url);
+      wireCopy(host.querySelector('.fb-link-copy'), url);
+    },
 
     // ── Modal ────────────────────────────────────────────────────────────────
     // Opened over the page it was launched from, so setting up a form never costs
     // you your place — from the new-pipeline modal it stacks on top of it.
     open: function (opts) {
+      const existing = !!(opts.form && opts.form.token);
+      const canDelete = !!(opts.onDelete && existing);
+      const origin = opts.origin || location.origin;
       const wrap = document.createElement('div');
       wrap.className = 'fb-overlay';
+
+      // Every control lives in the header, in both states. Nothing sits at the bottom: the
+      // editor is a list you read downwards, and a footer under it competed with "Add a
+      // field" for the end of that list — the two most different actions on the screen,
+      // adjacent. Publish and the way out belong to the frame instead.
       wrap.innerHTML =
-        '<div class="fb-modal" role="dialog" aria-modal="true">' +
-          '<div class="fb-head">' +
-            '<span class="fb-title">' + esc(opts.title || 'Form setup') + '</span>' +
-            '<button type="button" class="ds-btn ds-btn--ghost ds-btn--icon fb-close" aria-label="Close">' +
-              (window.dsIcon ? window.dsIcon('close', { size: 15 }) : '&times;') + '</button>' +
-          '</div>' +
-          '<div class="fb-scroll"></div>' +
-          '<div class="fb-foot">' +
-            '<span class="fb-err"></span>' +
-            '<button type="button" class="ds-btn ds-btn--ghost fb-cancel">Cancel</button>' +
-            '<button type="button" class="ds-btn ds-btn--primary fb-save">' + esc(opts.saveLabel || 'Save form') + '</button>' +
+        // A frame around the modal, so the pipeline can sit ON its top edge: the modal
+        // itself clips its children (overflow: hidden, rounded corners), so a tab straddling
+        // that edge has to be a sibling of it rather than a child.
+        '<div class="fb-frame">' +
+          (window.dsPipelineTag
+            ? '<span class="fb-modal-pipe">' +
+                window.dsPipelineTag({
+                  name: (opts.pipeline || {}).name,
+                  color: (opts.pipeline || {}).color,
+                  variant: 'tab',
+                }) +
+              '</span>'
+            : '') +
+          '<div class="fb-modal" role="dialog" aria-modal="true">' +
+            '<div class="fb-head"></div>' +
+            '<div class="fb-scroll"></div>' +
           '</div>' +
         '</div>';
       document.body.appendChild(wrap);
       document.body.classList.add('fb-locked');
 
       const builder = new Builder(wrap.querySelector('.fb-scroll'), opts);
+      const head = wrap.querySelector('.fb-head');
+      const cols = wrap.querySelector('.fb-cols');
+      const publishLabel = opts.saveLabel || 'Publish Form';
 
       function close() {
         wrap.remove();
@@ -442,26 +888,188 @@
       }
       function onKey(e) { if (e.key === 'Escape') close(); }
       document.addEventListener('keydown', onKey);
+      wrap.addEventListener('click', function (e) {
+        // The frame is the modal's own box plus the tab overhanging it, so a click landing
+        // on the frame itself is a click on the scrim.
+        if (e.target === wrap || e.target.classList.contains('fb-frame')) close();
+      });
 
-      wrap.querySelector('.fb-close').addEventListener('click', close);
-      wrap.querySelector('.fb-cancel').addEventListener('click', close);
-      wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
 
-      const saveBtn = wrap.querySelector('.fb-save');
-      saveBtn.addEventListener('click', async function () {
+      // ── The editor's header ──────────────────────────────────────────────
+      // Back on the left where a close button used to be — from here the way out is
+      // backwards, to whatever opened this, not a dismissal. Publish on the right, because
+      // that is where the action that finishes a screen goes.
+      function renderEditHead() {
+        head.className = 'fb-head';
+        head.innerHTML =
+          '<button type="button" class="ds-btn ds-btn--secondary ds-btn--sm fb-back">' +
+            (window.dsIcon ? window.dsIcon('back', { size: 13 }) : '&lsaquo;') + 'Back</button>' +
+          // What you are doing, then which record it is for. The pipeline used to be part of
+          // the title string ("Form — Hiring Pipeline"), which made the heading a sentence
+          // about two things; as a tag underneath it is the same object the destination
+          // picker names, so the header and the fields agree on what this form belongs to.
+          '<span class="fb-title">' + esc(opts.title || (existing ? 'Edit form' : 'Create a form')) + '</span>' +
+          '<span class="fb-err"></span>' +
+          // Copy, open and delete only mean something once the form exists, so a new one
+          // gets no menu at all rather than one holding a single dead item.
+          (existing
+            ? '<div class="ds-menu-anchor">' +
+                '<button type="button" class="ds-btn ds-btn--secondary ds-btn--icon fb-more"' +
+                  ' data-ds-menu="' + esc(builder.uid) + '-more" aria-haspopup="menu"' +
+                  ' aria-expanded="false" title="More">' +
+                  (window.dsIcon ? window.dsIcon('dots-three-vertical', { size: 15 }) : '&hellip;') +
+                '</button>' +
+                '<div class="ds-menu ds-menu--below-end" id="' + esc(builder.uid) + '-more" role="menu">' +
+                  '<button type="button" class="ds-menu__item" role="menuitem" data-act="copy">' +
+                    (window.dsIcon ? window.dsIcon('copy', { size: 15 }) : '') + 'Copy link</button>' +
+                  '<a class="ds-menu__item" role="menuitem" target="_blank" rel="noopener"' +
+                    ' href="' + esc(formUrl(origin, opts.form.token)) + '">' +
+                    (window.dsIcon ? window.dsIcon('open-external', { size: 15 }) : '') + 'Open form</a>' +
+                  (canDelete
+                    ? '<div class="ds-menu__sep"></div>' +
+                      '<button type="button" class="ds-menu__item ds-menu__item--danger" role="menuitem"' +
+                        ' data-act="delete">' +
+                        (window.dsIcon ? window.dsIcon('trash', { size: 15 }) : '') + 'Delete form</button>'
+                    : '') +
+                '</div>' +
+              '</div>'
+            : '') +
+          '<button type="button" class="ds-btn ds-btn--primary fb-publish">' + esc(publishLabel) + '</button>';
+
+        head.querySelector('.fb-back').addEventListener('click', close);
+        head.querySelector('.fb-publish').addEventListener('click', publish);
+
+        const copyItem = head.querySelector('[data-act="copy"]');
+        if (copyItem) wireCopy(copyItem, formUrl(origin, opts.form.token));
+
+        const delItem = head.querySelector('[data-act="delete"]');
+        if (delItem) {
+          delItem.addEventListener('click', async function () {
+            if (!confirmDelete(opts.pipeline && opts.pipeline.name)) return;
+            const err = head.querySelector('.fb-err');
+            err.textContent = '';
+            try {
+              // The caller unsets intakeForm and persists; the modal closes only once that
+              // has landed, so a failed write leaves the editor open with the form still
+              // in it rather than looking done.
+              await opts.onDelete();
+              close();
+            } catch (e2) {
+              err.textContent = 'Couldn’t delete: ' + ((e2 && e2.message) || e2);
+            }
+          });
+        }
+      }
+
+      // ── Published ────────────────────────────────────────────────────────
+      // The link is the form's whole output, so it takes the middle of the header — the
+      // one place on this screen nothing else is using — while the preview it belongs to
+      // slides into the middle of the body.
+      function renderPublishedHead(form) {
+        const url = formUrl(origin, form.token);
+        head.className = 'fb-head is-published';
+        head.innerHTML =
+          '<button type="button" class="ds-btn ds-btn--secondary ds-btn--sm fb-reopen">' +
+            (window.dsIcon ? window.dsIcon('back', { size: 13 }) : '&lsaquo;') + 'Back to Editing</button>' +
+          // One container holding the whole result: the state, the link, and the way to take
+          // it with you. Split across three elements it read as three separate things, one
+          // of which happened to be a URL.
+          '<div class="fb-published">' +
+            '<span class="fb-published-tick">' +
+              (window.dsIcon ? window.dsIcon('check', { size: 11 }) : '&check;') + '</span>' +
+            '<span class="fb-published-label">Form published</span>' +
+            // Real text, selectable: this gets pasted into a bio, a message, a printed
+            // sign, so it has to be readable and retypable, not an href you can only click.
+            '<span class="fb-published-url" tabindex="0">' + esc(url) + '</span>' +
+            '<button type="button" class="ds-btn ds-btn--secondary ds-btn--sm fb-published-copy">' +
+              (window.dsIcon ? window.dsIcon('copy', { size: 14 }) : '') + 'Copy</button>' +
+          '</div>' +
+          '<button type="button" class="ds-btn ds-btn--primary fb-done">Done</button>';
+
+        wireCopy(head.querySelector('.fb-published-copy'), url);
+        head.querySelector('.fb-done').addEventListener('click', close);
+        head.querySelector('.fb-reopen').addEventListener('click', backToEditing);
+
+        // Selected on arrival, so ⌘C works without reaching for the button.
+        const urlEl = head.querySelector('.fb-published-url');
+        const range = document.createRange();
+        range.selectNodeContents(urlEl);
+        const sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(range);
+      }
+
+      // The published/editing switch, animated as one movement rather than two.
+      //
+      // The layout change happens in a single frame — the editor is taken out of flow at its
+      // current width, so the preview's box jumps straight to the centre — and then the
+      // preview is put back where it was with a transform and released. It travels from its
+      // old position to its new one under one transition (FLIP), instead of being shoved
+      // along frame by frame by an animating max-width, which is what made it stutter.
+      const editEl = cols && cols.querySelector('.fb-edit');
+      const previewEl = cols && cols.querySelector('.fb-preview');
+
+      function slideTo(published) {
+        if (!cols || !editEl || !previewEl) {
+          if (cols) cols.classList.toggle('is-published', published);
+          return;
+        }
+        const from = previewEl.getBoundingClientRect().left;
+
+        if (published) {
+          // Pinned before it leaves the flow: an absolutely-positioned flex item with no
+          // width of its own would collapse to its content and reflow while fading.
+          editEl.style.width = editEl.getBoundingClientRect().width + 'px';
+          cols.classList.add('is-published');
+        } else {
+          cols.classList.remove('is-published');
+          editEl.style.width = '';     // back in flow, flex decides again
+        }
+
+        const dx = Math.round(from - previewEl.getBoundingClientRect().left);
+        if (!dx) return;
+        previewEl.style.transition = 'none';
+        previewEl.style.transform = 'translateX(' + dx + 'px)';
+
+        // Released on the next frame — and by a timer as a backstop, because if the frame
+        // callback never runs the preview is stranded at its old position with no way back.
+        // Whichever fires first wins; the second call is a no-op.
+        let released = false;
+        const release = function () {
+          if (released) return;
+          released = true;
+          // Cleared rather than set, so the duration and easing stay in the stylesheet.
+          previewEl.style.transition = '';
+          previewEl.style.transform = '';
+        };
+        requestAnimationFrame(release);
+        setTimeout(release, 50);
+      }
+
+      function backToEditing() {
+        slideTo(false);
+        renderEditHead();
+      }
+
+      async function publish() {
+        const btn = head.querySelector('.fb-publish');
+        const err = head.querySelector('.fb-err');
         const out = builder.collect();
-        const err = wrap.querySelector('.fb-err');
         if (out.error) { err.textContent = out.error; return; }
         err.textContent = '';
-        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        btn.disabled = true; btn.textContent = 'Publishing…';
         try {
           await opts.onSave(out.form, out.pipeline);
-          close();
+          // The editor leaves and the preview arrives in one movement, so the form you were
+          // describing becomes the form you just published rather than a new screen.
+          slideTo(true);
+          renderPublishedHead(out.form);
         } catch (e2) {
-          saveBtn.disabled = false; saveBtn.textContent = opts.saveLabel || 'Save form';
-          err.textContent = 'Couldn’t save: ' + ((e2 && e2.message) || e2);
+          btn.disabled = false; btn.textContent = publishLabel;
+          err.textContent = 'Couldn’t publish: ' + ((e2 && e2.message) || e2);
         }
-      });
+      }
+
+      renderEditHead();
 
       return { close: close, builder: builder };
     },

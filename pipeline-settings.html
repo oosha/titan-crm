@@ -371,6 +371,11 @@
 <script src="/crm-schema.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/form-render.js"></script>
+<!-- dsMenu drives the field-destination picker inside form-builder.js: one open at a
+     time, outside click, Escape, arrow keys. -->
+<script src="/design-system/components/menu.js"></script>
+<!-- Pipeline tag names the pipeline in the builder's destination picker. -->
+<script src="/design-system/components/pipeline-tag.js"></script>
 <script src="/form-builder.js"></script>
 
 <div class="app-window">
@@ -1385,15 +1390,26 @@
         pipeline: pipeline,
         form: pipeline.intakeForm || null,
         personaId: window.PERSONA_ID,
-        title: 'Form — ' + pipeline.name,
-        saveLabel: 'Done',
         onSave: function (form, pl) {
           pipeline.intakeForm = form;
           if (pl && pl.customFieldDefs) pipeline.customFieldDefs = pl.customFieldDefs;
           renderIntakeCard();
           psPersistPatch({ intakeForm: pipeline.intakeForm, customFieldDefs: pipeline.customFieldDefs }).then(function (ok) {
-            psToast(ok ? ('Form saved for “' + pipeline.name + '”.') : 'Could not save — try again.', ok);
+            psToast(ok ? ('Form published for “' + pipeline.name + '”.') : 'Could not publish — try again.', ok);
           });
+        },
+        // psPersistPatch Object.assigns onto the stored pipeline, so the key has to be
+        // sent as null to clear it — omitting it would leave the saved form in place.
+        // Every reader guards with `intakeForm && intakeForm.token`, null included.
+        onDelete: async function () {
+          // Persisted first, local state second: psPersistPatch re-reads the document
+          // and patches it independently of this copy, so a failed write must leave the
+          // page still showing the form it failed to remove.
+          const ok = await psPersistPatch({ intakeForm: null });
+          if (!ok) { psToast('Could not delete — try again.', false); throw new Error('save failed'); }
+          delete pipeline.intakeForm;
+          renderIntakeCard();
+          psToast('Form deleted.', true);
         },
       });
     } else if (kind === 'email') {

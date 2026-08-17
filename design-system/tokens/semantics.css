@@ -107,6 +107,8 @@
   --btn-pad-x:   14px;
   --btn-weight:  var(--weight-semi);
   --btn-font:    var(--text-sm);
+  /* Stays 1px: 1.5 snaps back to 1 at dpr 1, so it would thicken on some screens and not
+     others. Weight where it is needed instead — see the hover ring in button.css. */
   --btn-border-width: 1px;
 
   --input-radius: var(--radius-control);
@@ -180,6 +182,29 @@
   --badge-pad-x:  var(--space-075);
   --badge-font:   var(--text-2xs);
 
+  /* Pipeline tag — one pipeline's mark and name as a single object, for the places that
+     name a pipeline rather than navigate to it (a picker's header, a panel title).
+     Deliberately not a --badge variant: every badge colour is a fixed palette entry, and a
+     pipeline's colour is data the person chose, so the fill and edge are mixed from it at
+     the call site through --pipe (the property name crm-directory.css already uses for the
+     stage track). The two mix ratios are the ones the Forms list arrived at on its own. */
+  /* A rounded rectangle, not a lozenge. Fully round read as a status pill — a state
+     something is in — and a pipeline is a thing, named. --radius-control is what the
+     other named, contained objects on these screens use. */
+  --pipe-tag-radius: var(--radius-control);
+  --pipe-tag-pad-x:  var(--space-100);
+  --pipe-tag-pad-y:  3px;
+  --pipe-tag-gap:    var(--space-075);
+  --pipe-tag-font:   var(--text-sm);
+  --pipe-tag-tint:   12%;   /* of --pipe in the fill */
+  --pipe-tag-line:   26%;   /* of --pipe in the border */
+  /* The tab variant: rounder on top, square below, and roomier — it sits on a container's
+     edge and the two are meant to read as one shape, so it carries a tab's proportions
+     rather than a chip's. */
+  --pipe-tag-tab-radius: var(--radius-lg);
+  --pipe-tag-tab-pad-x:  var(--space-200);
+  --pipe-tag-tab-pad-y:  var(--space-125);
+
   /* Menu — the anchored panel behind a three-dot, an account switcher, a split button's
      caret. Three hand-rolled copies exist today (pipeline-nav-menu, card-action-menu,
      account-menu) and they disagree on radius, shadow and padding; these are the values
@@ -196,6 +221,8 @@
   --menu-item-gap:    var(--space-100);
   --menu-sep-color:   var(--border-hairline);
   --menu-gap:         var(--space-050);   /* panel's offset from its trigger */
+  --menu-group-gap:   var(--space-200);   /* air above a group that follows another */
+  --menu-label-gap:   var(--space-125);   /* and below the heading, before its items */
 
   /* Split button — one control, two targets. It inherits every --btn-* value, so it is
      the same height and weight as the button beside it; only the seam is its own.

@@ -26,8 +26,11 @@
      form-builder.js, mounted inline here and opened as a modal from the Forms tab and
      the new-pipeline flow — one editor, three ways in. */
   .fp-wrap { padding: 18px 20px 60px; }
+  /* Delete takes the auto margin so the two actions travel together on the right,
+     rather than delete stranding itself beside the title. */
+  .fp-delete { margin-left: auto; }
   .fp-save {
-    margin-left: auto; height: 34px; padding: 0 15px; border: 1px solid var(--dir-accent);
+    margin-left: var(--space-100); height: 34px; padding: 0 15px; border: 1px solid var(--dir-accent);
     border-radius: 9px; background: var(--dir-accent); color: #fff;
     font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
   }
@@ -49,8 +52,12 @@
         Back
       </span>
       <span class="subpage-title" id="fp-title">Form setup</span>
+      <!-- The form's link, once there is one to show. Filled by titanFormBuilder.linkRow()
+           so this route and the modal show it the same way. -->
+      <span id="fp-link"></span>
       <span class="fp-err" id="fp-err"></span>
-      <button class="fp-save" id="fp-save">Save form</button>
+      <button class="ds-btn ds-btn--destructive-quiet fp-delete" id="fp-delete">Delete form</button>
+      <button class="fp-save" id="fp-save">Publish form</button>
     </div>
 
     <div class="fp-wrap"><div id="fp-host"></div></div>
@@ -60,6 +67,14 @@
 <script src="/design-system/components/icon.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
+<!-- The builder labels each field's destination in the record's own words, which
+     crm-schema.js owns — without it the rows fall back to generic names. -->
+<script src="/crm-schema.js"></script>
+<!-- dsMenu drives the field-destination picker inside form-builder.js: one open at a
+     time, outside click, Escape, arrow keys. -->
+<script src="/design-system/components/menu.js"></script>
+<!-- Pipeline tag names the pipeline in the builder's destination picker. -->
+<script src="/design-system/components/pipeline-tag.js"></script>
 <script src="/form-builder.js"></script>
 <script>
   const SEGS = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
@@ -81,8 +96,34 @@
       document.getElementById('fp-host').innerHTML =
         '<div class="dash-empty">No such pipeline — it may have been deleted.</div>';
       document.getElementById('fp-save').style.display = 'none';
+      document.getElementById('fp-delete').style.display = 'none';
       return;
     }
+
+    // Nothing to delete until there is a stored form: on this route a pipeline with no
+    // form yet opens the editor on a fresh one, and Back is how you abandon that.
+    const delBtn = document.getElementById('fp-delete');
+    if (!(pipeline.intakeForm && pipeline.intakeForm.token)) delBtn.style.display = 'none';
+    delBtn.addEventListener('click', async function () {
+      const err = document.getElementById('fp-err');
+      if (!window.titanFormBuilder.confirmDelete(pipeline.name)) return;
+      err.textContent = '';
+      delBtn.disabled = true; delBtn.textContent = 'Deleting…';
+      // Held before the delete, not read after it: `pipeline` is the same object as
+      // window.DATA.pipelines[PIPELINE_ID], so by then there is nothing to put back.
+      const previous = pipeline.intakeForm;
+      try {
+        delete window.DATA.pipelines[PIPELINE_ID].intakeForm;
+        await window.saveData();
+        // Back to the list, which is where "the form is gone" is legible. Staying here
+        // would leave an editor open on a form that no longer exists.
+        location.href = crmPath('/crm/forms');
+      } catch (e) {
+        window.DATA.pipelines[PIPELINE_ID].intakeForm = previous;
+        delBtn.disabled = false; delBtn.textContent = 'Delete form';
+        err.textContent = 'Couldn’t delete: ' + ((e && e.message) || e);
+      }
+    });
     document.getElementById('fp-title').textContent = 'Form — ' + pipeline.name;
 
     builder = window.titanFormBuilder.mount(document.getElementById('fp-host'), {
@@ -91,22 +132,33 @@
       personaId: window.PERSONA_ID,
     });
 
+    // A form that already exists shows its link straight away. A new one has a token from
+    // the moment the editor opens, but it isn't reachable until this page saves it — so the
+    // row appears after the first save, not before.
+    function showLink() {
+      const f = window.DATA.pipelines[PIPELINE_ID] && window.DATA.pipelines[PIPELINE_ID].intakeForm;
+      window.titanFormBuilder.linkRow(document.getElementById('fp-link'), f && f.token);
+    }
+    showLink();
+
     document.getElementById('fp-save').addEventListener('click', async function () {
       const btn = document.getElementById('fp-save');
       const err = document.getElementById('fp-err');
       const out = builder.collect();
       if (out.error) { err.textContent = out.error; return; }
       err.textContent = '';
-      btn.disabled = true; btn.textContent = 'Saving…';
+      btn.disabled = true; btn.textContent = 'Publishing…';
       try {
         window.DATA.pipelines[PIPELINE_ID].intakeForm = out.form;
         window.DATA.pipelines[PIPELINE_ID].customFieldDefs = out.pipeline.customFieldDefs || [];
         await window.saveData();
-        btn.textContent = 'Saved';
-        setTimeout(function () { btn.disabled = false; btn.textContent = 'Save form'; }, 1200);
+        showLink();
+        delBtn.style.display = '';
+        btn.textContent = 'Published';
+        setTimeout(function () { btn.disabled = false; btn.textContent = 'Publish form'; }, 1200);
       } catch (e) {
-        btn.disabled = false; btn.textContent = 'Save form';
-        err.textContent = 'Couldn’t save: ' + ((e && e.message) || e);
+        btn.disabled = false; btn.textContent = 'Publish form';
+        err.textContent = 'Couldn’t publish: ' + ((e && e.message) || e);
       }
     });
   })();

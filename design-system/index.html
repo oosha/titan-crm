@@ -490,6 +490,7 @@
 <script src="./components/icon.js"></script>
 <script src="./components/button.js"></script>
 <script src="./components/menu.js"></script>
+<script src="./components/pipeline-tag.js"></script>
 <script>
   const css = getComputedStyle(document.documentElement);
   const val = (t) => css.getPropertyValue(t).trim();
@@ -1049,10 +1050,48 @@
         '<code>.ds-btn</code>. Only the seam is this component&rsquo;s &mdash; squared inner ' +
         'corners, a divider mixed from the button&rsquo;s own ink, and pressing as one control.</p>');
 
+    // Shown against real pipeline colours, because the whole point of this one is that its
+    // colour is data: the same markup has to hold up whatever someone picked, which a
+    // single swatch would not show.
+    out += spec('Pipeline tag', 'ds-pipeline-tag', 'md &middot; sm &middot; --pipe carries the pipeline&rsquo;s colour',
+      [['Neo partnerships', '#2170f4'], ['Tee orders', '#e0873f'], ['Hiring Pipeline', '#7b5ea7']]
+        .map(function (p) {
+          return '<div class="wb-row"><span class="wb-key">' + esc(p[1]) + '</span>' +
+            dsPipelineTag({ name: p[0], color: p[1] }) +
+            dsPipelineTag({ name: p[0], color: p[1], size: 'sm' }) + '</div>';
+        }).join('') +
+      '<div class="wb-row"><span class="wb-key">no colour</span>' +
+        dsPipelineTag({ name: 'Untitled pipeline' }) +
+        '<span class="wb-note" style="margin:0">falls back to <code>--accent-primary</code>, ' +
+        'never colourless</span></div>' +
+      '<div class="wb-row"><span class="wb-key">long name</span>' +
+        '<span style="max-width:200px; display:inline-flex">' +
+        dsPipelineTag({ name: 'Partnerships, EMEA and rest of world', color: '#2f9e7d' }) +
+        '</span><span class="wb-note" style="margin:0">truncates rather than widening what ' +
+        'holds it</span></div>' +
+      // Shown on a box, because the whole point of the variant is the seam: a tab rendered
+      // on its own looks like a tag with two odd corners.
+      '<div class="wb-row" style="align-items:flex-start"><span class="wb-key">tab</span>' +
+        '<div style="position:relative; padding-top:var(--space-300)">' +
+          '<span style="position:absolute; top:calc(var(--space-300) + 1px); left:0;' +
+            ' transform:translateY(-100%); display:flex">' +
+            dsPipelineTag({ name: 'Tee orders', color: '#e0873f', variant: 'tab' }) +
+          '</span>' +
+          '<div style="width:260px; height:64px; background:var(--surface-primary);' +
+            ' border:1px solid var(--border-subtle);' +
+            ' border-radius:0 var(--radius-lg) var(--radius-lg) var(--radius-lg)"></div>' +
+        '</div>' +
+        '<span class="wb-note" style="margin:0">bottom border dropped and that corner of the ' +
+          'container squared, so the two are one shape. Placement is the caller&rsquo;s.</span></div>' +
+      '<p class="wb-note" style="margin:var(--space-150) 0 0">Names a pipeline; does not ' +
+        'navigate to one &mdash; the sidebar&rsquo;s rows stay <code>titan-sidebar.css</code>. ' +
+        'Not a Badge variant: badge colours are fixed palette entries and a pipeline&rsquo;s ' +
+        'is whatever the person chose.</p>');
+
     // A registered component with no demo here is a hole in the instrument, so say so
     // rather than quietly rendering four of five.
     const shown = ['Button', 'Input', 'Badge', 'Card', 'Icon', 'Stage chevron', 'Segmented control',
-                   'Menu', 'Split button'];
+                   'Menu', 'Split button', 'Pipeline tag'];
     const missing = (SPECS || []).map(function (c) { return c.name; })
       .filter(function (n) { return shown.indexOf(n) === -1; });
     if (missing.length) {

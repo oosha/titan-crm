@@ -76,7 +76,8 @@
       "avoid": "Do not hand-roll a button. The product currently has 82 button rules across 14 class names — that is the duplication this replaces.",
       "variantNotes": {
         "destructive-quiet": "Outlined, not filled. A \"Delete record\" inside a form the user is editing must not read as the page's primary action. Found on the record screen, which had already forked .ov-btn-danger because no filled variant fit.",
-        "soft": "Filled neutral. Secondary is white with an edge, ghost has no fill at rest; a toolbar button must look like a button without competing with the primary action. The board header had this as three separate inline styles."
+        "soft": "Filled neutral. Secondary is white with an edge, ghost has no fill at rest; a toolbar button must look like a button without competing with the primary action. The board header had this as three separate inline styles.",
+        "hover": "An outlined variant fills on hover (--accent-subtle), recolours its edge and ink, and doubles that edge with an inset 1px ring — a hover that only swaps colours reads as a colour change, not as a response, and at 1px the edge is too fine for a hue shift to register. The ring rather than a wider border: border-width moves the label inside the box, and 1.5px snaps back to 1px at dpr 1."
       }
     },
     {
@@ -215,8 +216,8 @@
         "placement": "'below' | 'below-end' | 'fixed' — ds-menu--below aligns to the trigger's left edge, --below-end to its right, --fixed takes viewport coordinates set by the caller",
         "item": ".ds-menu__item — a <button> or <a>; add an icon element and it lands in the aligned icon column",
         "meta": ".ds-menu__meta — right-aligned secondary text on an item: a count, a shortcut, a state",
-        "separator": ".ds-menu__sep",
-        "label": ".ds-menu__label — an uppercase heading above a group",
+        "separator": ".ds-menu__sep — a rule, for the one boundary that must not be missed (a destructive action under harmless ones). NOT for group boundaries: a label after items already takes --menu-group-gap of space above it.",
+        "label": ".ds-menu__label — an uppercase heading above a group. Takes --menu-label-gap of air below it before its items, and --menu-group-gap above it when it follows another group.",
         "danger": ".ds-menu__item--danger",
         "caret": ".ds-menu-caret — the chevron on whatever opens the menu; rotates 180° while it is open. Also used by Split button.",
         "anchor": ".ds-menu-anchor — a bare positioning context for a --below menu. Use .ds-split only when there really are two buttons."
@@ -232,6 +233,8 @@
         "--menu-item-radius",
         "--menu-item-font",
         "--menu-item-gap",
+        "--menu-label-gap",
+        "--menu-group-gap",
         "--menu-sep-color",
         "--menu-gap"
       ],
@@ -246,7 +249,8 @@
       "avoid": "Positioning is not this component's job — anchor it with a relatively-positioned wrapper (--below/--below-end) or with coordinates (--fixed). Baking position in is what made all three existing copies re-declare everything. Do not use it for navigation between pages; that is the sidebar.",
       "variantNotes": {
         "fixed": "An absolutely-positioned panel is clipped by any overflow ancestor, which is why a three-dot inside a scrolling list needs viewport coordinates instead.",
-        "behaviour": "dsMenu binds by delegation on document, so markup rendered after load works with no re-binding, and it enforces one open menu at a time, outside-click and Escape close, and arrow-key movement. The three hand-rolled copies each implemented a different subset."
+        "behaviour": "dsMenu binds by delegation on document, so markup rendered after load works with no re-binding, and it enforces one open menu at a time, outside-click and Escape close, and arrow-key movement. The three hand-rolled copies each implemented a different subset.",
+        "groups": "Groups are separated by space, not by rules: .ds-menu__label picks up --menu-group-gap when it follows items or a separator, and stays tight when it leads the panel. A line between every group turns a list of choices into a stack of boxes and spends the strongest separator available on the weakest boundary."
       }
     },
     {
@@ -281,6 +285,46 @@
         "not a new button": "Both halves are real .ds-btn, so height, weight, radius and press behaviour come from --btn-*. This file owns only the seam — squared inner corners, the divider, and pressing as one control.",
         "divider": "Mixed from currentColor rather than declared per variant, so a filled primary gets a translucent white line and an outlined secondary a grey one, with no variant per case.",
         "brand colour": "A pipeline's own colour reaches the split by setting --accent-primary on the wrapper, not a background on one half — fill, border and hover all follow from the one property. See crm.html's board header."
+      }
+    },
+    {
+      "name": "Pipeline tag",
+      "category": "composites",
+      "css": "components/pipeline-tag.css",
+      "module": "components/pipeline-tag.js",
+      "render": "dsPipelineTag({ name, color, size, className }) -> html string",
+      "class": "ds-pipeline-tag",
+      "props": {
+        "name": "string — the pipeline's name",
+        "color": "string — the pipeline's own colour, applied as the --pipe custom property",
+        "variant": "'tab' (class .ds-pipeline-tag--tab) — the folder-tab shape, for a tag that sits on a container's top edge",
+        "size": "'md' | 'sm' (class .ds-pipeline-tag--sm)",
+        "className": "string — extra classes for layout only, never for restyling"
+      },
+      "parts": {
+        "mark": ".ds-pipeline-tag__mark — the pipeline glyph, in --pipe at full strength",
+        "name": ".ds-pipeline-tag__name — truncates rather than widening its container"
+      },
+      "shapeTokens": [
+        "--pipe-tag-radius",
+        "--pipe-tag-pad-x",
+        "--pipe-tag-pad-y",
+        "--pipe-tag-gap",
+        "--pipe-tag-font",
+        "--pipe-tag-tint",
+        "--pipe-tag-line",
+        "--pipe-tag-tab-radius",
+        "--pipe-tag-tab-pad-x",
+        "--pipe-tag-tab-pad-y"
+      ],
+      "states": [
+        "default"
+      ],
+      "usage": "Naming a pipeline where a record's field list, a panel or a confirmation needs to say which pipeline it belongs to. The colour is data, handed in as --pipe, so the fill and border are mixed from the pipeline's own colour rather than picked from a palette.",
+      "avoid": "Not for navigation — the sidebar's pipeline rows are titan-sidebar.css and stay there. Not a Badge variant: badge colours are fixed palette entries and a pipeline's colour is arbitrary. The tab variant does not position itself; a tab floating a hairline above its container is the tell that the caller skipped the overlap.",
+      "variantNotes": {
+        "sm": ".ds-pipeline-tag--sm — inline in a dense header or a line of text. Shape only; same colours and structure.",
+        "tab": "ds-pipeline-tag--tab — top corners rounded, bottom corners square, bottom border dropped, so the tag and the container below it read as one shape rather than a label parked on a box. Placement is the caller's, as with Menu: put it on the container's top edge (translateY(-100%), flush to the side it belongs to) and square that corner of the container. /crm/forms builds its rows this way and the form builder's modal wears one on its top edge."
       }
     }
   ],
