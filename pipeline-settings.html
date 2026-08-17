@@ -56,6 +56,27 @@
   .ps-nav-item.is-active .ps-nav-caret { display: inline-flex; }
   /* Panes stay in the DOM when hidden — saveSettings() reads every field by id, so
      a section you never opened still saves. */
+  /* ── Stages: sticky flow over a scrolling list ─────────────────────────────
+     .subpage-body is the scroller, so sticky resolves against it. The flow card
+     keeps its own background — without one the list would show through it. */
+  .ps-flow-card {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--surface-primary);
+  }
+  .ps-stage-list { display: flex; flex-direction: column; gap: var(--space-150); }
+  .ps-stage-item {
+    border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+    padding: var(--space-150); scroll-margin-top: var(--space-200);
+    transition: border-color .15s ease, background .15s ease;
+  }
+  /* The row for the stage selected in the flow above, so clicking a chevron and
+     landing here reads as one movement rather than a jump to an unmarked row. */
+  .ps-stage-item.is-selected { border-color: var(--border-accent); background: var(--surface-selected); }
+  .ps-stage-item-head { display: flex; align-items: center; gap: var(--space-100); margin-bottom: var(--space-100); }
+  .ps-stage-item-dot { width: 10px; height: 10px; border-radius: var(--radius-full); flex-shrink: 0; }
+  .ps-stage-item-name { font-weight: 600; }
+  .ps-stage-item textarea { min-height: 68px; resize: vertical; }
+
   .ps-pane { display: none; }
   .ps-pane.is-active { display: block; }
   .ps-pane > .ps-card:last-child { margin-bottom: 0; }
@@ -388,10 +409,17 @@
         </div><!-- /pane details -->
 
         <div class="ps-pane" data-pane="stages">
-        <div class="ps-card">
+        <!-- The flow stays put while the list below it scrolls, so the stage you are
+             writing about is always visible in context. -->
+        <div class="ps-card ps-flow-card">
           <div class="ps-card-title">Pipeline stages</div>
-          <div class="np-help">Select a stage to configure it. Click its name to rename; drag to reorder.</div>
+          <div class="np-help">Select a stage to jump to it below. Drag to reorder.</div>
           <div class="np-chev-chain" id="ps-stages"></div>
+        </div>
+        <div class="ps-card">
+          <div class="ps-card-title">Stage descriptions</div>
+          <div class="np-help">What each stage means, and when a record belongs in it.</div>
+          <div class="ps-stage-list" id="ps-stage-list"></div>
         </div>
         </div><!-- /pane stages -->
 
@@ -609,6 +637,7 @@
     subject = window.titanSchema.subjectOf(pipeline);
     renderColors();
     renderStages();
+    renderStageList();
     renderIntakeCard();
     renderDefaultOwner();
     renderSubject();
@@ -700,7 +729,10 @@
             '</span>'
           : '');
       chev.querySelector('.np-chev-name').textContent = stage.label || '—';
-      chev.querySelector('.np-chev-name').addEventListener('click', function (e) { e.stopPropagation(); editStage(i); });
+      // The name no longer swaps itself for an inline input on click. Renaming now
+      // happens in the list below, in a field you can see — and clicking the name
+      // was swallowing the click that selects the stage, so the flow's main job
+      // (jump to this stage) didn't work on the most obvious target.
       chev.addEventListener('click', function () { selectStageDetail(i); });
       chev.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectStageDetail(i); }
@@ -792,41 +824,26 @@
       if (idx !== -1) openStageDetailIdx = idx;
     }
     renderStages();
+    renderStageList();
   }
 
-  function editStage(i) {
-    const wrap = document.getElementById('ps-stages');
-    const chev = wrap.querySelector('.np-chev[data-idx="' + i + '"]');
-    if (!chev) return;
-    const nameEl = chev.querySelector('.np-chev-name');
-    if (!nameEl) return;
-    chev.draggable = false;
-    const input = document.createElement('input');
-    input.className = 'np-chev-input';
-    input.value = stages[i].label;
-    input.spellcheck = false;
-    nameEl.replaceWith(input);
-    input.focus();
-    input.select();
-    input.addEventListener('input', function () { stages[i].label = input.value; });
-    const commit = function () { stages[i].label = input.value.trim(); renderStages(); };
-    input.addEventListener('blur', commit);
-    input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-      else if (e.key === 'Escape') { input.value = stages[i].label; input.blur(); }
-    });
+  // Puts the cursor in the new stage's name field in the list, which is where
+  // renaming lives now that the chevron no longer swaps itself for an input.
+  function focusStageName(i) {
+    selectStageDetail(i);
+    const input = document.querySelector('#ps-stage-item-' + i + ' .ps-stage-item-name');
+    if (input) { input.focus(); input.select(); }
   }
-  function flushOpenEdit() {
-    const input = document.querySelector('#ps-stages .np-chev-input');
-    if (!input) return;
-    const chev = input.closest('.np-chev');
-    if (chev) { const i = Number(chev.dataset.idx); if (stages[i]) stages[i].label = input.value.trim(); }
-  }
+
+  // Kept as a no-op seam: saveSettings()/npCreate-style callers still call it, and
+  // the list's inputs write to the stage on each keystroke, so nothing is pending.
+  function flushOpenEdit() {}
   function addStage() {
     stageSeq++; stages.push(ensureStageDetailFields({ key: 's' + stageSeq, label: 'New stage' }));
     openStageDetailIdx = stages.length - 1;
     renderStages();
-    editStage(stages.length - 1);
+    renderStageList();
+    focusStageName(stages.length - 1);
   }
   // From the + that appears hovering the seam between two stages.
   function insertStage(atIndex) {
@@ -834,13 +851,15 @@
     stages.splice(atIndex, 0, ensureStageDetailFields({ key: 's' + stageSeq, label: 'New stage' }));
     openStageDetailIdx = atIndex;
     renderStages();
-    editStage(atIndex);
+    renderStageList();
+    focusStageName(atIndex);
   }
   function removeStage(i) {
     if (stages.length <= 2) return;
     stages.splice(i, 1);
     if (openStageDetailIdx >= stages.length) openStageDetailIdx = stages.length - 1;
     renderStages();
+    renderStageList();
   }
 
   let taskAddOpenForIdx = null;
@@ -848,6 +867,70 @@
     openStageDetailIdx = i;
     taskAddOpenForIdx = null;
     renderStages();
+    renderStageList();
+    scrollStageIntoView(i);
+  }
+
+  // ── Stage list ──
+  // The same stages as the flow above, as rows you can actually write in. Name and
+  // description only: the entry/idle/exit rules have their own screen, and repeating
+  // them here would be two editors for one object.
+  function renderStageList() {
+    const wrap = document.getElementById('ps-stage-list');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const n = stages.length;
+    stages.forEach(function (stage, i) {
+      const row = document.createElement('div');
+      row.className = 'ps-stage-item' + (openStageDetailIdx === i ? ' is-selected' : '');
+      row.id = 'ps-stage-item-' + i;
+      row.innerHTML =
+        '<div class="ps-stage-item-head">' +
+          '<span class="ps-stage-item-dot"></span>' +
+          '<input class="ds-input ps-stage-item-name" aria-label="Stage name">' +
+        '</div>' +
+        '<textarea class="ds-input" aria-label="Stage description" ' +
+          'placeholder="What does this stage mean? When should a record be here?"></textarea>';
+      row.querySelector('.ps-stage-item-dot').style.background = solidShadeFor(color, i, n);
+
+      const name = row.querySelector('.ps-stage-item-name');
+      name.value = stage.label || '';
+      // Renaming here has to reach the chevron above, which draws from the same
+      // object — otherwise the flow keeps showing the old name until a re-render.
+      name.addEventListener('input', function () { stage.label = name.value; renderStages(); });
+      name.addEventListener('focus', function () { selectStageDetail(i); });
+
+      const desc = row.querySelector('textarea');
+      desc.value = stage.description || '';
+      desc.addEventListener('input', function () { stage.description = desc.value; });
+
+      wrap.appendChild(row);
+    });
+  }
+
+  // Scrolls .subpage-body rather than calling scrollIntoView: the flow card is
+  // sticky, so the browser's idea of "in view" puts the row underneath it — hence
+  // subtracting the flow's height.
+  //
+  function scrollStageIntoView(i) {
+    const row = document.getElementById('ps-stage-item-' + i);
+    const scroller = document.querySelector('.subpage-body');
+    if (!row || !scroller) return;
+    const flow = document.querySelector('.ps-flow-card');
+    const offset = (flow ? flow.getBoundingClientRect().height : 0) + 16;
+    const top = row.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+    const target = Math.max(0, top - offset);
+    const start = scroller.scrollTop;
+    if (start === target) return;
+
+    scroller.scrollTo({ top: target, behavior: 'smooth' });
+    // Smooth scrolling is dropped entirely under reduced-motion and in some
+    // browsers, and it fails silently — the row just never arrives, which is the
+    // whole point of the click. If nothing has moved shortly after, jump instead:
+    // an instant scroll beats no scroll.
+    setTimeout(function () {
+      if (scroller.scrollTop === start) scroller.scrollTop = target;
+    }, 80);
   }
 
   function stageDetailSummary(stage) {
