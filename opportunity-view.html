@@ -351,7 +351,13 @@
     display: flex; align-items: center; justify-content: center;
   }
   .crm-act-ic svg { width: 14px; height: 14px; }
-  .crm-empty-state { font-size: 13px; color: #9a9fa7; padding: 4px 0; }
+  .crm-empty-state { font-size: var(--text-sm); color: var(--text-secondary); padding: var(--space-050) 0; }
+  /* An empty queue should say what to do about it, not just that it is empty. */
+  .ov-empty-add {
+    border: none; background: none; padding: 0; font: inherit; font-size: var(--text-sm);
+    font-weight: var(--weight-semi); color: var(--accent-primary); cursor: pointer;
+  }
+  .ov-empty-add:hover { text-decoration: underline; }
   .crm-activity-snippet { font-size: var(--text-sm); line-height: 1.5; color: var(--text-secondary); margin-top: var(--space-050); }
   /* AI summary sparkle only makes sense for emails (AI-summarized); calls, meetings,
      notes, tasks show their own plain text instead — same rule as the mailclient panel. */
@@ -712,14 +718,13 @@
         </div>
 
         <div class="ov-section ds-card ds-card--section">
-          <!-- Was "Upcoming activity", which had to cover both things you must do and
-               things already in the diary, and ended up listing a past meeting as
-               upcoming. This is the to-do list for this record: every row is
-               something to finish and can be ticked off. What happened lives in
-               Activity below; what you start lives in the buttons above. -->
-          <div class="ov-heading">Tasks</div>
+          <!-- A queue of what is still owed on this record: open tasks, meetings not
+               yet held, follow-ups planned. Only things that haven't happened —
+               ticking one off moves it down to Recent activity, which is the log of
+               what has. -->
+          <div class="ov-heading">Upcoming activity</div>
           <div id="ov-upcoming-activity"></div>
-          <div class="crm-add-activity" onclick="addActivity('task')">+ Add task</div>
+          <div class="crm-add-activity" id="ov-add-activity" onclick="addActivity('task')">+ Add activity</div>
         </div>
 
         <div class="ov-section ds-card ds-card--section">
@@ -730,7 +735,7 @@
 
 
         <div class="ov-section ds-card ds-card--section">
-          <div class="ov-heading">Activity</div>
+          <div class="ov-heading">Recent activity</div>
           <div id="ov-recent-activity"></div>
         </div>
 
@@ -1543,12 +1548,15 @@
     const upItems = (card.upcomingActivities && card.upcomingActivities.length) ? card.upcomingActivities : upcomingActivityList();
     up.innerHTML = upItems.length
       ? upItems.map(function (a, i) {
-          // Task-type rows get a real checkbox (matching the mailclient CRM panel's
-          // .crm-act-check look) — checking one off actually completes it here, rather
-          // than just toggling a visual state.
-          const iconHTML = a.type === 'task'
-            ? '<span class="crm-act-check" onclick="toggleActTask(' + i + ')" title="Mark done"><span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l2.6 2.6L11.8 5" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>'
-            : actIcon(a.type);
+          // Everything in this list is something still owed, so everything can be
+          // ticked off — not just rows that happen to be typed 'task'. A meeting
+          // you've held and a follow-up you've sent are as done as a task is, and
+          // there was no way to say so. The type icon moves in beside the text so
+          // it is still clear what kind of thing each row is.
+          const iconHTML =
+            '<span class="crm-act-check" onclick="event.stopPropagation(); toggleActTask(' + i + ')" title="Mark done">' +
+              '<span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.2l2.6 2.6L11.8 5" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
+            '</span>' + (a.type && a.type !== 'task' ? actIcon(a.type) : '');
           // Email/meeting rows open detail (mailclient, or a modal here) on click.
           return '<div class="crm-activity-row clickable" onclick="openActivityDetail(\'upcoming\',' + i + ')">' + iconHTML +
             '<div class="crm-activity-text">' + esc(a.text) + '</div>' +
@@ -1557,7 +1565,13 @@
               : '<div class="crm-activity-date is-undated">No date</div>') +
             '</div>';
         }).join('')
-      : '<div class="crm-empty-state">No upcoming activity.</div>';
+      : '<div class="crm-empty-state">No upcoming activity. ' +
+        '<button class="ov-empty-add" type="button" onclick="addActivity(\'task\')">Add an activity</button></div>';
+
+    // The empty state already offers the action, so the standing link underneath
+    // would be the same offer twice.
+    const addLink = document.getElementById('ov-add-activity');
+    if (addLink) addLink.style.display = upItems.length ? '' : 'none';
 
     const recent = document.getElementById('ov-recent-activity');
     const recentItems = (card.recentActivities && card.recentActivities.length)
@@ -1775,7 +1789,12 @@
     if (!done) return;
     if (done.overdue) card.overdue = false;
     if (!card.recentActivities) card.recentActivities = [];
-    card.recentActivities.unshift({ type: 'task', text: done.text, date: 'Just now' });
+    // Keep the original type: a held meeting should read as a meeting in the log,
+    // not be flattened into a task because that's how it got ticked off.
+    card.recentActivities.unshift({
+      type: done.type || 'task', text: done.text, author: NOTE_AUTHOR,
+      date: formatNoteStamp(new Date()),
+    });
     renderActivityAndFiles();
     schedulePersist();
   }
