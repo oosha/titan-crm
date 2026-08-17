@@ -1992,7 +1992,22 @@
           "token": "default.tebvzeliiwgwlwv12dax00",
           "provider": "cf7",
           "seen": [],
-          "name": "Contact Form 7"
+          "name": "Contact Form 7",
+          "sample": {
+            "values": {
+              "your-name": "John Macker",
+              "your-email": "john@macker.com",
+              "your-subject": "Partnerships of $100M",
+              "your-message": "Need to collaborate. Get back to me"
+            },
+            "at": 1786961711573
+          },
+          "suggested": {
+            "your-name": "name",
+            "your-email": "email",
+            "your-subject": "",
+            "your-message": "note"
+          }
         }
       ]
     }
