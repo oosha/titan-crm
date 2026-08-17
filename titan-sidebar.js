@@ -254,8 +254,6 @@
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'add-team\')">Invite team</div>' +
       '<div class="pipeline-nav-menu-item" onclick="pipelineNavMenuAction(\'pipeline-setting\')">Pipeline setting</div>' +
       '<div class="pipeline-nav-menu-item" data-action="entity-setting" onclick="pipelineNavMenuAction(\'entity-setting\')">Opportunity setting</div>' +
-      '<div class="pipeline-nav-menu-sep"></div>' +
-      '<div class="pipeline-nav-menu-item pnm-delete" onclick="pipelineNavMenuAction(\'delete-pipeline\')">Delete pipeline</div>' +
     '</div>';
   }
 
@@ -485,8 +483,9 @@
     }
     if (kind === 'filter') { alert('Prototype only: "Add filter view" is not wired up yet.'); return; }
     if (kind === 'add-team') { alert('Prototype only: "Invite team" is not wired up yet.'); return; }
-    // Deleting needs the board's confirm-and-repersist path, which lives in crm.html.
-    if (kind === 'delete-pipeline') { alert('Open this pipeline on the board to delete it.'); return; }
+    // No 'delete-pipeline' here: deleting a pipeline takes its records with it, so it
+    // shouldn't sit one hover-and-click away in the nav. It lives on the pipeline
+    // settings page, behind the confirmation there.
   };
 
   // ── Mount ──────────────────────────────────────────────────────────────────

@@ -17,6 +17,54 @@
   }
   .ps-btn-primary:hover { filter: brightness(1.05); }
   .ps-wrap { max-width: 1040px; margin: 0 auto; padding: 28px 24px 60px; }
+
+  /* ── The pipeline settings rail ────────────────────────────────────────────
+     This screen drops the CRM sidebar: it's a screen you go *into*, and the app
+     nav alongside it invites you to leave mid-edit with unsaved changes. The
+     page opts out by simply not rendering #sidebar-mount — titan-sidebar.js
+     guards on it — so the component keeps its "pages don't own sidebar markup"
+     rule and nothing here overrides it. Its stylesheet still loads: it also owns
+     .app-window / .main-area / .subpage-*, the shell this page sits in.
+
+     Page-local, not ds-*: the system has no vertical nav component, and inventing
+     a ds- one here would be inventing a component nobody designed. Reads tokens
+     throughout. The CRM sidebar's .nav-item is deliberately not reused — that's
+     the dark app rail, a different surface with a different job. */
+  .ps-side {
+    width: 248px; flex-shrink: 0; background: var(--surface-primary);
+    border-right: 1px solid var(--border-subtle);
+    padding: var(--space-200) var(--space-150); overflow-y: auto;
+  }
+  .ps-side-label {
+    font-size: var(--text-xs); font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: .05em;
+    padding: 0 var(--space-100) var(--space-100);
+  }
+  .ps-nav { display: flex; flex-direction: column; gap: var(--space-025); }
+  .ps-nav-item {
+    font: inherit; font-size: var(--text-sm); text-align: left; width: 100%;
+    background: none; border: 0; cursor: pointer; color: var(--text-secondary);
+    padding: var(--space-075) var(--space-100); border-radius: var(--radius-sm);
+  }
+  .ps-nav-item:hover { background: var(--surface-hover); color: var(--text-primary); }
+  .ps-nav-item.is-active { background: var(--surface-selected); color: var(--text-primary); font-weight: 600; }
+  /* Panes stay in the DOM when hidden — saveSettings() reads every field by id, so
+     a section you never opened still saves. */
+  .ps-pane { display: none; }
+  .ps-pane.is-active { display: block; }
+  .ps-pane > .ps-card:last-child { margin-bottom: 0; }
+  /* Narrow: the rail becomes a strip of tabs above the content rather than eating
+     a third of the width. */
+  @media (max-width: 860px) {
+    .app-window { flex-direction: column; }
+    .ps-side {
+      width: auto; border-right: 0; border-bottom: 1px solid var(--border-subtle);
+      padding: var(--space-100) var(--space-150); overflow-x: auto;
+    }
+    .ps-side-label { display: none; }
+    .ps-nav { flex-direction: row; flex-wrap: nowrap; }
+    .ps-nav-item { white-space: nowrap; }
+  }
   .ps-card { background: #fff; border: 1px solid #e8eaed; border-radius: 12px; padding: 22px 26px; margin-bottom: 20px; }
   /* Section header — matches .os-card-title on the opportunity settings page. */
   .ps-card-title { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 16px; }
@@ -100,6 +148,20 @@
   }
   .np-rule-input:focus { border-color: #2170f4; box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
   .np-rule-hint { font-size: 12px; color: #9aa1a9; margin-top: 8px; }
+
+  /* Delete-pipeline confirmation. The name is the thing being verified, so it's set
+     large and selectable-looking — but user-select is off so it can't be copy-pasted
+     into the box, which would defeat the point of asking. */
+  .ps-del-warning {
+    font-size: 13.5px; line-height: 1.5; color: var(--text-primary);
+    background: var(--status-danger-subtle); border-radius: var(--radius-md);
+    padding: var(--space-200) var(--space-250); margin-bottom: var(--space-300);
+  }
+  .ps-del-name {
+    font-size: 24px; font-weight: var(--weight-bold); color: var(--text-heading);
+    margin: var(--space-100) 0 var(--space-150); word-break: break-word; user-select: none;
+  }
+  .ps-del-input { min-height: 0; }
   .np-toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px);
     display: flex; align-items: center; gap: 8px;
@@ -263,7 +325,20 @@
 <script src="/form-builder.js"></script>
 
 <div class="app-window">
-  <div id="sidebar-mount"></div>
+  <!-- No #sidebar-mount on purpose: this screen replaces the CRM nav with its own
+       rail (see .ps-side). titan-sidebar.js guards on the element, so leaving it out
+       is the supported way to opt out — the page still loads the component's
+       stylesheet for .app-window / .main-area / .subpage-*. -->
+  <aside class="ps-side">
+    <div class="ps-side-label">Pipeline setting</div>
+    <nav class="ps-nav" id="ps-nav" aria-label="Pipeline settings sections">
+      <button type="button" class="ps-nav-item is-active" data-pane="details" onclick="psShowPane('details')">Pipeline details</button>
+      <button type="button" class="ps-nav-item" data-pane="stages" onclick="psShowPane('stages')">Pipeline stages</button>
+      <button type="button" class="ps-nav-item" data-pane="automation" onclick="psShowPane('automation')">Stage details &amp; automation</button>
+      <!-- Label carries the record type; set in renderIntakeCard(). -->
+      <button type="button" class="ps-nav-item" data-pane="sources" id="ps-nav-sources" onclick="psShowPane('sources')">Configure opportunity sources</button>
+    </nav>
+  </aside>
   <div class="main-area">
 
     <div class="subpage-top">
@@ -272,11 +347,14 @@
         Back
       </span>
       <span class="subpage-title" id="ps-title">Pipeline setting</span>
+      <button class="ds-btn ds-btn--destructive-quiet" onclick="openDeletePipeline()">Delete pipeline</button>
       <button class="ds-btn ds-btn--primary" onclick="saveSettings()">Save changes</button>
     </div>
 
     <div class="subpage-body">
       <div class="ps-wrap">
+        <div class="ps-panes">
+        <div class="ps-pane is-active" data-pane="details">
         <div class="ps-card">
           <div class="ps-card-title">Pipeline details</div>
           <div class="np-label">Pipeline name</div>
@@ -301,18 +379,25 @@
           <select class="np-name-input" id="ps-default-owner"></select>
         </div>
 
+        </div><!-- /pane details -->
+
+        <div class="ps-pane" data-pane="stages">
         <div class="ps-card">
-          <div class="ps-card-title">Stages</div>
+          <div class="ps-card-title">Pipeline stages</div>
           <div class="np-help">Select a stage to configure it. Click its name to rename; drag to reorder.</div>
           <div class="np-chev-chain" id="ps-stages"></div>
         </div>
+        </div><!-- /pane stages -->
 
+        <div class="ps-pane" data-pane="automation">
         <div class="ps-card">
-          <div class="ps-card-title">Stage details</div>
+          <div class="ps-card-title">Stage details &amp; automation</div>
           <div class="np-help">Open a stage to define what happens on entry, during inactivity, and before it moves on.</div>
           <div id="ps-stage-details"></div>
         </div>
+        </div><!-- /pane automation -->
 
+        <div class="ps-pane" data-pane="sources">
         <!-- Same 3-row list as the board's Sources screen — each row opens its
              own screen right here (see openSourceOption()). -->
         <div class="ps-card">
@@ -320,6 +405,8 @@
           <div class="np-help" id="ps-intake-help">Set up your opportunities to arrive on their own from a form, an existing form tool, or matching email.</div>
           <div id="ps-src-grid"></div>
         </div>
+        </div><!-- /pane sources -->
+        </div><!-- /ps-panes -->
 
         <div class="ps-note" id="ps-opener-note"></div>
       </div>
@@ -342,6 +429,32 @@
     <div class="np-footer">
       <button type="button" class="ds-btn ds-btn--ghost" onclick="closeSourceModal()">Cancel</button>
       <button type="button" class="ds-btn ds-btn--primary" onclick="psSaveEmailRule()">Save rule</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete pipeline. Type-the-name rather than a plain confirm(): deleting a pipeline
+     takes every record in it, and that is not something to lose to a stray Return on a
+     dialog you'd stopped reading. The name is shown large because it's the thing being
+     checked — you should be able to see what you're agreeing to destroy. -->
+<div class="np-overlay" id="ps-delete-overlay" onclick="if(event.target===this) closeDeletePipeline()">
+  <div class="np-modal">
+    <div class="np-header">
+      <span class="np-title">Delete pipeline</span>
+      <span class="np-close" onclick="closeDeletePipeline()">&times;</span>
+    </div>
+    <div class="np-body">
+      <div class="ps-del-warning" id="ps-del-warning"></div>
+      <div class="np-rule-label">Type the pipeline name to confirm</div>
+      <div class="ps-del-name" id="ps-del-name"></div>
+      <input class="np-rule-input ps-del-input" id="ps-del-input" type="text"
+             spellcheck="false" autocomplete="off" oninput="onDeleteNameInput()"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();confirmDeletePipeline();}">
+    </div>
+    <div class="np-footer">
+      <button type="button" class="ds-btn ds-btn--ghost" onclick="closeDeletePipeline()">Cancel</button>
+      <button type="button" class="ds-btn ds-btn--destructive" id="ps-del-btn"
+              disabled onclick="confirmDeletePipeline()">Delete pipeline</button>
     </div>
   </div>
 </div>
@@ -378,6 +491,28 @@
   try { editSource = JSON.parse(sessionStorage.getItem('titan-crm-edit-pipeline') || 'null'); } catch (e) {}
   let pipeline = (editSource && editSource.pipelineKey === pipelineKey) ? editSource.pipeline : null;
   function goBack() { location.href = '/crm/pipeline/' + encodeURIComponent(pipelineKey) + location.search; }
+
+  // ── Settings sections ──
+  // One section on screen at a time. The pane lives in the hash so a reload, a
+  // back button, or a link someone pasted ("…/setting#automation") lands on the
+  // section it names — the page is four unrelated jobs and arriving at the wrong
+  // one is the whole cost of getting this wrong.
+  const PS_PANES = ['details', 'stages', 'automation', 'sources'];
+  function psShowPane(name) {
+    if (PS_PANES.indexOf(name) === -1) name = PS_PANES[0];
+    document.querySelectorAll('.ps-nav-item').forEach(function (b) {
+      b.classList.toggle('is-active', b.dataset.pane === name);
+      b.setAttribute('aria-current', b.dataset.pane === name ? 'true' : 'false');
+    });
+    document.querySelectorAll('.ps-pane').forEach(function (p) {
+      p.classList.toggle('is-active', p.dataset.pane === name);
+    });
+    // replaceState, not a hash assignment: this shouldn't stack a history entry
+    // per click, and Back should leave the settings page rather than walk panes.
+    history.replaceState(null, '', location.pathname + location.search + '#' + name);
+  }
+  psShowPane((location.hash || '').replace('#', ''));
+
   const PIPELINE_COLORS = ['#4f6d9e', '#3f8a7d', '#5e8a4e', '#b5813f', '#ab5f74', '#7a6ba3', '#2170f4'];
 
   const EMAIL_TEMPLATE_OPTIONS = [
@@ -1026,6 +1161,8 @@
     const entity = (pipeline && pipeline.entity) || 'Record';
     const many = ((pipeline && pipeline.plural) || 'records').toLowerCase();
     document.getElementById('ps-intake-title').textContent = entity + ' Sources';
+    const navSources = document.getElementById('ps-nav-sources');
+    if (navSources) navSources.textContent = 'Configure ' + entity.toLowerCase() + ' sources';
     document.getElementById('ps-intake-help').textContent =
       'Set up your ' + many + ' to arrive on their own from a form, an existing form tool, or matching email.';
 
@@ -1196,6 +1333,52 @@
     document.querySelectorAll('#ps-subject [data-subject]').forEach(function (b) {
       b.setAttribute('aria-pressed', String(b.dataset.subject === subject));
     });
+  }
+
+  // ── Delete pipeline ────────────────────────────────────────────────────────────
+  // Gated on retyping the name because this takes the pipeline's records with it and
+  // there is no undo. Matching is case-insensitive and trims surrounding whitespace —
+  // the check is "do you know what you're deleting", not a typing test.
+  function pipelineNameForDelete() { return ((pipeline && pipeline.name) || '').trim(); }
+
+  function openDeletePipeline() {
+    const name = pipelineNameForDelete();
+    // The singular is `entity`, not `plural` with the s chopped off — that turns
+    // "opportunities" into "opportunitie".
+    const many = ((pipeline && pipeline.plural) || 'records').toLowerCase();
+    const one = ((pipeline && pipeline.entity) || 'record').toLowerCase();
+    const count = ((pipeline && pipeline.cards) || []).length;
+    document.getElementById('ps-del-warning').textContent = count
+      ? 'This deletes the pipeline and its ' + count + ' ' + (count === 1 ? one : many) + '. This can’t be undone.'
+      : 'This deletes the pipeline. This can’t be undone.';
+    document.getElementById('ps-del-name').textContent = name;
+    const input = document.getElementById('ps-del-input');
+    input.value = '';
+    input.placeholder = name;
+    onDeleteNameInput();
+    document.getElementById('ps-delete-overlay').classList.add('open');
+    input.focus();
+  }
+  function closeDeletePipeline() {
+    document.getElementById('ps-delete-overlay').classList.remove('open');
+  }
+  function deleteNameMatches() {
+    const typed = (document.getElementById('ps-del-input').value || '').trim().toLowerCase();
+    const name = pipelineNameForDelete().toLowerCase();
+    return !!name && typed === name;
+  }
+  function onDeleteNameInput() {
+    document.getElementById('ps-del-btn').disabled = !deleteNameMatches();
+  }
+  function confirmDeletePipeline() {
+    // Enter in the input reaches here too, so re-check rather than trusting the button.
+    if (!deleteNameMatches()) return;
+    // Same handoff the save path uses — crm.html owns PIPELINES, the sidebar and the
+    // empty-board state, so it does the removal and the persist.
+    sessionStorage.setItem('titan-crm-commit-pipeline', JSON.stringify({
+      pipelineKey: pipelineKey, deleted: true,
+    }));
+    location.href = '/crm' + location.search;
   }
 
   function saveSettings() {

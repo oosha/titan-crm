@@ -4614,6 +4614,21 @@
       try { commit = JSON.parse(raw); } catch (e) { return; }
       const p = commit && PIPELINES[commit.pipelineKey];
       if (!p) return;
+      // Deleting is the one commit that isn't a patch: the pipeline, its nav item and
+      // its records all go. Confirmation already happened on the settings page, which
+      // made the user retype the name — this end just carries it out.
+      if (commit.deleted) {
+        delete PIPELINES[commit.pipelineKey];
+        const navItem = document.querySelector('.nav-item[data-pipeline-id="' + commit.pipelineKey + '"]');
+        if (navItem) navItem.remove();
+        // Land on any surviving pipeline; applyEmptyBoardState() handles none left.
+        const next = Object.keys(PIPELINES)[0] || null;
+        currentPipelineId = next;
+        applyEmptyBoardState();
+        if (next) switchPipeline(next);
+        schedulePersist();
+        return;
+      }
       if (commit.patch) Object.assign(p, commit.patch);
       if (commit.newCard) p.cards.push(commit.newCard);
       justCommittedPipelineId = commit.pipelineKey;
