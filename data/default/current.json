@@ -1984,6 +1984,17 @@
           "lastSyncedAt": 1786615109765
         }
       ]
+    },
+    "inbound": {
+      "connections": [
+        {
+          "id": "inmsx2ot5h",
+          "token": "default.tebvzeliiwgwlwv12dax00",
+          "provider": "cf7",
+          "seen": [],
+          "name": "Contact Form 7"
+        }
+      ]
     }
   }
 }
