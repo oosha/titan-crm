@@ -59,6 +59,15 @@
   /* ── Stages: sticky flow over a scrolling list ─────────────────────────────
      .subpage-body is the scroller, so sticky resolves against it. The flow card
      keeps its own background — without one the list would show through it. */
+  /* The stage you're editing is the subject of everything below it, so it grows
+     rather than just tinting — at a glance the flow says which one you're in. */
+  .ps-flow-pick { cursor: pointer; transition: height .15s ease, min-width .15s ease; }
+  .ps-flow-pick .np-chev-name { transition: font-size .15s ease; }
+  /* Two classes, because .np-chev sets its own height further down the sheet and
+     would otherwise win on source order alone. */
+  .np-chev.ps-flow-pick--on { height: 76px; min-width: 140px; }
+  .ps-flow-pick--on .np-chev-name { font-size: var(--text-md); }
+
   .ps-flow-card {
     position: sticky; top: 0; z-index: 2;
     background: var(--surface-primary);
@@ -71,9 +80,9 @@
   }
   /* The row for the stage selected in the flow above, so clicking a chevron and
      landing here reads as one movement rather than a jump to an unmarked row. */
-  .ps-stage-item.is-selected { border-color: var(--border-accent); background: var(--surface-selected); }
+  /* A ring rather than a fill: the row's background is the stage's own colour. */
+  .ps-stage-item.is-selected { border-color: var(--border-accent); box-shadow: 0 0 0 2px var(--accent-muted); }
   .ps-stage-item-head { display: flex; align-items: center; gap: var(--space-100); margin-bottom: var(--space-100); }
-  .ps-stage-item-dot { width: 10px; height: 10px; border-radius: var(--radius-full); flex-shrink: 0; }
   .ps-stage-item-name { font-weight: 600; }
   .ps-stage-item textarea { min-height: 68px; resize: vertical; }
 
@@ -221,6 +230,15 @@
     padding: 0 15px 0 19px; max-width: 100%; white-space: nowrap; overflow: hidden;
     text-overflow: ellipsis; cursor: text;
   }
+  /* The flow's name is an <input> so it can be typed in directly, but it should read
+     as the stage's label, not as a form field sitting inside the chevron — so it is
+     transparent until focused. */
+  input.np-chev-name {
+    width: 100%; background: transparent; border: 0; outline: none;
+    font-family: inherit; cursor: text;
+  }
+  input.np-chev-name:focus { background: rgba(255,255,255,0.92); border-radius: 4px; }
+
   .np-chev-input {
     width: 74%; border: none; outline: none; background: rgba(255,255,255,0.9);
     border-radius: 4px; text-align: center; font-size: 12.5px; font-weight: 700;
@@ -290,7 +308,10 @@
   .ps-stage-editor-meta, .ps-stage-section-hint { font-size: var(--text-xs); color: var(--text-muted); }
   .ps-stage-editor-meta { margin-left: var(--space-100); }
   .ps-stage-section { border-top: 1px solid var(--border-hairline); margin-top: var(--space-300); padding-top: var(--space-200); }
-  .ps-stage-section-head { display: flex; align-items: baseline; gap: var(--space-150); margin-bottom: var(--space-200); }
+  /* Column, not row: the hint is a sentence describing the section, so it reads as
+     a subtitle under the heading rather than a fragment trailing off beside it. */
+  .ps-stage-section-head { display: flex; flex-direction: column; gap: var(--space-025); margin-bottom: var(--space-200); }
+  .ps-stage-section-hint { max-width: 62ch; line-height: 1.5; }
   .ps-stage-section-title, .ps-stage-editor .ds-field-label { font-size: var(--text-md); font-weight: var(--weight-semi); color: var(--text-heading); }
   .ps-stage-field { display: grid; gap: var(--space-075); }
   .ps-stage-row { position: relative; display: flex; align-items: center; gap: var(--space-200); margin-top: var(--space-200); padding-right: calc(var(--btn-height-sm) + var(--space-100)); font-size: var(--text-md); color: var(--text-primary); }
@@ -372,10 +393,10 @@
     <div class="ps-body">
   <aside class="ps-side">
     <nav class="ps-nav" id="ps-nav" aria-label="Pipeline settings sections">
-      <button type="button" class="ps-nav-item is-active" data-pane="details" onclick="psShowPane('details')"><span class="ps-nav-label">Pipeline details</span><span class="ps-nav-caret" data-ds-icon="caret-right" data-size="14"></span></button>
+      <button type="button" class="ps-nav-item is-active" data-pane="details" onclick="psShowPane('details')"><span class="ps-nav-label">Main details</span><span class="ps-nav-caret" data-ds-icon="caret-right" data-size="14"></span></button>
       <button type="button" class="ps-nav-item" data-pane="stages" onclick="psShowPane('stages')"><span class="ps-nav-label">Pipeline stages</span><span class="ps-nav-caret" data-ds-icon="caret-right" data-size="14"></span></button>
-      <button type="button" class="ps-nav-item" data-pane="automation" onclick="psShowPane('automation')"><span class="ps-nav-label">Stage details &amp; automation</span><span class="ps-nav-caret" data-ds-icon="caret-right" data-size="14"></span></button>
-      <button type="button" class="ps-nav-item" data-pane="sources" id="ps-nav-sources" onclick="psShowPane('sources')"><span class="ps-nav-label">Configure opportunity sources</span><span class="ps-nav-caret" data-ds-icon="caret-right" data-size="14"></span></button>
+      <button type="button" class="ps-nav-item" data-pane="automation" onclick="psShowPane('automation')"><span class="ps-nav-label">Stage actions &amp; automation</span><span class="ps-nav-caret" data-ds-icon="caret-right" data-size="14"></span></button>
+      <button type="button" class="ps-nav-item" data-pane="sources" id="ps-nav-sources" onclick="psShowPane('sources')"><span class="ps-nav-label">Add opportunity sources</span><span class="ps-nav-caret" data-ds-icon="caret-right" data-size="14"></span></button>
     </nav>
   </aside>
     <div class="subpage-body">
@@ -383,7 +404,7 @@
         <div class="ps-panes">
         <div class="ps-pane is-active" data-pane="details">
         <div class="ps-card">
-          <div class="ps-card-title">Pipeline details</div>
+          <div class="ps-card-title">Main details</div>
           <div class="np-label">Pipeline name</div>
           <input class="np-name-input" id="ps-name" style="margin-bottom:22px;">
 
@@ -424,9 +445,12 @@
         </div><!-- /pane stages -->
 
         <div class="ps-pane" data-pane="automation">
+        <div class="ps-card ps-flow-card">
+          <div class="ps-card-title">Stage actions &amp; automation</div>
+          <div class="np-help">Pick a stage to define what happens on entry, while it sits there, and before it moves on.</div>
+          <div class="np-chev-chain" id="ps-automation-flow"></div>
+        </div>
         <div class="ps-card">
-          <div class="ps-card-title">Stage details &amp; automation</div>
-          <div class="np-help">Open a stage to define what happens on entry, during inactivity, and before it moves on.</div>
           <div id="ps-stage-details"></div>
         </div>
         </div><!-- /pane automation -->
@@ -722,17 +746,20 @@
       chev.setAttribute('aria-pressed', String(openStageDetailIdx === i));
       chev.style.background = shadeFor(color, i, n);
       chev.innerHTML =
-        '<span class="np-chev-name" title="Click to rename" style="color:' + darken(color, 0.5) + ';"></span>' +
+        '<input class="np-chev-name" aria-label="Stage name" draggable="false" style="color:' + darken(color, 0.5) + ';">' +
         (n > 2
           ? '<span class="np-chev-remove" title="Remove stage">' +
               '<span data-ds-icon="close" data-size="9"></span>' +
             '</span>'
           : '');
-      chev.querySelector('.np-chev-name').textContent = stage.label || '—';
-      // The name no longer swaps itself for an inline input on click. Renaming now
-      // happens in the list below, in a field you can see — and clicking the name
-      // was swallowing the click that selects the stage, so the flow's main job
-      // (jump to this stage) didn't work on the most obvious target.
+      const chevName = chev.querySelector('.np-chev-name');
+      chevName.value = stage.label || '';
+      chevName.addEventListener('input', function () { syncStageLabel(i, chevName.value, 'flow'); });
+      // The chevron is draggable for reordering, which otherwise swallows the
+      // mousedown that would put a caret in the field. Release it while editing.
+      chevName.addEventListener('focus', function () { chev.draggable = false; selectStageDetail(i); });
+      chevName.addEventListener('blur', function () { chev.draggable = true; });
+      chevName.addEventListener('keydown', function (e) { if (e.key === 'Enter') chevName.blur(); });
       chev.addEventListener('click', function () { selectStageDetail(i); });
       chev.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectStageDetail(i); }
@@ -863,11 +890,39 @@
   }
 
   let taskAddOpenForIdx = null;
-  function selectStageDetail(i) {
+  // Selection repaints in place rather than re-rendering both views. It used to call
+  // renderStages() + renderStageList(), which destroyed and rebuilt the very input
+  // the click had just landed in — so the name fields looked editable and weren't:
+  // focus was thrown away on the first keystroke's focus event.
+  function setSelectedStage(i) {
     openStageDetailIdx = i;
+    document.querySelectorAll('#ps-stages .np-chev').forEach(function (chev, idx) {
+      chev.classList.toggle('selected', idx === i);
+      chev.setAttribute('aria-pressed', String(idx === i));
+    });
+    document.querySelectorAll('.ps-stage-item').forEach(function (row, idx) {
+      row.classList.toggle('is-selected', idx === i);
+    });
+  }
+
+  // One label, two inputs. Whichever you type in writes the model and mirrors into
+  // the other — again without a re-render, so the caret stays where you left it.
+  function syncStageLabel(i, value, from) {
+    if (!stages[i]) return;
+    stages[i].label = value;
+    if (from !== 'flow') {
+      const el = document.querySelector('#ps-stages .np-chev[data-idx="' + i + '"] .np-chev-name');
+      if (el && el.value !== value) el.value = value;
+    }
+    if (from !== 'list') {
+      const el = document.querySelector('#ps-stage-item-' + i + ' .ps-stage-item-name');
+      if (el && el.value !== value) el.value = value;
+    }
+  }
+
+  function selectStageDetail(i) {
     taskAddOpenForIdx = null;
-    renderStages();
-    renderStageList();
+    setSelectedStage(i);
     scrollStageIntoView(i);
   }
 
@@ -886,19 +941,18 @@
       row.id = 'ps-stage-item-' + i;
       row.innerHTML =
         '<div class="ps-stage-item-head">' +
-          '<span class="ps-stage-item-dot"></span>' +
           '<input class="ds-input ps-stage-item-name" aria-label="Stage name">' +
         '</div>' +
         '<textarea class="ds-input" aria-label="Stage description" ' +
           'placeholder="What does this stage mean? When should a record be here?"></textarea>';
-      row.querySelector('.ps-stage-item-dot').style.background = solidShadeFor(color, i, n);
+      // Tinted with the same progression as its chevron, so a row and the stage it
+      // belongs to are the same colour rather than related by a small dot.
+      row.style.background = shadeFor(color, i, n);
 
       const name = row.querySelector('.ps-stage-item-name');
       name.value = stage.label || '';
-      // Renaming here has to reach the chevron above, which draws from the same
-      // object — otherwise the flow keeps showing the old name until a re-render.
-      name.addEventListener('input', function () { stage.label = name.value; renderStages(); });
-      name.addEventListener('focus', function () { selectStageDetail(i); });
+      name.addEventListener('input', function () { syncStageLabel(i, name.value, 'list'); });
+      name.addEventListener('focus', function () { setSelectedStage(i); });
 
       const desc = row.querySelector('textarea');
       desc.value = stage.description || '';
@@ -940,25 +994,45 @@
     return bits.join(' · ');
   }
 
+  // A read-only copy of the flow, purely for picking which stage you are editing.
+  // No drag, no rename — that is the stages screen's job; here the flow is a
+  // selector, and doubling it as an editor is how you end up with two of everything.
+  function renderAutomationFlow() {
+    const wrap = document.getElementById('ps-automation-flow');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const n = stages.length;
+    stages.forEach(function (stage, i) {
+      const chev = document.createElement('div');
+      chev.className = 'np-chev ds-stage ds-stage--sm ps-flow-pick' +
+        (openStageDetailIdx === i ? ' selected ps-flow-pick--on' : '') +
+        (i === 0 ? ' ds-stage--first' : '') + (i === n - 1 ? ' ds-stage--last' : '');
+      chev.setAttribute('role', 'button');
+      chev.setAttribute('tabindex', '0');
+      chev.setAttribute('aria-pressed', String(openStageDetailIdx === i));
+      chev.style.background = shadeFor(color, i, n);
+      chev.innerHTML = '<span class="np-chev-name" style="color:' + darken(color, 0.5) + ';"></span>';
+      chev.querySelector('.np-chev-name').textContent = stage.label || '—';
+      const pick = function () { openStageDetailIdx = i; renderStageDetails(); };
+      chev.addEventListener('click', pick);
+      chev.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); }
+      });
+      wrap.appendChild(chev);
+    });
+  }
+
   function renderStageDetails() {
     const wrap = document.getElementById('ps-stage-details');
+    if (!wrap) return;
     wrap.innerHTML = '';
     if (!stages.length) return;
+    // Land on the first stage rather than nothing, so the screen opens with
+    // something to read instead of an empty panel.
+    if (openStageDetailIdx === null || !stages[openStageDetailIdx]) openStageDetailIdx = 0;
+    renderAutomationFlow();
     const detailBodies = [];
-    stages.forEach(function (item, index) {
-      ensureStageDetailFields(item);
-      const detail = document.createElement('div');
-      detail.className = 'ps-stage-detail' + (openStageDetailIdx === index ? ' open' : '');
-      detail.innerHTML = '<div class="ps-stage-detail-header" role="button" tabindex="0" aria-expanded="' + (openStageDetailIdx === index) + '"><span class="ps-stage-detail-dot" style="background:' + solidShadeFor(color, index, stages.length) + ';"></span><span class="ps-stage-detail-name"></span><span class="ps-stage-detail-summary"></span><span class="ps-stage-detail-chevron"><span data-ds-icon="expand" data-size="12"></span></span></div><div class="ps-stage-detail-body"></div>';
-      detail.querySelector('.ps-stage-detail-name').textContent = item.label || 'Untitled stage';
-      detail.querySelector('.ps-stage-detail-summary').textContent = stageDetailSummary(item);
-      const toggle = function () { openStageDetailIdx = openStageDetailIdx === index ? null : index; renderStageDetails(); };
-      detail.querySelector('.ps-stage-detail-header').addEventListener('click', toggle);
-      detail.querySelector('.ps-stage-detail-header').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
-      detailBodies[index] = detail.querySelector('.ps-stage-detail-body');
-      wrap.appendChild(detail);
-    });
-    if (openStageDetailIdx === null || !stages[openStageDetailIdx]) return;
+    detailBodies[openStageDetailIdx] = wrap;
     const i = openStageDetailIdx;
     const stage = ensureStageDetailFields(stages[i]);
     const editor = document.createElement('div');
@@ -992,7 +1066,10 @@
 
     const entryType = ((pipeline && pipeline.entity) || 'record').toLowerCase();
     const entryArticle = /^[aeiou]/.test(entryType) ? 'an' : 'a';
-    const entrySection = addSection('When ' + entryArticle + ' ' + entryType + ' is added to ' + (stage.label || 'this stage'), 'runs once, on entry');
+    const stageName = stage.label || 'this stage';
+    const entrySection = addSection(
+      'When ' + entryArticle + ' ' + entryType + ' is added to ' + stageName,
+      'Runs once, the moment ' + entryArticle + ' ' + entryType + ' lands in this stage.');
     function actionRow(action, ai) {
       const row = document.createElement('div'); row.className = 'ps-stage-row';
       const remove = function () { stage.entry.splice(ai, 1); renderStageDetails(); };
@@ -1017,7 +1094,9 @@
     const addAction = document.createElement('select'); addAction.className = 'ds-input ps-add-action'; addAction.innerHTML = '<option value="">Add an action…</option><option value="email">Send email</option><option value="task">Create task</option>';
     addAction.addEventListener('change', function () { if (!addAction.value) return; stage.entry.push({ id: addAction.value + '-' + Date.now(), type: addAction.value, using: '', value: '', name: '', due: 2 }); renderStageDetails(); }); entrySection.appendChild(addAction);
 
-    const idleSection = addSection('If it goes quiet', 'nothing logged against the record');
+    const idleSection = addSection(
+      'If ' + entryArticle + ' ' + entryType + ' goes quiet',
+      'When nothing has been logged against it for a set number of days.');
     const idleRow = document.createElement('label'); idleRow.className = 'ps-stage-row'; idleRow.innerHTML = '<input type="checkbox"> After <input type="number" class="ds-input ps-number" min="1"> days of no activity,';
     const idleOn = idleRow.querySelector('input[type=checkbox]'), idleDays = idleRow.querySelector('input[type=number]'); idleOn.checked = stage.idle.on; idleDays.value = stage.idle.days; idleDays.disabled = !stage.idle.on;
     const idleAction = document.createElement('select'); idleAction.className = 'ds-input'; idleAction.innerHTML = '<option value="">Select action</option><option value="remind">Remind me</option><option value="email">Send email</option><option value="task">Create task</option>'; idleAction.value = stage.idle.action || ''; idleAction.disabled = !stage.idle.on; idleRow.appendChild(idleAction);
@@ -1025,7 +1104,9 @@
     if (stage.idle.action === 'task') { const task = stage.idle.taskName ? document.createElement('button') : document.createElement('input'); if (stage.idle.taskName) { task.type = 'button'; task.className = 'ds-btn ds-btn--secondary ps-template-link'; task.textContent = stage.idle.taskName; task.title = 'Open and edit this task'; task.disabled = !stage.idle.on; } else { task.className = 'ds-input ps-action-text'; task.placeholder = 'e.g. Book a discovery call'; task.disabled = !stage.idle.on; } const add = document.createElement('button'); add.type = 'button'; add.className = 'ds-btn ds-btn--primary ds-btn--sm'; add.textContent = 'Add'; add.disabled = !stage.idle.on; add.addEventListener('click', function () { if (!task.value.trim()) { task.focus(); return; } stage.idle.taskName = task.value.trim(); renderStageDetails(); }); idleRow.appendChild(task); if (!stage.idle.taskName) idleRow.appendChild(add); }
     idleOn.addEventListener('change', function () { stage.idle.on = idleOn.checked; idleDays.disabled = !idleOn.checked; idleAction.disabled = !idleOn.checked; idleRow.querySelectorAll('select, input').forEach(function (control) { if (control !== idleOn) control.disabled = !idleOn.checked; }); }); idleDays.addEventListener('input', function () { stage.idle.days = Number(idleDays.value) || 1; }); idleAction.addEventListener('change', function () { stage.idle.action = idleAction.value; renderStageDetails(); }); idleSection.appendChild(idleRow);
 
-    const exitSection = addSection('Moving on to the next stage', 'whichever stage follows this one');
+    const exitSection = addSection(
+      'Moving ' + entryArticle + ' ' + entryType + ' to the next stage',
+      'What has to be true before it leaves ' + stageName + ' for whichever stage follows.');
     const radios = document.createElement('div'); radios.className = 'ps-stage-radio'; radios.innerHTML = '<label><input type="radio" name="ps-exit" value="manual"> Move it manually</label><label><input type="radio" name="ps-exit" value="auto"> Move it automatically</label>';
     radios.querySelector('input[value="' + stage.exit.mode + '"]').checked = true; radios.querySelectorAll('input').forEach(function (radio) { radio.addEventListener('change', function () { stage.exit.mode = radio.value; if (radio.value === 'auto') { if (!stage.exit.rules.length) stage.exit.rules.push({ id: 'rule-' + Date.now(), when: '', task: '', field: '', days: 7, join: 'or' }); else { stage.exit.rules[0].when = ''; stage.exit.rules[0].task = ''; } } renderStageDetails(); }); }); exitSection.appendChild(radios);
     if (stage.exit.mode === 'auto') stage.exit.rules.forEach(function (rule, ri) { const row = document.createElement('div'); row.className = 'ps-stage-row'; row.innerHTML = '<span>' + (ri ? 'or when' : 'Move it when') + '</span><select class="ds-input"><option value="task">A task is completed</option><option value="field">Data is added for a field</option><option value="days">Days pass in this stage</option></select><button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm ps-stage-row-remove" title="Remove condition"><span data-ds-icon="close" data-size="14"></span></button>'; const when = row.querySelector('select'); when.value = rule.when; const detail = document.createElement(rule.when === 'days' ? 'input' : 'select'); detail.className = 'ds-input ' + (rule.when === 'days' ? 'ps-number' : ''); if (rule.when === 'days') { detail.type = 'number'; detail.value = rule.days || 7; detail.addEventListener('input', function () { rule.days = Number(detail.value) || 1; }); } else { const source = rule.when === 'task' ? stage.entry.filter(function (x) { return x.type === 'task'; }).map(function (x) { return x.name; }) : RECORD_FIELD_OPTIONS; detail.disabled = rule.when === 'task' && !source.length; detail.innerHTML = rule.when === 'task' ? '<option value="">Select action</option>' + source.map(function (x) { return '<option value="' + escHtml(x) + '">' + escHtml(x) + '</option>'; }).join('') : source.map(function (x) { return '<option value="' + escHtml(x.value) + '">' + escHtml(x.label) + '</option>'; }).join(''); detail.value = rule[rule.when] || ''; detail.addEventListener('change', function () { rule[rule.when] = detail.value; }); } row.insertBefore(detail, row.lastChild); when.addEventListener('change', function () { rule.when = when.value; renderStageDetails(); }); row.querySelector('.ps-stage-row-remove').addEventListener('click', function () { stage.exit.rules.splice(ri, 1); renderStageDetails(); }); exitSection.appendChild(row); });
@@ -1253,7 +1334,7 @@
     document.getElementById('ps-intake-title').textContent = entity + ' Sources';
     // Write the label span, not the button: the button also holds the caret.
     const navSources = document.querySelector('#ps-nav-sources .ps-nav-label');
-    if (navSources) navSources.textContent = 'Configure ' + entity.toLowerCase() + ' sources';
+    if (navSources) navSources.textContent = 'Add ' + entity.toLowerCase() + ' sources';
     document.getElementById('ps-intake-help').textContent =
       'Set up your ' + many + ' to arrive on their own from a form, an existing form tool, or matching email.';
 
