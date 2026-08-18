@@ -234,8 +234,9 @@
   .seq-template-selector:hover { color: var(--text-accent); background: var(--surface-selected); }
   .seq-template-selector .seq-template-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .seq-template-view { margin-left: auto; flex: 0 0 auto; }
+  .seq-timeline-node.has-open-template-menu { z-index: 1000; }
   .seq-template-menu {
-    position: fixed; z-index: 600;
+    position: fixed; z-index: 2000;
     width: min(calc(var(--input-height) * 6), calc(100vw - (var(--space-300) * 2)));
     max-height: calc(100vh - (var(--space-300) * 2)); overflow-y: auto;
     display: grid; gap: var(--space-050); padding: var(--space-075);
@@ -252,9 +253,40 @@
   .seq-template-option:hover { background: var(--surface-hover); }
   .seq-template-option[aria-selected="true"] { background: var(--surface-selected); color: var(--text-accent); font-weight: var(--weight-semi); }
   .seq-template-preview {
-    padding: var(--space-200); border: var(--btn-border-width) solid var(--border-subtle);
+    overflow: hidden; border: var(--btn-border-width) solid var(--border-subtle);
     border-radius: var(--radius-control); background: var(--surface-recessed);
-    display: grid; gap: var(--space-100);
+  }
+  .seq-template-preview-toggle {
+    width: 100%; min-height: var(--input-height); padding: var(--space-150) var(--space-200);
+    display: flex; align-items: center; justify-content: space-between; gap: var(--space-200);
+    border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer;
+    transition: var(--motion-hover);
+  }
+  .seq-template-preview-toggle:hover { background: var(--surface-hover); }
+  .seq-template-preview-toggle:focus-visible {
+    outline: none; box-shadow: inset 0 0 0 calc(var(--btn-border-width) * 2) var(--border-accent);
+  }
+  .seq-template-preview-action {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--space-075);
+    color: var(--text-accent); font-size: var(--text-xs); font-weight: var(--weight-semi);
+  }
+  .seq-template-preview-caret { transition: transform var(--dur-fast) var(--ease-standard); }
+  .seq-template-preview-toggle[aria-expanded="true"] .seq-template-preview-caret { transform: rotate(180deg); }
+  .seq-template-preview-body {
+    display: grid; gap: var(--space-200); padding: var(--space-200);
+    border-top: var(--btn-border-width) solid var(--border-subtle); background: var(--surface-primary);
+  }
+  .seq-template-preview-body[hidden] { display: none; }
+  .seq-template-preview-recipient {
+    display: flex; align-items: center; gap: var(--space-100);
+    color: var(--text-secondary); font-size: var(--text-sm);
+  }
+  .seq-template-preview-label {
+    color: var(--text-muted); font-size: var(--text-xs); font-weight: var(--weight-semi);
+    text-transform: uppercase;
+  }
+  .seq-template-preview-content {
+    color: var(--text-primary); font-size: var(--text-sm); line-height: 1.6;
   }
   .seq-template-subject { color: var(--text-heading); font-size: var(--text-sm); font-weight: var(--weight-semi); }
   .seq-add-step {
@@ -394,6 +426,7 @@
   let editingSequenceId = null;
   let sequenceNameDraft = '';
   let timelineMotionBusy = false;
+  const expandedTemplatePreviews = new Set();
 
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
@@ -445,11 +478,21 @@
     '</div>';
   }
 
-  function templatePreview(action) {
+  function templatePreview(action, stepIndex, actionIndex) {
     const template = templates.find(function (item) { return item.id === action.templateId; }) || templates[0];
     if (!template) return '';
+    const previewKey = selectedId + ':' + action.id;
+    const previewId = 'seq-template-preview-' + stepIndex + '-' + actionIndex;
+    const expanded = expandedTemplatePreviews.has(previewKey);
     return '<div class="seq-template-preview">' +
-      '<div class="seq-template-subject">Subject: ' + esc(template.subject) + '</div>' +
+      '<button class="seq-template-preview-toggle" type="button" data-toggle-template-preview="' + esc(previewKey) + '" aria-expanded="' + expanded + '" aria-controls="' + previewId + '">' +
+        '<span class="seq-template-subject">Subject: ' + esc(template.subject) + '</span>' +
+        '<span class="seq-template-preview-action"><span data-template-preview-label>' + (expanded ? 'Collapse' : 'Expand') + '</span><span class="seq-template-preview-caret" data-ds-icon="caret-down" data-size="13"></span></span>' +
+      '</button>' +
+      '<div class="seq-template-preview-body" id="' + previewId + '"' + (expanded ? '' : ' hidden') + '>' +
+        '<div class="seq-template-preview-recipient"><span class="seq-template-preview-label">To</span><span>' + renderTemplateText(template.to) + '</span></div>' +
+        '<div class="seq-template-preview-content">' + renderTemplateText(template.body || template.preview) + '</div>' +
+      '</div>' +
     '</div>';
   }
 
@@ -460,13 +503,13 @@
     return '<div class="seq-template-control seq-control-wide">' +
       '<div class="seq-template-heading">' +
         '<button class="ds-btn ds-btn--ghost ds-btn--sm seq-template-selector" type="button" data-toggle-template-menu="' + stepIndex + '-' + actionIndex + '" aria-expanded="false" aria-haspopup="listbox" aria-controls="' + menuId + '"><span data-ds-icon="envelope" data-size="14"></span><span class="seq-template-name">' + esc(template.name) + '</span><span data-ds-icon="caret-down" data-size="13"></span></button>' +
-        '<button class="ds-btn ds-btn--secondary ds-btn--sm seq-template-view" type="button" data-preview-template="' + esc(template.id) + '">View template</button></div>' +
+        '<button class="ds-btn ds-btn--secondary ds-btn--sm seq-template-view" type="button" disabled>Add another template</button></div>' +
       '<div class="seq-template-menu" id="' + menuId + '" data-template-menu="' + stepIndex + '-' + actionIndex + '" role="listbox" aria-label="Email templates" hidden>' +
         templates.map(function (item) {
           return '<button class="seq-template-option" type="button" role="option" aria-selected="' + (item.id === template.id) + '" data-select-template="' + esc(item.id) + '" data-step-index="' + stepIndex + '" data-action-index="' + actionIndex + '">' + esc(item.name) + '</button>';
         }).join('') +
       '</div>' +
-      templatePreview(action) +
+      templatePreview(action, stepIndex, actionIndex) +
     '</div>';
   }
 
@@ -627,6 +670,12 @@
     menu.style.top = top + 'px';
   }
 
+  function closeTemplateMenus() {
+    document.querySelectorAll('[data-template-menu]').forEach(function (item) { item.hidden = true; });
+    document.querySelectorAll('[data-toggle-template-menu]').forEach(function (item) { item.setAttribute('aria-expanded', 'false'); });
+    document.querySelectorAll('.has-open-template-menu').forEach(function (item) { item.classList.remove('has-open-template-menu'); });
+  }
+
   function timelineMotionReduced() {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
@@ -742,6 +791,7 @@
   function openTemplateDialog(templateId, trigger) {
     const template = templates.find(function (item) { return item.id === templateId; });
     if (!template) return;
+    closeTemplateMenus();
     const dialog = document.getElementById('seq-template-dialog');
     templateDialogTrigger = trigger;
     document.getElementById('seq-dialog-title').textContent = template.name;
@@ -835,9 +885,12 @@
     if (toggleTemplateMenu) {
       const menu = document.getElementById(toggleTemplateMenu.getAttribute('aria-controls'));
       const willOpen = menu.hidden;
-      document.querySelectorAll('[data-template-menu]').forEach(function (item) { item.hidden = true; });
-      document.querySelectorAll('[data-toggle-template-menu]').forEach(function (item) { item.setAttribute('aria-expanded', 'false'); });
-      if (willOpen) positionTemplateMenu(toggleTemplateMenu, menu);
+      closeTemplateMenus();
+      if (willOpen) {
+        const timelineNode = toggleTemplateMenu.closest('.seq-timeline-node');
+        if (timelineNode) timelineNode.classList.add('has-open-template-menu');
+        positionTemplateMenu(toggleTemplateMenu, menu);
+      }
       toggleTemplateMenu.setAttribute('aria-expanded', String(willOpen));
       return;
     }
@@ -850,6 +903,19 @@
     const previewTemplate = event.target.closest('[data-preview-template]');
     if (previewTemplate) {
       openTemplateDialog(previewTemplate.dataset.previewTemplate, previewTemplate);
+      return;
+    }
+    const toggleTemplatePreview = event.target.closest('[data-toggle-template-preview]');
+    if (toggleTemplatePreview) {
+      const previewKey = toggleTemplatePreview.dataset.toggleTemplatePreview;
+      const expanded = toggleTemplatePreview.getAttribute('aria-expanded') !== 'true';
+      const previewBody = document.getElementById(toggleTemplatePreview.getAttribute('aria-controls'));
+      toggleTemplatePreview.setAttribute('aria-expanded', String(expanded));
+      if (expanded) expandedTemplatePreviews.add(previewKey);
+      else expandedTemplatePreviews.delete(previewKey);
+      if (previewBody) previewBody.hidden = !expanded;
+      const previewLabel = toggleTemplatePreview.querySelector('[data-template-preview-label]');
+      if (previewLabel) previewLabel.textContent = expanded ? 'Collapse' : 'Expand';
       return;
     }
     const setAction = event.target.closest('[data-set-action]');
@@ -912,8 +978,7 @@
   });
   document.addEventListener('click', function (event) {
     if (event.target.closest('.seq-template-control')) return;
-    document.querySelectorAll('[data-template-menu]').forEach(function (item) { item.hidden = true; });
-    document.querySelectorAll('[data-toggle-template-menu]').forEach(function (item) { item.setAttribute('aria-expanded', 'false'); });
+    closeTemplateMenus();
   });
   document.addEventListener('keydown', function (event) {
     const dialog = document.getElementById('seq-template-dialog');
@@ -931,8 +996,7 @@
         return;
       }
       if (event.key === 'Escape') {
-        document.querySelectorAll('[data-template-menu]').forEach(function (item) { item.hidden = true; });
-        document.querySelectorAll('[data-toggle-template-menu]').forEach(function (item) { item.setAttribute('aria-expanded', 'false'); });
+        closeTemplateMenus();
       }
       return;
     }
@@ -950,12 +1014,10 @@
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
   });
   document.getElementById('seq-editor').addEventListener('scroll', function () {
-    document.querySelectorAll('[data-template-menu]').forEach(function (item) { item.hidden = true; });
-    document.querySelectorAll('[data-toggle-template-menu]').forEach(function (item) { item.setAttribute('aria-expanded', 'false'); });
+    closeTemplateMenus();
   });
   window.addEventListener('resize', function () {
-    document.querySelectorAll('[data-template-menu]').forEach(function (item) { item.hidden = true; });
-    document.querySelectorAll('[data-toggle-template-menu]').forEach(function (item) { item.setAttribute('aria-expanded', 'false'); });
+    closeTemplateMenus();
   });
 
   if (!selectedSequence() && sequenceDrafts.length) writeSelection(sequenceDrafts[0].id);

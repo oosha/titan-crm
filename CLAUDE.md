@@ -218,12 +218,15 @@ the more prominent numbered circles reserved for action steps. The add-step cont
 compact blue circle with a white plus. Every flow begins with a small blue dot labeled `Start of sequence`
 and finishes with a small red dot labeled `End of sequence`. A reply stops the remaining linear sequence. Only the
 no-email-reply condition is supported; there is no branching model.
-Applied email templates can be opened from a sequence step in a read-only preview
-showing the full subject, body and merge fields. Each sequence also has a `weekdaysOnly`
+The gray template summary beneath the selector is an inline disclosure: its Expand control
+reveals the recipient and full body in place, and changes to Collapse without rerendering
+the action card. The adjacent Add another template button is intentionally disabled in this
+prototype and does not open another surface. Each sequence also has a `weekdaysOnly`
 setting, enabled by default, that represents skipping Saturday and Sunday when execution
 is eventually connected to a scheduler. The selected sequence name is edited inline in the
 flow header. Template selectors use a viewport-positioned menu so the editor's scrolling
-timeline cannot clip or cover their options. Editor labels distinguish adding another action
+timeline cannot clip their options; the active timeline node is raised above its siblings
+while that menu is open so later cards cannot cover it. Editor labels distinguish adding another action
 inside the current step from adding another step to the sequence. Adding a step uses a smooth
 entrance, scrolls the new step into view and animates the lower timeline items into their new
 positions. Removing a step first scrolls it into view, animates it out, then smoothly reflows
