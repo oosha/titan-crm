@@ -346,7 +346,7 @@
   /* Column, not row: the hint is a sentence describing the section, so it reads as
      a subtitle under the heading rather than a fragment trailing off beside it. */
   .ps-stage-section-head { display: flex; flex-direction: column; gap: var(--space-050); margin-bottom: var(--space-200); }
-  /* Matches the body text in the controls below it (the "After N days of no activity"
+  /* Matches the body text in the controls below it (the "After N days without a reply"
      row), so the sentence describing a section reads at the same size as the section. */
   .ps-stage-section-hint { max-width: 62ch; line-height: 1.5; font-size: var(--text-md); }
   .ps-stage-editor .ds-field-label { font-size: var(--text-md); font-weight: var(--weight-semi); color: var(--text-heading); }
@@ -366,6 +366,11 @@
   .ps-add-condition { margin-top: var(--space-200); }
   .ps-stage-row .ps-action-text { flex: 1; min-width: 220px; max-width: 340px; }
   .ps-stage-row .ps-number { width: 64px; min-width: 64px; }
+  .ps-reminder-schedule { min-width: 0; flex: 1 1 auto; display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--space-100); }
+  .ps-stage-row .ps-reminder-offset { width: 180px; min-width: 180px; }
+  .ps-stage-row .ps-reminder-days { width: 72px; min-width: 72px; }
+  .ps-stage-row .ps-reminder-time { width: 128px; min-width: 128px; }
+  .ps-reminder-copy { color: var(--text-secondary); font-size: var(--text-sm); font-weight: var(--weight-semi); }
   .ps-stage-row:has(.ps-condition-join) { display: grid; grid-template-columns: 96px 200px 200px; gap: var(--space-100); }
   .ps-stage-row:has(.ps-condition-join) .ps-condition-join { width: 96px; min-width: 96px; margin: 0; }
   .ps-stage-row:has(.ps-condition-join) select:nth-of-type(3) { margin-left: var(--space-100); }
@@ -412,6 +417,7 @@
 <script src="/design-system/components/icon.js"></script>
 <script src="/crm-owner.js"></script>
 <script src="/crm-schema.js"></script>
+<script src="/titan-sequences.js"></script>
 <div class="app-window">
   <!-- Full-page settings replaces the CRM nav with its own section rail (see .ps-side).
        titan-sidebar.css still owns the shared .app-window / .main-area / .subpage-* shell. -->
@@ -494,7 +500,7 @@
         <div class="ps-pane" data-pane="automation">
         <div class="ps-card">
           <div class="ps-card-title">Stage actions &amp; automation</div>
-          <div class="np-help">Pick a stage to define what happens on entry, while it sits there, and before it moves on.</div>
+          <div class="np-help">Choose a stage.</div>
           <div class="np-chev-chain" id="ps-automation-flow"></div>
           <div id="ps-stage-details"></div>
         </div>
@@ -632,22 +638,17 @@
 
   const PIPELINE_COLORS = ['#4f6d9e', '#3f8a7d', '#5e8a4e', '#b5813f', '#ab5f74', '#7a6ba3', '#2170f4'];
 
-  const EMAIL_TEMPLATE_OPTIONS = [
-    { value: '', label: 'None' },
-    { value: 'welcome', label: 'Welcome email' },
-    { value: 'intro-call', label: 'Intro call follow-up' },
-    { value: 'demo-invite', label: 'Demo invite' },
-    { value: 'proposal-sent', label: 'Proposal sent' },
-    { value: 'check-in', label: 'Check-in / nurture' },
-    { value: 'custom', label: 'Custom template…' },
-  ];
-  const EMAIL_SEQUENCE_OPTIONS = [
-    { value: '', label: 'None' },
-    { value: 'onboarding', label: 'Onboarding sequence' },
-    { value: 'nurture', label: 'Nurture sequence' },
-    { value: 're-engage', label: 'Re-engagement sequence' },
-    { value: 'custom-seq', label: 'Custom sequence…' },
-  ];
+  // Pipeline settings and /crm/sequences read the same small prototype library.
+  // Nothing here sends mail or schedules work yet; these values are references that
+  // make the intended automation legible in the saved pipeline configuration.
+  const EMAIL_TEMPLATE_OPTIONS = [{ value: '', label: 'None' }].concat(
+    window.titanSequenceLibrary.templates.map(function (template) {
+      return { value: template.id, label: template.name };
+    }));
+  const EMAIL_SEQUENCE_OPTIONS = [{ value: '', label: 'None' }].concat(
+    window.titanSequenceLibrary.sequences.map(function (sequence) {
+      return { value: sequence.id, label: sequence.name };
+    }));
   const ADVANCE_CONDITION_OPTIONS = [
     { value: 'task-completed', label: 'A task is completed' },
     { value: 'field-updated', label: 'Data is added for a field' },
@@ -672,12 +673,21 @@
     { value: 'contact-location', label: 'Contact location' },
     { value: 'contact-linkedin', label: 'Contact LinkedIn' },
   ];
+  const REMINDER_OFFSET_OPTIONS = [
+    { value: 'now', label: 'Immediately' },
+    { value: '1-hour', label: 'In 1 hour' },
+    { value: 'next-day', label: 'The next day' },
+    { value: '2-days', label: 'In two days' },
+    { value: '3-days', label: 'In three days' },
+    { value: 'custom-days', label: 'Custom' },
+  ];
+  const DAY_REMINDER_OFFSETS = ['next-day', '2-days', '3-days', 'custom-days'];
   // Older saved pipelines won't have these yet — fill in sensible defaults rather
   // than erroring, so this feature can roll out without a data migration.
   function stageDefaults() {
     return {
-      description: '', entry: [],
-      idle: { on: false, days: 3, action: '', template: '', taskName: '' },
+      description: '', entry: [], exitActions: [],
+      idle: { on: false, days: 3, action: '', template: '', sequence: '', taskName: '', callName: '', reminderOffset: 'next-day', reminderTime: '09:00' },
       exit: { mode: 'manual', rules: [] },
     };
   }
@@ -689,7 +699,10 @@
       const value = s.emailTemplate || s.emailSeqName || s.emailSequence || '';
       if (value) s.entry.unshift({ id: 'email-0', type: 'email', using: s.emailSeqName ? 'sequence' : 'template', value: value });
     }
-    if (!s.idle || typeof s.idle !== 'object') s.idle = { on: !!s.reminderEnabled, days: s.reminderDays || 3, action: 'remind', template: '', taskName: '' };
+    if (!s.idle || typeof s.idle !== 'object') s.idle = { on: !!s.reminderEnabled, days: s.reminderDays || 3, action: 'remind', template: '', sequence: '', taskName: '', callName: '', reminderOffset: 'next-day', reminderTime: '09:00' };
+    if (!s.idle.reminderOffset) s.idle.reminderOffset = 'next-day';
+    if (!Array.isArray(s.exitActions)) s.exitActions = [];
+    delete s.idle.signal;
     if (!s.exit || typeof s.exit !== 'object') {
       const when = s.advanceCondition === 'field-updated' ? 'field' : s.advanceCondition === 'days-in-stage' ? 'days' : 'task';
       s.exit = { mode: s.advanceMode || 'manual', rules: [{ id: 'rule-0', when: when, task: s.advanceTaskName || '', field: s.advanceFieldKey || RECORD_FIELD_OPTIONS[0].value, days: s.advanceDays || 7 }] };
@@ -1048,7 +1061,7 @@
   function stageDetailSummary(stage) {
     const bits = [];
     bits.push(stage.exit && stage.exit.mode === 'auto' ? 'Auto-advance' : 'Manual advance');
-    if (stage.idle && stage.idle.on) bits.push('Reminder after ' + stage.idle.days + 'd');
+    if (stage.idle && stage.idle.on) bits.push('No reply · ' + stage.idle.days + 'd');
     return bits.join(' · ');
   }
 
@@ -1100,7 +1113,7 @@
     editor.innerHTML =
       '<div class="ps-stage-editor-head"><span class="ps-stage-editor-title"></span></div>';
     editor.querySelector('.ps-stage-editor-title').textContent =
-      'In stage: ' + (stage.label || 'Untitled stage');
+      stage.label || 'Untitled stage';
     // Tint plus a solid edge in the same stage colour. The tint alone starts at 0.06
     // alpha for the first stage, indistinguishable from the card behind it — so the
     // bar for "Lead" would have had no colour at all.
@@ -1112,56 +1125,202 @@
       section.className = 'ps-stage-section';
       section.innerHTML = '<div class="ps-stage-section-head"><div class="ps-stage-section-title"></div><div class="ps-stage-section-hint"></div></div>';
       section.querySelector('.ps-stage-section-title').textContent = title;
-      section.querySelector('.ps-stage-section-hint').textContent = hint;
+      const hintEl = section.querySelector('.ps-stage-section-hint');
+      if (hint) hintEl.textContent = hint; else hintEl.remove();
       editor.appendChild(section);
       return section;
     };
     // No description field here: it lives on the stages screen now, and two inputs
     // bound to one stage.description is how they drift.
 
-    const entryType = ((pipeline && pipeline.entity) || 'record').toLowerCase();
-    const entryArticle = /^[aeiou]/.test(entryType) ? 'an' : 'a';
     const stageName = stage.label || 'this stage';
     const entrySection = addSection(
-      'When ' + entryArticle + ' ' + entryType + ' is added to ' + stageName,
-      'Runs once, the moment ' + entryArticle + ' ' + entryType + ' lands in this stage.');
-    function actionRow(action, ai) {
-      const row = document.createElement('div'); row.className = 'ps-stage-row';
-      const remove = function () { stage.entry.splice(ai, 1); renderStageDetails(); };
-      row.innerHTML = '<span class="ds-badge ds-badge--accent"></span><button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm ps-stage-row-remove" title="Remove action"><span data-ds-icon="close" data-size="14"></span></button>';
-      row.querySelector('.ds-badge').textContent = action.type === 'email' ? 'Send email' : 'Create task';
-      row.querySelector('.ps-stage-row-remove').addEventListener('click', remove);
-      if (action.type === 'email') {
-        const using = document.createElement('select'); using.className = 'ds-input'; using.innerHTML = '<option value="">Select the email</option><option value="template">Email template</option><option value="sequence">Email sequence</option>'; using.value = action.using || '';
-        const value = document.createElement('select'); value.className = 'ds-input ps-entry-value';
-        const fill = function () { if (!using.value) { value.style.display = 'none'; return; } const opts = (using.value === 'sequence' ? EMAIL_SEQUENCE_OPTIONS : EMAIL_TEMPLATE_OPTIONS).filter(function (o) { return o.value; }); const placeholder = using.value === 'sequence' ? 'Select email sequence' : 'Select email template'; value.innerHTML = '<option value="">' + placeholder + '</option>' + opts.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join(''); value.value = action.value || ''; value.style.display = ''; };
-        using.addEventListener('change', function () { action.using = using.value; action.value = ''; fill(); }); value.addEventListener('change', function () { action.value = value.value; renderStageDetails(); }); fill(); row.insertBefore(using, row.lastChild); if (using.value && action.value) { const template = document.createElement('button'); template.type = 'button'; template.className = 'ds-btn ds-btn--secondary ps-template-link'; const options = using.value === 'sequence' ? EMAIL_SEQUENCE_OPTIONS : EMAIL_TEMPLATE_OPTIONS; const chosen = options.find(function (o) { return o.value === action.value; }); template.textContent = chosen ? chosen.label : action.value; template.title = 'Open and edit this ' + (using.value === 'sequence' ? 'email sequence' : 'email template'); row.insertBefore(template, row.lastChild); } else { row.insertBefore(value, row.lastChild); }
-      } else {
-        const name = action.name ? document.createElement('button') : document.createElement('input');
-        if (action.name) { name.type = 'button'; name.className = 'ds-btn ds-btn--secondary ps-template-link'; name.textContent = action.name; name.title = 'Open and edit this task'; } else { name.className = 'ds-input ps-action-text'; name.placeholder = 'e.g. Book a discovery call'; name.value = ''; name.addEventListener('input', function () { action.name = name.value; }); }
-        const due = document.createElement('input'); due.type = 'number'; due.min = '1'; due.className = 'ds-input ps-number'; due.value = action.due || 2; due.addEventListener('input', function () { action.due = Number(due.value) || 1; });
-        row.insertBefore(name, row.lastChild); row.insertBefore(document.createTextNode('due in'), row.lastChild); row.insertBefore(due, row.lastChild); row.insertBefore(document.createTextNode('days'), row.lastChild);
-        if (!action.name) { const add = document.createElement('button'); add.type = 'button'; add.className = 'ds-btn ds-btn--primary ds-btn--sm'; add.textContent = 'Add'; add.addEventListener('click', function () { if (!name.value.trim()) { name.focus(); return; } action.name = name.value.trim(); renderStageDetails(); }); row.insertBefore(add, row.lastChild); }
-      }
-      entrySection.appendChild(row);
+      'On entry · ' + stageName,
+      '');
+    function optionMarkup(options, selected, placeholder) {
+      return '<option value="">' + placeholder + '</option>' + options.filter(function (option) {
+        return option.value;
+      }).map(function (option) {
+        return '<option value="' + escHtml(option.value) + '"' + (option.value === selected ? ' selected' : '') + '>' + escHtml(option.label) + '</option>';
+      }).join('');
     }
-    stage.entry.forEach(actionRow);
-    const addAction = document.createElement('select'); addAction.className = 'ds-input ps-add-action'; addAction.innerHTML = '<option value="">Add an action…</option><option value="email">Send email</option><option value="task">Create task</option>';
-    addAction.addEventListener('change', function () { if (!addAction.value) return; stage.entry.push({ id: addAction.value + '-' + Date.now(), type: addAction.value, using: '', value: '', name: '', due: 2 }); renderStageDetails(); }); entrySection.appendChild(addAction);
+    function reminderOptionMarkup(selected) {
+      return REMINDER_OFFSET_OPTIONS.map(function (option) {
+        return '<option value="' + escHtml(option.value) + '"' + (option.value === selected ? ' selected' : '') + '>' + escHtml(option.label) + '</option>';
+      }).join('');
+    }
+
+    function normalizeReminderConfig(config) {
+      if (config.reminderOffset === '1-day') config.reminderOffset = 'next-day';
+      if (config.reminderOffset === '1-week') {
+        config.reminderOffset = 'custom-days';
+        config.reminderDays = config.reminderDays || 7;
+      }
+      config.reminderOffset = config.reminderOffset || 'next-day';
+      if (DAY_REMINDER_OFFSETS.includes(config.reminderOffset)) {
+        config.reminderTime = config.reminderTime || '09:00';
+      }
+      if (config.reminderOffset === 'custom-days') config.reminderDays = Math.max(1, Number(config.reminderDays) || 4);
+    }
+
+    function appendReminderSchedule(row, config, beforeNode) {
+      normalizeReminderConfig(config);
+      const schedule = document.createElement('div');
+      schedule.className = 'ps-reminder-schedule';
+      const copy = document.createElement('span');
+      copy.className = 'ps-reminder-copy'; copy.textContent = 'Remind me'; schedule.appendChild(copy);
+
+      const reminder = document.createElement('select');
+      reminder.className = 'ds-input ps-reminder-offset';
+      reminder.setAttribute('aria-label', 'Reminder timing');
+      reminder.innerHTML = reminderOptionMarkup(config.reminderOffset);
+      reminder.value = config.reminderOffset;
+      reminder.addEventListener('change', function () {
+        config.reminderOffset = reminder.value;
+        if (DAY_REMINDER_OFFSETS.includes(config.reminderOffset) && !config.reminderTime) config.reminderTime = '09:00';
+        if (config.reminderOffset === 'custom-days' && !config.reminderDays) config.reminderDays = 4;
+        renderStageDetails();
+      });
+      schedule.appendChild(reminder);
+
+      if (config.reminderOffset === 'custom-days') {
+        const days = document.createElement('input');
+        days.className = 'ds-input ps-reminder-days'; days.type = 'number'; days.min = '1'; days.value = config.reminderDays;
+        days.setAttribute('aria-label', 'Custom reminder delay in days');
+        days.addEventListener('input', function () { config.reminderDays = Math.max(1, Number(days.value) || 1); });
+        schedule.appendChild(days);
+        const daysCopy = document.createElement('span');
+        daysCopy.className = 'ps-reminder-copy'; daysCopy.textContent = 'days later'; schedule.appendChild(daysCopy);
+      }
+
+      if (DAY_REMINDER_OFFSETS.includes(config.reminderOffset)) {
+        const at = document.createElement('span');
+        at.className = 'ps-reminder-copy'; at.textContent = 'at'; schedule.appendChild(at);
+        const time = document.createElement('input');
+        time.className = 'ds-input ps-reminder-time'; time.type = 'time'; time.value = config.reminderTime || '09:00';
+        time.setAttribute('aria-label', 'Reminder time');
+        time.addEventListener('input', function () { config.reminderTime = time.value; });
+        schedule.appendChild(time);
+      }
+
+      if (beforeNode) row.insertBefore(schedule, beforeNode);
+      else row.appendChild(schedule);
+    }
+
+    function openSequence(sequenceId) {
+      if (!sequenceId) return;
+      stashSettingsDraft();
+      const params = new URLSearchParams(location.search);
+      location.href = '/crm/sequences' + (params.toString() ? '?' + params.toString() : '') + '#' + encodeURIComponent(sequenceId);
+    }
+
+    function renderActionRow(section, actions, action, ai) {
+      // Older settings stored a sequence as type=email + using=sequence. Read it as
+      // the first-class action it has become without requiring a data migration.
+      const type = action.type === 'email' && action.using === 'sequence' ? 'sequence' : action.type;
+      action.type = type;
+      if (type === 'sequence') action.value = action.value || action.sequence || '';
+      const labels = { sequence: 'Start sequence', email: 'Send an email', call: 'Set a call reminder', task: 'Create a task' };
+      const row = document.createElement('div');
+      row.className = 'ps-stage-row';
+      row.innerHTML = '<span class="ds-badge ds-badge--accent"></span><button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm ps-stage-row-remove" title="Remove action"><span data-ds-icon="close" data-size="14"></span></button>';
+      row.querySelector('.ds-badge').textContent = labels[type] || 'Action';
+      row.querySelector('.ps-stage-row-remove').addEventListener('click', function () {
+        actions.splice(ai, 1); renderStageDetails();
+      });
+
+      if (type === 'sequence' || type === 'email') {
+        const options = type === 'sequence' ? EMAIL_SEQUENCE_OPTIONS : EMAIL_TEMPLATE_OPTIONS;
+        const picker = document.createElement('select');
+        picker.className = 'ds-input ps-entry-value';
+        picker.innerHTML = optionMarkup(options, action.value || '', type === 'sequence' ? 'Select sequence' : 'Select email template');
+        picker.value = action.value || '';
+        picker.addEventListener('change', function () {
+          action.value = picker.value;
+          if (type === 'sequence') renderStageDetails();
+        });
+        row.insertBefore(picker, row.lastChild);
+        if (type === 'sequence') {
+          const edit = document.createElement('button');
+          edit.type = 'button'; edit.className = 'ds-btn ds-btn--secondary ds-btn--sm';
+          edit.textContent = 'View steps'; edit.disabled = !action.value;
+          edit.addEventListener('click', function () { openSequence(action.value); });
+          row.insertBefore(edit, row.lastChild);
+        }
+      } else {
+        const name = document.createElement('input');
+        name.className = 'ds-input ps-action-text';
+        name.placeholder = type === 'call' ? 'e.g. Call the new lead' : 'e.g. Prepare the proposal';
+        name.value = action.name || '';
+        name.addEventListener('input', function () { action.name = name.value; });
+        row.insertBefore(name, row.lastChild);
+        appendReminderSchedule(row, action, row.lastChild);
+      }
+      section.appendChild(row);
+    }
+
+    function addActionPicker(section, actions) {
+      const picker = document.createElement('select');
+      picker.className = 'ds-input ps-add-action';
+      picker.innerHTML = '<option value="">Add an action…</option><option value="sequence">Start sequence</option><option value="email">Send an email</option><option value="call">Set a call reminder</option><option value="task">Create a task</option>';
+      picker.addEventListener('change', function () {
+        if (!picker.value) return;
+        actions.push({ id: picker.value + '-' + Date.now(), type: picker.value, value: '', name: '', reminderOffset: 'next-day', reminderTime: '09:00' });
+        renderStageDetails();
+      });
+      section.appendChild(picker);
+    }
+
+    stage.entry.forEach(function (action, ai) { renderActionRow(entrySection, stage.entry, action, ai); });
+    addActionPicker(entrySection, stage.entry);
 
     const idleSection = addSection(
-      'If ' + entryArticle + ' ' + entryType + ' goes quiet',
-      'When nothing has been logged against it for a set number of days.');
-    const idleRow = document.createElement('label'); idleRow.className = 'ps-stage-row'; idleRow.innerHTML = '<input type="checkbox"> After <input type="number" class="ds-input ps-number" min="1"> days of no activity,';
-    const idleOn = idleRow.querySelector('input[type=checkbox]'), idleDays = idleRow.querySelector('input[type=number]'); idleOn.checked = stage.idle.on; idleDays.value = stage.idle.days; idleDays.disabled = !stage.idle.on;
-    const idleAction = document.createElement('select'); idleAction.className = 'ds-input'; idleAction.innerHTML = '<option value="">Select action</option><option value="remind">Remind me</option><option value="email">Send email</option><option value="task">Create task</option>'; idleAction.value = stage.idle.action || ''; idleAction.disabled = !stage.idle.on; idleRow.appendChild(idleAction);
-    if (stage.idle.action === 'email') { const template = document.createElement('select'); template.className = 'ds-input ps-entry-value'; template.innerHTML = '<option value="">Select email template</option>' + EMAIL_TEMPLATE_OPTIONS.filter(function (o) { return o.value; }).map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join(''); template.value = stage.idle.template || ''; template.disabled = !stage.idle.on; template.addEventListener('change', function () { stage.idle.template = template.value; renderStageDetails(); }); if (stage.idle.template) { const selected = EMAIL_TEMPLATE_OPTIONS.find(function (o) { return o.value === stage.idle.template; }); const link = document.createElement('button'); link.type = 'button'; link.className = 'ds-btn ds-btn--secondary ps-template-link'; link.textContent = selected ? selected.label : stage.idle.template; link.title = 'Open and edit this email template'; link.disabled = !stage.idle.on; idleRow.appendChild(link); } else idleRow.appendChild(template); }
-    if (stage.idle.action === 'task') { const task = stage.idle.taskName ? document.createElement('button') : document.createElement('input'); if (stage.idle.taskName) { task.type = 'button'; task.className = 'ds-btn ds-btn--secondary ps-template-link'; task.textContent = stage.idle.taskName; task.title = 'Open and edit this task'; task.disabled = !stage.idle.on; } else { task.className = 'ds-input ps-action-text'; task.placeholder = 'e.g. Book a discovery call'; task.disabled = !stage.idle.on; } const add = document.createElement('button'); add.type = 'button'; add.className = 'ds-btn ds-btn--primary ds-btn--sm'; add.textContent = 'Add'; add.disabled = !stage.idle.on; add.addEventListener('click', function () { if (!task.value.trim()) { task.focus(); return; } stage.idle.taskName = task.value.trim(); renderStageDetails(); }); idleRow.appendChild(task); if (!stage.idle.taskName) idleRow.appendChild(add); }
-    idleOn.addEventListener('change', function () { stage.idle.on = idleOn.checked; idleDays.disabled = !idleOn.checked; idleAction.disabled = !idleOn.checked; idleRow.querySelectorAll('select, input').forEach(function (control) { if (control !== idleOn) control.disabled = !idleOn.checked; }); }); idleDays.addEventListener('input', function () { stage.idle.days = Number(idleDays.value) || 1; }); idleAction.addEventListener('change', function () { stage.idle.action = idleAction.value; renderStageDetails(); }); idleSection.appendChild(idleRow);
+      'No email reply',
+      '');
+    const idleRow = document.createElement('div');
+    idleRow.className = 'ps-stage-row';
+    idleRow.innerHTML = '<input type="checkbox" aria-label="Enable no-reply action"> Wait <input type="number" class="ds-input ps-number" min="1" aria-label="Wait in days"> days <select class="ds-input" aria-label="Action"><option value="">Select action</option><option value="remind">Remind me</option><option value="sequence">Start sequence</option><option value="email">Send an email</option><option value="call">Set a call reminder</option><option value="task">Create a task</option></select>';
+    const idleOn = idleRow.querySelector('input[type=checkbox]');
+    const idleDays = idleRow.querySelector('input[type=number]');
+    const idleAction = idleRow.querySelector('select');
+    idleOn.checked = stage.idle.on; idleDays.value = stage.idle.days; idleAction.value = stage.idle.action || '';
+    idleRow.querySelectorAll('select, input').forEach(function (control) { if (control !== idleOn) control.disabled = !stage.idle.on; });
+    idleOn.addEventListener('change', function () { stage.idle.on = idleOn.checked; renderStageDetails(); });
+    idleDays.addEventListener('input', function () { stage.idle.days = Number(idleDays.value) || 1; });
+    idleAction.addEventListener('change', function () { stage.idle.action = idleAction.value; renderStageDetails(); });
+    idleSection.appendChild(idleRow);
+
+    if (stage.idle.on && stage.idle.action === 'sequence') {
+      const row = document.createElement('div'); row.className = 'ps-stage-row ps-stage-row--compact';
+      const picker = document.createElement('select'); picker.className = 'ds-input ps-entry-value';
+      picker.innerHTML = optionMarkup(EMAIL_SEQUENCE_OPTIONS, stage.idle.sequence || '', 'Select sequence'); picker.value = stage.idle.sequence || '';
+      picker.addEventListener('change', function () { stage.idle.sequence = picker.value; renderStageDetails(); }); row.appendChild(picker);
+      const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'ds-btn ds-btn--secondary ds-btn--sm'; edit.textContent = 'View steps'; edit.disabled = !stage.idle.sequence;
+      edit.addEventListener('click', function () { openSequence(stage.idle.sequence); }); row.appendChild(edit); idleSection.appendChild(row);
+    } else if (stage.idle.on && stage.idle.action === 'email') {
+      const row = document.createElement('div'); row.className = 'ps-stage-row ps-stage-row--compact';
+      const picker = document.createElement('select'); picker.className = 'ds-input ps-entry-value';
+      picker.innerHTML = optionMarkup(EMAIL_TEMPLATE_OPTIONS, stage.idle.template || '', 'Select email template'); picker.value = stage.idle.template || '';
+      picker.addEventListener('change', function () { stage.idle.template = picker.value; }); row.appendChild(picker); idleSection.appendChild(row);
+    } else if (stage.idle.on && (stage.idle.action === 'task' || stage.idle.action === 'call')) {
+      const row = document.createElement('div'); row.className = 'ps-stage-row ps-stage-row--compact';
+      const name = document.createElement('input'); name.className = 'ds-input ps-action-text';
+      const key = stage.idle.action === 'call' ? 'callName' : 'taskName';
+      name.placeholder = stage.idle.action === 'call' ? 'e.g. Call to check in' : 'e.g. Review the account'; name.value = stage.idle[key] || '';
+      name.addEventListener('input', function () { stage.idle[key] = name.value; }); row.appendChild(name);
+      appendReminderSchedule(row, stage.idle);
+      idleSection.appendChild(row);
+    }
+
+    const leaveSection = addSection(
+      'On exit · ' + stageName,
+      '');
+    stage.exitActions.forEach(function (action, ai) { renderActionRow(leaveSection, stage.exitActions, action, ai); });
+    addActionPicker(leaveSection, stage.exitActions);
 
     const exitSection = addSection(
-      'Moving ' + entryArticle + ' ' + entryType + ' to the next stage',
-      'What has to be true before it leaves ' + stageName + ' for whichever stage follows.');
+      'Stage movement',
+      '');
     const radios = document.createElement('div'); radios.className = 'ps-stage-radio'; radios.innerHTML = '<label><input type="radio" name="ps-exit" value="manual"> Move it manually</label><label><input type="radio" name="ps-exit" value="auto"> Move it automatically</label>';
     radios.querySelector('input[value="' + stage.exit.mode + '"]').checked = true; radios.querySelectorAll('input').forEach(function (radio) { radio.addEventListener('change', function () { stage.exit.mode = radio.value; if (radio.value === 'auto') { if (!stage.exit.rules.length) stage.exit.rules.push({ id: 'rule-' + Date.now(), when: '', task: '', field: '', days: 7, join: 'or' }); else { stage.exit.rules[0].when = ''; stage.exit.rules[0].task = ''; } } renderStageDetails(); }); }); exitSection.appendChild(radios);
     if (stage.exit.mode === 'auto') stage.exit.rules.forEach(function (rule, ri) { const row = document.createElement('div'); row.className = 'ps-stage-row'; row.innerHTML = '<span>' + (ri ? 'or when' : 'Move it when') + '</span><select class="ds-input"><option value="task">A task is completed</option><option value="field">Data is added for a field</option><option value="days">Days pass in this stage</option></select><button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm ps-stage-row-remove" title="Remove condition"><span data-ds-icon="close" data-size="14"></span></button>'; const when = row.querySelector('select'); when.value = rule.when; const detail = document.createElement(rule.when === 'days' ? 'input' : 'select'); detail.className = 'ds-input ' + (rule.when === 'days' ? 'ps-number' : ''); if (rule.when === 'days') { detail.type = 'number'; detail.value = rule.days || 7; detail.addEventListener('input', function () { rule.days = Number(detail.value) || 1; }); } else { const source = rule.when === 'task' ? stage.entry.filter(function (x) { return x.type === 'task'; }).map(function (x) { return x.name; }) : RECORD_FIELD_OPTIONS; detail.disabled = rule.when === 'task' && !source.length; detail.innerHTML = rule.when === 'task' ? '<option value="">Select action</option>' + source.map(function (x) { return '<option value="' + escHtml(x) + '">' + escHtml(x) + '</option>'; }).join('') : source.map(function (x) { return '<option value="' + escHtml(x.value) + '">' + escHtml(x.label) + '</option>'; }).join(''); detail.value = rule[rule.when] || ''; detail.addEventListener('change', function () { rule[rule.when] = detail.value; }); } row.insertBefore(detail, row.lastChild); when.addEventListener('change', function () { rule.when = when.value; renderStageDetails(); }); row.querySelector('.ps-stage-row-remove').addEventListener('click', function () { stage.exit.rules.splice(ri, 1); renderStageDetails(); }); exitSection.appendChild(row); });
@@ -1234,7 +1393,7 @@
       const emailField = document.createElement('div');
       emailField.className = 'ps-stage-field';
       emailField.innerHTML =
-        '<div class="ps-stage-field-label">Send email</div>' +
+        '<div class="ps-stage-field-label">Send an email</div>' +
         '<div class="ps-inline-row">' +
           '<span class="ps-inline-label">Send using</span>' +
           '<select class="ds-input ps-send-using">' +

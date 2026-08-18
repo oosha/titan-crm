@@ -26,6 +26,14 @@
       "destination": "/activities.html"
     },
     {
+      "source": "/crm/sequences",
+      "destination": "/sequences.html"
+    },
+    {
+      "source": "/crm/sequences/",
+      "destination": "/sequences.html"
+    },
+    {
       "source": "/crm/contacts",
       "destination": "/contacts.html"
     },

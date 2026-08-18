@@ -37,6 +37,7 @@ Multi-page app. Routes are rewrites in `vercel.json`; each route is its own docu
 | `/crm/pipeline/:id/setting` | `pipeline-settings.html` | Stages, fields |
 | `/crm/pipeline/:id/record-setting` | `opportunity-settings.html` | |
 | `/crm/contacts`, `/crm/companies` | `contacts.html`, `companies.html` | Directory pages |
+| `/crm/sequences` | `sequences.html` | Global prototype sequence library + linear editor |
 | `/crm/forms` | `forms.html` | One row per pipeline: its intake form, or the offer of one |
 | `/crm/pipeline/:id/form` | `form-settings.html` | Deep link to one form's editor |
 | `/f/:token` | `form.html` | **Public.** The intake form itself — no auth, no sidebar |
@@ -189,12 +190,54 @@ themselves. On every other CRM page the component falls back to navigating to `/
 so the control is never inert.
 
 The nav is: Dashboard · New pipeline · the pipeline rows (each with saved filter views and
-a three-dot menu) · Contacts · Companies · Forms.
+a three-dot menu) · Upcoming activities · Sequences · Contacts · Companies · Forms · Integrations.
 
 `crm.html` still defines its own `switchPipeline`, `openNewPipeline`, `toggleSettingsModal`,
 `togglePipelineNavMenu`, `pipelineNavMenuAction` and account handlers — it loads the
 component in `<head>`, so its later definitions win. That overlap is deliberate but it is
 a contract: rename one of those and the board's sidebar breaks.
+
+## Sequences
+
+`/crm/sequences` is a global, frontend-only prototype library. `titan-sequences.js` owns
+the small shared set of sales email templates and linear sequences, and both
+`sequences.html` and `pipeline-settings.html` read it. A sequence step is a timing group
+with actions that send an email, set a call reminder, or create a task. Actions in the same
+group run together, and each action renders as its own card. A group may temporarily be
+empty while editing, in which case the editor shows a compact add-action state. Calls and
+tasks represent new items that would appear in Upcoming
+activities; they are not reusable task definitions. Both use the same reminder schedule:
+immediately, in one hour, the next day, in two days, in three days, or a custom number of days.
+Every day-based choice also stores an exact `reminderTime` (default `09:00`), while custom uses
+`reminderDays` for the relative day count. Before each action group, the editor
+shows one compact control with three modes: continue immediately, continue after a delay
+of N days, or continue if there is no reply for N days. New action groups default to the
+no-reply option with a one-day wait. Waits are relative to the previous action (or the sequence
+trigger for step one). Condition cards use a small solid amber-brown timeline dot rather than
+the more prominent numbered circles reserved for action steps. The add-step control uses a
+compact blue circle with a white plus. Every flow begins with a small blue dot labeled `Start of sequence`
+and finishes with a small red dot labeled `End of sequence`. A reply stops the remaining linear sequence. Only the
+no-email-reply condition is supported; there is no branching model.
+Applied email templates can be opened from a sequence step in a read-only preview
+showing the full subject, body and merge fields. Each sequence also has a `weekdaysOnly`
+setting, enabled by default, that represents skipping Saturday and Sunday when execution
+is eventually connected to a scheduler. The selected sequence name is edited inline in the
+flow header. Template selectors use a viewport-positioned menu so the editor's scrolling
+timeline cannot clip or cover their options. Editor labels distinguish adding another action
+inside the current step from adding another step to the sequence. Adding a step uses a smooth
+entrance, scrolls the new step into view and animates the lower timeline items into their new
+positions. Removing a step first scrolls it into view, animates it out, then smoothly reflows
+the remaining keyed timeline items. These effects use the Web Animations API, announce the
+result through an ARIA live region and respect `prefers-reduced-motion`; do not add GSAP for them.
+Sequence list cards show the number of steps (not the total actions nested inside them) and
+`activeInstances`, the representative number of pipeline-record sequence instances currently active. This is intentionally different from `usedBy`, which
+describes stage configuration references rather than live record-level instances.
+
+There is deliberately no scheduler, sender or sequence API yet. The editor keeps changes
+in memory and says so in the UI; a reload restores the shared sample definitions. Do not
+move the drafts to localStorage or turn sessionStorage into sequence persistence. Stage
+settings may reference the sample sequence ids for entry, quiet-stage and exit actions,
+but nothing executes those references yet.
 
 ## Intake forms
 

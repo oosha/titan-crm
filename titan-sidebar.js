@@ -72,6 +72,7 @@
     var segs = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
     if (segs[0] !== 'crm') return { kind: 'other' };
     if (segs[1] === 'activities') return { kind: 'activities' };
+    if (segs[1] === 'sequences') return { kind: 'sequences' };
     if (segs[1] === 'dashboard') return { kind: 'dashboard' };
     if (segs[1] === 'contacts') return { kind: 'contacts' };
     if (segs[1] === 'companies') return { kind: 'companies' };
@@ -135,6 +136,7 @@
   }
   var ICON = {
     get activities() { return ico('clock'); },
+    get sequences() { return ico('paper-plane-tilt'); },
     get dashboard() { return ico('dashboard'); },
     get contacts() { return ico('contacts'); },
     get companies() { return ico('companies'); },
@@ -215,6 +217,10 @@
         '<div class="nav-item' + on('activities') + '" onclick="titanSidebarGo(\'/crm/activities\')">' +
           '<div class="nav-item-icon">' + ICON.activities + '</div>' +
           '<span class="nav-item-label' + on('activities') + '">Upcoming activities</span>' +
+        '</div>' +
+        '<div class="nav-item' + on('sequences') + '" onclick="titanSidebarGo(\'/crm/sequences\')">' +
+          '<div class="nav-item-icon">' + ICON.sequences + '</div>' +
+          '<span class="nav-item-label' + on('sequences') + '">Sequences</span>' +
         '</div>' +
         '<div class="nav-item' + on('contacts') + '" onclick="titanSidebarGo(\'/crm/contacts\')">' +
           '<div class="nav-item-icon">' + ICON.contacts + '</div>' +
