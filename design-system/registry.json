@@ -1,7 +1,7 @@
 {
   "$schema": "./registry.schema.json",
   "name": "Titan Design System Registry",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Machine-readable index of the design system's components, patterns and directions. An agent should read this before writing any UI and update it in the same change that adds a system primitive. Extracted from App Redesign/index_prodRedesign_interactions.html.",
   "conventions": {
     "idiom": "Plain CSS classes plus optional JS render modules — no build step, no framework, no TypeScript. A component is a stylesheet, and a function returning an HTML string where composition earns one. This is the same pattern titan-sidebar.js and form-render.js already use in production.",
@@ -96,6 +96,41 @@
         "pipeline-settings.html — /crm/pipeline/:id/setting",
         "opportunity-settings.html — /crm/pipeline/:id/record-setting",
         "form-settings.html — /crm/pipeline/:id/form; every form creation/editing entry point navigates here"
+      ]
+    },
+    {
+      "id": "two-pane-workspace",
+      "name": "Two-pane workspace",
+      "category": "Interaction & layout",
+      "visual": "two-pane-workspace",
+      "summary": "Two persistent sibling panes keep a controlling editor or list visible beside the detail or preview it affects. The panes read as separate work areas, not as cards inside one parent box.",
+      "useWhen": "Use when a task depends on continuously comparing or controlling two related surfaces—such as a library and its selected flow, or an editor and its live preview—and switching between separate pages would hide necessary context.",
+      "route": "Composes inside an existing full-page route",
+      "structure": [
+        "Exactly two adjacent pane surfaces fill the available workspace below any page-level header.",
+        "The contents of both panes align inside one horizontally centred, width-bounded frame while their surface backgrounds may remain full-bleed.",
+        "The controlling or editing pane comes first; its corresponding detail or preview pane comes second.",
+        "A single separator spans the full shared height between the panes.",
+        "Each pane owns its surface, internal padding, heading when needed, and scroll region."
+      ],
+      "requirements": [
+        "Use semantic surface and border tokens; the separator is the boundary, so do not wrap both panes in another card.",
+        "Treat both content rails as one centred unit: choose one page-owned maximum width for their complete frame, preserve the pane proportions within it, then let it remain fluid below that cap.",
+        "Size panes for their content rather than defaulting to equal halves; neither pane may force horizontal page scrolling.",
+        "Keep edits and selections reflected in the companion pane without navigation or manual refresh.",
+        "Give both panes an accessible name or heading and keep their scrolling independent on wide screens.",
+        "Below the width where both panes remain usable, stack them or offer an explicit mode switch instead of squeezing them."
+      ],
+      "avoid": [
+        "Do not copy the sequence timeline, colors, cards, or other feature-specific styling into the pattern.",
+        "Do not constrain full-bleed pane surfaces merely to constrain their content, and do not centre each content rail against a different frame.",
+        "Do not use for unrelated content that merely happens to fit in two columns.",
+        "Do not add a third pane; move secondary tools into the appropriate pane or another route.",
+        "Do not use when the second surface is incidental enough for a modal, drawer, or inline disclosure."
+      ],
+      "examples": [
+        "sequences.html — sequence library and selected sequence flow",
+        "form-settings.html — form editor and live form preview"
       ]
     }
   ],

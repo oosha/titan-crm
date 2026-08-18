@@ -63,11 +63,15 @@ The current choice is deliberate:
 |---|---|---|
 | **Modal dialog** | A short, bounded task that should retain the current page as context | Multi-section configuration, deep navigation, or anything needing a durable URL |
 | **Full-page settings** | Sustained or multi-section configuration with its own cold-loadable route | A quick confirmation or compact edit that should return directly to the current page |
+| **Two-pane workspace** | Two related surfaces that must remain visible together, such as an editor and live preview | Unrelated columns, three-pane layouts, or a secondary surface that is only incidental |
 
 Patterns and components are independent layers. The Modal dialog behavior is registered
 even though its reusable `ds-*` component shell is still planned; pages must follow the
 behavioral contract and compose the closest existing controls without inventing a fake
-design-system component.
+design-system component. Two-pane workspace is likewise a composition contract rather than
+a `ds-*` class: each adopting page owns its pane proportions and shared content maximum
+width while preserving full-bleed pane surfaces, one horizontally centred content frame,
+the full-height separator, independent scrolling, semantic surfaces and responsive fallback.
 
 Adding a direction is therefore one file in `themes/` plus one entry in the registry's
 `themes` array — the workbench picks up both the header control and the side-by-side

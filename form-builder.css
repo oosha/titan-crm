@@ -133,8 +133,8 @@ body.fb-locked { overflow: hidden; }
 .fb-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-300); }
 
 /* ── The editor ───────────────────────────────────────────────────────────────
-   Flex rather than grid because publishing takes the editor out of the flow and the preview
-   has to end up centred on what is left — see .is-published below and slideTo(). */
+   The base layout belongs to the legacy modal adapter. The inline full-page route overrides
+   it below with the registered Two-pane workspace pattern. */
 .fb-cols {
   display: flex; justify-content: center; align-items: flex-start;
   gap: var(--space-300);
@@ -146,8 +146,8 @@ body.fb-locked { overflow: hidden; }
               transform var(--dur-slow) var(--ease-decel);
 }
 
-/* Publishing: the editor leaves the flow at its full width and fades out to the left, while
-   the preview travels into the middle.
+/* Publishing: the editor leaves the flow at its full width and fades out, while the
+   preview travels into the left pane and the sharing handoff enters on the right.
    Animating the editor's max-width to zero instead — which is what this used to do — meant
    the preview was dragged along by relayout rather than moving, so it stuttered and there
    was no slide to see. Now the layout change happens in one frame and the preview is
@@ -157,7 +157,7 @@ body.fb-locked { overflow: hidden; }
   opacity: 0; transform: translateX(-40px);
   pointer-events: none;
 }
-/* The two-column gap disappears with the editor, keeping the published form truly centred. */
+/* Pane separation is carried by the full-height boundary rather than a gutter. */
 .fb-cols.is-published { gap: 0; }
 /* Someone who has asked for less movement gets the same two states, arrived at instantly.
    The FLIP offset is still applied and released either way, so the end position is the same
@@ -165,6 +165,7 @@ body.fb-locked { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .fb-edit, .fb-preview { transition: none; }
   .fb-published { animation: none; }
+  .fb-share { animation: none !important; }
 }
 /* "Preview" is the wrong word for it now: this is the form, published. */
 .fb-cols.is-published .fb-preview-badge { opacity: 0; }
@@ -181,11 +182,160 @@ body.fb-locked { overflow: hidden; }
   .fb-preview { flex: 0 0 auto; width: 100%; position: static; }
 }
 
-.fb-card {
-  background: var(--surface-primary); border: 1px solid var(--card-border);
-  border-radius: var(--card-radius); padding: var(--space-300);
-  margin-bottom: var(--space-200);
+/* ── Registered Two-pane workspace · inline form route ───────────────────────
+   Only the reusable layout premise comes from Sequences: two adjacent work areas, one
+   full-height separator and independent scrolling. Pane proportions and every piece of
+   form styling remain owned by the form builder. */
+.fb-inline,
+.fb-inline .fb-cols { height: 100%; min-height: 0; }
+.fb-inline .fb-cols {
+  --fb-workspace-max: calc(var(--space-400) * 45);
+  --fb-editor-max: calc(var(--space-400) * 27);
+  --fb-preview-max: calc(var(--space-400) * 18);
+  --fb-publish-motion: calc(var(--dur-slow) + var(--dur-slow));
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, min(60%, var(--fb-editor-max)))
+    minmax(0, min(40%, var(--fb-preview-max)))
+    minmax(0, 1fr);
+  align-items: stretch; justify-content: stretch; gap: 0;
 }
+.fb-inline .fb-edit,
+.fb-inline .fb-preview {
+  min-width: 0; min-height: 0; overflow-y: auto;
+}
+.fb-inline .fb-edit,
+.fb-inline .fb-preview { transition-duration: var(--fb-publish-motion); }
+.fb-inline .fb-edit { grid-column: 1 / 3; background: var(--surface-page); }
+.fb-inline .fb-edit-content,
+.fb-inline .fb-preview-content {
+  box-sizing: border-box; width: 100%; min-height: 100%; padding: var(--space-400);
+}
+.fb-inline .fb-edit-content {
+  max-width: var(--fb-editor-max); margin-left: auto;
+  padding-right: calc(var(--space-400) + var(--space-200));
+}
+.fb-inline .fb-preview-content {
+  position: relative; max-width: none;
+}
+.fb-inline .fb-preview {
+  grid-column: 3 / 5;
+  width: auto; max-width: none; position: relative; top: auto;
+  border-left: var(--btn-border-width) solid var(--border-default);
+  background-color: color-mix(in srgb, var(--surface-sunken) 82%, var(--surface-pressed));
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--text-muted) 16%, transparent) var(--btn-border-width),
+    transparent var(--btn-border-width)
+  );
+  background-size: var(--space-200) var(--space-200);
+}
+.fb-share { display: none; }
+.fb-inline .fb-preview-title {
+  position: absolute; z-index: 1; top: var(--space-150); left: var(--space-150);
+  display: block; margin: 0; padding: var(--space-025) var(--space-075);
+  border-radius: var(--radius-sm); background: var(--surface-primary);
+  color: var(--text-secondary); font-size: var(--text-sm); font-weight: var(--weight-semi);
+  line-height: 1.2; box-shadow: var(--elevation-raise);
+  transition: opacity var(--dur-base) var(--ease-standard);
+}
+.fb-inline .fb-preview-stage { margin-top: var(--space-300); }
+.fb-inline .fb-preview-badge { display: none; }
+.fb-inline .fb-cols.is-published .fb-preview { grid-column: 1 / 3; border-left: 0; }
+.fb-inline .fb-cols.is-published .fb-preview-content {
+  max-width: none; margin-inline: 0;
+}
+.fb-inline .fb-cols.is-published .fb-preview-title { opacity: 0; }
+.fb-inline .fb-cols.is-published .fb-share {
+  display: block; grid-column: 3 / 5; min-width: 0; min-height: 0; overflow-y: auto;
+  border-left: var(--btn-border-width) solid var(--border-default);
+  background: var(--surface-page);
+  animation: fb-share-enter var(--fb-publish-motion) var(--ease-decel) both;
+}
+.fb-share-content {
+  box-sizing: border-box; width: 100%; max-width: var(--fb-preview-max); min-height: 100%;
+  margin-right: auto; padding: var(--space-400);
+  padding-left: calc(var(--space-400) + var(--space-100));
+}
+.fb-share-confirm { display: flex; align-items: flex-start; gap: var(--space-150); }
+.fb-share-tick {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  width: var(--space-400); height: var(--space-400); border-radius: var(--radius-full);
+  background: var(--status-success); color: var(--text-on-accent);
+}
+.fb-share-confirm h2 {
+  margin: 0; color: var(--text-heading); font-size: var(--text-xl); line-height: 1.25;
+}
+.fb-share-confirm p {
+  margin: var(--space-050) 0 0; color: var(--text-secondary);
+  font-size: var(--text-sm); line-height: 1.5;
+}
+.fb-share-heading {
+  margin: var(--space-400) 0 var(--space-200);
+  color: var(--text-heading); font-size: var(--text-lg);
+}
+.fb-share-methods {
+  display: grid; gap: var(--space-200);
+}
+.fb-share-method {
+  display: flex; align-items: flex-start; gap: var(--space-150);
+}
+.fb-share-method-icon {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  width: var(--space-400); height: var(--space-400); border-radius: var(--radius-md);
+  background: var(--surface-sunken); color: var(--text-secondary);
+}
+.fb-share-method-body { min-width: 0; flex: 1; }
+.fb-share-method-body label,
+.fb-share-method-label {
+  display: block; margin-bottom: var(--space-100);
+}
+.fb-share-control { display: flex; align-items: center; gap: var(--space-100); }
+.fb-share-link { min-width: 0; flex: 1; }
+.fb-share-method p + .ds-btn { margin-top: var(--space-150); }
+.fb-social-marks { display: inline-flex; align-items: center; padding-left: var(--space-050); }
+.fb-social-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: calc(var(--space-300) - var(--space-050));
+  height: calc(var(--space-300) - var(--space-050));
+  margin-left: calc(var(--space-050) * -1);
+  border: var(--btn-border-width) solid var(--border-default); border-radius: var(--radius-full);
+  background: var(--surface-primary); color: var(--text-primary);
+}
+.fb-social-mark svg { width: var(--space-150); height: var(--space-150); }
+.fb-share-code {
+  display: block; width: 100%; min-height: calc(var(--input-height) * 2);
+  margin-bottom: var(--space-100); resize: vertical; line-height: 1.45;
+}
+@keyframes fb-share-enter {
+  from { opacity: 0; transform: translateX(var(--space-300)); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Once both panes would become cramped, preserve their usable widths by stacking them.
+   The shared host becomes the scroll owner instead of leaving two short nested scrollers. */
+@media (max-width: 1000px) {
+  .fb-inline { overflow-y: auto; }
+  .fb-inline .fb-cols { height: auto; min-height: 100%; display: flex; overflow: visible; }
+  .fb-inline .fb-edit,
+  .fb-inline .fb-preview,
+  .fb-inline .fb-share { flex: 0 0 auto; overflow: visible; }
+  .fb-inline .fb-edit-content,
+  .fb-inline .fb-preview-content {
+    max-width: none; margin-inline: 0; padding: var(--space-300);
+  }
+  .fb-inline .fb-preview {
+    border-left: 0; border-top: var(--btn-border-width) solid var(--border-default);
+  }
+  .fb-inline .fb-cols.is-published .fb-preview { border-top: 0; }
+  .fb-inline .fb-cols.is-published .fb-share {
+    border-left: 0; border-top: var(--btn-border-width) solid var(--border-default);
+  }
+  .fb-share-content { max-width: none; margin-inline: 0; padding: var(--space-300); }
+}
+
+.fb-card { margin-bottom: var(--space-200); }
 .fb-card:last-child { margin-bottom: 0; }
 .fb-card-title {
   font-size: var(--text-2xs); font-weight: var(--weight-bold);
@@ -389,14 +539,17 @@ body.fb-locked { overflow: hidden; }
   accent-color: var(--checkbox-accent);
 }
 
-/* Its own width, kept through the publish animation — the editor beside it is what leaves,
-   so the preview must not be the thing that flexes. The transform transition is the slide
-   into the centre; slideTo() sets the starting offset and then clears it. */
+/* Its own width in the legacy modal, kept through the publish animation — the editor beside
+   it is what leaves. The inline two-pane route overrides the pane width above. */
 .fb-preview {
-  flex: 0 0 460px; max-width: 460px; position: sticky; top: 0;
-  /* `position: sticky` is already a positioning context, so the badge anchors to this. */
+  flex: 0 0 calc(var(--space-400) * 14); max-width: calc(var(--space-400) * 14);
+  position: sticky; top: 0;
   transition: transform var(--dur-slow) var(--ease-decel);
 }
+.fb-preview-stage {
+  position: relative; width: 100%; max-width: calc(var(--space-400) * 14); margin-inline: auto;
+}
+.fb-preview-title { display: none; }
 /* A .ds-badge--accent straddling the preview box's top-left corner. Positioning is this
    file's job; the chip and its colours are the design system's — the accent variant's fill
    is opaque, so the box's border passes behind it and appears to stop for it. */

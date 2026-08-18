@@ -22,29 +22,27 @@
 <link rel="stylesheet" href="/form-builder.css">
 <script src="/form-render.js"></script>
 <style>
-  /* The full-page settings route for one pipeline's form. Every creation/editing
-     entry point navigates here; the shared builder is mounted inline.
-     Capped and centred like every other settings route (.ps-wrap, .os-wrap), just wider:
-     this one carries two columns — a flexing editor beside a 460px preview — so 1040px
-     would squeeze the field rows. 1240px is the width the builder was drawn at. */
-  .fp-wrap { width: 100%; max-width: 1240px; margin: 0 auto; padding: var(--space-400) 20px 60px; }
-  body[data-subpage="form-settings"] .main-area { background: var(--surface-page); }
-  /* Published mirrors the former modal header: navigation at the edges, with the shared
-     confirmation and URL centred against the complete task bar. */
-  body[data-subpage="form-settings"] .subpage-top.is-published { position: relative; }
-  body[data-subpage="form-settings"] .subpage-top.is-published .fp-save { margin-left: auto; }
-  body[data-subpage="form-settings"] .subpage-top.is-published .fb-published {
-    top: 50%;
-    transform: translate(-50%, -50%);
-    /* The modal's rise animation ends at translateY(0), which would pull this pill back
-       below the shorter full-page task bar after the first frame. */
-    animation: none;
+  /* This full-page settings route composes the registered Two-pane workspace pattern:
+     the shared task bar stays above two panes that own the remaining viewport. */
+  .fp-wrap {
+    width: 100%; min-height: 0; flex: 1 1 auto; overflow: hidden;
   }
+  /* Pane surfaces remain full-bleed. The builder centres their inner content rails as
+     one bounded 3:2 workspace, so this route keeps the host fluid. */
+  #fp-host {
+    width: 100%; height: 100%; min-height: 0;
+  }
+  body[data-subpage="form-settings"] .main-area { background: var(--surface-page); }
+  /* The published result now lives in the right pane; the task bar keeps only navigation
+     and the final Done action. */
+  body[data-subpage="form-settings"] .subpage-top.is-published .fp-save { margin-left: auto; }
   /* Delete takes the auto margin so the two actions travel together on the right,
      rather than delete stranding itself beside the title. */
   .fp-delete { margin-left: auto; }
   .fp-save { margin-left: var(--space-100); }
-  .fp-err { font-size: 12.5px; color: #c0392b; margin-right: 12px; }
+  .fp-err {
+    margin-right: var(--space-150); color: var(--status-danger); font-size: var(--text-xs);
+  }
   /* A small first-publish celebration. Particles originate at both viewport edges and
      converge around the centred form; they never intercept input or become accessibility
      content. Colours stay on the system's semantic palette. */
@@ -97,7 +95,7 @@
       <button class="ds-btn ds-btn--primary fp-save" id="fp-save">Publish form</button>
     </div>
 
-    <div class="fp-wrap"><div id="fp-host"></div></div>
+    <div class="fp-wrap"><div class="fb-inline" id="fp-host"></div></div>
   </div>
 </div>
 
@@ -165,8 +163,8 @@
     const form = window.DATA && window.DATA.pipelines &&
       window.DATA.pipelines[PIPELINE_ID] && window.DATA.pipelines[PIPELINE_ID].intakeForm;
     const host = document.getElementById('fp-link');
-    if (published) window.titanFormBuilder.publishedRow(host, form && form.token, null, true);
-    else window.titanFormBuilder.linkRow(host, form && form.token);
+    if (published) { host.innerHTML = ''; return; }
+    window.titanFormBuilder.linkRow(host, form && form.token);
   }
 
   function launchFirstPublishConfetti() {

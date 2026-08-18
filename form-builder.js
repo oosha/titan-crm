@@ -282,12 +282,13 @@
   // get a link out, not while they are tuning copy.
   const SHELL = '' +
     '<div class="fb-cols">' +
-      '<div class="fb-edit">' +
+      '<section class="fb-edit" aria-label="Edit form">' +
+        '<div class="fb-edit-content">' +
         // The logo tile is the upload control, not a preview beside one. A separate
         // "Upload logo" button made branding look like a second task; here the thing you
         // click is the thing you get, and it sits where it sits on the form itself —
         // to the left of the title.
-        '<div class="fb-card">' +
+        '<div class="ds-card ds-card--section fb-card">' +
           '<div class="fb-title-row">' +
             '<div class="fb-row"><label for="fb-heading">Form title</label>' +
               '<input class="ds-input fb-big" id="fb-heading" data-meta="heading" placeholder="e.g. Apply — Senior Frontend Engineer"></div>' +
@@ -306,7 +307,7 @@
           '</div>' +
         '</div>' +
 
-        '<div class="fb-card">' +
+        '<div class="ds-card ds-card--section fb-card">' +
           '<div class="fb-card-title">Fields</div>' +
           '<div class="fb-fields"></div>' +
           '<button type="button" class="ds-btn ds-btn--add fb-add-btn">Add a new field</button>' +
@@ -314,14 +315,27 @@
 
         // Kept, not deleted — see PAUSE_UI at the top of this file.
         (PAUSE_UI ? '<label class="fb-toggle"><input type="checkbox" class="fb-enabled"> Accepting responses</label>' : '') +
-      '</div>' +
+        '</div>' +
+      '</section>' +
 
-      '<div class="fb-preview">' +
-        // Sits on the box's own top-left edge rather than on a line above it: a heading
-        // there was a row of the layout, and this is a label on the thing it names.
+      '<section class="fb-preview" aria-label="Form preview">' +
+        '<div class="fb-preview-content">' +
+        '<h2 class="fb-preview-title">Preview</h2>' +
+        '<div class="fb-preview-stage">' +
+        // The legacy modal keeps its compact badge on the form itself. The inline route
+        // hides it in favour of the pane-level heading above.
         '<span class="ds-badge ds-badge--accent fb-preview-badge">Form Preview</span>' +
         '<div class="tf-sheet"><div class="tf-card fb-body"></div></div>' +
-      '</div>' +
+        '</div>' +
+        '</div>' +
+      '</section>' +
+
+      // Filled only after a successful publish on the full-page route. Keeping it as a
+      // sibling pane lets the preview move left while the sharing handoff arrives on the
+      // right; the legacy modal continues to use its compact header result.
+      '<section class="fb-share" aria-label="Share published form">' +
+        '<div class="fb-share-content"></div>' +
+      '</section>' +
     '</div>';
 
   // One live editor over a form object. `host` is any element; the modal is just a
@@ -333,6 +347,7 @@
     this.form = JSON.parse(JSON.stringify(opts.form || window.titanFormDefault(opts.personaId, this.pipeline)));
     this.onSave = opts.onSave || function () {};
     this.origin = opts.origin || location.origin;
+    this.inline = host.classList.contains('fb-inline');
     // Custom-field keys this session invented, so switching such a row to one of the
     // record's own fields can take its definition back out again — see releaseCustom().
     // Only these are ever removed; a field that existed before may carry values.
@@ -366,9 +381,9 @@
     this.renderLogo();
   }
 
-  // The mounted full-page route and the legacy modal share the same published-state
-  // movement. Keeping the FLIP transition on the builder prevents a route-specific save
-  // handler from silently losing the animation again.
+  // The mounted full-page route and legacy modal share the preview's FLIP movement. The
+  // inline route adds a right-hand sharing pane; the compatibility modal keeps its compact
+  // header result.
   Builder.prototype.setPublished = function (published) {
     const cols = this.$('.fb-cols');
     const editEl = cols && cols.querySelector('.fb-edit');
@@ -380,6 +395,7 @@
 
     const from = previewEl.getBoundingClientRect().left;
     if (published) {
+      if (this.inline) this.renderSharePanel();
       // Pinned before it leaves the flow: an absolutely-positioned flex item with no
       // width of its own would collapse to its content and reflow while fading.
       editEl.style.width = editEl.getBoundingClientRect().width + 'px';
@@ -403,6 +419,93 @@
     };
     requestAnimationFrame(release);
     setTimeout(release, 50);
+  };
+
+  // The full-page success state is a handoff, not a toast: the published form remains
+  // visible while the neighbouring pane gives the three useful ways to distribute it.
+  Builder.prototype.renderSharePanel = function () {
+    const host = this.$('.fb-share-content');
+    if (!host || !this.form.token) return;
+    const url = formUrl(this.origin, this.form.token);
+    const shareTitle = this.form.heading || 'Form';
+    const linkId = this.uid + '-share-link';
+    const embedId = this.uid + '-embed-code';
+    const icon = function (name, size) {
+      return window.dsIcon ? window.dsIcon(name, { size: size }) : '';
+    };
+    // Brand marks are content rather than design-system icons. They stay monochrome so
+    // the button keeps the system's own colour and state treatment.
+    const socialMarks =
+      '<span class="fb-social-marks" aria-hidden="true">' +
+        '<span class="fb-social-mark" title="Facebook"><svg viewBox="0 0 16 16">' +
+          '<path d="M9.5 14V8.5h1.9l.3-2.2H9.5V4.9c0-.7.2-1.1 1.1-1.1h1.2v-2c-.2 0-.9-.1-1.7-.1-1.7 0-2.9 1-2.9 3v1.6H5.3v2.2h1.9V14h2.3Z" fill="currentColor"/></svg></span>' +
+        '<span class="fb-social-mark" title="Instagram"><svg viewBox="0 0 16 16" fill="none">' +
+          '<rect x="2.2" y="2.2" width="11.6" height="11.6" rx="3.1" stroke="currentColor" stroke-width="1.4"/>' +
+          '<circle cx="8" cy="8" r="2.7" stroke="currentColor" stroke-width="1.4"/>' +
+          '<circle cx="11.4" cy="4.7" r=".8" fill="currentColor"/></svg></span>' +
+        '<span class="fb-social-mark" title="X"><svg viewBox="0 0 16 16" fill="none">' +
+          '<path d="M3 2.5 13 13.5M12.5 2.5l-9 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>' +
+      '</span>';
+
+    host.innerHTML =
+      '<div class="fb-share-confirm" role="status" aria-live="polite">' +
+        '<span class="fb-share-tick">' + icon('check', 18) + '</span>' +
+        '<div><h2>Your form was published.</h2>' +
+          '<p>It is live and ready to share.</p></div>' +
+      '</div>' +
+      '<h3 class="fb-share-heading">Share your form</h3>' +
+      '<div class="fb-share-methods">' +
+        '<section class="ds-card fb-share-method">' +
+          '<span class="fb-share-method-icon">' + icon('link-simple', 18) + '</span>' +
+          '<div class="fb-share-method-body"><label class="ds-card-title" for="' + esc(linkId) + '">Link</label>' +
+            '<div class="fb-share-control">' +
+              '<input class="ds-input fb-share-link" id="' + esc(linkId) + '" readonly>' +
+              '<button type="button" class="ds-btn ds-btn--secondary fb-share-copy">' +
+                icon('copy', 15) + 'Copy link</button>' +
+            '</div>' +
+          '</div>' +
+        '</section>' +
+        '<section class="ds-card fb-share-method">' +
+          '<span class="fb-share-method-icon">' + icon('paper-plane-tilt', 18) + '</span>' +
+          '<div class="fb-share-method-body"><span class="ds-card-title fb-share-method-label">Social media</span>' +
+            '<p class="ds-card-sub">Choose Facebook, Instagram, X, or another available app.</p>' +
+            '<button type="button" class="ds-btn ds-btn--secondary fb-share-social" aria-label="Share to social media">' +
+              socialMarks + '<span class="fb-share-social-label">Share</span></button>' +
+          '</div>' +
+        '</section>' +
+        '<section class="ds-card fb-share-method">' +
+          '<span class="fb-share-method-icon">' + icon('file-text', 18) + '</span>' +
+          '<div class="fb-share-method-body"><label class="ds-card-title" for="' + esc(embedId) + '">Embed code</label>' +
+            '<textarea class="ds-input fb-share-code" id="' + esc(embedId) + '" readonly></textarea>' +
+            '<button type="button" class="ds-btn ds-btn--secondary fb-share-embed-copy">' +
+              icon('copy', 15) + 'Copy code</button>' +
+          '</div>' +
+        '</section>' +
+      '</div>';
+
+    const link = host.querySelector('.fb-share-link');
+    const code = host.querySelector('.fb-share-code');
+    const embed = '<iframe src="' + url + '" title="Contact form" loading="lazy"></iframe>';
+    link.value = url;
+    code.value = embed;
+    wireCopy(host.querySelector('.fb-share-copy'), url);
+    wireCopy(host.querySelector('.fb-share-embed-copy'), embed);
+
+    host.querySelector('.fb-share-social').addEventListener('click', async function () {
+      const btn = this;
+      if (navigator.share) {
+        try { await navigator.share({ title: shareTitle, url: url }); }
+        catch (e) { /* Closing the native share sheet is not an error state. */ }
+        return;
+      }
+      navigator.clipboard.writeText(url).then(function () {
+        const label = btn.querySelector('.fb-share-social-label');
+        label.textContent = 'Link copied';
+        setTimeout(function () { label.textContent = 'Share'; }, 1400);
+      }).catch(function () {
+        btn.querySelector('.fb-share-social-label').textContent = 'Copy failed';
+      });
+    });
   };
 
   // Forms saved before the destination and the type were one choice can carry a custom

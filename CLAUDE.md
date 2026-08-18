@@ -68,10 +68,13 @@ fastest way to see what exists before you build — and the place a visual regre
 **Patterns are requirements, not inspiration.** Before choosing whether a task opens in
 a modal, drawer or full page, check `registry.json.patterns` / `#patterns`. If the task
 matches a registered pattern, follow its route, structure, accessibility and state rules.
-The current contracts are Modal dialog (short, bounded work that retains page context)
-and Full-page settings (sustained or multi-section configuration with a cold-loadable
-route). Using design-system components inside the wrong interaction pattern does not make
-the surface compliant.
+The current contracts are Modal dialog (short, bounded work that retains page context),
+Full-page settings (sustained or multi-section configuration with a cold-loadable route),
+and Two-pane workspace (two related surfaces that must remain visible together). The
+two-pane contract covers only the adjacent full-bleed pane surfaces, their horizontally
+centred and width-bounded shared content frame, separator, independent scroll regions and
+responsive fallback; it does not carry feature styling between adopters. Using
+design-system components inside the wrong interaction pattern does not make the surface compliant.
 
 **Scope is the CRM and its modules — `index.html` is deliberately out.** The mailbox is the
 mocked half; it keeps its own chrome and is excluded from both measurement scripts (and from
@@ -291,10 +294,15 @@ and 404s locally until it's added there too.
 
 `form-builder.js` (+ `form-builder.css`) is the editor. Every form creation/editing entry
 point navigates in place to `/crm/pipeline/:id/form`, following the Full-page settings
-pattern; `titanFormBuilder.mount(host, {…})` renders it inline there. The route fetches its
-own data on a cold load, replaces the global sidebar, preserves `?u=<persona>`, and saves via
-`saveData()`. A safe `?from=forms|board|pipeline-settings` enum controls Back without
-accepting an arbitrary return URL.
+pattern; its body composes the Two-pane workspace pattern with the editor on the left and
+the live preview on the right. `titanFormBuilder.mount(host, {…})` renders it inline there.
+After a successful publish, the editor leaves, the preview slides into the left pane, and a
+right-hand handoff pane confirms publication and offers link copying, native social sharing,
+and embed-code copying. The route header does not duplicate that success result.
+The route fetches its own data on a cold load, replaces the global sidebar, preserves
+`?u=<persona>`, and saves via `saveData()`. A safe
+`?from=forms|board|pipeline-settings` enum controls Back without accepting an arbitrary
+return URL.
 
 The board's New Pipeline flow creates and persists the pipeline before navigating to the
 form route, because a full-page editor cannot fetch a pipeline that still exists only in
