@@ -1957,6 +1957,27 @@
   },
   "sequences": [
     {
+      "id": "sequence-mt02jeq6-mvclw",
+      "name": "Untitled sequence",
+      "description": "Simple sales follow-up.",
+      "weekdaysOnly": true,
+      "schedule": {
+        "activeDays": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri"
+        ],
+        "startTime": "09:00",
+        "endTime": "17:00",
+        "timezone": "contact"
+      },
+      "activeInstances": 0,
+      "usedBy": [],
+      "steps": []
+    },
+    {
       "id": "new-lead-follow-up",
       "name": "New lead follow-up",
       "description": "Call and follow up with new leads.",
