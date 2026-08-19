@@ -43,7 +43,12 @@
       <div class="int-wrap">
         <p class="int-intro">Connect the tools you already use, so information arrives in
           Titan without anyone retyping it.</p>
-        <div id="int-list"></div>
+        <div class="int-grid" id="int-list"></div>
+
+        <div class="int-section-head">Coming soon</div>
+        <p class="int-section-sub">These all post submissions to a URL, so they will
+          arrive the same way Contact Form 7 does. Tell us which you need and it moves up.</p>
+        <div class="int-grid" id="int-soon"></div>
       </div>
     </div>
   </div>
@@ -133,25 +138,32 @@
     document.getElementById('int-list').innerHTML = PROVIDERS.map(function (p) {
       const on = !!connectedById[p.id];
       return '<div class="int-row-card">' +
-        '<div class="int-logo"><img src="' + esc(p.logo) + '" alt=""></div>' +
-        '<div class="int-row-text">' +
-          '<div class="int-row-name">' + esc(p.name) + '</div>' +
-          '<div class="int-row-blurb">' + esc(on ? p.summarise(data) : p.blurb) + '</div>' +
+        '<div class="int-card-top">' +
+          '<div class="int-logo"><img src="' + esc(p.logo) + '" alt=""></div>' +
+          '<div class="int-row-text">' +
+            '<div class="int-row-name">' + esc(p.name) + '</div>' +
+            '<div class="int-row-blurb">' + esc(on ? p.summarise(data) : p.blurb) + '</div>' +
+          '</div>' +
         '</div>' +
-        '<span class="int-status ' + (on ? 'on' : 'off') + '">' + (on ? 'Connected' : 'Not connected') + '</span>' +
-        '<button class="dir-btn ' + (on ? '' : 'dir-btn-primary') + '" type="button" data-path="' + esc(p.path) + '">' +
-          (on ? 'Manage' : 'Connect') +
-        '</button>' +
+        '<div class="int-card-foot">' +
+          '<span class="int-status ' + (on ? 'on' : 'off') + '">' + (on ? 'Connected' : 'Not connected') + '</span>' +
+          '<button class="dir-btn ' + (on ? '' : 'dir-btn-primary') + '" type="button" data-path="' + esc(p.path) + '">' +
+            (on ? 'Manage' : 'Connect') +
+          '</button>' +
+        '</div>' +
       '</div>';
-    }).join('') +
-    COMING_SOON.map(function (p) {
+    }).join('');
+
+    document.getElementById('int-soon').innerHTML = COMING_SOON.map(function (p) {
       return '<div class="int-row-card is-soon">' +
-        '<div class="int-logo"><img src="' + esc(p.logo) + '" alt=""></div>' +
-        '<div class="int-row-text">' +
-          '<div class="int-row-name">' + esc(p.name) + '</div>' +
-          '<div class="int-row-blurb">' + esc(p.blurb) + '</div>' +
+        '<div class="int-card-top">' +
+          '<div class="int-logo"><img src="' + esc(p.logo) + '" alt=""></div>' +
+          '<div class="int-row-text">' +
+            '<div class="int-row-name">' + esc(p.name) + '</div>' +
+            '<div class="int-row-blurb">' + esc(p.blurb) + '</div>' +
+          '</div>' +
         '</div>' +
-        '<span class="int-status soon">Coming soon</span>' +
+        '<div class="int-card-foot"><span class="int-status soon">Coming soon</span></div>' +
       '</div>';
     }).join('');
 
