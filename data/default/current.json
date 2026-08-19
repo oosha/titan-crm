@@ -1988,6 +1988,19 @@
               "sendTime": "09:00"
             }
           ]
+        },
+        {
+          "id": "group-104",
+          "timing": "immediate",
+          "days": 0,
+          "actions": [
+            {
+              "id": "action-103",
+              "action": "email",
+              "templateId": "initial-outreach",
+              "sendTime": "09:00"
+            }
+          ]
         }
       ]
     },
