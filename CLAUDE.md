@@ -250,18 +250,20 @@ delay entity's inspector. The entity being edited keeps an obvious selected
 border/ring without tinting the card surface, plus `aria-pressed="true"`, until the inspector closes. Action and orange
 delay cards also reveal an adjacent quick-delete button on hover or keyboard focus; deletion
 requires no confirmation, scales/fades the entity out, then slides later entities upward. The
-inspector retains its own remove control. Deleting an action also deletes its associated delay,
-so an orphaned wait is never left in the flow. Deleting the final action clears any remaining
-standalone delays and returns the flow to its clean Starting point state; sequence-level settings
-and metadata remain intact. An action is always the first visible flow entity. Deleting the first
-action also removes any leading standalone delays that it exposes and makes the next action
-immediate, so a delay or condition can never become the beginning of the flow. On wide screens the flow lane recentres within the
+inspector retains its own remove control. Deleting an action preserves its preceding delay or
+condition as a standalone flow entity; an immediate timing group is removed when its action is
+deleted because it has no visible entity to retain. Deleting the final action clears the flow only
+when no other actions remain. Sequence-level settings and metadata remain intact. An action is always
+the first visible flow entity, so the one exception to delay preservation is at the beginning:
+deleting the first action also removes any leading standalone delays it exposes and makes the next
+action immediate. A delay or condition can therefore never become the beginning of the flow. On wide screens the flow lane recentres within the
 remaining canvas while the inspector is open; narrower screens keep it as an overlay rather
 than squeezing the cards. The final flow control is a compact blue circular plus button with
 the accessible label `Add to flow`. For every action after the starting action, its popover uses a
-two-stage wizard with a visible `1 Condition — 2 Action` progress indicator: `Set the condition`
-exposes wait duration and `After wait, continue`, then `Choose an action` offers email, call reminder
-and task. The active stage uses the accent treatment and the completed stage remains visibly marked.
+two-stage wizard with simple `Step 1 of 2` and `Step 2 of 2` progress labels rather than a graphical
+stepper. `Set the condition` exposes wait duration and `After wait, continue`, then `Choose an action`
+offers email, call reminder and task. Both stage headings render as prominent uppercase headings,
+while the `Step N of 2` progress copy remains the smaller supporting label.
 Only one stage is visible at a time, Back returns to condition configuration, and clicking an action on the second stage adds the
 configured delay and action with no further confirmation. The popover has an upward-pointing tail centered on the blue plus.
 The first activity chosen from a new sequence's starting point runs immediately and does not receive
