@@ -675,7 +675,9 @@
           "actions": [
             {
               "id": "action-101",
-              "action": "call",
+              "action": "email",
+              "templateId": "initial-outreach",
+              "sendTime": "09:00",
               "title": "Follow-up call",
               "reminderOffset": "next-day",
               "reminderTime": "09:00"
