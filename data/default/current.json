@@ -96,41 +96,6 @@
       ],
       "cards": [
         {
-          "id": 216,
-          "deal": "John Macker",
-          "stage": "lead",
-          "company": "",
-          "contact": "John Macker",
-          "initials": "JM",
-          "contactEmail": "john@macker.com",
-          "contactPhone": "",
-          "contactDesignation": "",
-          "contactLocation": "",
-          "contactLinkedin": "",
-          "contacts": [
-            {
-              "name": "John Macker",
-              "email": "john@macker.com",
-              "phone": "",
-              "designation": "",
-              "location": "",
-              "linkedin": ""
-            }
-          ],
-          "value": 0,
-          "currency": "$",
-          "source": "Web form",
-          "note": "Partnerships of $100M",
-          "noteAuthor": "John Macker",
-          "noteDate": "",
-          "lastActivity": "just now",
-          "activityType": "Form submission",
-          "overdue": false,
-          "createdBy": "Form",
-          "customFieldValues": {},
-          "inboundKey": "i:1rabukw:132"
-        },
-        {
           "id": 1,
           "company": "BrightPath Co",
           "contact": "Olivia Bennett",
