@@ -670,8 +670,8 @@
       "steps": [
         {
           "id": "group-104",
-          "timing": "after",
-          "days": 1,
+          "timing": "immediate",
+          "days": 0,
           "actions": [
             {
               "id": "action-103",
