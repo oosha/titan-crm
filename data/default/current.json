@@ -1975,7 +1975,21 @@
       },
       "activeInstances": 0,
       "usedBy": [],
-      "steps": []
+      "steps": [
+        {
+          "id": "group-102",
+          "timing": "immediate",
+          "days": 0,
+          "actions": [
+            {
+              "id": "action-101",
+              "action": "email",
+              "templateId": "initial-outreach",
+              "sendTime": "09:00"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "new-lead-follow-up",
