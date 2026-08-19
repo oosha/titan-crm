@@ -2369,6 +2369,31 @@
     .kanban-card { cursor: pointer; }
 
     .kanban-board { display: flex; gap: var(--kanban-col-gap); align-items: stretch; }
+    /* List view uses the same board data in a denser, scan-friendly table. Table is a
+       design-system gap today, so these ps-free, page-local rules only arrange the
+       existing tokens and controls — they do not introduce a second component. */
+    .pipeline-list { width: 100%; overflow-x: auto; }
+    .pipeline-list table { width: 100%; min-width: 720px; border-collapse: collapse; }
+    .pipeline-list th {
+      padding: var(--space-100) var(--space-200); border-bottom: 1px solid var(--border-default);
+      color: var(--text-secondary); font-size: var(--text-2xs); font-weight: var(--weight-semi);
+      text-align: left; text-transform: uppercase;
+    }
+    .pipeline-list td {
+      padding: var(--space-150) var(--space-200); border-bottom: 1px solid var(--border-hairline);
+      color: var(--text-primary); font-size: var(--text-sm); vertical-align: middle;
+    }
+    .pipeline-list tbody tr { cursor: pointer; }
+    .pipeline-list tbody tr:hover { background: var(--surface-hover); }
+    .pipeline-list tbody tr:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+    .pipeline-list__record { color: var(--text-heading); font-weight: var(--weight-semi); }
+    .pipeline-list__meta { color: var(--text-secondary); font-size: var(--text-xs); margin-top: var(--space-025); }
+    .pipeline-list__stage { color: var(--text-secondary); white-space: nowrap; }
+    .pipeline-list__amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .pipeline-list__company { display: flex; align-items: center; gap: var(--space-075); white-space: nowrap; }
+    .pipeline-list__activity { color: var(--text-secondary); max-width: 240px; }
+    .pipeline-list__last-activity { color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .pipeline-list__empty { color: var(--text-muted); text-align: center; }
     .kanban-col {
       width: var(--kanban-col-width); flex-shrink: 0; background: transparent;
       display: flex; flex-direction: column; max-height: 100%;
@@ -2624,11 +2649,11 @@
                 </button>
               </div>
             </div>
-            <div class="ds-segmented" role="group" aria-label="Board view">
-              <button type="button" title="Kanban" aria-pressed="true">
+            <div class="ds-segmented" role="group" aria-label="Pipeline view">
+              <button type="button" id="board-view-kanban" title="Kanban" aria-pressed="true" onclick="setBoardView('kanban')">
                 <span data-ds-icon="board" data-size="17"></span>
               </button>
-              <button type="button" title="List" aria-pressed="false" onclick="alert('Prototype only: List view (§3.3) is not built yet.')">
+              <button type="button" id="board-view-list" title="List" aria-pressed="false" onclick="setBoardView('list')">
                 <span data-ds-icon="list" data-size="17"></span>
               </button>
             </div>
@@ -4443,12 +4468,138 @@
     document.addEventListener('scroll', hideAvatarTip, true);
     document.addEventListener('dragstart', hideAvatarTip);
 
+    let boardView = 'kanban';
+    let pipelineListSort = { key: 'lastActivity', direction: 'asc' };
+
+    function setBoardView(view) {
+      if (view !== 'kanban' && view !== 'list') return;
+      boardView = view;
+      const kanbanButton = document.getElementById('board-view-kanban');
+      const listButton = document.getElementById('board-view-list');
+      if (kanbanButton) kanbanButton.setAttribute('aria-pressed', String(view === 'kanban'));
+      if (listButton) listButton.setAttribute('aria-pressed', String(view === 'list'));
+      renderBoard();
+    }
+
+    function lastActivityAge(card) {
+      const value = String(card.lastActivity || '').toLowerCase().trim();
+      if (!value || value === 'just now') return 0;
+      if (value === 'yesterday') return 86400;
+      const match = value.match(/^(\d+)\s*(m|h|d|w|mo|y)\s+ago$/);
+      if (!match) return Number.MAX_SAFE_INTEGER;
+      const units = { m: 60, h: 3600, d: 86400, w: 604800, mo: 2592000, y: 31536000 };
+      return Number(match[1]) * units[match[2]];
+    }
+
+    function sortPipelineList(key) {
+      if (pipelineListSort.key === key) pipelineListSort.direction = pipelineListSort.direction === 'asc' ? 'desc' : 'asc';
+      else pipelineListSort = { key: key, direction: 'asc' };
+      renderBoard();
+    }
+
+    function renderPipelineList(board) {
+      const hasMoney = currentHasMoney();
+      const list = document.createElement('div');
+      list.className = 'pipeline-list ds-card ds-card--flat';
+      const table = document.createElement('table');
+      const lastActivityLabel = pipelineListSort.direction === 'asc' ? 'Last activity ↑' : 'Last activity ↓';
+      table.innerHTML = '<thead><tr>' +
+        '<th scope="col">' + ((PIPELINES[currentPipelineId] || {}).entity || 'Record') + '</th>' +
+        '<th scope="col">Contact</th>' +
+        '<th scope="col">Company</th>' +
+        '<th scope="col">Stage</th>' +
+        (hasMoney ? '<th scope="col">Value</th>' : '') +
+        '<th scope="col">Activity</th>' +
+        '<th scope="col"><button type="button" class="ds-btn ds-btn--ghost ds-btn--sm" onclick="sortPipelineList(\'lastActivity\')" aria-label="Sort by last activity">' + lastActivityLabel + '</button></th>' +
+      '</tr></thead>';
+      const body = document.createElement('tbody');
+
+      if (!CARDS.length) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.className = 'pipeline-list__empty';
+        cell.colSpan = hasMoney ? 7 : 6;
+        cell.textContent = 'No ' + CURRENT_ENTITY_PLURAL + ' yet';
+        row.appendChild(cell);
+        body.appendChild(row);
+      }
+
+      CARDS.slice().sort(function (a, b) {
+        const difference = lastActivityAge(a) - lastActivityAge(b);
+        return pipelineListSort.direction === 'asc' ? difference : -difference;
+      }).forEach(function (card) {
+        const row = document.createElement('tr');
+        row.tabIndex = 0;
+        row.setAttribute('role', 'button');
+        row.setAttribute('aria-label', 'Open ' + (card.deal || card.contact || 'record'));
+        row.addEventListener('click', function () { openOpportunity(card.id); });
+        row.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openOpportunity(card.id); }
+        });
+
+        const recordCell = document.createElement('td');
+        const recordName = document.createElement('div');
+        recordName.className = 'pipeline-list__record';
+        recordName.textContent = card.deal || card.contact || 'Untitled';
+        recordCell.appendChild(recordName);
+        row.appendChild(recordCell);
+
+        const contactCell = document.createElement('td');
+        contactCell.textContent = card.contact || '—';
+        row.appendChild(contactCell);
+
+        const companyCell = document.createElement('td');
+        if (card.company) {
+          const company = document.createElement('div');
+          company.className = 'pipeline-list__company';
+          company.innerHTML = companyLogoHTML(card);
+          const companyName = document.createElement('span');
+          companyName.textContent = card.company;
+          company.appendChild(companyName);
+          companyCell.appendChild(company);
+        } else companyCell.textContent = '—';
+        row.appendChild(companyCell);
+
+        const stageCell = document.createElement('td');
+        stageCell.className = 'pipeline-list__stage';
+        const stage = STAGES.find(function (item) { return item.key === card.stage; });
+        stageCell.textContent = stage ? stage.label : '—';
+        row.appendChild(stageCell);
+
+        if (hasMoney) {
+          const amountCell = document.createElement('td');
+          amountCell.className = 'pipeline-list__amount';
+          amountCell.textContent = card.value ? fmtMoney(card.value) : '—';
+          row.appendChild(amountCell);
+        }
+
+        const activityCell = document.createElement('td');
+        activityCell.className = 'pipeline-list__activity';
+        activityCell.textContent = card.nextActivity
+          ? formatNextActivity(card.nextActivity)
+          : card.activityType || '—';
+        row.appendChild(activityCell);
+
+        const lastActivityCell = document.createElement('td');
+        lastActivityCell.className = 'pipeline-list__last-activity';
+        lastActivityCell.textContent = card.lastActivity || '—';
+        row.appendChild(lastActivityCell);
+        body.appendChild(row);
+      });
+
+      table.appendChild(body);
+      list.appendChild(table);
+      board.appendChild(list);
+    }
+
     function renderBoard() {
       const board = document.getElementById('kanban-board');
       if (!board) return;
       board.innerHTML = '';
 
-      STAGES.forEach(function (stage, idx) {
+      if (boardView === 'list') {
+        renderPipelineList(board);
+      } else STAGES.forEach(function (stage, idx) {
         const cardsInStage = CARDS.filter(function (c) { return c.stage === stage.key; });
         const total = cardsInStage.reduce(function (sum, c) { return sum + c.value; }, 0);
         const headerShade = blueShade(idx, STAGES.length);
