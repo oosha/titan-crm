@@ -43,21 +43,41 @@
 }
 
 /* ── The active-view chip on the board ───────────────────────────────────── */
+/* Its own row under the pipeline total, so the chip and Edit view are not competing
+   with the heading for the same line. */
+.cv-chip-row {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: var(--space-150); margin-top: var(--space-125);
+}
 .cv-chip {
-  display: inline-flex; align-items: center; gap: var(--space-075);
+  display: inline-flex; align-items: center; gap: var(--space-100);
+  /* Less padding on the right than the left: the close button brings its own. */
+  padding: var(--space-075) var(--space-075) var(--space-075) var(--space-150);
   background: var(--surface-selected, var(--surface-recessed));
   border: 1px solid var(--border-accent, var(--accent-primary));
-  border-radius: 20px; padding: var(--space-050) var(--space-125);
-  font-size: var(--text-xs); color: var(--text-primary);
+  border-radius: 999px;
+  font-size: var(--text-xs); color: var(--text-primary); line-height: 1;
 }
 .cv-chip-name { font-weight: var(--weight-semi); }
-.cv-chip-count { color: var(--text-secondary); }
-.cv-chip button {
-  border: 0; background: none; padding: 0; cursor: pointer; line-height: 1;
-  color: var(--text-secondary); font-size: var(--text-md);
+/* A dot rather than more space: the name and the count are two different facts, and
+   at this size whitespace alone reads as one run-on label. */
+.cv-chip-sep {
+  width: 3px; height: 3px; border-radius: 50%;
+  background: var(--text-secondary); opacity: .5; flex-shrink: 0;
 }
-.cv-chip button:hover { color: var(--text-primary); }
+.cv-chip-count { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+/* Was an 8x14 glyph — technically clickable, practically not. */
+.cv-chip-x {
+  width: 20px; height: 20px; flex-shrink: 0; margin-left: var(--space-025);
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%; background: none; padding: 0; cursor: pointer;
+  color: var(--text-secondary);
+}
+.cv-chip-x:hover { background: var(--surface-primary); color: var(--text-primary); }
+.cv-chip-x:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 1px; }
 .cv-chip-edit {
   font: inherit; font-size: var(--text-xs); font-weight: var(--weight-semi);
-  color: var(--accent-primary); background: none; border: 0; cursor: pointer; padding: 0;
+  color: var(--accent-primary); background: none; border: 0; cursor: pointer;
+  padding: var(--space-050) 0;
 }
+.cv-chip-edit:hover { text-decoration: underline; }

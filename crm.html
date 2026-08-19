@@ -4678,13 +4678,19 @@
       if (!v) { host.innerHTML = ''; return; }
       const n = visibleCards().length;
       host.innerHTML =
-        '<span class="cv-chip">' +
-          '<span class="cv-chip-name">' + escAttr(v.name) + '</span>' +
-          '<span class="cv-chip-count">' + n + ' of ' + CARDS.length + '</span>' +
-          '<button type="button" onclick="clearView()" aria-label="Clear this view">&times;</button>' +
-        '</span> ' +
-        '<button type="button" class="cv-chip-edit" onclick="openViewEditor(currentPipelineId, \'' +
-          escAttr(v.id) + '\')">Edit view</button>';
+        '<div class="cv-chip-row">' +
+          '<span class="cv-chip">' +
+            '<span class="cv-chip-name">' + escAttr(v.name) + '</span>' +
+            '<span class="cv-chip-sep" aria-hidden="true"></span>' +
+            '<span class="cv-chip-count">' + n + ' of ' + CARDS.length + '</span>' +
+            '<button type="button" class="cv-chip-x" onclick="clearView()" ' +
+              'aria-label="Clear the ' + escAttr(v.name) + ' view">' +
+              '<span data-ds-icon="close" data-size="12"></span></button>' +
+          '</span>' +
+          '<button type="button" class="cv-chip-edit" onclick="openViewEditor(currentPipelineId, \'' +
+            escAttr(v.id) + '\')">Edit view</button>' +
+        '</div>';
+      if (window.dsIcon) window.dsIcon.hydrate(host);
     }
 
     // Navigates rather than re-rendering in place: the URL is the source of truth, and
