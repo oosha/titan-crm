@@ -96,41 +96,6 @@
       ],
       "cards": [
         {
-          "id": 218,
-          "deal": "Mathews",
-          "stage": "lead",
-          "company": "",
-          "contact": "Mathews",
-          "initials": "M",
-          "contactEmail": "mathews@gmail.com",
-          "contactPhone": "",
-          "contactDesignation": "",
-          "contactLocation": "",
-          "contactLinkedin": "",
-          "contacts": [
-            {
-              "name": "Mathews",
-              "email": "mathews@gmail.com",
-              "phone": "",
-              "designation": "",
-              "location": "",
-              "linkedin": ""
-            }
-          ],
-          "value": 0,
-          "currency": "$",
-          "source": "Contact Form 0",
-          "note": "Subject:\nNeed funding of $500 for partnerhsop\n\nMessage:\nI need some money",
-          "noteAuthor": "Mathews",
-          "noteDate": "",
-          "lastActivity": "just now",
-          "activityType": "Form submission",
-          "overdue": false,
-          "createdBy": "Form",
-          "customFieldValues": {},
-          "inboundKey": "i:161mp3a:127"
-        },
-        {
           "id": 217,
           "deal": "Mercy Loyal",
           "stage": "lead",
