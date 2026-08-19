@@ -1,9 +1,9 @@
 // Global prototype sequence library.
 //
-// This is deliberately client-only: the sequence editor and pipeline settings read
-// the same definitions, but there is no scheduler, mail sender or persistence API
-// behind them yet. Keep the data small and believable so the interaction can be
-// evaluated before the execution model is built.
+// Templates remain code-owned, while the sequence definitions below are the migration
+// fallback for persona documents that do not have a persisted `sequences` field yet.
+// The sequence editor seeds and then reads/writes live definitions through
+// /api/sequences. There is still no scheduler or mail sender behind them.
 (function () {
   var templates = [
     {

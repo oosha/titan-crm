@@ -202,14 +202,16 @@ a contract: rename one of those and the board's sidebar breaks.
 
 ## Sequences
 
-`/crm/sequences` is a global, frontend-only prototype library. It shows existing
+`/crm/sequences` is a global prototype library with persona-scoped server persistence. It shows existing
 sequences in a performance table; selecting one opens its full-page editor at `/crm/sequences/:id`,
 which follows the Full-page settings pattern and does not mount the global CRM sidebar.
 Its page-local rail sits below the full-width header and has four hash-addressable sections:
 Sequence flow, Performance, Details and Sending schedule. Both routes preserve `?u=<persona>`
-and survive a cold load. `titan-sequences.js` owns
-the small shared set of sales email templates and linear sequences, and both
-`sequences.html` and `pipeline-settings.html` read it. The stored model internally uses timing groups,
+and survive a cold load. `titan-sequences.js` owns the small shared set of sales email
+templates plus the migration fallback sequences. `sequences.html` and
+`pipeline-settings.html` load the live sequence definitions from `/api/sequences`; when an
+older persona document has no `sequences` field, the sequence page seeds it from that fallback.
+The stored model internally uses timing groups,
 but the UI deliberately never calls them steps or numbers them. The visible hierarchy is a
 sequence containing a flow, and that flow containing actions and delays. It renders one centred,
 top-to-bottom flow lane of action cards—send an email, set a call reminder, or create a
@@ -291,11 +293,15 @@ Triggered, Opened and Replied columns. Opened and Replied are blank for call rem
 tasks. It does not show meetings, clicks, bounces, unsubscribes, call connections, task
 completion, enrollment rate, or deal/revenue attribution.
 
-There is deliberately no scheduler, sender or sequence API yet. The editor keeps changes
-in memory and says so in the UI; a reload restores the shared sample definitions. Do not
-move the drafts to localStorage or turn sessionStorage into sequence persistence. Stage
-settings may reference the sample sequence ids for entry, quiet-stage and exit actions,
-but nothing executes those references yet.
+There is deliberately no scheduler or sender yet, but sequence definitions are real persisted
+CRM data. `/api/sequences?persona=<id>` reads and writes the top-level `sequences[]` field in
+the same GitHub-backed persona document as pipelines. Its POST uses `updateJsonFile()` so it
+patches only that field against the freshest document instead of replacing unrelated pipeline
+data. The editor debounces saves, displays Loading/Saving/Saved/error state, assigns a durable
+id before a new draft is shown, and waits for pending persistence before its Back or Done
+controls navigate. Do not move sequence drafts to localStorage or sessionStorage. The built-in
+email templates remain code-owned because template editing is not supported. Performance
+figures remain fixtures, and nothing executes stage sequence references yet.
 
 ## Intake forms
 
@@ -437,8 +443,10 @@ a record (`t3` → record #6 in `neo` is hardcoded; persona threads use
 
 ## API
 
-- `api/data.js` — `GET`/`POST` a persona's pipeline data (whole document; see the
-  warning at the end of this file)
+- `api/data.js` — `GET`/`POST` a persona's pipeline data (whole document except that
+  POST preserves the freshest server-side `sequences`; see the warning at the end)
+- `api/sequences.js` — `GET` the persona's saved sequences and `POST {sequences}` to
+  patch only that field with conflict-safe read-modify-write retries
 - `api/form.js` — the **public** intake-form endpoint. `GET` returns one form's definition,
   `POST` appends one card. Never returns records. Backed by `api/_form.js`.
 - `api/revert.js` — reset `default` to seed; full, or per-pipeline via `{pipelineIds}`
@@ -467,6 +475,7 @@ records and is served through the API. Adding one is documented in `api/_github.
 { currentPipelineId, pipelineSeq,
   contactFields[],            // the contact schema (Contacts page "Fields")
   dashboard: { type, scope, hidden[] },   // dashboard prefs, persisted like the rest
+  sequences[],                // persona-scoped sequence definitions; /api/sequences owns writes
   pipelines: { <id>: { id, name, entity, plural, color, type,
                        stages[], cards[], hiddenFields[], shownFields[],
                        subject, customFieldDefs[], contactsEnabled, team,
@@ -556,9 +565,9 @@ browser — they are separate documents.
 
 ## Writing to `/api/data`
 
-`POST /api/data` replaces the **entire** document for a persona, and `writeJsonFile()`
-resolves a 409 by re-reading the sha and re-writing the same stale object
-(`api/_github.js`) — last-write-wins, not a merge. That's tolerable for the app, where one
+`POST /api/data` replaces the document for a persona, except that it always preserves the
+freshest server-side `sequences` field; `/api/sequences` is that field's only writer. Other
+fields are still last-write-wins, not a merge. That's tolerable for the app, where one
 person edits their own board. It is **not** safe for anything public or concurrent: a
-narrow, append-only endpoint that re-reads and re-appends inside the retry is the right
+narrow endpoint that re-reads and reapplies its mutation inside the retry is the right
 shape there, not a reuse of `saveData()`.

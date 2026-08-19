@@ -97,6 +97,7 @@
   .seq-editor-status {
     color: var(--text-secondary); font-size: var(--text-sm);
   }
+  .seq-editor-status[data-state="error"] { color: var(--status-danger); }
   .seq-editor-only .subpage-back {
     flex-shrink: 0;
   }
@@ -710,7 +711,7 @@
         <span data-ds-icon="back" data-size="13"></span>
       </button>
       <span class="subpage-title" id="seq-editor-page-title">Sequence</span>
-      <span class="seq-editor-status">Changes are kept for this visit</span>
+      <span class="seq-editor-status" id="seq-editor-status" role="status" aria-live="polite">Loading sequences…</span>
       <button class="ds-btn ds-btn--primary" type="button" data-sequences-back>Done</button>
     </header>
     <div class="subpage-body">
@@ -738,7 +739,7 @@
                 </thead>
                 <tbody id="seq-list"></tbody>
               </table>
-              <div class="seq-library-empty" id="seq-library-empty" hidden>No sequences match these filters.</div>
+              <div class="seq-library-empty" id="seq-library-empty">Loading sequences…</div>
             </div>
           </div>
         </section>
@@ -899,7 +900,8 @@
   }
 </script>
 <script>
-  const sequenceDrafts = window.titanSequenceLibrary.clone(window.titanSequenceLibrary.sequences);
+  const fallbackSequences = window.titanSequenceLibrary.clone(window.titanSequenceLibrary.sequences);
+  let sequenceDrafts = window.titanSequenceLibrary.clone(fallbackSequences);
   const templates = window.titanSequenceLibrary.templates;
   const REMINDER_OPTIONS = [
     { value: 'same-day', label: 'Same day' },
@@ -965,6 +967,10 @@
   const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri'];
   const ALL_DAYS = WEEKDAYS.concat(['sat', 'sun']);
   const sequenceMode = document.documentElement.dataset.sequenceMode;
+  const sequencePersonaId = (function () {
+    const raw = new URLSearchParams(location.search).get('u');
+    return raw && /^[a-z0-9_-]{1,32}$/.test(raw) ? raw.toLowerCase() : 'default';
+  })();
   const sequencePathParts = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
   const routeSequenceId = sequenceMode === 'editor' ? decodeURIComponent(sequencePathParts[2]) : '';
   const sequenceHash = decodeURIComponent((location.hash || '').replace(/^#/, ''));
@@ -983,12 +989,117 @@
   let librarySearch = '';
   let librarySortKey = 'name';
   let librarySortDirection = 'asc';
+  let sequenceDataLoaded = false;
+  let sequencePersistenceReady = false;
+  let sequenceDirty = false;
+  let sequenceSaveTimer = null;
+  let sequenceSaveInFlight = null;
   const expandedTemplatePreviews = new Set();
 
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
     });
+  }
+
+  function setSequenceSaveStatus(message, state) {
+    const status = document.getElementById('seq-editor-status');
+    if (!status) return;
+    status.textContent = message;
+    if (state) status.dataset.state = state;
+    else delete status.dataset.state;
+  }
+
+  function syncStepSequenceCounter() {
+    let highest = 100;
+    sequenceDrafts.forEach(function (sequence) {
+      (sequence.steps || []).forEach(function (group) {
+        [group.id].concat((group.actions || []).map(function (action) { return action.id; })).forEach(function (id) {
+          const match = String(id || '').match(/(\d+)$/);
+          if (match) highest = Math.max(highest, Number(match[1]) || 0);
+        });
+      });
+    });
+    stepSequence = highest;
+  }
+
+  function scheduleSequencePersist(delay) {
+    if (!sequenceDataLoaded) return;
+    sequenceDirty = true;
+    clearTimeout(sequenceSaveTimer);
+    if (!sequencePersistenceReady) {
+      setSequenceSaveStatus('Could not connect — changes not saved', 'error');
+      return;
+    }
+    setSequenceSaveStatus('Saving…');
+    sequenceSaveTimer = setTimeout(function () { persistSequencesNow(); }, delay == null ? 650 : delay);
+  }
+
+  async function persistSequencesNow() {
+    clearTimeout(sequenceSaveTimer);
+    sequenceSaveTimer = null;
+    if (!sequencePersistenceReady) return false;
+    if (sequenceSaveInFlight) return sequenceSaveInFlight;
+    if (!sequenceDirty) return true;
+
+    sequenceSaveInFlight = (async function () {
+      while (sequenceDirty) {
+        const payload = window.titanSequenceLibrary.clone(sequenceDrafts);
+        sequenceDirty = false;
+        setSequenceSaveStatus('Saving…');
+        try {
+          const response = await fetch('/api/sequences?persona=' + encodeURIComponent(sequencePersonaId), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sequences: payload }),
+          });
+          if (!response.ok) throw new Error('Save failed (' + response.status + ')');
+        } catch (error) {
+          console.error('titan-crm: failed to save sequences.', error);
+          sequenceDirty = true;
+          setSequenceSaveStatus('Could not save — try again', 'error');
+          return false;
+        }
+      }
+      setSequenceSaveStatus('Saved');
+      return true;
+    })();
+
+    const activeSave = sequenceSaveInFlight;
+    const saved = await activeSave;
+    if (sequenceSaveInFlight === activeSave) sequenceSaveInFlight = null;
+    return saved;
+  }
+
+  async function loadSequenceData() {
+    let shouldSeedServer = false;
+    try {
+      const response = await fetch('/api/sequences?persona=' + encodeURIComponent(sequencePersonaId), { cache: 'no-store' });
+      if (!response.ok) throw new Error('Load failed (' + response.status + ')');
+      const data = await response.json();
+      if (Array.isArray(data.sequences)) sequenceDrafts = window.titanSequenceLibrary.clone(data.sequences);
+      else {
+        sequenceDrafts = window.titanSequenceLibrary.clone(fallbackSequences);
+        shouldSeedServer = true;
+      }
+      sequencePersistenceReady = true;
+      setSequenceSaveStatus('Saved');
+    } catch (error) {
+      console.error('titan-crm: failed to load sequences.', error);
+      sequenceDrafts = window.titanSequenceLibrary.clone(fallbackSequences);
+      sequencePersistenceReady = false;
+      setSequenceSaveStatus('Could not load saved sequences', 'error');
+    }
+
+    sequenceDataLoaded = true;
+    syncStepSequenceCounter();
+    if (sequenceMode === 'editor' && selectedId === 'new') createNewSequenceDraft();
+    renderAll();
+    if (editingSequenceId) {
+      const nameInput = document.querySelector('[data-sequence-name-input]');
+      if (nameInput) { nameInput.focus(); nameInput.select(); }
+    }
+    if (shouldSeedServer || editingSequenceId) scheduleSequencePersist(0);
   }
 
   function timeMeridiem(value) {
@@ -1127,7 +1238,9 @@
       '</tr>';
     }).join('');
 
-    document.getElementById('seq-library-empty').hidden = rows.length > 0;
+    const empty = document.getElementById('seq-library-empty');
+    empty.textContent = 'No sequences match this search.';
+    empty.hidden = rows.length > 0;
     document.querySelectorAll('[data-library-sort]').forEach(function (button) {
       const active = button.dataset.librarySort === librarySortKey;
       const heading = button.closest('th');
@@ -1757,9 +1870,18 @@
     goToSequence('new');
   }
 
+  function newSequenceId() {
+    let id;
+    do {
+      id = 'sequence-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+    } while (sequenceDrafts.some(function (sequence) { return sequence.id === id; }));
+    return id;
+  }
+
   function createNewSequenceDraft() {
+    const id = newSequenceId();
     const sequence = {
-      id: 'new',
+      id: id,
       name: 'Untitled sequence',
       description: 'Simple sales follow-up.',
       weekdaysOnly: true,
@@ -1769,8 +1891,10 @@
       steps: [],
     };
     sequenceDrafts.unshift(sequence);
+    selectedId = id;
     editingSequenceId = sequence.id;
     sequenceNameDraft = sequence.name;
+    history.replaceState(null, '', sequenceUrl(id) + (location.hash || ''));
   }
 
   function saveSequenceName() {
@@ -1781,6 +1905,7 @@
     editingSequenceId = null;
     sequenceNameDraft = '';
     renderAll();
+    scheduleSequencePersist();
   }
 
   function positionTemplateMenu(trigger, menu) {
@@ -1899,6 +2024,7 @@
         : removeFlowDelay(sequence, groupIndex);
       if (!removed) return false;
       renderEditor();
+      scheduleSequencePersist();
       await animateTimelineReflow(positions, { message: kind === 'activity' ? 'Action removed' : 'Delay removed' });
       return true;
     } finally {
@@ -1927,6 +2053,7 @@
       sequence.steps.splice(index, 1);
       const focusKey = sequence.steps[index] ? 'step-' + sequence.steps[index].id : 'add-step';
       renderAll();
+      scheduleSequencePersist();
       await animateTimelineReflow(positions, { focusKey: focusKey, message: 'Item removed' });
     } finally {
       timelineMotionBusy = false;
@@ -2003,7 +2130,13 @@
     if (row) location.href = row.dataset.sequenceUrl;
   });
   document.querySelectorAll('[data-sequences-back]').forEach(function (button) {
-    button.addEventListener('click', function () { location.href = sequencesUrl(); });
+    button.addEventListener('click', async function () {
+      if (editingSequenceId && sequenceNameDraft.trim()) saveSequenceName();
+      button.disabled = true;
+      const saved = await persistSequencesNow();
+      button.disabled = false;
+      if (saved) location.href = sequencesUrl();
+    });
   });
   document.querySelectorAll('[data-sequence-nav]').forEach(function (button) {
     button.addEventListener('click', function () { showSequencePane(button.dataset.sequenceNav); });
@@ -2024,10 +2157,14 @@
     document.title = (sequence.name || 'Untitled sequence') + ' — Titan CRM';
     document.getElementById('seq-editor-page-title').textContent = sequence.name || 'Untitled sequence';
     if (editingSequenceId === sequence.id) sequenceNameDraft = event.target.value;
+    scheduleSequencePersist();
   });
   document.getElementById('seq-details-description').addEventListener('input', function (event) {
     const sequence = selectedSequence();
-    if (sequence) sequence.description = event.target.value;
+    if (sequence) {
+      sequence.description = event.target.value;
+      scheduleSequencePersist();
+    }
   });
   document.querySelectorAll('[data-sequence-day]').forEach(function (input) {
     input.addEventListener('change', function () {
@@ -2038,6 +2175,7 @@
       sequence.weekdaysOnly = sequence.schedule.activeDays.length === WEEKDAYS.length &&
         WEEKDAYS.every(function (day) { return sequence.schedule.activeDays.includes(day); });
       validateSequenceSchedule(sequence);
+      scheduleSequencePersist();
     });
   });
   document.getElementById('seq-schedule-start').addEventListener('input', function (event) {
@@ -2045,16 +2183,21 @@
     if (!sequence) return;
     sequence.schedule.startTime = event.target.value;
     validateSequenceSchedule(sequence);
+    scheduleSequencePersist();
   });
   document.getElementById('seq-schedule-end').addEventListener('input', function (event) {
     const sequence = ensureSequenceSettings(selectedSequence());
     if (!sequence) return;
     sequence.schedule.endTime = event.target.value;
     validateSequenceSchedule(sequence);
+    scheduleSequencePersist();
   });
   document.getElementById('seq-schedule-timezone').addEventListener('change', function (event) {
     const sequence = ensureSequenceSettings(selectedSequence());
-    if (sequence) sequence.schedule.timezone = event.target.value;
+    if (sequence) {
+      sequence.schedule.timezone = event.target.value;
+      scheduleSequencePersist();
+    }
   });
   document.getElementById('seq-flow-drawer').addEventListener('input', function (event) {
     if (!flowDrawerSelection) return;
@@ -2062,24 +2205,31 @@
     const group = sequence && sequence.steps[flowDrawerSelection.groupIndex];
     if (!group) return;
     const action = flowDrawerSelection.kind === 'activity' ? group.actions[flowDrawerSelection.actionIndex] : null;
+    let changed = false;
     if (event.target.dataset.drawerActionTitle !== undefined && action) {
       action.title = event.target.value;
+      changed = true;
       renderEditor();
     } else if (event.target.dataset.drawerEmailTime !== undefined && action) {
       action.sendTime = event.target.value || '09:00';
+      changed = true;
       renderEditor();
     } else if (event.target.dataset.drawerReminderDays !== undefined && action) {
       action.reminderDays = Math.max(1, Number(event.target.value) || 1);
+      changed = true;
       renderEditor();
     } else if (event.target.dataset.drawerReminderTime !== undefined && action) {
       action.reminderTime = event.target.value;
+      changed = true;
       renderEditor();
     } else if (event.target.dataset.drawerDelayDays !== undefined) {
       group.days = Math.max(1, Number(event.target.value) || 1);
+      changed = true;
       const delayUnit = event.currentTarget.querySelector('[data-drawer-delay-unit]');
       if (delayUnit) delayUnit.textContent = group.days === 1 ? 'day' : 'days';
       renderEditor();
     }
+    if (changed) scheduleSequencePersist();
   });
 
   document.getElementById('seq-flow-drawer').addEventListener('change', function (event) {
@@ -2097,6 +2247,7 @@
     }
     renderEditor();
     renderFlowDrawer();
+    scheduleSequencePersist();
   });
 
   document.getElementById('seq-flow-drawer').addEventListener('click', async function (event) {
@@ -2124,6 +2275,7 @@
       }
       renderEditor();
       renderFlowDrawer();
+      scheduleSequencePersist();
       return;
     }
     const reminderChoice = event.target.closest('[data-select-drawer-reminder]');
@@ -2135,6 +2287,7 @@
       if (action.reminderOffset === 'custom-days' && !action.reminderDays) action.reminderDays = 4;
       renderEditor();
       renderFlowDrawer();
+      scheduleSequencePersist();
       return;
     }
     if (event.target.closest('[data-remove-drawer-delay]') && flowDrawerSelection.kind === 'delay') {
@@ -2159,17 +2312,24 @@
   document.getElementById('seq-editor').addEventListener('input', function (event) {
     const sequence = selectedSequence();
     if (!sequence) return;
+    let changed = false;
     if (event.target.dataset.sequenceNameInput !== undefined) {
       sequenceNameDraft = event.target.value;
       const save = document.querySelector('[data-save-sequence-name]');
       if (save) save.disabled = !sequenceNameDraft.trim();
     } else if (event.target.dataset.actionTitle !== undefined) {
       sequence.steps[Number(event.target.dataset.stepIndex)].actions[Number(event.target.dataset.actionIndex)].title = event.target.value;
+      changed = true;
     } else if (event.target.dataset.actionReminderDays !== undefined) {
       sequence.steps[Number(event.target.dataset.stepIndex)].actions[Number(event.target.dataset.actionIndex)].reminderDays = Math.max(1, Number(event.target.value) || 1);
+      changed = true;
     }
     const daysIndex = event.target.dataset.stepDays;
-    if (daysIndex !== undefined) sequence.steps[Number(daysIndex)].days = Math.max(1, Number(event.target.value) || 1);
+    if (daysIndex !== undefined) {
+      sequence.steps[Number(daysIndex)].days = Math.max(1, Number(event.target.value) || 1);
+      changed = true;
+    }
+    if (changed) scheduleSequencePersist();
   });
 
   document.getElementById('seq-editor').addEventListener('change', function (event) {
@@ -2204,6 +2364,7 @@
     } else if (event.target.dataset.stepDays !== undefined) {
       renderEditor();
     }
+    scheduleSequencePersist();
   });
 
   document.getElementById('seq-editor').addEventListener('click', async function (event) {
@@ -2243,6 +2404,7 @@
       const group = { id: 'group-' + (++stepSequence), timing: 'after', days: 1, actions: [] };
       sequence.steps.push(group);
       renderEditor();
+      scheduleSequencePersist();
       await animateTimelineReflow(positions, { addedKey: 'condition-' + group.id, focusKey: 'condition-' + group.id, message: 'Delay added' });
       openFlowDrawer('delay', sequence.steps.length - 1);
       return;
@@ -2261,6 +2423,7 @@
       }
       group.actions.push(action);
       renderEditor();
+      scheduleSequencePersist();
       await animateTimelineReflow(positions, { addedKey: 'activity-' + action.id, focusKey: 'activity-' + action.id, message: 'Action added' });
       openFlowDrawer('activity', groupIndex, group.actions.length - 1);
       return;
@@ -2295,6 +2458,7 @@
     if (selectTemplate) {
       sequence.steps[Number(selectTemplate.dataset.stepIndex)].actions[Number(selectTemplate.dataset.actionIndex)].templateId = selectTemplate.dataset.selectTemplate;
       renderEditor();
+      scheduleSequencePersist();
       return;
     }
     const previewTemplate = event.target.closest('[data-preview-template]');
@@ -2319,6 +2483,7 @@
     if (addActionToStep) {
       sequence.steps[Number(addActionToStep.dataset.addActionToStep)].actions.push(makeAction('email', 0));
       renderAll();
+      scheduleSequencePersist();
       return;
     }
     const removeAction = event.target.closest('[data-remove-action]');
@@ -2326,6 +2491,7 @@
       const actions = sequence.steps[Number(removeAction.dataset.stepIndex)].actions;
       actions.splice(Number(removeAction.dataset.removeAction), 1);
       renderAll();
+      scheduleSequencePersist();
       return;
     }
     const addActionBox = event.target.closest('[data-add-action-box]');
@@ -2340,6 +2506,7 @@
       };
       sequence.steps.push(newStep);
       renderAll();
+      scheduleSequencePersist();
       try {
         await animateTimelineReflow(positions, {
           addedKey: 'step-' + newStep.id,
@@ -2418,6 +2585,11 @@
   window.addEventListener('resize', function () {
     closeTemplateMenus();
   });
+  window.addEventListener('beforeunload', function (event) {
+    if (!sequenceDirty && !sequenceSaveInFlight) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
   window.addEventListener('hashchange', function () {
     if (sequenceMode !== 'editor') return;
     const pane = decodeURIComponent((location.hash || '').replace(/^#/, ''));
@@ -2427,12 +2599,7 @@
   if (sequenceMode === 'library' && legacySequenceId) {
     location.replace(sequenceUrl(legacySequenceId));
   } else {
-    if (sequenceMode === 'editor' && selectedId === 'new') createNewSequenceDraft();
-    renderAll();
-    if (editingSequenceId) {
-      const nameInput = document.querySelector('[data-sequence-name-input]');
-      if (nameInput) { nameInput.focus(); nameInput.select(); }
-    }
+    loadSequenceData();
   }
 </script>
 </body>

@@ -1,4 +1,12 @@
-const { currentPathFor, seedPathFor, applyCors, isValidPersonaId, readJsonFile, writeJsonFile } = require('./_github');
+const {
+  currentPathFor,
+  seedPathFor,
+  applyCors,
+  isValidPersonaId,
+  readJsonFile,
+  writeJsonFile,
+  updateJsonFile,
+} = require('./_github');
 
 module.exports = async function handler(req, res) {
   applyCors(req, res);
@@ -29,7 +37,19 @@ module.exports = async function handler(req, res) {
         return;
       }
       const existing = await readJsonFile(currentPath);
-      await writeJsonFile(currentPath, data, 'Update ' + personaId + ' data', existing ? existing.sha : undefined);
+      if (existing) {
+        await updateJsonFile(currentPath, function (document) {
+          // Sequence definitions have their own narrow endpoint. Preserve the
+          // freshest copy so a pipeline page opened before a sequence edit cannot
+          // restore its stale `sequences` field when it later saves the document.
+          const sequences = Array.isArray(document.sequences) ? document.sequences : null;
+          Object.keys(document).forEach(function (key) { delete document[key]; });
+          Object.assign(document, data);
+          if (sequences) document.sequences = sequences;
+        }, 'Update ' + personaId + ' data');
+      } else {
+        await writeJsonFile(currentPath, data, 'Create ' + personaId + ' data');
+      }
       res.status(200).json({ ok: true });
       return;
     }

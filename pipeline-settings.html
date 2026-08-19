@@ -598,6 +598,11 @@
 <div class="np-toast" id="np-toast"></div>
 
 <script>
+  const pipelineSettingsPersonaId = (function () {
+    const raw = new URLSearchParams(location.search).get('u');
+    return raw && /^[a-z0-9_-]{1,32}$/.test(raw) ? raw.toLowerCase() : 'default';
+  })();
+  window.PERSONA_ID = pipelineSettingsPersonaId;
   // URL is /crm/pipeline/<id>/setting — the id is a real path segment, not a query
   // param, since this is real persisted data now, not throwaway prototype state.
   const pathSegs = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
@@ -651,10 +656,24 @@
     window.titanSequenceLibrary.templates.map(function (template) {
       return { value: template.id, label: template.name };
     }));
-  const EMAIL_SEQUENCE_OPTIONS = [{ value: '', label: 'None' }].concat(
+  let EMAIL_SEQUENCE_OPTIONS = [{ value: '', label: 'None' }].concat(
     window.titanSequenceLibrary.sequences.map(function (sequence) {
       return { value: sequence.id, label: sequence.name };
     }));
+
+  async function loadSequenceOptions() {
+    try {
+      const response = await fetch('/api/sequences?persona=' + encodeURIComponent(pipelineSettingsPersonaId), { cache: 'no-store' });
+      if (!response.ok) throw new Error('sequence fetch failed');
+      const data = await response.json();
+      const sequences = Array.isArray(data.sequences) ? data.sequences : window.titanSequenceLibrary.sequences;
+      EMAIL_SEQUENCE_OPTIONS = [{ value: '', label: 'None' }].concat(sequences.map(function (sequence) {
+        return { value: sequence.id, label: sequence.name || 'Untitled sequence' };
+      }));
+    } catch (error) {
+      console.error('titan-crm: failed to load saved sequences for pipeline settings.', error);
+    }
+  }
   const ADVANCE_CONDITION_OPTIONS = [
     { value: 'task-completed', label: 'A task is completed' },
     { value: 'field-updated', label: 'Data is added for a field' },
@@ -745,15 +764,17 @@
   }
 
   async function init() {
+    const sequenceOptionsReady = loadSequenceOptions();
     if (!pipeline) {
       try {
-        const res = await fetch('/api/data?persona=' + encodeURIComponent(window.PERSONA_ID || 'default'), { cache: 'no-store' });
+        const res = await fetch('/api/data?persona=' + encodeURIComponent(pipelineSettingsPersonaId), { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           pipeline = (data.pipelines || {})[pipelineKey] || null;
         }
       } catch (e) { /* fall through to the note below */ }
     }
+    await sequenceOptionsReady;
     if (!pipeline) {
       document.getElementById('ps-opener-note').innerHTML =
         'This pipeline couldn’t be loaded. <a href="/crm">Open Titan CRM</a> and try again.';

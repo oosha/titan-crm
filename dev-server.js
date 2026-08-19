@@ -9,7 +9,7 @@
 //   1. Static files out of the repo root.
 //   2. The vercel.json rewrites, so /crm, /crm/contacts, /crm/pipeline/x/record/1
 //      resolve to the right .html (a plain static server 404s on these).
-//   3. /api/data, /api/revert, /api/logo — same origin, because only crm.html
+//   3. /api/data, /api/sequences, /api/revert, /api/logo — same origin, because only crm.html
 //      honours ?apiBase; every other page hardcodes a relative /api/data.
 //
 // Data is read from and written to the LOCAL files under data/. It never touches
@@ -108,10 +108,52 @@ async function apiData(req, res, query) {
     if (!data || typeof data !== 'object' || !data.pipelines) {
       return json(res, 400, { error: 'Body must include a "pipelines" object.' });
     }
+    const existing = await readJson(currentPathFor(personaId));
+    // Mirror production: sequence definitions are owned by /api/sequences and
+    // must not be replaced by a stale whole-document save from another page.
+    if (existing && Array.isArray(existing.sequences)) data.sequences = existing.sequences;
     await writeJson(currentPathFor(personaId), data);
     console.log('  saved → ' + currentPathFor(personaId));
     return json(res, 200, { ok: true });
   }
+  json(res, 405, { error: 'Method not allowed' });
+}
+
+// ── /api/sequences ───────────────────────────────────────────────────────────
+function validSequenceArray(value) {
+  return Array.isArray(value) && value.length <= 100 &&
+    Buffer.byteLength(JSON.stringify(value), 'utf8') <= 512 * 1024 &&
+    value.every((sequence) => sequence && typeof sequence === 'object' &&
+      typeof sequence.id === 'string' && /^[a-z0-9_-]{1,80}$/.test(sequence.id) &&
+      typeof sequence.name === 'string' && sequence.name.length <= 80 &&
+      Array.isArray(sequence.steps));
+}
+
+async function apiSequences(req, res, query) {
+  const personaId = isValidPersonaId(query.get('persona')) ? query.get('persona') : 'default';
+  const currentPath = currentPathFor(personaId);
+
+  if (req.method === 'GET') {
+    const document = await readJson(currentPath) ||
+      (seedPathFor(personaId) ? await readJson(seedPathFor(personaId)) : null);
+    if (!document) return json(res, 404, { error: 'Unknown persona: ' + personaId });
+    return json(res, 200, { sequences: Array.isArray(document.sequences) ? document.sequences : null });
+  }
+
+  if (req.method === 'POST') {
+    const body = await readBody(req);
+    if (!body || !validSequenceArray(body.sequences)) {
+      return json(res, 400, { error: 'Body must include a valid "sequences" array.' });
+    }
+    const document = await readJson(currentPath) ||
+      (seedPathFor(personaId) ? await readJson(seedPathFor(personaId)) : null);
+    if (!document) return json(res, 404, { error: 'Unknown persona: ' + personaId });
+    document.sequences = body.sequences;
+    await writeJson(currentPath, document);
+    console.log('  saved sequences → ' + currentPath);
+    return json(res, 200, { ok: true });
+  }
+
   json(res, 405, { error: 'Method not allowed' });
 }
 
@@ -435,6 +477,7 @@ http.createServer(async (req, res) => {
 
   try {
     if (pathname === '/api/data') return await apiData(req, res, url.searchParams);
+    if (pathname === '/api/sequences') return await apiSequences(req, res, url.searchParams);
     if (pathname === '/api/revert') return await apiRevert(req, res, url.searchParams);
     if (pathname === '/api/form') return await apiForm(req, res, url.searchParams);
     if (pathname === '/api/logo') return await apiLogo(req, res, url.searchParams);
