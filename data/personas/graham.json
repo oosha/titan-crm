@@ -97,13 +97,8 @@
           "source": "Google Maps route research",
           "equipment": "Refuse trucks and hydraulic lifts",
           "note": "Satellite view shows a service yard with multiple heavy vehicles. Find the maintenance manager before the first visit.",
-          "lastActivity": "Today",
-          "activityType": "Prospect mapped",
-          "nextActivity": {
-            "type": "visit",
-            "label": "Plan an introductory stop",
-            "date": "Tomorrow"
-          },
+          "lastActivity": "12m ago",
+          "activityType": "Email received",
           "overdue": false
         },
         {
@@ -240,6 +235,11 @@
           ],
           "upcomingActivities": [
             {
+              "type": "meeting",
+              "text": "Review the hydraulic oil recommendation with Luis and Dana",
+              "date": "Thu, 10:30am"
+            },
+            {
               "type": "followup",
               "text": "Confirm the quantity and delivery window with Luis",
               "date": "Tomorrow"
@@ -344,14 +344,14 @@
           "equipment": "Utility trucks, pumps and generators",
           "netsuiteRef": "Estimate EST-10477",
           "note": "Sent the seasonal fleet lubrication estimate. Anita needs the estimate to include the department PO before submitting it internally.",
-          "lastActivity": "Yesterday",
+          "lastActivity": "4d ago",
           "activityType": "Email sent",
           "nextActivity": {
             "type": "followup",
-            "label": "Check PO requirements",
-            "date": "Friday"
+            "label": "Check PO requirements with procurement",
+            "date": "Overdue"
           },
-          "overdue": false
+          "overdue": true
         },
         {
           "id": "graham-5",
@@ -469,9 +469,9 @@
           "nextActivity": {
             "type": "visit",
             "label": "Monthly floor check",
-            "date": "Sep 3"
+            "date": "Overdue"
           },
-          "overdue": false
+          "overdue": true
         },
         {
           "id": "graham-7",

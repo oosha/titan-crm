@@ -303,8 +303,7 @@
 
   .ov-autolink-row {
     display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-100);
-    margin-top: var(--space-200); padding-top: var(--space-150);
-    border-top: 1px solid var(--border-subtle);
+    margin-top: var(--space-200);
     font-size: var(--text-xs); color: var(--text-secondary);
     cursor: pointer; user-select: none;
   }
@@ -625,7 +624,7 @@
                 <span data-ds-icon="location" data-size="15"></span> View in Maps
               </a>
               <button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" onclick="actNote()">
-                <span data-ds-icon="note" data-size="15"></span><span data-ds-icon="plus" data-size="10"></span> Note
+                <span data-ds-icon="note" data-size="15"></span> Note
               </button>
               <button class="ov-ai-btn ds-btn ds-btn--soft ds-btn--sm ds-btn--icon" id="ov-ai-btn" type="button"
                       onclick="toggleAiSummary()" aria-label="AI summary" title="AI summary" aria-expanded="false" aria-controls="ov-ai-card">
@@ -707,6 +706,11 @@
               <div class="ov-key-label"><span class="ov-field-label-text" id="ov-close-label">Expected close date</span></div>
               <input class="ds-input ov-key-input" id="ov-close-date" type="date" oninput="onFieldChange()">
             </div>
+
+            <div class="ov-key" data-field="source">
+              <div class="ov-key-label"><span class="ov-field-label-text">Source</span></div>
+              <input class="ds-input ov-key-input" id="ov-source" placeholder="e.g. Referral, Website" oninput="onFieldChange()">
+            </div>
           </div>
 
           <!-- High enough to be seen when you open the record. It decides what shows
@@ -723,17 +727,25 @@
             </select>
           </div>
 
-          <!-- Source and the pipeline's own custom fields are all deal attributes, so
-               they share one grid. Rendering the custom ones into a second grid of
-               their own left both stacked down the left with the right half empty. -->
+          <!-- Custom fields remain in a shared grid, but only when this pipeline has
+               configured any. Source lives with the record's other key facts above. -->
           <div class="ov-field-grid">
-            <div class="ov-field" data-field="source">
-              <div class="ov-field-label"><span class="ov-field-label-text">Source</span></div>
-              <input class="ds-input" id="ov-source" placeholder="e.g. Referral, Website" oninput="onFieldChange()">
-            </div>
             <div id="ov-custom-fields" class="ov-fields-contents"></div>
           </div>
           <div class="ov-field-empty" id="ov-custom-fields-empty" style="display:none;"></div>
+        </div>
+
+        <div class="ov-section ds-card ds-card--section" data-field="note">
+          <div class="ov-heading">Latest note</div>
+          <div class="crm-note" id="ov-last-note" style="display:none;">
+            <div class="meta"><span class="note-ic"><span data-ds-icon="drafts" data-size="16"></span></span>Last note added by <span id="ov-last-note-author"></span><span id="ov-last-note-on"> on <span id="ov-last-note-date"></span></span></div>
+            <span id="ov-last-note-text"></span>
+          </div>
+          <div id="ov-note-history"></div>
+          <div class="crm-note-add">
+            <textarea class="ds-input" id="ov-note-input" placeholder="Add a note..." oninput="toggleAddNoteBtn()"></textarea>
+            <button id="ov-add-note-btn" onclick="addNote()" style="display:none;">Add note</button>
+          </div>
         </div>
 
         <!-- The company's own details, in their own box. They describe Meridian Labs
@@ -770,19 +782,6 @@
           <div class="ov-heading">Contacts</div>
           <div id="ov-contacts"></div>
           <span class="ov-add-link" id="ov-add-contact-link" onclick="addContact()">+ Add contact</span>
-        </div>
-
-        <div class="ov-section ds-card ds-card--section" data-field="note">
-          <div class="ov-heading">Latest note</div>
-          <div class="crm-note" id="ov-last-note" style="display:none;">
-            <div class="meta"><span class="note-ic"><span data-ds-icon="drafts" data-size="16"></span></span>Last note added by <span id="ov-last-note-author"></span><span id="ov-last-note-on"> on <span id="ov-last-note-date"></span></span></div>
-            <span id="ov-last-note-text"></span>
-          </div>
-          <div id="ov-note-history"></div>
-          <div class="crm-note-add">
-            <textarea class="ds-input" id="ov-note-input" placeholder="Add a note..." oninput="toggleAddNoteBtn()"></textarea>
-            <button id="ov-add-note-btn" onclick="addNote()" style="display:none;">Add note</button>
-          </div>
         </div>
 
         <div class="ov-section ds-card ds-card--section">
@@ -2173,8 +2172,9 @@
     const entity = pipeline.entity || 'Record';
     document.getElementById('ov-configure-fields').textContent =
       'Configure ' + entity.toLowerCase() + ' fields';
-    emptyEl.style.display = defs.length ? 'none' : '';
-    emptyEl.textContent = 'No custom fields on ' + (pipeline.name || 'this pipeline') + ' yet.';
+    emptyEl.style.display = 'none';
+    emptyEl.textContent = '';
+    if (wrap.parentElement) wrap.parentElement.style.display = defs.length ? '' : 'none';
     // Stays display: contents (see .ov-fields-contents) so these land in the deal's
     // own field grid beside Source, rather than starting a second grid.
     wrap.className = 'ov-fields-contents';
