@@ -1982,7 +1982,8 @@
             "your-name": "name",
             "your-email": "email",
             "your-subject": "note",
-            "your-message": "note"
+            "your-message": "note",
+            "company-name": "company"
           },
           "lastAt": 1787148837191,
           "source": "Contact Form 0",
@@ -1993,9 +1994,6 @@
             "company-name",
             "your-subject",
             "your-message"
-          ],
-          "newFields": [
-            "company-name"
           ]
         }
       ]
