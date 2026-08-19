@@ -619,31 +619,30 @@
         }
       ],
       "hiddenFields": [
-        "company-linkedin",
+        "value",
+        "status",
+        "source",
         "instagram",
-        "contact-linkedin"
+        "contact-designation",
+        "contact-department",
+        "contact-location"
       ],
       "customFieldDefs": [],
       "contactsEnabled": true,
       "shownFields": [
         "name",
-        "value",
         "stage",
-        "status",
         "close-date",
-        "source",
         "note",
         "company",
         "location",
         "geo-location",
         "website",
+        "company-linkedin",
         "contact",
         "contact-name",
         "contact-email",
         "contact-phone",
-        "contact-designation",
-        "contact-department",
-        "contact-location",
         "contact-linkedin"
       ]
     }
