@@ -104,12 +104,12 @@
 
       host.innerHTML =
         '<div class="mr-sec">' +
-          '<div class="mr-label">Which mailboxes should Titan watch?</div>' +
-          '<div class="mr-hint" data-mr-mbhint></div>' +
+          '<div class="ds-card-title mr-label">Which mailboxes should Titan watch?</div>' +
+          '<div class="ds-card-sub mr-hint" data-mr-mbhint></div>' +
           '<div class="mr-mailboxes" data-mr-mbpanel></div>' +
         '</div>' +
         '<div class="mr-sec">' +
-          '<div class="mr-label">When an incoming email meets the below conditions</div>' +
+          '<div class="ds-card-title mr-label">When an incoming email meets the below conditions</div>' +
           (state.legacy
             ? '<div class="mr-legacy">Your previous rule was “<strong>' + esc(state.legacy) +
               '</strong>”. Rebuild it below — it is kept until you save.</div>'

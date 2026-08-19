@@ -211,6 +211,10 @@ and survive a cold load. `titan-sequences.js` owns the small shared set of sales
 templates plus the migration fallback sequences. `sequences.html` and
 `pipeline-settings.html` load the live sequence definitions from `/api/sequences`; when an
 older persona document has no `sequences` field, the sequence page seeds it from that fallback.
+The page links the two design-system entry points and composes controls, fields, menus, cards,
+card typography and icons from registered `ds-*` primitives. Sequence-specific CSS owns only
+the flow geometry and the blocks still marked planned in the registry (table, nav item,
+checkbox, empty state, side drawer, stat tile and modal shell); all of it reads semantic tokens.
 The stored model internally uses timing groups,
 but the UI deliberately never calls them steps or numbers them. The visible hierarchy is a
 sequence containing a flow, and that flow containing actions and delays. It renders one centred,
@@ -218,56 +222,90 @@ top-to-bottom flow lane of action cards—send an email, set a call reminder, or
 task—with compact orange delay cards only where an actual delay exists. Consecutive
 actions may run immediately with no delay card between them. Calls and tasks represent new items that would appear in Upcoming
 activities; they are not reusable task definitions. Both use the same reminder schedule:
-the same day, the next available day, in two days, in three days, or a custom number of days.
+the same day, the next day, in two days, in three days, or a custom number of days.
 Every choice allows an exact reminder time. Reminder choices remain relative and never show a
 cumulative sequence-day number. Every day-based choice also stores an exact `reminderTime`
 (default `09:00`), while custom uses `reminderDays` for the relative day count. Action cards
 present reminder timing as a natural relative sentence such as `Reminder will trigger the
-next available day at h:mm AM/PM`. Neither action cards, their inspectors, reminder menus,
+next day at h:mm AM/PM`. Neither action cards, their inspectors, reminder menus,
 nor Performance rows expose Day N badges or labels; internal timing groups may still calculate
 relative execution order. Orange delay cards have three modes: wait for
 N days, wait for N days and continue only if there is no reply, or wait and continue when an
 earlier email was opened but received no reply. Its visible label reads `If email opened but
 no reply`. The opened-without-reply condition is available
-only when an email exists earlier in the sequence. The Delay settings inspector keeps wait duration
-and condition as separate settings: every delay card has a duration, while its condition may
+only when an email exists earlier in the sequence. Delay controls are available both in the
+following action's inspector and by clicking the orange delay summary itself. They keep wait duration
+and condition as separate settings: every delay has a duration, while its condition may
 be none, no reply, or opened without a reply. Duration uses a sentence-like `Wait for [N]
 day(s)` control with its singular/plural unit immediately beside the number. The condition
 control is presented in plain language as `After delay, continue` rather than as an abstract
-`Condition` field; its unconditional option reads `As scheduled`. Removing a delay card
-preserves its following action and reconnects it immediately; a trailing delay with no
-action is removed outright.
+`Condition` field; its unconditional option reads `Always`. Removing a delay card
+preserves its following action and reconnects it immediately.
 The flow has no Start/End pointer or numbered markers.
 
 Action and delay cards are summaries, not forms. Clicking either opens a page-local
-inspector that slides in from the right; all mutable action type, template, reminder,
-title and delay controls live there. The entity being edited keeps an obvious selected
+inspector that slides in from the right. Action type, template, reminder and title editing belongs
+to the action inspector; duration and continuation-condition editing belongs only to the orange
+delay entity's inspector. The entity being edited keeps an obvious selected
 border/ring without tinting the card surface, plus `aria-pressed="true"`, until the inspector closes. Action and orange
 delay cards also reveal an adjacent quick-delete button on hover or keyboard focus; deletion
 requires no confirmation, scales/fades the entity out, then slides later entities upward. The
-inspector retains its own remove control. On wide screens the flow lane recentres within the
+inspector retains its own remove control. Deleting an action also deletes its associated delay,
+so an orphaned wait is never left in the flow. On wide screens the flow lane recentres within the
 remaining canvas while the inspector is open; narrower screens keep it as an overlay rather
 than squeezing the cards. The final flow control is a compact blue circular plus button with
-the accessible label `Add to flow`; it offers either a delay or a new email, call-reminder or
-task action. A delay may temporarily exist without
-a following action while the editor waits for that choice. While a trailing delay is waiting
-for its action, the add menu keeps the Delay section visible with a disabled `Delay already
-added` button instead of hiding that option. The Action section always appears before the
-Delay section. The supported conditions are no
+the accessible label `Add to flow`; it offers only the three actions: a new email, call reminder
+or task. Its popover is labelled `Choose an action`; clicking any action adds it immediately with
+no second confirmation button. The popover has an upward-pointing tail centered on the blue plus.
+Actions created from the starting point or final blue plus silently
+receive a one-day, unconditional delay by default. The delay and its action render as two distinct
+flow entities, and the user can delete the orange delay entity to make the action run immediately;
+delay is not presented as a competing standalone add choice. The supported conditions are no
 email reply and an earlier email opened but not replied to; there is no branching model. The
 prototype has no Exit rules section or `exitRules` data.
+Every connector between two existing flow cards also carries a compact, opaque circular plus with a
+neutral border that scales up on hover. The button is muted grey at rest and becomes white on
+hover, but remains visually hidden until the pointer enters a generous invisible connector zone or
+the control receives keyboard focus. Connector lines and arrowheads use the stronger neutral border
+token. Gaps are deliberately generous, and the downward arrowhead leaves clearance above the next
+card so its selected border and focus ring remain unobstructed without feeling detached. The inline
+plus sits at the midpoint of the visible segment between the preceding card and arrowhead. Each
+connector segment terminates at
+its arrowhead rather than continuing through the clearance. Its compact insertion menu offers only `Add an action`
+and `Add a delay`: the former inserts an email action by default and the latter inserts a standalone
+one-day delay, after which the new entity's inspector opens for customization. The plus is centered
+precisely on the connector, and its wider fixed-position menu has a small directional tail aligned
+to the clicked plus whether it opens above or below. It renders above the flow canvas and inspector
+while staying within the viewport. Inserting between a
+delay and its action preserves visual order by splitting the
+stored timing group as needed; the resulting delay and action remain independently editable.
 Email template selection and its content preview live in the inspector. Each email action
-also stores `sendTime` (default `09:00`). Its flow card replaces the
+uses a slightly wider inspector than the original narrow drawer. The template preview includes an
+`Edit` control that opens a pre-filled `Edit template` modal. The template selector ends with
+`+ Create new template`, which opens the same modal blank and assigns the saved template to the
+current email action. Template name, subject and message are editable, and templates persist in the
+persona document's `sequenceTemplates` field through `/api/sequences` alongside sequence definitions.
+The message editor supports bold, italic, underline, bulleted and numbered lists. `Name` and `Email`
+are inserted and displayed as non-editable merge-field chips instead of exposing raw brace syntax;
+storage retains portable `{{name}}` and `{{email}}` tokens inside a sanitized optional `bodyHtml`
+representation plus a plain-text `body` fallback.
+Email actions also store `sendTime` (default `09:00`). Their flow cards replace the
 template subject summary with `Email will be sent at h:mm AM/PM`, and Send time is editable in
 the action inspector. Each sequence has a `schedule` with
 `activeDays[]`, `startTime`, `endTime` and `timezone`; the default is Monday–Friday,
 09:00–17:00 in the contact's local time. Stored times remain 24-hour `HH:MM`, while every
-visible time summary uses 12-hour `h:mm AM/PM` and time inputs show a live AM/PM indicator.
+visible time summary uses 12-hour `h:mm AM/PM` followed by a compact time-zone abbreviation such
+as `IST`, `UTC`, `EST` or `EDT`. Native time inputs own their locale-specific AM/PM presentation;
+do not add a second meridiem suffix or spell out relative labels such as `Contact’s local time`.
+Action time fields integrate the abbreviation as muted supporting text inside the same bordered
+control, directly after the native AM/PM value; a separate clock trigger remains aligned to the far
+right and opens the native picker. The dedicated Time zone control in sequence settings remains the source of truth;
+it presents a concise global set of commonly used time zones as an abbreviation plus region name,
+preserves a previously selected uncommon zone, and keeps `Contact’s local time` as the final option.
 `weekdaysOnly` remains as a compatibility mirror
 for older callers, not the editor's source of truth. Details owns the editable name and
 description; the full-page header displays the current name while the flow canvas does not
-repeat it. Adding an action or
-delay uses the Web Animations API, scrolls the new card into view, announces the result through
+repeat it. Adding an action uses the Web Animations API, scrolls the new card into view, announces the result through
 an ARIA live region and respects `prefers-reduced-motion`; do not add GSAP for these effects.
 New sequence drafts begin with an empty `steps` array and render a tutorial-style Starting
 point card with all three first-action choices; do not pre-create an email or another action.
@@ -287,8 +325,8 @@ events this sequence model can produce or track: total and currently active enro
 emails sent, opened and replied to; call reminders set; and tasks created. Its Duration
 selector supports the last 7, 30 or 90 days and all time, updating every period-based metric,
 chart and action result. `Active now` remains a current-state count rather than a duration-
-bound metric. The section shows total enrollments, active now, email open rate and contact
-reply rate, followed by enrollment trend, action totals and a per-action table with
+bound metric. The section shows total enrollments, active now, email open rate and reply
+rate, followed by enrollment trend, action totals and a per-action table with
 Triggered, Opened and Replied columns. Opened and Replied are blank for call reminders and
 tasks. It does not show meetings, clicks, bounces, unsubscribes, call connections, task
 completion, enrollment rate, or deal/revenue attribution.

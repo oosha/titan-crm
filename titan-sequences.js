@@ -1,8 +1,8 @@
 // Global prototype sequence library.
 //
-// Templates remain code-owned, while the sequence definitions below are the migration
-// fallback for persona documents that do not have a persisted `sequences` field yet.
-// The sequence editor seeds and then reads/writes live definitions through
+// Templates and sequence definitions below are migration fallbacks for persona documents
+// that do not have persisted `sequenceTemplates` and `sequences` fields yet.
+// The sequence editor seeds and then reads/writes both live definitions through
 // /api/sequences. There is still no scheduler or mail sender behind them.
 (function () {
   var templates = [

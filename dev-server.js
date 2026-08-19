@@ -112,6 +112,7 @@ async function apiData(req, res, query) {
     // Mirror production: sequence definitions are owned by /api/sequences and
     // must not be replaced by a stale whole-document save from another page.
     if (existing && Array.isArray(existing.sequences)) data.sequences = existing.sequences;
+    if (existing && Array.isArray(existing.sequenceTemplates)) data.sequenceTemplates = existing.sequenceTemplates;
     await writeJson(currentPathFor(personaId), data);
     console.log('  saved → ' + currentPathFor(personaId));
     return json(res, 200, { ok: true });
@@ -129,6 +130,17 @@ function validSequenceArray(value) {
       Array.isArray(sequence.steps));
 }
 
+function validSequenceTemplateArray(value) {
+  return Array.isArray(value) && value.length <= 200 &&
+    Buffer.byteLength(JSON.stringify(value), 'utf8') <= 512 * 1024 &&
+    value.every((template) => template && typeof template === 'object' &&
+      typeof template.id === 'string' && /^[a-z0-9_-]{1,80}$/.test(template.id) &&
+      typeof template.name === 'string' && template.name.length <= 80 &&
+      typeof template.subject === 'string' && template.subject.length <= 200 &&
+      typeof template.body === 'string' && template.body.length <= 100000 &&
+      (template.bodyHtml == null || (typeof template.bodyHtml === 'string' && template.bodyHtml.length <= 100000)));
+}
+
 async function apiSequences(req, res, query) {
   const personaId = isValidPersonaId(query.get('persona')) ? query.get('persona') : 'default';
   const currentPath = currentPathFor(personaId);
@@ -137,7 +149,10 @@ async function apiSequences(req, res, query) {
     const document = await readJson(currentPath) ||
       (seedPathFor(personaId) ? await readJson(seedPathFor(personaId)) : null);
     if (!document) return json(res, 404, { error: 'Unknown persona: ' + personaId });
-    return json(res, 200, { sequences: Array.isArray(document.sequences) ? document.sequences : null });
+    return json(res, 200, {
+      sequences: Array.isArray(document.sequences) ? document.sequences : null,
+      templates: Array.isArray(document.sequenceTemplates) ? document.sequenceTemplates : null,
+    });
   }
 
   if (req.method === 'POST') {
@@ -145,10 +160,14 @@ async function apiSequences(req, res, query) {
     if (!body || !validSequenceArray(body.sequences)) {
       return json(res, 400, { error: 'Body must include a valid "sequences" array.' });
     }
+    if (body.templates != null && !validSequenceTemplateArray(body.templates)) {
+      return json(res, 400, { error: '"templates" must be a valid template array.' });
+    }
     const document = await readJson(currentPath) ||
       (seedPathFor(personaId) ? await readJson(seedPathFor(personaId)) : null);
     if (!document) return json(res, 404, { error: 'Unknown persona: ' + personaId });
     document.sequences = body.sequences;
+    if (body.templates != null) document.sequenceTemplates = body.templates;
     await writeJson(currentPath, document);
     console.log('  saved sequences → ' + currentPath);
     return json(res, 200, { ok: true });

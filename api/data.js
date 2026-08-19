@@ -43,9 +43,11 @@ module.exports = async function handler(req, res) {
           // freshest copy so a pipeline page opened before a sequence edit cannot
           // restore its stale `sequences` field when it later saves the document.
           const sequences = Array.isArray(document.sequences) ? document.sequences : null;
+          const sequenceTemplates = Array.isArray(document.sequenceTemplates) ? document.sequenceTemplates : null;
           Object.keys(document).forEach(function (key) { delete document[key]; });
           Object.assign(document, data);
           if (sequences) document.sequences = sequences;
+          if (sequenceTemplates) document.sequenceTemplates = sequenceTemplates;
         }, 'Update ' + personaId + ' data');
       } else {
         await writeJsonFile(currentPath, data, 'Create ' + personaId + ' data');

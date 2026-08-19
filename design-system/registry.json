@@ -95,7 +95,8 @@
       "examples": [
         "pipeline-settings.html — /crm/pipeline/:id/setting",
         "opportunity-settings.html — /crm/pipeline/:id/record-setting",
-        "form-settings.html — /crm/pipeline/:id/form; every form creation/editing entry point navigates here"
+        "form-settings.html — /crm/pipeline/:id/form; every form creation/editing entry point navigates here",
+        "sequences.html — /crm/sequences/:id"
       ]
     },
     {
@@ -129,7 +130,6 @@
         "Do not use when the second surface is incidental enough for a modal, drawer, or inline disclosure."
       ],
       "examples": [
-        "sequences.html — sequence library and selected sequence flow",
         "form-settings.html — form editor and live form preview"
       ]
     }

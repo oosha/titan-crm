@@ -1,13 +1,9 @@
 /* The incoming-email rule builder. Mounted by crm.html's New Pipeline step and by
-   pipeline-settings.html's Sources modal — page-local names (mr-*), never ds-*,
-   because none of this is a registered component. Everything reads tokens. */
+   pipeline-settings.html's Sources modal. Its layout remains page-local (mr-*),
+   while the shared heading typography uses registered design-system primitives. */
 
 .mr-sec + .mr-sec { margin-top: var(--space-300); }
-.mr-label { font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-primary); }
-.mr-hint {
-  font-size: var(--text-xs); line-height: 1.6; color: var(--text-secondary);
-  margin-top: var(--space-050);
-}
+.mr-hint { line-height: 1.6; }
 
 /* ── Mailbox picker ───────────────────────────────────────────────────────── */
 /* Toggles, not a dropdown. The panel used to expand in flow and shove the conditions
