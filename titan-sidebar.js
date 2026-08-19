@@ -309,6 +309,52 @@
     try { return new URLSearchParams(location.search).get('view') || ''; } catch (e) { return ''; }
   }
 
+  // The per-view menu. crm.html owns what Edit and Delete do — it has the editor and
+  // the cards — so from anywhere else these travel as ?intent=.
+  function viewNavMenuHtml() {
+    return '<div class="pipeline-nav-menu" id="view-nav-menu">' +
+      '<div class="pipeline-nav-menu-item" onclick="viewNavMenuAction(\'edit-view\')">Edit view</div>' +
+      '<div class="pipeline-nav-menu-sep"></div>' +
+      '<div class="pipeline-nav-menu-item danger" onclick="viewNavMenuAction(\'delete-view\')">Delete view</div>' +
+    '</div>';
+  }
+  window.toggleViewNavMenu = function (evt, pipelineId, viewId) {
+    var menu = document.getElementById('view-nav-menu');
+    if (!menu) { document.body.insertAdjacentHTML('beforeend', viewNavMenuHtml()); menu = document.getElementById('view-nav-menu'); }
+    var pipeMenu = document.getElementById('pipeline-nav-menu');
+    if (pipeMenu) pipeMenu.classList.remove('open');
+    var wasFor = menu.dataset.viewId;
+    var isOpen = menu.classList.contains('open');
+    if (isOpen && wasFor === viewId) { menu.classList.remove('open'); return; }
+    menu.dataset.pipelineId = pipelineId;
+    menu.dataset.viewId = viewId;
+    var r = evt.currentTarget.getBoundingClientRect();
+    menu.style.top = (r.bottom + 4) + 'px';
+    menu.style.left = Math.max(8, r.right - 168) + 'px';
+    menu.classList.add('open');
+  };
+  window.viewNavMenuAction = function (kind) {
+    var menu = document.getElementById('view-nav-menu');
+    if (!menu) return;
+    var pipelineId = menu.dataset.pipelineId, viewId = menu.dataset.viewId;
+    menu.classList.remove('open');
+    if (kind === 'edit-view' && typeof window.openViewEditor === 'function') {
+      window.openViewEditor(pipelineId, viewId); return;
+    }
+    if (kind === 'delete-view' && typeof window.deleteViewById === 'function') {
+      window.deleteViewById(pipelineId, viewId); return;
+    }
+    titanSidebarGo('/crm/pipeline/' + encodeURIComponent(pipelineId) +
+      '?intent=' + encodeURIComponent(kind) + '&viewId=' + encodeURIComponent(viewId));
+  };
+  document.addEventListener('click', function (e) {
+    var menu = document.getElementById('view-nav-menu');
+    if (menu && menu.classList.contains('open') &&
+        !e.target.closest('#view-nav-menu') && !e.target.closest('.nav-item-menu-btn')) {
+      menu.classList.remove('open');
+    }
+  });
+
   function currentPipelineId() {
     var r = route();
     return activePipelineId || (r.kind === 'pipeline' ? r.id : null);
@@ -366,7 +412,14 @@
         view.querySelector('.nav-item-label').textContent = v.name;
         view.title = (window.titanViews && window.titanViews.describe)
           ? window.titanViews.describe(v) : v.name;
-        view.addEventListener('click', function () {
+        view.insertAdjacentHTML('beforeend',
+          '<span class="nav-item-menu-btn" title="View actions">' + ICON.kebab + '</span>');
+        view.addEventListener('click', function (e) {
+          if (e.target.closest('.nav-item-menu-btn')) {
+            e.stopPropagation();
+            toggleViewNavMenu(e, pl.id, v.id);
+            return;
+          }
           titanSidebarGo('/crm/pipeline/' + encodeURIComponent(pl.id) + '?view=' + encodeURIComponent(v.id));
         });
         after.after(view);

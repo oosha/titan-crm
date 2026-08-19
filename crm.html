@@ -3790,18 +3790,21 @@
       const icon = document.querySelector('.nav-scroll .nav-item[data-pipeline-id="' + id + '"] .nav-item-icon path');
       if (icon) icon.setAttribute('fill', CURRENT_PIPELINE_COLOR);
 
-      // Switching here doesn't navigate, so the component can't read the new current
-      // pipeline off the URL — tell it, and let it mark the row.
-      window.titanSidebar.setActivePipeline(id);
       updateBoardFormBtn();
-
       closeCardActionMenu();
-      // Views belong to a pipeline. activeView() already returns null for one that
-      // isn't this pipeline's, so nothing is mis-filtered; this drops the dead
-      // parameter from the URL so the address bar and the board agree.
-      if (activeViewId && !window.titanViews.byId(PIPELINES[id], activeViewId)) activeViewId = '';
+
+      // Choosing the pipeline itself means "show me all of it", so the view goes.
+      // Except during boot, which also comes through here — clearing then would eat
+      // the ?view= the page was opened with.
+      if (boardBooted) activeViewId = '';
+      else if (activeViewId && !window.titanViews.byId(PIPELINES[id], activeViewId)) activeViewId = '';
+
+      // URL first, then the sidebar. Switching here doesn't navigate, so the component
+      // can't read the current pipeline off the URL — but it does read the view off it,
+      // and told before the rewrite it re-marks the row for a view we just cleared.
       renderBoard();
       updateCrmUrl(id, null);
+      window.titanSidebar.setActivePipeline(id);
     }
 
     // ── Pipeline sidebar row: three-dot action menu ──
@@ -3870,7 +3873,12 @@
       // The sources modal is right here, so open it in place — no ?intent= round
       // trip like the sidebar's copy of this handler needs from a sub-page.
       if (kind === 'add-records') { openAddRecordsFor(pipelineKey); return; }
-      alert('Prototype only: "Add filter view" for ' + (pl.name || pipelineKey) + ' is not wired up yet.');
+      // The editor is on this page, so open it directly. The sidebar's copy of this
+      // handler navigates here with ?intent=new-view instead; both end up in the
+      // same place, which is the point of keeping them in step.
+      if (kind === 'filter') { openViewEditor(pipelineKey, null); return; }
+      if (kind === 'edit-view') { openViewEditor(pipelineKey, menu.dataset.viewId || null); return; }
+      if (kind === 'delete-view') { deleteViewById(pipelineKey, menu.dataset.viewId); return; }
     }
 
     // ── Add team: invite a teammate from a dummy directory ──
@@ -4659,6 +4667,8 @@
     // A view narrows what the board shows. It is in the URL rather than a variable so
     // it survives a cold load and can be linked to — the sidebar rows are just links.
     let activeViewId = new URLSearchParams(location.search).get('view') || '';
+    // Flipped once the first board render is done — see switchPipeline.
+    let boardBooted = false;
     let cvEditor = null, cvEditingId = null;
 
     function currentPipelineObj() { return PIPELINES[currentPipelineId] || null; }
@@ -4747,6 +4757,19 @@
       renderBoard(); renderViewChip();
       npToast('View saved.', true);
     }
+    // Called from the sidebar's per-view menu, where there is no open editor.
+    function deleteViewById(pipelineId, viewId) {
+      const pl = PIPELINES[pipelineId];
+      if (!pl || !viewId) return;
+      const gone = window.titanViews.byId(pl, viewId);
+      pl.views = window.titanViews.list(pl).filter(function (v) { return v.id !== viewId; });
+      schedulePersist();
+      if (window.titanSidebar) window.titanSidebar.setPipelines(Object.values(PIPELINES));
+      if (activeViewId === viewId) { clearView(); return; }
+      renderBoard();
+      npToast('Deleted “' + (gone ? gone.name : 'view') + '”.', true);
+    }
+
     function deleteCurrentView() {
       const pl = currentPipelineObj();
       if (!pl || !cvEditingId) return;
@@ -5128,6 +5151,9 @@
     async function bootCrm() {
       await applyPersona();
       consumeSidebarIntent();   // ?intent= from the shared sidebar on a sub-page
+      // From here a switchPipeline call is someone choosing a pipeline, not the page
+      // setting itself up — and choosing the pipeline clears any applied view.
+      boardBooted = true;
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootCrm);
     else bootCrm();
@@ -5161,6 +5187,8 @@
       const intent = q.get('intent');
       if (!intent) return;
       q.delete('intent');
+      const viewIdParam = q.get('viewId');
+      q.delete('viewId');
       const rest = q.toString();
       history.replaceState(null, '', location.pathname + (rest ? '?' + rest : ''));
       if (intent === 'new-pipeline') openNewPipeline();
@@ -5168,8 +5196,10 @@
       // Sent by the sidebar's three-dot menu and pipeline settings — the sources
       // modal lives here, so they navigate to the board and ask for it.
       else if (intent === 'add-records') openAddRecordsFor(currentPipelineId);
-      // The sidebar's "Add filter view" from a page that cannot open the editor.
+      // The sidebar's view actions, from a page that cannot open the editor itself.
       else if (intent === 'new-view') openViewEditor(currentPipelineId, null);
+      else if (intent === 'edit-view') openViewEditor(currentPipelineId, viewIdParam);
+      else if (intent === 'delete-view') deleteViewById(currentPipelineId, viewIdParam);
     }
 
     function openNewPipeline() {

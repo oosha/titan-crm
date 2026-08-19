@@ -58,6 +58,7 @@
     var els = opts.els || {};
     var greeting = typeof opts.greeting === 'function' ? opts.greeting : function () { return null; };
     var onWrite = typeof opts.onWrite === 'function' ? opts.onWrite : function () {};
+    // Both are reassignable through configure() — see the instance returned below.
     var msgs = [];
     var busy = false;
 
@@ -333,9 +334,18 @@
     }
 
     wire();
-    return { ask: ask, reset: reset, refreshGreeting: refreshGreeting,
-             focus: function () { if (els.text) els.text.focus(); },
-             count: function () { return msgs.length; } };
+    return {
+      ask: ask, reset: reset, refreshGreeting: refreshGreeting,
+      focus: function () { if (els.text) els.text.focus(); },
+      count: function () { return msgs.length; },
+      // The dashboard mounts like every other page, then hands over a greeting built
+      // from its tiles once its data has arrived. Swapping it in redraws the opener
+      // and leaves the conversation alone.
+      configure: function (next) {
+        if (next && typeof next.greeting === 'function') { greeting = next.greeting; refreshGreeting(); }
+        if (next && typeof next.onWrite === 'function') onWrite = next.onWrite;
+      },
+    };
   }
 
   // ── The floating button ────────────────────────────────────────────────────
@@ -347,13 +357,13 @@
   //
   // The dashboard is the one exception in the other direction — it has the room for a
   // docked rail and already shows one, so a FAB there would be the same assistant twice.
+  var mounted = null;
   function mountFab() {
     if (document.getElementById('ai-fab')) return null;
     // Either the placeholder or the rendered sidebar counts. titan-sidebar.js fills
     // #sidebar-mount and the id goes with it, so checking only for the placeholder
     // answered "no sidebar" on every page that had one.
     if (!document.getElementById('sidebar-mount') && !document.querySelector('.sidebar')) return null;
-    if (document.getElementById('ai-rail')) return null;
 
     var fab = document.createElement('button');
     fab.id = 'ai-fab';
@@ -433,14 +443,31 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && panel.classList.contains('is-open')) setOpen(false);
     });
+    mounted = api;
     return api;
   }
 
-  // The sidebar renders on DOMContentLoaded, and #sidebar-mount is in the markup
-  // before that, so this can run at either point and still read it.
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountFab);
-  else mountFab();
+  // Most pages have #sidebar-mount in their markup, so one attempt at DOMContentLoaded
+  // is enough. sequences.html builds its sidebar from script afterwards, though, and a
+  // single attempt finds nothing — so keep watching for a few seconds rather than
+  // picking a delay and hoping.
+  function tryMount() {
+    if (mountFab()) return true;
+    if (document.getElementById('ai-fab')) return true;
+    return false;
+  }
+  function startMounting() {
+    if (tryMount()) return;
+    var obs = new MutationObserver(function () { if (tryMount()) obs.disconnect(); });
+    obs.observe(document.body, { childList: true, subtree: true });
+    // A page that never grows a sidebar (the settings screens, the public form) would
+    // otherwise leave this observing for the life of the document.
+    setTimeout(function () { obs.disconnect(); }, 5000);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startMounting);
+  else startMounting();
 
-  window.titanAssistant = { create: create, mountFab: mountFab, CHIPS: CHIPS,
+  window.titanAssistant = { create: create, mountFab: mountFab,
+                            instance: function () { return mounted; }, CHIPS: CHIPS,
                             aiTable: aiTable, textToHtml: textToHtml, accountName: accountName };
 })();

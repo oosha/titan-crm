@@ -291,44 +291,12 @@
             </svg>
             Customize
           </button>
-          <button class="dash-ghost-btn is-on" id="d-ai-toggle" type="button" aria-pressed="true">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M8 1.5l1.4 3.7 3.7 1.4-3.7 1.4L8 11.7 6.6 8 2.9 6.6 6.6 5.2 8 1.5z" fill="currentColor"/>
-              <path d="M12.8 10.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8z" fill="currentColor"/>
-            </svg>
-            Assistant
-          </button>
         </div>
 
         <div id="d-content"></div>
         <div class="dash-note" id="d-note"></div>
       </div>
 
-      <aside class="ai-rail" id="ai-rail" aria-label="Titan assistant">
-        <div class="ai-head">
-          <span class="ai-mark">
-            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M8 1.6l1.5 3.9 3.9 1.5-3.9 1.5L8 12.4 6.5 8.5 2.6 7l3.9-1.5L8 1.6z" fill="currentColor"/>
-            </svg>
-          </span>
-          <div class="ai-id">
-            <div class="ai-name">Ask Titan <span class="ds-badge ds-badge--purple">Beta</span></div>
-            <div class="ai-sub">Your pipeline copilot</div>
-          </div>
-          <button class="ai-new ds-btn ds-btn--ghost ds-btn--sm" id="ai-new" type="button" title="Start a new chat">New chat</button>
-          <button class="ai-close ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm" id="ai-close" type="button" aria-label="Hide assistant">
-            <span data-ds-icon="close" data-size="13"></span>
-          </button>
-        </div>
-        <div class="ai-msgs" id="ai-msgs"></div>
-        <div class="ai-chips" id="ai-chips"></div>
-        <form class="ai-input" id="ai-form">
-          <textarea id="ai-text" rows="1" placeholder="Ask about your pipeline…" aria-label="Message Titan"></textarea>
-          <button class="ai-send ds-btn ds-btn--primary ds-btn--icon" id="ai-send" type="submit" aria-label="Send" disabled>
-            <span data-ds-icon="forward" data-size="16"></span>
-          </button>
-        </form>
-      </aside>
     </div>
   </div>
 </div>
@@ -1103,29 +1071,19 @@
   // for glancing at another board — the scope never constrained the assistant anyway.
   function refreshGreeting() { if (assistant) assistant.refreshGreeting(); }
 
+  // The FAB is mounted by titan-assistant.js on every page with a sidebar, this one
+  // included. All the dashboard does is give it the greeting it could not compute for
+  // itself, and redraw the tiles after a write.
   function wireAssistant() {
-    assistant = window.titanAssistant.create({
-      els: {
-        msgs: document.getElementById('ai-msgs'), chips: document.getElementById('ai-chips'),
-        form: document.getElementById('ai-form'), text: document.getElementById('ai-text'),
-        send: document.getElementById('ai-send'), newBtn: document.getElementById('ai-new'),
-      },
+    assistant = window.titanAssistant.instance();
+    if (!assistant) return;
+    assistant.configure({
       greeting: greetingMsg,
       // Tiles were computed from data fetched at load, so an applied change isn't in
       // them yet. Re-pull rather than leave the dashboard disagreeing with the record.
       onWrite: async function () { await fetchPipelineData(); render(); },
     });
-
-    const rail = document.getElementById('ai-rail'), toggle = document.getElementById('d-ai-toggle');
-    function setOpen(open) {
-      rail.classList.toggle('is-hidden', !open);
-      toggle.classList.toggle('is-on', open);
-      toggle.setAttribute('aria-pressed', String(open));
-    }
-    toggle.addEventListener('click', function () { setOpen(rail.classList.contains('is-hidden')); });
-    document.getElementById('ai-close').addEventListener('click', function () { setOpen(false); });
   }
-
 
   // ── Init ──────────────────────────────────────────────────────────────────────
   (async function init() {

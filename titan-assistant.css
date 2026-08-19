@@ -133,13 +133,28 @@
    pattern's own rule — the sidebar is absent there for the same reason. */
 .ai-fab {
   position: fixed; right: var(--space-300); bottom: var(--space-300); z-index: 70;
-  width: 52px; height: 52px; border-radius: 50%; border: 0; cursor: pointer;
+  width: 52px; height: 52px; border-radius: 50%; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
-  background: var(--ai-mark, #7a6ba3); color: #fff;
-  box-shadow: 0 6px 20px rgba(20,22,26,0.22);
-  transition: transform 140ms ease, box-shadow 140ms ease;
+  /* White, so it reads as a control sitting on the page rather than a coloured blob
+     competing with the board's own accents. The star carries the colour. */
+  background: var(--surface-primary, #fff);
+  border: 1px solid var(--border-subtle);
+  color: var(--accent-primary);
+  box-shadow: 0 4px 14px rgba(20,22,26,0.14);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
 }
-.ai-fab:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(20,22,26,0.28); }
+.ai-fab svg { transition: filter 200ms ease, transform 200ms ease; }
+/* The shine: the star brightens and throws a soft halo of its own colour. Reduced
+   motion keeps the colour change and drops the movement. */
+.ai-fab:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-primary);
+  box-shadow: 0 8px 22px rgba(20,22,26,0.18), 0 0 0 4px var(--surface-selected, rgba(33,112,244,0.10));
+}
+.ai-fab:hover svg {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 5px var(--accent-primary));
+}
 .ai-fab:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 3px; }
 .ai-fab.is-open { transform: scale(0.92); }
 
@@ -165,7 +180,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ai-fab { transition: none; }
+  .ai-fab, .ai-fab svg { transition: none; }
+  .ai-fab:hover { transform: none; }
+  .ai-fab:hover svg { transform: none; }
 }
 
 /* Shown when a write lands from a page that rendered its data before the change. */
