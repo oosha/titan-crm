@@ -251,15 +251,23 @@ border/ring without tinting the card surface, plus `aria-pressed="true"`, until 
 delay cards also reveal an adjacent quick-delete button on hover or keyboard focus; deletion
 requires no confirmation, scales/fades the entity out, then slides later entities upward. The
 inspector retains its own remove control. Deleting an action also deletes its associated delay,
-so an orphaned wait is never left in the flow. On wide screens the flow lane recentres within the
+so an orphaned wait is never left in the flow. Deleting the final action clears any remaining
+standalone delays and returns the flow to its clean Starting point state; sequence-level settings
+and metadata remain intact. An action is always the first visible flow entity. Deleting the first
+action also removes any leading standalone delays that it exposes and makes the next action
+immediate, so a delay or condition can never become the beginning of the flow. On wide screens the flow lane recentres within the
 remaining canvas while the inspector is open; narrower screens keep it as an overlay rather
 than squeezing the cards. The final flow control is a compact blue circular plus button with
-the accessible label `Add to flow`; it offers only the three actions: a new email, call reminder
-or task. Its popover is labelled `Choose an action`; clicking any action adds it immediately with
-no second confirmation button. The popover has an upward-pointing tail centered on the blue plus.
-Actions created from the starting point or final blue plus silently receive a one-day delay by
-default. New delays default to `If there is no reply` whenever an earlier email exists; the first
-delay remains `Always` because there is no prior email to evaluate. The delay and its action render as two distinct
+the accessible label `Add to flow`. For every action after the starting action, its popover uses a
+two-stage wizard with a visible `1 Condition — 2 Action` progress indicator: `Set the condition`
+exposes wait duration and `After wait, continue`, then `Choose an action` offers email, call reminder
+and task. The active stage uses the accent treatment and the completed stage remains visibly marked.
+Only one stage is visible at a time, Back returns to condition configuration, and clicking an action on the second stage adds the
+configured delay and action with no further confirmation. The popover has an upward-pointing tail centered on the blue plus.
+The first activity chosen from a new sequence's starting point runs immediately and does not receive
+an automatic delay. Later additions begin with a visible one-day wait and default the continuation
+condition to `If there is no reply` whenever an earlier email exists, but users review and may change
+both settings before choosing the action. The delay and its action render as two distinct
 flow entities, and the user can delete the orange delay entity to make the action run immediately;
 delay is not presented as a competing standalone add choice. The supported conditions are no
 email reply and an earlier email opened but not replied to; there is no branching model. The
@@ -273,8 +281,8 @@ card so its selected border and focus ring remain unobstructed without feeling d
 plus sits at the midpoint of the visible segment between the preceding card and arrowhead. Each
 connector segment terminates at
 its arrowhead rather than continuing through the clearance. Its compact insertion menu offers only `Add an action`
-and `Add a delay`: the former inserts an email action by default and the latter inserts a standalone
-one-day delay, after which the new entity's inspector opens for customization. The plus is centered
+and `Add a delay`: the former opens the same two-stage delay-then-action wizard and the latter inserts
+a standalone one-day delay, after which the new entity's inspector opens for customization. The plus is centered
 precisely on the connector, and its wider fixed-position menu has a small directional tail aligned
 to the clicked plus whether it opens above or below. It renders above the flow canvas and inspector
 while staying within the viewport. Inserting between a

@@ -346,6 +346,28 @@
     gap: var(--space-150);
   }
   .seq-flow-add-option { min-height: var(--btn-height); white-space: nowrap; }
+  .seq-add-action-wizard, .seq-add-action-stage { display: grid; gap: var(--space-200); }
+  .seq-add-action-wizard[hidden], .seq-add-action-stage[hidden] { display: none; }
+  .seq-add-action-head { display: grid; gap: var(--space-150); }
+  .seq-add-action-stepper { display: grid; grid-template-columns: max-content minmax(var(--space-400), 1fr) max-content; align-items: center; gap: var(--space-100); }
+  .seq-add-action-step { display: inline-flex; align-items: center; gap: var(--space-075); color: var(--text-muted); font-size: var(--text-xs); font-weight: var(--weight-semi); }
+  .seq-add-action-step-marker {
+    width: var(--space-300); height: var(--space-300); display: inline-flex; align-items: center; justify-content: center;
+    border: var(--btn-border-width) solid var(--border-default); border-radius: var(--radius-full);
+    background: var(--surface-primary); color: var(--text-muted);
+  }
+  .seq-add-action-step.is-active { color: var(--text-accent); }
+  .seq-add-action-step.is-active .seq-add-action-step-marker { border-color: var(--border-accent); background: var(--accent-primary); color: var(--text-on-accent); }
+  .seq-add-action-step.is-complete { color: var(--text-secondary); }
+  .seq-add-action-step.is-complete .seq-add-action-step-marker { border-color: var(--border-accent); background: var(--accent-subtle); color: var(--text-accent); }
+  .seq-add-action-step-line { height: var(--btn-border-width); background: var(--border-default); }
+  .seq-add-action-step-line.is-complete { background: var(--border-accent); }
+  .seq-add-action-title { color: var(--text-heading); font-size: var(--text-md); font-weight: var(--weight-semi); }
+  .seq-add-action-fields { display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr); gap: var(--space-200); }
+  .seq-add-action-fields .ds-field { gap: var(--space-100); }
+  .seq-add-action-footer { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-100); }
+  .seq-flow-insert-menu .seq-add-action-fields,
+  .seq-flow-insert-menu .seq-flow-add-options { grid-template-columns: minmax(0, 1fr); }
   .seq-flow-insert-node { z-index: 4; height: 0; }
   .seq-flow-insert-node.is-menu-open { z-index: 1000; }
   .seq-flow-insert-node::before {
@@ -406,6 +428,7 @@
   .seq-flow-insert-options {
     display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-150);
   }
+  .seq-flow-insert-options[hidden] { display: none; }
   .seq-flow-empty {
     width: min(100%, calc(var(--input-height) * 13)); padding: var(--space-400);
     border: var(--btn-border-width) dashed var(--border-default); border-radius: var(--radius-control);
@@ -1544,6 +1567,19 @@
     };
   }
 
+  function normalizeFlowStart(sequence) {
+    const firstActionGroupIndex = sequence.steps.findIndex(function (item) {
+      return item.actions.length;
+    });
+    if (firstActionGroupIndex === -1) {
+      sequence.steps = [];
+      return;
+    }
+    if (firstActionGroupIndex > 0) sequence.steps.splice(0, firstActionGroupIndex);
+    sequence.steps[0].timing = 'immediate';
+    sequence.steps[0].days = 0;
+  }
+
   function normalizeActivityGroups(sequence) {
     const normalized = [];
     sequence.steps.forEach(function (group) {
@@ -1561,6 +1597,7 @@
       });
     });
     sequence.steps = normalized;
+    normalizeFlowStart(sequence);
   }
 
   function removeFlowActivity(sequence, groupIndex, actionIndex) {
@@ -1568,6 +1605,7 @@
     if (!group || !group.actions[actionIndex]) return false;
     group.actions.splice(actionIndex, 1);
     if (!group.actions.length) sequence.steps.splice(groupIndex, 1);
+    normalizeFlowStart(sequence);
     return true;
   }
 
@@ -1600,6 +1638,10 @@
       const displacedActions = group.actions.slice();
       group.actions = [action];
       sequence.steps.splice.apply(sequence.steps, [groupIndex + 1, 0].concat(displacedActions.map(actionGroup)));
+      return { groupIndex: groupIndex, actionIndex: 0, action: action };
+    }
+    if (afterKind === 'delay' && group.timing !== 'immediate') {
+      group.actions = [action];
       return { groupIndex: groupIndex, actionIndex: 0, action: action };
     }
     const insertedGroup = actionGroup(action);
@@ -1697,15 +1739,57 @@
     '</div>';
   }
 
-  function renderFlowInsertControl(node, index) {
+  function renderAddActionStepper(activeStage) {
+    const onAction = activeStage === 'action';
+    return '<div class="seq-add-action-stepper" aria-label="Add action progress">' +
+      '<span class="seq-add-action-step ' + (onAction ? 'is-complete' : 'is-active') + '"' + (onAction ? '' : ' aria-current="step"') + '><span class="seq-add-action-step-marker">1</span><span>Condition</span></span>' +
+      '<span class="seq-add-action-step-line' + (onAction ? ' is-complete' : '') + '" aria-hidden="true"></span>' +
+      '<span class="seq-add-action-step' + (onAction ? ' is-active' : '') + '"' + (onAction ? ' aria-current="step"' : '') + '><span class="seq-add-action-step-marker">2</span><span>Action</span></span>' +
+    '</div>';
+  }
+
+  function renderAddActionWizard(hasEarlierEmail, mode, hidden) {
+    const defaultCondition = hasEarlierEmail ? 'no-reply' : 'after';
+    const actionAttribute = mode === 'insert' ? 'data-insert-flow-action-type' : 'data-add-flow-activity';
+    return '<div class="seq-add-action-wizard" data-add-action-wizard data-default-condition="' + defaultCondition + '"' + (hidden ? ' hidden' : '') + '>' +
+      '<div class="seq-add-action-stage" data-add-action-stage="delay">' +
+        '<div class="seq-add-action-head">' + renderAddActionStepper('condition') + '<span class="seq-add-action-title">Set the condition</span></div>' +
+        '<div class="seq-add-action-fields">' +
+          '<label class="ds-field"><span class="ds-field-label">Wait for</span><span class="seq-delay-duration-control"><input class="ds-input seq-delay-duration-input" type="number" min="1" step="1" value="1" data-add-action-wait-days aria-label="Wait duration in days"><span class="seq-delay-duration-unit" data-add-action-wait-unit>day</span></span></label>' +
+          '<label class="ds-field"><span class="ds-field-label">After wait, continue</span><select class="ds-input" data-add-action-condition>' +
+            '<option value="after"' + (defaultCondition === 'after' ? ' selected' : '') + '>Always</option>' +
+            '<option value="no-reply"' + (defaultCondition === 'no-reply' ? ' selected' : '') + (hasEarlierEmail ? '' : ' disabled') + '>If there is no reply</option>' +
+            '<option value="opened-no-reply"' + (hasEarlierEmail ? '' : ' disabled') + '>If email opened but no reply</option>' +
+          '</select></label>' +
+        '</div>' +
+        '<div class="seq-add-action-footer">' +
+          (mode === 'insert' ? '<button class="ds-btn ds-btn--secondary" type="button" data-cancel-insert-action>Back</button>' : '') +
+          '<button class="ds-btn ds-btn--primary" type="button" data-add-action-next>Next</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="seq-add-action-stage" data-add-action-stage="action" hidden>' +
+        '<div class="seq-add-action-head">' + renderAddActionStepper('action') + '<span class="seq-add-action-title">Choose an action</span></div>' +
+        '<div class="seq-flow-add-options">' +
+          ACTIVITY_OPTIONS.map(function (option) {
+            return '<button class="ds-btn ds-btn--secondary seq-flow-add-option" type="button" ' + actionAttribute + '="' + option.value + '"><span data-ds-icon="' + option.icon + '" data-size="15"></span>' + esc(option.label) + '</button>';
+          }).join('') +
+        '</div>' +
+        '<div class="seq-add-action-footer"><button class="ds-btn ds-btn--secondary" type="button" data-add-action-back>Back</button></div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderFlowInsertControl(sequence, node, index) {
     const menuId = 'seq-flow-insert-menu-' + index;
+    const targetGroupIndex = node.kind === 'delay' ? node.groupIndex : node.groupIndex + 1;
     return '<div class="seq-flow-node seq-flow-insert-node">' +
       '<button class="ds-btn ds-btn--icon seq-flow-insert-control" type="button" data-toggle-flow-insert aria-expanded="false" aria-controls="' + menuId + '" aria-label="Add here" data-after-kind="' + node.kind + '" data-after-group-index="' + node.groupIndex + '"><span data-ds-icon="plus" data-size="12"></span></button>' +
       '<div class="seq-flow-add-menu seq-flow-insert-menu" id="' + menuId + '" data-flow-insert-menu hidden>' +
-        '<div class="seq-flow-insert-options">' +
-          '<button class="ds-btn ds-btn--secondary seq-flow-add-option" type="button" data-insert-flow-activity="email"><span data-ds-icon="envelope" data-size="15"></span>Add an action</button>' +
+        '<div class="seq-flow-insert-options" data-flow-insert-choices>' +
+          '<button class="ds-btn ds-btn--secondary seq-flow-add-option" type="button" data-start-insert-action><span data-ds-icon="envelope" data-size="15"></span>Add an action</button>' +
           '<button class="ds-btn ds-btn--secondary seq-flow-add-option" type="button" data-insert-flow-delay><span data-ds-icon="clock" data-size="15"></span>Add a delay</button>' +
         '</div>' +
+        renderAddActionWizard(hasEmailBeforeGroup(sequence, targetGroupIndex), 'insert', true) +
       '</div>' +
     '</div>';
   }
@@ -1746,18 +1830,14 @@
       return;
     }
     const flowMarkup = flowNodes.map(function (node, index) {
-      return node.html + (index < flowNodes.length - 1 ? renderFlowInsertControl(node, index) : '');
+      return node.html + (index < flowNodes.length - 1 ? renderFlowInsertControl(sequence, node, index) : '');
     }).join('');
     host.innerHTML = '<div class="seq-flow-lane">' +
         (flowMarkup || '<div class="seq-flow-node"><div class="seq-flow-empty">This sequence has no actions yet. Add the first one below.</div></div>') +
         '<div class="seq-flow-node seq-flow-add-node" data-timeline-key="add-flow"><div class="seq-flow-add-wrap">' +
           '<button class="ds-btn ds-btn--primary ds-btn--icon seq-flow-add-control" type="button" data-toggle-flow-add aria-expanded="false" aria-label="Add to flow"><span data-ds-icon="plus" data-size="16"></span></button>' +
           '<div class="seq-flow-add-menu" id="seq-flow-add-menu" hidden>' +
-            '<div class="seq-flow-add-group"><div class="seq-flow-add-label">Choose an action</div><div class="seq-flow-add-options">' +
-              '<button class="ds-btn ds-btn--secondary seq-flow-add-option" type="button" data-add-flow-activity="email"><span data-ds-icon="envelope" data-size="15"></span>Send an email</button>' +
-              '<button class="ds-btn ds-btn--secondary seq-flow-add-option" type="button" data-add-flow-activity="call"><span data-ds-icon="phone" data-size="15"></span>Set a call reminder</button>' +
-              '<button class="ds-btn ds-btn--secondary seq-flow-add-option" type="button" data-add-flow-activity="task"><span data-ds-icon="clipboard-text" data-size="15"></span>Create a task</button>' +
-            '</div></div>' +
+            renderAddActionWizard(hasEmailBeforeGroup(sequence, sequence.steps.length), 'end', false) +
           '</div>' +
         '</div></div>' +
       '</div>';
@@ -1778,6 +1858,39 @@
         behavior: 'smooth'
       });
     });
+  }
+
+  function showAddActionStage(wizard, stage) {
+    wizard.querySelectorAll('[data-add-action-stage]').forEach(function (panel) {
+      panel.hidden = panel.dataset.addActionStage !== stage;
+    });
+    const menu = wizard.closest('.seq-flow-add-menu');
+    const insertTrigger = menu && menu.hasAttribute('data-flow-insert-menu')
+      ? document.querySelector('[aria-controls="' + menu.id + '"]')
+      : null;
+    requestAnimationFrame(function () {
+      if (insertTrigger) positionFlowInsertMenu(insertTrigger, menu);
+      else if (menu) bringFlowAddMenuIntoSafeArea(menu);
+      const focusTarget = wizard.querySelector('[data-add-action-stage="' + stage + '"]:not([hidden]) input, [data-add-action-stage="' + stage + '"]:not([hidden]) button');
+      if (focusTarget) focusTarget.focus({ preventScroll: true });
+    });
+  }
+
+  function resetAddActionWizard(wizard) {
+    const days = wizard.querySelector('[data-add-action-wait-days]');
+    const unit = wizard.querySelector('[data-add-action-wait-unit]');
+    const condition = wizard.querySelector('[data-add-action-condition]');
+    if (days) days.value = '1';
+    if (unit) unit.textContent = 'day';
+    if (condition) condition.value = wizard.dataset.defaultCondition || 'after';
+    showAddActionStage(wizard, 'delay');
+  }
+
+  function addActionWizardSettings(wizard) {
+    return {
+      days: Math.max(1, Number(wizard.querySelector('[data-add-action-wait-days]').value) || 1),
+      timing: wizard.querySelector('[data-add-action-condition]').value || 'after',
+    };
   }
 
   function closeFlowInsertMenus(except) {
@@ -2783,6 +2896,11 @@
   document.getElementById('seq-editor').addEventListener('input', function (event) {
     const sequence = selectedSequence();
     if (!sequence) return;
+    if (event.target.dataset.addActionWaitDays !== undefined) {
+      const unit = event.target.closest('[data-add-action-wizard]').querySelector('[data-add-action-wait-unit]');
+      if (unit) unit.textContent = Number(event.target.value) === 1 ? 'day' : 'days';
+      return;
+    }
     let changed = false;
     if (event.target.dataset.sequenceNameInput !== undefined) {
       sequenceNameDraft = event.target.value;
@@ -2873,16 +2991,58 @@
       menu.hidden = !open;
       toggleFlowInsert.setAttribute('aria-expanded', String(open));
       toggleFlowInsert.closest('.seq-flow-insert-node')?.classList.toggle('is-menu-open', open);
-      if (open) positionFlowInsertMenu(toggleFlowInsert, menu);
+      if (open) {
+        const choices = menu.querySelector('[data-flow-insert-choices]');
+        const wizard = menu.querySelector('[data-add-action-wizard]');
+        if (choices) choices.hidden = false;
+        if (wizard) wizard.hidden = true;
+        positionFlowInsertMenu(toggleFlowInsert, menu);
+      }
       return;
     }
-    const insertFlowActivity = event.target.closest('[data-insert-flow-activity]');
+    const startInsertAction = event.target.closest('[data-start-insert-action]');
+    if (startInsertAction) {
+      const menu = startInsertAction.closest('[data-flow-insert-menu]');
+      const choices = menu.querySelector('[data-flow-insert-choices]');
+      const wizard = menu.querySelector('[data-add-action-wizard]');
+      choices.hidden = true;
+      wizard.hidden = false;
+      resetAddActionWizard(wizard);
+      return;
+    }
+    const cancelInsertAction = event.target.closest('[data-cancel-insert-action]');
+    if (cancelInsertAction) {
+      const menu = cancelInsertAction.closest('[data-flow-insert-menu]');
+      menu.querySelector('[data-add-action-wizard]').hidden = true;
+      menu.querySelector('[data-flow-insert-choices]').hidden = false;
+      const trigger = document.querySelector('[aria-controls="' + menu.id + '"]');
+      requestAnimationFrame(function () { positionFlowInsertMenu(trigger, menu); });
+      return;
+    }
+    const addActionNext = event.target.closest('[data-add-action-next]');
+    if (addActionNext) {
+      const wizard = addActionNext.closest('[data-add-action-wizard]');
+      const days = wizard.querySelector('[data-add-action-wait-days]');
+      if (!days.reportValidity()) return;
+      days.value = String(Math.max(1, Number(days.value) || 1));
+      showAddActionStage(wizard, 'action');
+      return;
+    }
+    const addActionBack = event.target.closest('[data-add-action-back]');
+    if (addActionBack) {
+      showAddActionStage(addActionBack.closest('[data-add-action-wizard]'), 'delay');
+      return;
+    }
+    const insertFlowActivity = event.target.closest('[data-insert-flow-action-type]');
     if (insertFlowActivity) {
       const menu = insertFlowActivity.closest('[data-flow-insert-menu]');
       const trigger = document.querySelector('[aria-controls="' + menu.id + '"]');
+      const settings = addActionWizardSettings(insertFlowActivity.closest('[data-add-action-wizard]'));
       const positions = captureTimelinePositions();
-      const inserted = insertFlowActionAfter(sequence, trigger.dataset.afterKind, Number(trigger.dataset.afterGroupIndex), insertFlowActivity.dataset.insertFlowActivity);
+      const inserted = insertFlowActionAfter(sequence, trigger.dataset.afterKind, Number(trigger.dataset.afterGroupIndex), insertFlowActivity.dataset.insertFlowActionType);
       if (!inserted) return;
+      sequence.steps[inserted.groupIndex].timing = settings.timing;
+      sequence.steps[inserted.groupIndex].days = settings.days;
       const drawer = document.getElementById('seq-flow-drawer');
       if (drawer.classList.contains('is-open')) closeFlowDrawer();
       renderEditor();
@@ -2890,7 +3050,7 @@
       await animateTimelineReflow(positions, {
         addedKey: 'activity-' + inserted.action.id,
         focusKey: 'activity-' + inserted.action.id,
-        message: 'Action inserted',
+        message: 'Action and delay inserted',
       });
       openFlowDrawer('activity', inserted.groupIndex, inserted.actionIndex);
       return;
@@ -2921,7 +3081,10 @@
       closeFlowInsertMenus();
       menu.hidden = !open;
       toggleFlowAdd.setAttribute('aria-expanded', String(open));
-      if (open) bringFlowAddMenuIntoSafeArea(menu);
+      if (open) {
+        resetAddActionWizard(menu.querySelector('[data-add-action-wizard]'));
+        bringFlowAddMenuIntoSafeArea(menu);
+      }
       return;
     }
     const addFlowActivity = event.target.closest('[data-add-flow-activity]');
@@ -2929,19 +3092,22 @@
       const positions = captureTimelinePositions();
       const actionType = addFlowActivity.dataset.addFlowActivity;
       const action = makeAction(actionType, 0);
+      const isFirstActivity = !sequence.steps.some(function (item) { return item.actions.length; });
+      const wizard = addFlowActivity.closest('[data-add-action-wizard]');
+      const settings = wizard ? addActionWizardSettings(wizard) : { timing: 'immediate', days: 0 };
       let groupIndex = sequence.steps.length - 1;
       let group = sequence.steps[groupIndex];
       if (!group || group.actions.length) {
-        group = { id: 'group-' + (++stepSequence), timing: 'after', days: 1, actions: [] };
+        group = { id: 'group-' + (++stepSequence), timing: 'immediate', days: 0, actions: [] };
         sequence.steps.push(group);
         groupIndex = sequence.steps.length - 1;
       }
-      group.timing = defaultDelayTiming(sequence, groupIndex);
-      group.days = 1;
+      group.timing = isFirstActivity ? 'immediate' : settings.timing;
+      group.days = isFirstActivity ? 0 : settings.days;
       group.actions.push(action);
       renderEditor();
       scheduleSequencePersist();
-      await animateTimelineReflow(positions, { addedKey: 'activity-' + action.id, focusKey: 'activity-' + action.id, message: 'Action and delay added' });
+      await animateTimelineReflow(positions, { addedKey: 'activity-' + action.id, focusKey: 'activity-' + action.id, message: isFirstActivity ? 'Action added' : 'Action and delay added' });
       openFlowDrawer('activity', groupIndex, group.actions.length - 1);
       return;
     }
@@ -3018,8 +3184,9 @@
       const actionType = addActionBox.dataset.addActionBox;
       const positions = captureTimelinePositions();
       const groupIndex = sequence.steps.length;
+      const isFirstActivity = groupIndex === 0;
       const newStep = {
-        id: 'step-' + (++stepSequence), timing: defaultDelayTiming(sequence, groupIndex), days: 1,
+        id: 'step-' + (++stepSequence), timing: isFirstActivity ? 'immediate' : defaultDelayTiming(sequence, groupIndex), days: isFirstActivity ? 0 : 1,
         actions: [makeAction(actionType, actionType === 'email' ? 1 : 0)],
       };
       sequence.steps.push(newStep);
