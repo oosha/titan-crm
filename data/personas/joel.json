@@ -685,14 +685,7 @@
           "id": "group-112",
           "timing": "no-reply",
           "days": 1,
-          "actions": [
-            {
-              "id": "action-111",
-              "action": "email",
-              "templateId": "initial-outreach",
-              "sendTime": "09:00"
-            }
-          ]
+          "actions": []
         }
       ]
     },
