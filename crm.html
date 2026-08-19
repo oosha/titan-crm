@@ -44,7 +44,9 @@
   <script src="/design-system/components/icon.js"></script>
   <script src="/design-system/components/menu.js"></script>
   <link rel="stylesheet" href="/titan-sidebar.css">
+  <link rel="stylesheet" href="/mail-rule.css">
   <script src="/crm-schema.js"></script>
+  <script src="/mail-rule.js"></script>
   <script src="/crm-status.js"></script>
   <script src="/titan-sidebar.js"></script>
   <style>
@@ -2039,6 +2041,7 @@
       box-shadow: 0 16px 50px rgba(0,0,0,0.24); transition: width 0.18s ease;
     }
     .np-modal.np-step2-open { width: 900px; }
+    .np-modal.np-step4-open { width: 760px; }
     .np-header {
       padding: 18px 24px; border-bottom: 1px solid #eee;
       display: flex; align-items: center; gap: 8px; flex-shrink: 0;
@@ -3120,9 +3123,7 @@
           <span class="np-close" onclick="closeNewPipeline()">&times;</span>
         </div>
         <div class="np-body">
-          <div class="np-rule-label">What should Titan look for?</div>
-          <textarea class="ds-input np-rule-input" id="np-email-rule" spellcheck="false"></textarea>
-          <div class="np-rule-hint" id="np-email-hint"></div>
+          <div id="np-email-rule-host"></div>
         </div>
         <div class="np-footer">
           <button type="button" class="ds-btn ds-btn--ghost" onclick="npShowStep(3)">Back</button>
@@ -5052,6 +5053,11 @@
       document.getElementById('np-step-4').classList.toggle('active', n === 4);
       document.getElementById('np-step-5').classList.toggle('active', n === 5);
       document.getElementById('np-modal').classList.toggle('np-step2-open', n === 2);
+      // Step 4 needs more room than the shell — four controls to a condition row.
+      document.getElementById('np-modal').classList.toggle('np-step4-open', n === 4);
+      // Built on entry rather than on modal open, so it always reflects the pipeline
+      // that exists now. Both ways into this step come through here.
+      if (n === 4) npMountEmailRule();
     }
 
     // Reflects whether the created pipeline already has a form, so the step-3 row
@@ -5336,14 +5342,9 @@
       document.getElementById('np-source-import-desc').textContent =
         'Bring in ' + many + ' you already have from a spreadsheet or another CRM.';
 
-      const rule = document.getElementById('np-email-rule');
-      // Reopened on a pipeline that already has a rule: show it rather than an
-      // empty box, so this is an edit and not a silent overwrite.
-      rule.placeholder = NP_RULE_PLACEHOLDER[npState.type] || NP_RULE_PLACEHOLDER.other;
+      // The rule itself is built when step 4 opens — mounting it here would build it
+      // against whichever pipeline was current when the sources screen was drawn.
       const hasEmailRule = !!(pl.emailIntake && pl.emailIntake.rule);
-      rule.value = hasEmailRule ? pl.emailIntake.rule : '';
-      document.getElementById('np-email-hint').textContent =
-        'Plain English is fine — for example “anything asking about pricing”. Titan matches on the subject and body.';
       document.getElementById('np-src-email-card').classList.toggle('configured', hasEmailRule);
       document.getElementById('np-src-integrations-card').classList.toggle('configured', (pl.connectedIntegrations || []).length > 0);
 
@@ -5380,14 +5381,6 @@
       if (source === 'integrations') { npGoIntegrations(); }
     }
     function npArticle(word) { return /^[aeiou]/i.test(word || '') ? 'an' : 'a'; }
-
-    const NP_RULE_PLACEHOLDER = {
-      sales:      'e.g. anyone asking for a demo, pricing or a quote',
-      projects:   'e.g. a client describing a new brief or scope of work',
-      orders:     'e.g. a purchase order or an order confirmation request',
-      candidates: 'e.g. someone applying for a role, or sending a CV',
-      other:      'e.g. describe the emails that should become records',
-    };
 
     // Ticked when connected — nothing in this prototype ever actually sets
     // connectedIntegrations (npPickIntegration is still just a toast), but the field
@@ -5436,14 +5429,25 @@
       npToast('Prototype only: importing ' + many + ' is not wired up yet.');
     }
 
+    // Mounted when the step opens, against the pipeline that was just created.
+    let npMailRule = null;
+    function npMountEmailRule() {
+      const pl = PIPELINES[npCreatedId];
+      const acct = (window.TITAN_PERSONAS || {})[window.PERSONA_ID];
+      npMailRule = window.titanMailRule.mount(document.getElementById('np-email-rule-host'), {
+        value: pl && pl.emailIntake,
+        accountEmail: (acct && acct.account && acct.account.email) || 'ella.henderson@avontechlabs.com',
+        onRequestAccess: function (who) { npToast('Access requested from ' + who + '.', true); },
+      });
+    }
     function npSaveEmailRule() {
       const pl = PIPELINES[npCreatedId];
-      const rule = (document.getElementById('np-email-rule').value || '').trim();
-      if (!pl) return;
-      if (!rule) { npToast('Describe what to look for first.'); return; }
+      if (!pl || !npMailRule) return;
+      const problem = npMailRule.validate();
+      if (problem) { npToast(problem); return; }
       // Stored on the pipeline beside its form. Nothing reads it yet — no mail is
       // actually scanned — so it is a saved intent, not a working rule.
-      pl.emailIntake = { enabled: true, rule: rule };
+      pl.emailIntake = npMailRule.read();
       schedulePersist();
       document.getElementById('np-src-email-card').classList.add('configured');
       npShowStep(3);

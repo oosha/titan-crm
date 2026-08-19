@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="/design-system/tokens.css">
 <link rel="stylesheet" href="/design-system/components.css">
 <link rel="stylesheet" href="/titan-sidebar.css">
+<link rel="stylesheet" href="/mail-rule.css">
 <style>
   .subpage-body { background: #f7f8fa; color: #222; }
   .ps-btn-primary {
@@ -158,6 +159,9 @@
     max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;
     box-shadow: 0 16px 50px rgba(0,0,0,0.24);
   }
+  /* After .np-modal, not before: same specificity, so source order decides. The rule
+     builder puts four controls on a row and 520px squeezes the values to nothing. */
+  .np-modal--wide { width: 720px; }
   .np-header {
     padding: 18px 24px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
   }
@@ -420,6 +424,7 @@
 <script src="/design-system/components/icon.js"></script>
 <script src="/crm-owner.js"></script>
 <script src="/crm-schema.js"></script>
+<script src="/mail-rule.js"></script>
 <script src="/titan-sequences.js"></script>
 <div class="app-window">
   <!-- Full-page settings replaces the CRM nav with its own section rail (see .ps-side).
@@ -529,15 +534,13 @@
 
 <!-- Sources: From incoming email -->
 <div class="np-overlay" id="ps-email-overlay" onclick="if(event.target===this) closeSourceModal()">
-  <div class="np-modal">
+  <div class="np-modal np-modal--wide">
     <div class="np-header">
       <span class="np-title">From incoming email</span>
       <span class="np-close" onclick="closeSourceModal()">&times;</span>
     </div>
     <div class="np-body">
-      <div class="np-rule-label">What should Titan look for?</div>
-      <textarea class="np-rule-input" id="ps-email-rule" spellcheck="false"></textarea>
-      <div class="np-rule-hint" id="ps-email-hint"></div>
+      <div id="ps-email-rule-host"></div>
     </div>
     <div class="np-footer">
       <button type="button" class="ds-btn ds-btn--ghost" onclick="closeSourceModal()">Cancel</button>
@@ -1613,17 +1616,23 @@
     document.getElementById('ps-email-overlay').classList.remove('open');
     document.getElementById('ps-int-overlay').classList.remove('open');
   }
+  // Remounted each time rather than kept alive: the modal is the editor's whole
+  // lifetime, and a stale instance would hand back the previous draft.
+  var psMailRule = null;
   function openEmailSourceModal() {
-    const mail = pipeline.emailIntake;
-    document.getElementById('ps-email-rule').value = (mail && mail.rule) || '';
-    document.getElementById('ps-email-hint').textContent =
-      'Plain English is fine — for example “anything asking about pricing”. Titan matches on the subject and body.';
+    var acct = (window.TITAN_PERSONAS || {})[window.PERSONA_ID];
+    psMailRule = window.titanMailRule.mount(document.getElementById('ps-email-rule-host'), {
+      value: pipeline.emailIntake,
+      accountEmail: (acct && acct.account && acct.account.email) || 'ella.henderson@avontechlabs.com',
+      onRequestAccess: function (who) { psToast('Access requested from ' + who + '.', true); },
+    });
     document.getElementById('ps-email-overlay').classList.add('open');
   }
   function psSaveEmailRule() {
-    const rule = (document.getElementById('ps-email-rule').value || '').trim();
-    if (!rule) { psToast('Describe what to look for first.'); return; }
-    pipeline.emailIntake = { enabled: true, rule: rule };
+    if (!psMailRule) return;
+    var problem = psMailRule.validate();
+    if (problem) { psToast(problem); return; }
+    pipeline.emailIntake = psMailRule.read();
     closeSourceModal();
     renderIntakeCard();
     psPersistPatch({ emailIntake: pipeline.emailIntake }).then(function (ok) {
