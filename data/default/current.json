@@ -96,41 +96,6 @@
       ],
       "cards": [
         {
-          "id": 217,
-          "deal": "Mercy Loyal",
-          "stage": "lead",
-          "company": "",
-          "contact": "Mercy Loyal",
-          "initials": "ML",
-          "contactEmail": "mercy@apple.com",
-          "contactPhone": "",
-          "contactDesignation": "",
-          "contactLocation": "",
-          "contactLinkedin": "",
-          "contacts": [
-            {
-              "name": "Mercy Loyal",
-              "email": "mercy@apple.com",
-              "phone": "",
-              "designation": "",
-              "location": "",
-              "linkedin": ""
-            }
-          ],
-          "value": 0,
-          "currency": "$",
-          "source": "Web form",
-          "note": "Need to connect, lemme know a suitable slot.",
-          "noteAuthor": "Mercy Loyal",
-          "noteDate": "",
-          "lastActivity": "just now",
-          "activityType": "Form submission",
-          "overdue": false,
-          "createdBy": "Form",
-          "customFieldValues": {},
-          "inboundKey": "i:94bb67:141"
-        },
-        {
           "id": 216,
           "deal": "John Macker",
           "stage": "lead",
