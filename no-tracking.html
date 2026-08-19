@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Analytics — Titan CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Deliberately does NOT load /analytics.js. Recording the page whose whole job is
+     to stop recording would be its own joke, and it would start a session for anyone
+     arriving here to opt out. -->
+<link rel="stylesheet" href="/design-system/tokens.css">
+<link rel="stylesheet" href="/design-system/components.css">
+<style>
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: var(--space-300); background: var(--surface-recessed);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text-primary);
+  }
+  .nt-card {
+    width: 100%; max-width: 480px; background: var(--surface-primary);
+    border: 1px solid var(--border-subtle); border-radius: 12px;
+    padding: var(--space-300);
+  }
+  .nt-title { font-size: var(--text-lg); font-weight: var(--weight-semi); }
+  .nt-blurb {
+    font-size: var(--text-sm); line-height: 1.6; color: var(--text-secondary);
+    margin-top: var(--space-100);
+  }
+  /* The state has to be readable at a glance — someone lands here to find out
+     whether they are being recorded, not to read about it. */
+  .nt-state {
+    display: flex; align-items: center; gap: var(--space-125);
+    border: 1px solid var(--border-subtle); border-radius: 10px;
+    padding: var(--space-150); margin: var(--space-200) 0;
+    background: var(--surface-recessed);
+  }
+  .nt-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .nt-state-text { font-size: var(--text-sm); font-weight: var(--weight-semi); }
+  .nt-state-sub { font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-025); }
+
+  .is-tracked .nt-dot { background: var(--status-warning, var(--accent-primary)); }
+  .is-optedout .nt-dot { background: var(--status-success, var(--accent-primary)); }
+
+  #nt-toggle { margin-top: var(--space-050); }
+  .nt-foot { font-size: var(--text-xs); line-height: 1.6; color: var(--text-secondary); margin-top: var(--space-200); }
+  .nt-foot code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--surface-recessed); border-radius: 4px; padding: 0 var(--space-050);
+  }
+</style>
+</head>
+<body>
+
+<div class="nt-card">
+  <div class="nt-title">Session recording</div>
+  <div class="nt-blurb">
+    Titan records how people use this prototype, so we can see where it confuses them.
+    If you are on the team, turn it off for this browser — your own clicking around
+    is not user research.
+  </div>
+
+  <div class="nt-state" id="nt-state">
+    <span class="nt-dot"></span>
+    <div>
+      <div class="nt-state-text" id="nt-state-text"></div>
+      <div class="nt-state-sub" id="nt-state-sub"></div>
+    </div>
+  </div>
+
+  <button class="ds-btn ds-btn--primary" id="nt-toggle" type="button"></button>
+
+  <div class="nt-foot" id="nt-foot"></div>
+</div>
+
+<script>
+  // This page is the only thing that writes the flag; /analytics.js only reads it.
+  var KEY = 'titan-no-analytics';
+  var LEGACY = '_hjOptOut';           // in case someone already ran the snippet going round
+
+  function read() {
+    try {
+      return localStorage.getItem(KEY) === 'true' || localStorage.getItem(LEGACY) === 'true';
+    } catch (e) {
+      return null;                    // storage blocked — we cannot tell, and cannot set it
+    }
+  }
+
+  function render() {
+    var out = read();
+    var card = document.getElementById('nt-state');
+    var text = document.getElementById('nt-state-text');
+    var sub = document.getElementById('nt-state-sub');
+    var btn = document.getElementById('nt-toggle');
+    var foot = document.getElementById('nt-foot');
+
+    if (out === null) {
+      card.className = 'nt-state';
+      text.textContent = 'Can’t tell';
+      sub.textContent = 'This browser is blocking storage, so the setting can’t be saved here.';
+      btn.style.display = 'none';
+      foot.textContent = 'Private windows and some privacy extensions block Hotjar outright, ' +
+        'so you are probably not being recorded anyway.';
+      return;
+    }
+
+    card.className = 'nt-state ' + (out ? 'is-optedout' : 'is-tracked');
+    text.textContent = out ? 'Not being recorded' : 'Being recorded';
+    sub.textContent = out
+      ? 'Hotjar is switched off in this browser.'
+      : 'Your sessions in this browser go to Hotjar.';
+    btn.textContent = out ? 'Turn recording back on' : 'Stop recording me';
+    btn.className = 'ds-btn ' + (out ? '' : 'ds-btn--primary');
+    foot.innerHTML = out
+      ? 'The setting lives in this browser only, under <code>' + KEY + '</code>. ' +
+        'Clearing site data undoes it, and each browser and device needs its own visit.'
+      : 'Takes effect on the next page you load. A session already in progress ' +
+        'cannot be stopped halfway — close the tab afterwards to be sure.';
+  }
+
+  document.getElementById('nt-toggle').addEventListener('click', function () {
+    var out = read();
+    try {
+      if (out) { localStorage.removeItem(KEY); localStorage.removeItem(LEGACY); }
+      else { localStorage.setItem(KEY, 'true'); }
+    } catch (e) { /* render() will report it */ }
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
