@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Gravity Forms">
+  <rect width="100" height="100" rx="20" fill="#1f2a3c"/>
+  <path d="M50 20l26 15v30L50 80 24 65V35z" fill="none" stroke="#ff8b1f" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M38 44h24M38 57h16" stroke="#ff8b1f" stroke-width="6" stroke-linecap="round"/>
+</svg>

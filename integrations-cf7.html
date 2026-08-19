@@ -144,7 +144,7 @@
     return '<div class="int-label">Forms</div>' +
       connections.map(rowHTML).join('') +
       '<div class="int-foot">' +
-        '<button class="dir-btn dir-btn-primary" id="cf7-create" type="button">Add another form</button>' +
+        '<button class="int-linkbtn" id="cf7-create" type="button">+ Add another form</button>' +
       '</div>' +
       '<div class="int-note">Records appear as soon as WordPress posts them — nothing to check or refresh.</div>';
   }
@@ -173,7 +173,7 @@
     const n = submissionCount(conn);
     const count = mapped
       ? '<span class="int-sep">\u00b7</span>' +
-        '<span class="int-conn-count' + (n ? '' : ' is-zero') + '">' + countLabel(n) + '</span>'
+        '<span class="int-conn-count">' + countLabel(n) + '</span>'
       : '';
     const menuId = 'int-menu-' + esc(conn.id || String(i));
     return '<div class="int-conn">' +
@@ -299,7 +299,6 @@
     function draw() {
       const pl = pipelinesById[draft.pipelineId];
       const bad = clashes();
-      const noteCount = Object.keys(draft.map).filter(function (k) { return draft.map[k] === 'note'; }).length;
       body.innerHTML =
         '<div class="int-sec">' +
           '<div class="int-sec-title">Where these submissions go</div>' +
@@ -320,7 +319,7 @@
                     esc(st.label || st.key) + '</option>';
                 }).join('') +
               '</select></div>' +
-            '<div class="int-row"><div class="int-label">Source label</div>' +
+            '<div class="int-row"><div class="int-label">Source</div>' +
               '<input class="int-text" id="cf7-source" value="' + esc(draft.source) + '" ' +
               'placeholder="e.g. Website contact form" maxlength="60"></div>' +
           '</div>' +
@@ -341,14 +340,6 @@
                 }).join('') +
               '</select></div>';
           }).join('') +
-          '<div class="int-map-note">' +
-            (noteCount > 1
-              ? 'Those <strong>' + noteCount + '</strong> answers will be saved as one note, each under its own heading.'
-              : 'Point more than one answer at <strong>Note</strong> to keep them together — ' +
-                'a subject and a message are saved as one note, each under its own heading.') +
-            '<br>Anything left as <strong>Don’t import</strong> is still added to the note, labelled, ' +
-            'so nothing the form collected is lost.' +
-          '</div>' +
         '</div>';
 
       body.querySelector('#cf7-pipeline').onchange = function () {
@@ -368,7 +359,7 @@
     draw();
 
     window.openModal({
-      title: 'Set up this form',
+      title: 'Set up ' + (conn.name || 'this form'),
       body: body,
       confirmLabel: 'Save',
       onConfirm: async function (modal) {

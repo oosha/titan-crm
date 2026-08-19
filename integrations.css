@@ -47,6 +47,14 @@
 }
 .int-status.on { background: var(--status-success-subtle); color: var(--status-success); }
 .int-status.off { background: var(--surface-recessed); color: var(--text-secondary); }
+.int-status.soon {
+  background: var(--surface-recessed); color: var(--text-secondary);
+  border: 1px dashed var(--border-subtle);
+}
+/* Present but not offered. The logo keeps its colour — recognising the tool is the
+   whole reason for listing it — and the row is muted through its text instead. */
+.is-soon .int-row-name { color: var(--text-secondary); }
+.is-soon .int-row-blurb { color: var(--text-secondary); }
 
 .int-row { margin-top: var(--space-200); }
 /* A section heading, so it carries its own air above. Inside a .int-row the row
@@ -101,7 +109,6 @@
 .int-conn-meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-050); margin-top: var(--space-025); }
 .int-conn-meta .int-sep { color: var(--border-subtle); }
 .int-conn-count { font-size: var(--text-xs); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-.int-conn-count.is-zero { color: var(--text-tertiary, var(--text-secondary)); }
 
 /* Square, so the three dots sit in the middle of it rather than in a pill. */
 .int-kebab {

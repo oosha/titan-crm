@@ -2374,7 +2374,14 @@
     .opp-detail-footer { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 13px 22px; background: #fff; border-top: 1px solid #e8eaed; flex-shrink: 0; }
     .kanban-card { cursor: pointer; }
 
-    .kanban-board { display: flex; gap: var(--kanban-col-gap); align-items: stretch; }
+    .kanban-board {
+      display: flex; gap: var(--kanban-col-gap); align-items: stretch;
+      /* The board is the horizontal scroller now, not .content-area. */
+      overflow-x: auto; overflow-y: visible;
+      /* Cancels the container's left padding so the first column can scroll under the
+         edge rather than leaving a gap the columns slide past. */
+      padding-bottom: var(--space-100);
+    }
     /* List view uses the same board data in a denser, scan-friendly table. Table is a
        design-system gap today, so these ps-free, page-local rules only arrange the
        existing tokens and controls — they do not introduce a second component. */
@@ -2589,7 +2596,11 @@
            sit here. Removed: "New pipeline" is in the sidebar, the search field never
            worked, and 64px of chrome above a kanban is 64px the board doesn't get. -->
 
-      <div class="content-area" style="display:block; overflow:auto; padding:20px 24px;">
+      <!-- overflow-x is hidden here and owned by .kanban-board instead: the header and
+           the columns used to share this scroller, so scrolling right took the pipeline
+           title and its buttons with it. Vertical scrolling stays here, where the whole
+           page (header included) should move together. -->
+      <div class="content-area" style="display:block; overflow-y:auto; overflow-x:hidden; padding:20px 24px;">
         <div id="board-header">
           <div class="board-title">
             <h1 id="pipeline-name-heading">Neo partnerships</h1>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Jotform">
+  <rect width="100" height="100" rx="20" fill="#ff6100"/>
+  <path d="M62 24v36a16 16 0 01-32 0" fill="none" stroke="#ffffff" stroke-width="9"
+        stroke-linecap="round"/>
+  <path d="M48 24h26" stroke="#ffffff" stroke-width="9" stroke-linecap="round"/>
+</svg>

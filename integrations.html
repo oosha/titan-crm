@@ -114,6 +114,21 @@
     },
   }];
 
+  // Not built yet. Every one of these can POST a submission to a URL, so they land on
+  // the same receiver as Contact Form 7 (api/_inbound.js) with a different setup guide
+  // rather than new server code — see that file's header. Listed with no route, because
+  // a row that opens an empty page is worse than a row that says "not yet".
+  const COMING_SOON = [
+    { id: 'wpforms',      name: 'WPForms',       blurb: 'WordPress forms',            logo: '/assets/logo-wpforms.svg' },
+    { id: 'elementor',    name: 'Elementor',     blurb: 'WordPress page builder forms', logo: '/assets/logo-elementor.svg' },
+    { id: 'gravityforms', name: 'Gravity Forms', blurb: 'WordPress forms',            logo: '/assets/logo-gravityforms.svg' },
+    { id: 'wix',          name: 'Wix Forms',     blurb: 'Wix site forms',             logo: '/assets/logo-wix.svg' },
+    { id: 'mailchimp',    name: 'Mailchimp',     blurb: 'Signup and landing pages',   logo: '/assets/logo-mailchimp.svg' },
+    { id: 'googleforms',  name: 'Google Forms',  blurb: 'Google Workspace forms',     logo: '/assets/logo-googleforms.svg' },
+    { id: 'typeform',     name: 'Typeform',      blurb: 'Conversational forms',       logo: '/assets/logo-typeform.svg' },
+    { id: 'jotform',      name: 'Jotform',       blurb: 'Online form builder',        logo: '/assets/logo-jotform.svg' },
+  ];
+
   function renderList(data, connectedById) {
     document.getElementById('int-list').innerHTML = PROVIDERS.map(function (p) {
       const on = !!connectedById[p.id];
@@ -127,6 +142,16 @@
         '<button class="dir-btn ' + (on ? '' : 'dir-btn-primary') + '" type="button" data-path="' + esc(p.path) + '">' +
           (on ? 'Manage' : 'Connect') +
         '</button>' +
+      '</div>';
+    }).join('') +
+    COMING_SOON.map(function (p) {
+      return '<div class="int-row-card is-soon">' +
+        '<div class="int-logo"><img src="' + esc(p.logo) + '" alt=""></div>' +
+        '<div class="int-row-text">' +
+          '<div class="int-row-name">' + esc(p.name) + '</div>' +
+          '<div class="int-row-blurb">' + esc(p.blurb) + '</div>' +
+        '</div>' +
+        '<span class="int-status soon">Coming soon</span>' +
       '</div>';
     }).join('');
 

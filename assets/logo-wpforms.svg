@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="WPForms">
+  <!-- Approximation of the brand mark: orange rounded tile, white form lines with a tick. -->
+  <rect width="100" height="100" rx="20" fill="#e27730"/>
+  <g stroke="#ffffff" stroke-width="7" stroke-linecap="round">
+    <path d="M30 34h40"/><path d="M30 50h40"/><path d="M30 66h20"/>
+  </g>
+</svg>
