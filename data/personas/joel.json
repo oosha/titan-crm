@@ -649,6 +649,27 @@
   },
   "sequences": [
     {
+      "id": "sequence-mt08et2q-ssjf4",
+      "name": "Untitled sequence",
+      "description": "Simple sales follow-up.",
+      "weekdaysOnly": true,
+      "schedule": {
+        "activeDays": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri"
+        ],
+        "startTime": "09:00",
+        "endTime": "17:00",
+        "timezone": "contact"
+      },
+      "activeInstances": 0,
+      "usedBy": [],
+      "steps": []
+    },
+    {
       "id": "sequence-mt06x9yw-07efm",
       "name": "Untitled sequence",
       "description": "Simple sales follow-up.",
