@@ -464,6 +464,72 @@
           "equipment": "Packaging line bearings and conveyors",
           "netsuiteRef": "Invoice INV-48131",
           "note": "Monthly food-grade grease and chain lubricant account. Evan prefers a quick floor check during the first week of each month.",
+          "noteAuthor": "Graham Northcutt",
+          "noteDate": "2d ago",
+          "recentActivities": [
+            {
+              "type": "meeting",
+              "text": "Initial packaging-line lubrication assessment",
+              "snippet": "Walked the conveyor and bearing points with Evan and Sofia. Food-safe changeover and washdown resistance were the priorities.",
+              "date": "10 Jan 2025"
+            },
+            {
+              "type": "email",
+              "text": "Food-grade lubrication quotation sent",
+              "snippet": "Quoted the monthly grease and chain lubricant program, including the first on-site setup visit.",
+              "date": "15 Jan 2025"
+            },
+            {
+              "type": "task",
+              "text": "First six-month supply review completed",
+              "snippet": "Evan confirmed the line is running cleanly after the switch to the food-grade products.",
+              "date": "18 Jul 2025"
+            },
+            {
+              "type": "note",
+              "text": "Site visit follow-up",
+              "snippet": "Sofia asked to add two high-temperature conveyor points to the next delivery. Paul approved the revised sanitation window.",
+              "date": "22 Jan 2026"
+            },
+            {
+              "type": "email",
+              "text": "September replenishment request received",
+              "snippet": "Evan asked Graham to confirm the next delivery slot before the monthly floor check.",
+              "date": "2d ago"
+            }
+          ],
+          "files": [
+            {
+              "name": "Seaside Food Processing site photos - Jan 2025.zip",
+              "size": "24.8 MB",
+              "direction": "received"
+            },
+            {
+              "name": "EST-09861 Seaside food-grade lubrication quotation.pdf",
+              "size": "316 KB",
+              "direction": "sent"
+            },
+            {
+              "name": "INV-46920 Seaside Food Processing - 15 Jan 2025.pdf",
+              "size": "198 KB",
+              "direction": "sent"
+            },
+            {
+              "name": "INV-47591 Seaside Food Processing - 15 Jul 2025.pdf",
+              "size": "203 KB",
+              "direction": "sent"
+            },
+            {
+              "name": "INV-48131 Seaside Food Processing - 15 Jan 2026.pdf",
+              "size": "211 KB",
+              "direction": "sent"
+            },
+            {
+              "name": "Packaging line bearing audit.pdf",
+              "size": "1.6 MB",
+              "direction": "received"
+            }
+          ],
           "lastActivity": "2d ago",
           "activityType": "Email received",
           "nextActivity": {

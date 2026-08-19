@@ -6432,16 +6432,68 @@
     function formatMailPanelActivityDate(value) {
       const raw = String(value || '').trim();
       if (!raw) return '';
-      const today = raw.match(/^today(?:,?\s+(.+))?$/i);
-      if (today) return (today[1] || '').trim();
-      const yesterday = raw.match(/^yesterday(?:,?\s+(.+))?$/i);
-      if (yesterday) {
+      const calendarDate = function (date) {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return date.getDate() + ' ' + months[date.getMonth()];
+      };
+      const cleanTime = function (time) {
+        return String(time || '').trim().replace(/^at\s+/i, '');
+      };
+      const dateInDays = function (days) {
         const date = new Date();
-        date.setDate(date.getDate() - 1);
-        const day = date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-        return day + (yesterday[1] ? ' at ' + yesterday[1].trim() : '');
+        date.setDate(date.getDate() + days);
+        return date;
+      };
+      const today = raw.match(/^today(?:,?\s+(.+))?$/i);
+      if (today) return cleanTime(today[1]);
+      const yesterday = raw.match(/^yesterday(?:,?\s+(.+))?$/i);
+      if (yesterday) return calendarDate(dateInDays(-1));
+      const tomorrow = raw.match(/^tomorrow(?:,?\s+(.+))?$/i);
+      if (tomorrow) return calendarDate(dateInDays(1));
+      const daysAgo = raw.match(/^(\d+)d\s+ago$/i);
+      if (daysAgo) return raw.toLowerCase();
+      if (/^this week$/i.test(raw)) {
+        const daysUntilSunday = 7 - new Date().getDay();
+        return calendarDate(dateInDays(daysUntilSunday || 7));
       }
-      return raw.replace(/^(\d{1,2}\s+[A-Za-z]{3}),\s+(\d{1,2}:\d{2}\s*(?:am|pm))$/i, '$1 at $2');
+      const weekday = raw.match(/^(sun|mon|tue|wed|thu|fri|sat)(?:day)?(?:,?\s+(?:at\s+)?(\d{1,2}:\d{2}\s*(?:am|pm)))?$/i);
+      if (weekday) {
+        const weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        const targetDay = weekdays.indexOf(weekday[1].toLowerCase());
+        const delta = (targetDay - new Date().getDay() + 7) % 7;
+        return delta === 0 ? cleanTime(weekday[2]) : calendarDate(dateInDays(delta));
+      }
+      const dated = raw.match(/^(?:(\d{1,2})\s+([A-Za-z]{3})(?:\s+(\d{4}))?|([A-Za-z]{3})\s+(\d{1,2})(?:,?\s+(\d{4}))?)(?:,?\s+(?:at\s+)?(\d{1,2}:\d{2}\s*(?:am|pm)))?$/i);
+      if (dated) {
+        const day = Number(dated[1] || dated[5]);
+        const month = dated[2] || dated[4];
+        const year = Number(dated[3] || dated[6] || new Date().getFullYear());
+        const date = new Date(year, new Date(month + ' 1, 2000').getMonth(), day);
+        const isToday = calendarDate(date) === calendarDate(new Date());
+        const time = cleanTime(dated[7]);
+        if (isToday && time) return time;
+        return calendarDate(date);
+      }
+      return raw;
+    }
+    function mailPanelActivitySortValue(value) {
+      const raw = String(value || '').trim();
+      const now = new Date();
+      if (!raw) return 0;
+      if (/^just now$/i.test(raw)) return now.getTime();
+      const hoursAgo = raw.match(/^(\d+)h\s+ago$/i);
+      if (hoursAgo) return now.getTime() - Number(hoursAgo[1]) * 60 * 60 * 1000;
+      const daysAgo = raw.match(/^(\d+)d\s+ago$/i);
+      if (daysAgo) return now.getTime() - Number(daysAgo[1]) * 24 * 60 * 60 * 1000;
+      if (/^today(?:,?\s+.*)?$/i.test(raw)) return now.getTime();
+      if (/^yesterday(?:,?\s+.*)?$/i.test(raw)) return now.getTime() - 24 * 60 * 60 * 1000;
+      const dated = raw.match(/^(?:(\d{1,2})\s+([A-Za-z]{3})(?:\s+(\d{4}))?|([A-Za-z]{3})\s+(\d{1,2})(?:,?\s+(\d{4}))?)/i);
+      if (!dated) return 0;
+      const day = Number(dated[1] || dated[5]);
+      const month = dated[2] || dated[4];
+      const year = Number(dated[3] || dated[6] || now.getFullYear());
+      const date = new Date(year, new Date(month + ' 1, 2000').getMonth(), day);
+      return Number.isNaN(date.getTime()) ? 0 : date.getTime();
     }
     function fillRealActivityAndFiles(card) {
       const up = crmSectionBody('Upcoming Activity');
@@ -6455,8 +6507,13 @@
       }).join('') : '<div class="crm-empty-state">No upcoming activity.</div>';
 
       const recent = crmSectionBody('Recent Activity');
-      const recentItems = (card.recentActivities && card.recentActivities.length) ? card.recentActivities
-        : ((card.activityType || card.lastActivity) ? [{ type: 'email', text: card.activityType || 'Activity', date: card.lastActivity || '' }] : []);
+      const recentItems = ((card.recentActivities && card.recentActivities.length) ? card.recentActivities
+        : ((card.activityType || card.lastActivity) ? [{ type: 'email', text: card.activityType || 'Activity', date: card.lastActivity || '' }] : []))
+        .map(function (activity, index) { return { activity: activity, index: index }; })
+        .sort(function (first, second) {
+          return mailPanelActivitySortValue(second.activity.date) - mailPanelActivitySortValue(first.activity.date) || first.index - second.index;
+        })
+        .map(function (entry) { return entry.activity; });
       if (recent) recent.innerHTML = recentItems.length ? recentItems.map(function (a) {
         // A task whose snippet is really a reference to another activity (e.g. "Send
         // updated proposal deck" pointing back at the email that requested it) renders
