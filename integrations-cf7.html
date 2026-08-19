@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>Contact Form 7 — Titan CRM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Hotjar. One shared file rather than the snippet pasted into every page;
+     see analytics.js. Loaded early so a session is recorded from first paint. -->
+<script src="/analytics.js"></script>
 <script>
   (function () {
     var raw = new URLSearchParams(location.search).get('u');
@@ -20,11 +23,15 @@
   /* The URL is the whole integration, so it gets read like one thing and copied
      in one click — not selected by hand out of a paragraph. */
   .cf7-url {
-    display: flex; align-items: center; gap: var(--space-100);
     background: var(--surface-recessed); border: 1px solid var(--border-subtle);
-    border-radius: 8px; padding: var(--space-100) var(--space-150);
-    margin: var(--space-150) 0;
+    border-radius: 8px; padding: var(--space-125) var(--space-150);
+    margin-top: var(--space-150);
   }
+  .cf7-url-label {
+    font-size: var(--text-2xs); font-weight: var(--weight-semi); color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: .04em; margin-bottom: var(--space-075);
+  }
+  .cf7-url-line { display: flex; align-items: center; gap: var(--space-100); }
   .cf7-url code {
     flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -33,7 +40,7 @@
   .cf7-await {
     display: flex; align-items: center; gap: var(--space-100);
     background: var(--accent-subtle); border: 1px solid var(--border-accent, var(--accent-primary));
-    border-radius: 8px; padding: var(--space-150); margin-top: var(--space-150);
+    border-radius: 8px; padding: var(--space-125) var(--space-150); margin-top: var(--space-150);
     font-size: var(--text-sm); color: var(--text-primary);
   }
   .cf7-dot {
@@ -76,6 +83,7 @@
 </div>
 
 <script src="/design-system/components/icon.js"></script>
+<script src="/design-system/components/menu.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
 <script>
@@ -141,37 +149,72 @@
       '<div class="int-note">Records appear as soon as WordPress posts them — nothing to check or refresh.</div>';
   }
 
+  // `seen` is a bounded ring, so it is a floor rather than the answer — a connection
+  // saved before the counter existed still reports what it can prove.
+  function submissionCount(conn) {
+    return Math.max(conn.count || 0, ((conn.seen || []).length));
+  }
+  function countLabel(n) {
+    return n === 0 ? 'No submissions yet' : n === 1 ? '1 submission' : n + ' submissions';
+  }
+
   function rowHTML(conn, i) {
     const pipeline = pipelinesById[conn.pipelineId];
     const mapped = conn.map && Object.keys(conn.map).length;
     // Three states, and the middle one is the point: a URL that exists but has
     // never been used looks identical to a broken one unless we say so.
     const state = mapped
-      ? '<span class="int-conn-dest">' + esc((pipeline && pipeline.name) || 'No pipeline') + '</span>'
+      ? esc((pipeline && pipeline.name) || 'No pipeline')
       : conn.sample
-        ? '<span class="int-conn-dest">Ready to set up</span>'
-        : '<span class="int-conn-dest">Waiting for a submission</span>';
+        ? 'Ready to set up'
+        : 'Waiting for a submission';
+    // The total is only meaningful once records are actually being created; before
+    // that the state line is already saying nothing has arrived.
+    const n = submissionCount(conn);
+    const count = mapped
+      ? '<span class="int-sep">\u00b7</span>' +
+        '<span class="int-conn-count' + (n ? '' : ' is-zero') + '">' + countLabel(n) + '</span>'
+      : '';
+    const menuId = 'int-menu-' + esc(conn.id || String(i));
     return '<div class="int-conn">' +
+      '<div class="int-conn-main">' +
       '<div class="int-conn-text">' +
-        '<div class="int-conn-form">' + esc(conn.name || 'Contact Form 7') + '</div>' + state +
+        '<div class="int-conn-form">' + esc(conn.name || 'Contact Form 7') + '</div>' +
+        '<div class="int-conn-meta"><span class="int-conn-dest">' + state + '</span>' + count + '</div>' +
       '</div>' +
       '<div class="int-conn-actions">' +
         (conn.sample || mapped
           ? '<button class="dir-btn" type="button" data-map="' + i + '">' + (mapped ? 'Edit' : 'Set up') + '</button>'
           : '') +
-        '<button class="dir-btn" type="button" data-url="' + i + '">URL</button>' +
-        '<button class="dir-btn" type="button" data-del="' + i + '">Remove</button>' +
+        // URL and Remove were two bare buttons, and "URL" told you nothing about what
+        // pressing it did. Behind a three-dot they get room for a verb each.
+        '<span class="ds-menu-anchor">' +
+          '<button class="dir-btn int-kebab" type="button" data-ds-menu="' + menuId + '" ' +
+            'aria-label="More actions for this form" aria-haspopup="menu">' +
+            '<span data-ds-icon="dots-three-vertical" data-size="15"></span>' +
+          '</button>' +
+          '<div class="ds-menu ds-menu--below-end" id="' + menuId + '" role="menu">' +
+            '<button class="ds-menu__item" type="button" role="menuitem" data-url="' + i + '">' +
+              '<span data-ds-icon="copy" data-size="15"></span>Copy webhook URL</button>' +
+            '<div class="ds-menu__sep"></div>' +
+            '<button class="ds-menu__item ds-menu__item--danger" type="button" role="menuitem" data-del="' + i + '">' +
+              '<span data-ds-icon="trash" data-size="15"></span>Remove this form</button>' +
+          '</div>' +
+        '</span>' +
       '</div>' +
-    '</div>' +
-    (conn.sample && !mapped
-      ? '<div class="cf7-await"><span class="cf7-dot"></span>' +
-        'A submission arrived with ' + Object.keys(conn.sample.values).length +
-        ' fields. Set it up to start creating records.</div>'
-      : '') +
-    (!conn.sample && !mapped
-      ? '<div class="cf7-url"><code>' + esc(webhookUrl(conn)) + '</code>' +
-        '<button class="dir-btn" type="button" data-copy="' + i + '">Copy</button></div>'
-      : '');
+      '</div>' +
+      (conn.sample && !mapped
+        ? '<div class="cf7-await"><span class="cf7-dot"></span>' +
+          'A submission arrived with ' + Object.keys(conn.sample.values).length +
+          ' fields. Set it up to start creating records.</div>'
+        : '') +
+      (!conn.sample && !mapped
+        ? '<div class="cf7-url">' +
+          '<div class="cf7-url-label">Paste this into your form\u2019s Webhook tab</div>' +
+          '<div class="cf7-url-line"><code>' + esc(webhookUrl(conn)) + '</code>' +
+          '<button class="dir-btn" type="button" data-copy="' + i + '">Copy</button></div></div>'
+        : '') +
+    '</div>';
   }
 
   function wire() {
@@ -191,9 +234,18 @@
     });
   }
 
+  // The menu closes as soon as an item is chosen, so the old "button says Copied"
+  // feedback would vanish with it. Say it on the row instead.
   function copyUrl(conn, btn) {
     const url = webhookUrl(conn);
-    const done = function () { const t = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = t; }, 1600); };
+    const row = btn.closest('.int-conn');
+    const done = function () {
+      const dest = row && row.querySelector('.int-conn-dest');
+      if (!dest) return;
+      const was = dest.textContent;
+      dest.textContent = 'Webhook URL copied';
+      setTimeout(function () { dest.textContent = was; }, 1800);
+    };
     if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, function () {});
     else done();
   }
@@ -225,41 +277,79 @@
                      ['phone', 'Contact phone'], ['designation', 'Job title'], ['company', 'Company'],
                      ['location', 'Location'], ['linkedin', 'LinkedIn'], ['note', 'Note']];
 
+    // Note may be chosen more than once; every other target is one-to-one. Two fields
+    // both claiming `email` silently overwrote each other before, which looked like a
+    // dropped answer rather than the mapping mistake it is.
+    function clashes() {
+      const bad = {}, count = {};
+      Object.keys(draft.map).forEach(function (k) {
+        const t = draft.map[k];
+        if (!t || t === 'note') return;
+        count[t] = (count[t] || 0) + 1;
+      });
+      Object.keys(draft.map).forEach(function (k) {
+        const t = draft.map[k];
+        if (t && t !== 'note' && count[t] > 1) bad[k] = t;
+      });
+      return bad;
+    }
+
+    const sample = (conn.sample && conn.sample.values) || {};
     const body = document.createElement('div');
     function draw() {
       const pl = pipelinesById[draft.pipelineId];
+      const bad = clashes();
+      const noteCount = Object.keys(draft.map).filter(function (k) { return draft.map[k] === 'note'; }).length;
       body.innerHTML =
-        '<div class="int-row"><div class="int-label">Add new records to</div>' +
-          '<select class="int-text" id="cf7-pipeline">' +
-            '<option value="">Choose a pipeline</option>' +
-            Object.keys(pipelinesById).map(function (id) {
-              return '<option value="' + esc(id) + '"' + (draft.pipelineId === id ? ' selected' : '') + '>' +
-                esc(pipelinesById[id].name) + '</option>';
-            }).join('') +
-          '</select></div>' +
-        '<div class="int-row"><div class="int-label">Starting them in</div>' +
-          '<select class="int-text" id="cf7-stage"' + (pl ? '' : ' disabled') + '>' +
-            ((pl && pl.stages) || []).map(function (st) {
-              return '<option value="' + esc(st.key) + '"' + (draft.stage === st.key ? ' selected' : '') + '>' +
-                esc(st.label || st.key) + '</option>';
-            }).join('') +
-          '</select></div>' +
-        '<div class="int-row"><div class="int-label">Label these records\u2019 source as</div>' +
-          '<input class="int-text" id="cf7-source" value="' + esc(draft.source) + '" ' +
-          'placeholder="e.g. Website contact form" maxlength="60"></div>' +
-        '<div class="int-label">Where should each answer go?</div>' +
-        '<div class="int-map-head"><span>Field on your form</span><span>Saved in Titan as</span></div>' +
-        fields.map(function (key) {
-          return '<div class="int-map-row"><div class="int-map-from">' + esc(key) + '</div>' +
-            '<select class="int-text" data-field="' + esc(key) + '">' +
-              targets.map(function (t) {
-                return '<option value="' + t[0] + '"' + (draft.map[key] === t[0] ? ' selected' : '') + '>' + t[1] + '</option>';
+        '<div class="int-sec">' +
+          '<div class="int-sec-title">Where these submissions go</div>' +
+          '<div class="int-sec-blurb">Every submission to this form becomes one record.</div>' +
+          '<div class="int-row"><div class="int-label">Pipeline</div>' +
+            '<select class="int-text" id="cf7-pipeline">' +
+              '<option value="">Choose a pipeline</option>' +
+              Object.keys(pipelinesById).map(function (id) {
+                return '<option value="' + esc(id) + '"' + (draft.pipelineId === id ? ' selected' : '') + '>' +
+                  esc(pipelinesById[id].name) + '</option>';
               }).join('') +
-            '</select></div>';
-        }).join('') +
-        '<div class="int-note">Best guesses — change any that look wrong. ' +
-        'Anything set to <strong>Don\u2019t import</strong> is still added to the note, ' +
-        'labelled, so nothing the form collected is lost.</div>';
+            '</select></div>' +
+          '<div class="int-two">' +
+            '<div class="int-row"><div class="int-label">Starting stage</div>' +
+              '<select class="int-text" id="cf7-stage"' + (pl ? '' : ' disabled') + '>' +
+                ((pl && pl.stages) || []).map(function (st) {
+                  return '<option value="' + esc(st.key) + '"' + (draft.stage === st.key ? ' selected' : '') + '>' +
+                    esc(st.label || st.key) + '</option>';
+                }).join('') +
+              '</select></div>' +
+            '<div class="int-row"><div class="int-label">Source label</div>' +
+              '<input class="int-text" id="cf7-source" value="' + esc(draft.source) + '" ' +
+              'placeholder="e.g. Website contact form" maxlength="60"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="int-sec">' +
+          '<div class="int-sec-title">What each answer becomes</div>' +
+          '<div class="int-sec-blurb">These are the fields this form actually sent.</div>' +
+          '<div class="int-map-head"><span>Field on your form</span><span>Saved in Titan as</span></div>' +
+          fields.map(function (key) {
+            const val = String(sample[key] == null ? '' : sample[key]);
+            return '<div class="int-map-row' + (bad[key] ? ' is-clash' : '') + '">' +
+              '<div class="int-map-from">' + esc(key) +
+                (val ? '<span class="int-map-sample">' + esc(val) + '</span>' : '') +
+              '</div>' +
+              '<select class="int-text" data-field="' + esc(key) + '">' +
+                targets.map(function (t) {
+                  return '<option value="' + t[0] + '"' + (draft.map[key] === t[0] ? ' selected' : '') + '>' + t[1] + '</option>';
+                }).join('') +
+              '</select></div>';
+          }).join('') +
+          '<div class="int-map-note">' +
+            (noteCount > 1
+              ? 'Those <strong>' + noteCount + '</strong> answers will be saved as one note, each under its own heading.'
+              : 'Point more than one answer at <strong>Note</strong> to keep them together — ' +
+                'a subject and a message are saved as one note, each under its own heading.') +
+            '<br>Anything left as <strong>Don’t import</strong> is still added to the note, labelled, ' +
+            'so nothing the form collected is lost.' +
+          '</div>' +
+        '</div>';
 
       body.querySelector('#cf7-pipeline').onchange = function () {
         draft.pipelineId = this.value;
@@ -286,6 +376,14 @@
         const targetsChosen = Object.keys(draft.map).map(function (k) { return draft.map[k]; });
         if (targetsChosen.indexOf('email') === -1 && targetsChosen.indexOf('name') === -1) {
           modal.setStatus('Point at least one field at a name or an email.', true);
+          return;
+        }
+        const bad = clashes();
+        const clashed = Object.keys(bad);
+        if (clashed.length) {
+          const label = (targets.filter(function (t) { return t[0] === bad[clashed[0]]; })[0] || ['', ''])[1];
+          modal.setStatus('Two fields are both set to ' + label + '. Only Note can take more than one.', true);
+          draw();
           return;
         }
         modal.setBusy(true);

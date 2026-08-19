@@ -102,15 +102,20 @@ const GUESSES = [
   ['designation', /title|role|position|designation|job/i],
   ['location',    /location|city|country|address/i],
   ['linkedin',    /linked-?in/i],
-  ['note',        /message|comment|enquiry|inquiry|note|detail/i],
+  ['note',        /message|comment|enquiry|inquiry|note|detail|subject|reason/i],
 ];
+
+// Note is the one target that may be suggested more than once — a form asking for a
+// subject and a message wants both, and the modal composes them into a single note.
+// Every other target is claimed by the first field that matches it.
+const MULTI_TARGETS = ['note'];
 
 function guessMap(values) {
   const map = {}, taken = {};
   Object.keys(values).forEach(function (key) {
     for (let i = 0; i < GUESSES.length; i++) {
       const target = GUESSES[i][0];
-      if (taken[target]) continue;
+      if (taken[target] && MULTI_TARGETS.indexOf(target) === -1) continue;
       if (GUESSES[i][1].test(key)) { map[key] = target; taken[target] = true; return; }
     }
     map[key] = '';                      // "Don't import" until told otherwise
@@ -126,30 +131,77 @@ function guessMap(values) {
 // range, a checkbox list — so they are appended to the note with their labels
 // kept, which is the only place free text can live on a card.
 const EXTRAS_SEP = '\n\n';
+
+// Form field keys are machine names — CF7 ships `your-subject`, Elementor `form_name`.
+// Printed into a note as-is they read like debug output, so a key becomes a label the
+// way a person would write it. A key that is already prose ("Comment or Message")
+// passes through untouched.
+function prettyLabel(key) {
+  return String(key || '')
+    .replace(/^your[-_ ]+/i, '')
+    .replace(/[-_]+/g, ' ')
+    .trim()
+    .replace(/^./, function (c) { return c.toUpperCase(); }) || String(key || '');
+}
+
 function extrasNote(conn, values) {
   const map = conn.map || {};
   return Object.keys(values)
     .filter(function (k) { return !map[k]; })
     .filter(function (k) { return String(values[k]).trim(); })
-    .map(function (k) { return k + ': ' + values[k]; })
+    .map(function (k) { return prettyLabel(k) + ': ' + values[k]; })
     .join('\n');
 }
 
-// Returns the values to build from: the submission, with unmapped answers folded
-// into whichever field is pointed at the note.
+// Note is the one target that may be pointed at from several fields at once. A
+// Subject and a Message are two halves of one enquiry and the note is the only
+// field on a card that can hold free text, so forcing a choice between them would
+// throw half the submission away. Every other target stays one-to-one — two fields
+// claiming `email` is a mapping mistake, not an intention, and the modal rejects it.
+//
+// With more than one, each answer keeps its label so the note reads as a transcript:
+//
+//     Subject:
+//     Partnership enquiry
+//
+//     Message:
+//     We'd like to talk about a pilot.
+//
+// A single note field stays bare, exactly as it always was — the labels appear only
+// when there is something to tell apart.
+//
+// Returns the values to build from, plus the keys the form shape must now leave out:
+// they have been folded into the first one and would otherwise overwrite it.
 function valuesWithExtras(conn, values) {
-  const extras = extrasNote(conn, values);
-  if (!extras) return { values: values, noteKey: null };
   const map = conn.map || {};
-  const noteKey = Object.keys(map).filter(function (k) { return map[k] === 'note'; })[0] || '__extras';
+  const noteKeys = Object.keys(values).filter(function (k) { return map[k] === 'note'; });
+
+  // Labelled on what actually arrived, not on how the form was mapped: two note
+  // fields where only one was filled in is one answer, and one answer under a
+  // heading looks like a form someone half-completed.
+  const filled = noteKeys.filter(function (k) {
+    return String(values[k] == null ? '' : values[k]).trim();
+  });
+  const labelled = filled.length > 1;
+
+  const parts = filled.map(function (k) {
+    const v = String(values[k]).trim();
+    return labelled ? prettyLabel(k) + ':\n' + v : v;
+  });
+
+  const extras = extrasNote(conn, values);
+  if (extras) parts.push(extras);
+  if (!parts.length) return { values: values, noteKey: null, dropKeys: [] };
+
+  const noteKey = noteKeys[0] || '__extras';
   const out = Object.assign({}, values);
-  const existing = String(out[noteKey] || '').trim();
-  out[noteKey] = existing ? existing + EXTRAS_SEP + extras : extras;
-  return { values: out, noteKey: noteKey };
+  out[noteKey] = parts.join(EXTRAS_SEP);
+  return { values: out, noteKey: noteKey, dropKeys: noteKeys.slice(1) };
 }
 
-function formShapeFor(conn, values, extraNoteKey) {
+function formShapeFor(conn, values, extraNoteKey, dropKeys) {
   const map = conn.map || {};
+  const dropped = dropKeys || [];
   // buildCard falls back to the pipeline's name, which would title every lead
   // "Neo partnerships". Whoever submitted is the useful name for a record that is,
   // at this point, just a person who got in touch.
@@ -158,7 +210,9 @@ function formShapeFor(conn, values, extraNoteKey) {
   return {
     recordTitle: conn.recordTitle || who || (conn.name ? conn.name + ' enquiry' : 'Website enquiry'),
     sourceLabel: conn.source || conn.sourceLabel || 'Web form',
-    fields: Object.keys(map).filter(function (k) { return map[k]; }).map(function (k) {
+    fields: Object.keys(map).filter(function (k) {
+      return map[k] && dropped.indexOf(k) === -1;
+    }).map(function (k) {
       return { key: k, label: k, target: map[k] };
     // When nothing was mapped to the note, the folded extras need a field of their
     // own or buildCard has no route for them.
@@ -197,13 +251,17 @@ function receive(doc, conn, body) {
 
   const withExtras = valuesWithExtras(conn, values);
   const card = F.buildCard(doc, pipeline,
-    formShapeFor(conn, withExtras.values, withExtras.noteKey), withExtras.values);
+    formShapeFor(conn, withExtras.values, withExtras.noteKey, withExtras.dropKeys),
+    withExtras.values);
   if (conn.stage) card.stage = conn.stage;
   card.inboundKey = print;
   pipeline.cards = pipeline.cards || [];
   pipeline.cards.unshift(card);
 
   conn.seen = (conn.seen || []).concat([print]).slice(-LIMITS.seen);
+  // A running total, because `seen` is a bounded ring — after 200 submissions its
+  // length stops being the answer to "how many has this form sent us?".
+  conn.count = (conn.count || 0) + 1;
   conn.lastAt = Date.now();
   delete conn.sample;
   delete conn.suggested;
@@ -212,6 +270,7 @@ function receive(doc, conn, body) {
 
 module.exports = {
   ENVELOPES: ENVELOPES,
+  prettyLabel: prettyLabel,
   extrasNote: extrasNote,
   valuesWithExtras: valuesWithExtras,
   connectionsOf: connectionsOf,

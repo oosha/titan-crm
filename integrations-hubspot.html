@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>HubSpot Forms — Titan CRM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Hotjar. One shared file rather than the snippet pasted into every page;
+     see analytics.js. Loaded early so a session is recorded from first paint. -->
+<script src="/analytics.js"></script>
 <!-- Persona loader: ?u=<id> scopes which persona's connections are read and
      saved, and loads personas/<id>.js for the account identity in the sidebar. -->
 <script>
@@ -272,7 +275,10 @@
       ? 'The pipeline this fed has been deleted — edit this to pick another.'
       : (missingForm ? 'This form no longer exists in HubSpot.' : '');
 
-    return '<div class="int-conn">' +
+    // .int-conn is the block; .int-conn-main is the row inside it. The CF7 page hangs
+    // a notice or a URL under the row, so the border had to move out to a wrapper —
+    // both pages share the class, so both use the wrapper.
+    return '<div class="int-conn"><div class="int-conn-main">' +
       '<div class="int-conn-text">' +
         '<div class="int-conn-form">' + esc(conn.formName || 'Untitled form') + '</div>' +
         (warn
@@ -285,7 +291,7 @@
         '<button class="dir-btn" type="button" data-edit="' + esc(conn.id) + '">Edit</button>' +
         '<button class="dir-btn" type="button" data-remove="' + esc(conn.id) + '">Remove</button>' +
       '</div>' +
-    '</div>';
+    '</div></div>';
   }
 
   async function removeConnection(id) {

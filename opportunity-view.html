@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>Opportunity — Titan CRM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Hotjar. One shared file rather than the snippet pasted into every page;
+     see analytics.js. Loaded early so a session is recorded from first paint. -->
+<script src="/analytics.js"></script>
 <!-- Persona loader: ?u=<id> scopes the /api/data fetch to that persona's saved
      file, and now also loads personas/<id>.js. This page used to skip that script
      on the grounds that a single record needs no mailbox data — true until
@@ -349,7 +352,13 @@
   }
   .crm-note .meta { display: flex; align-items: center; gap: var(--space-050); font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--space-125); }
   .crm-note .meta .note-ic { width: 12px; height: 12px; color: var(--text-secondary); flex-shrink: 0; display: inline-flex; }
-  .crm-note #ov-last-note-text { display: block; font-size: var(--text-sm); color: var(--text-primary); line-height: 1.6; }
+  /* pre-wrap, because a note's line breaks are content. A form that maps a subject
+     and a message onto one note writes them as labelled blocks, and a note typed by
+     hand has paragraphs — both collapsed into a single run-on line before this. */
+  .crm-note #ov-last-note-text {
+    display: block; font-size: var(--text-sm); color: var(--text-primary); line-height: 1.6;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
   /* Older notes — same box as the latest note, greyed to read as history. */
   /* Local override of one value: textarea.ds-input is 96px min, right for a description
      and too tall for a note box. Everything else comes from the component. */
