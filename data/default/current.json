@@ -1,5 +1,5 @@
 {
-  "currentPipelineId": "neo",
+  "currentPipelineId": "p6",
   "pipelineSeq": 7,
   "pipelines": {
     "neo": {
@@ -1661,7 +1661,7 @@
     },
     "p6": {
       "id": "p6",
-      "name": "Rahu's Sales Pipeline",
+      "name": "Rahul's Sales Pipeline",
       "entity": "Opportunity",
       "plural": "opportunities",
       "color": "#3f8a7d",
@@ -1670,27 +1670,135 @@
       "stages": [
         {
           "key": "lead-0",
-          "label": "Lead"
+          "label": "Lead",
+          "description": "",
+          "entry": [],
+          "exitActions": [],
+          "idle": {
+            "on": false,
+            "days": 3,
+            "action": "",
+            "template": "",
+            "sequence": "",
+            "taskName": "",
+            "callName": "",
+            "reminderOffset": "next-day",
+            "reminderTime": "09:00"
+          },
+          "exit": {
+            "mode": "manual",
+            "rules": []
+          }
         },
         {
           "key": "qualified-1",
-          "label": "Qualified"
+          "label": "Qualified",
+          "description": "",
+          "entry": [],
+          "exitActions": [],
+          "idle": {
+            "on": false,
+            "days": 3,
+            "action": "",
+            "template": "",
+            "sequence": "",
+            "taskName": "",
+            "callName": "",
+            "reminderOffset": "next-day",
+            "reminderTime": "09:00"
+          },
+          "exit": {
+            "mode": "manual",
+            "rules": []
+          }
         },
         {
           "key": "demo-scheduled-2",
-          "label": "Demo Scheduled"
+          "label": "Demo Scheduled",
+          "description": "",
+          "entry": [],
+          "exitActions": [],
+          "idle": {
+            "on": false,
+            "days": 3,
+            "action": "",
+            "template": "",
+            "sequence": "",
+            "taskName": "",
+            "callName": "",
+            "reminderOffset": "next-day",
+            "reminderTime": "09:00"
+          },
+          "exit": {
+            "mode": "manual",
+            "rules": []
+          }
         },
         {
           "key": "proposal-sent-3",
-          "label": "Proposal Sent"
+          "label": "Proposal Sent",
+          "description": "",
+          "entry": [],
+          "exitActions": [],
+          "idle": {
+            "on": false,
+            "days": 3,
+            "action": "",
+            "template": "",
+            "sequence": "",
+            "taskName": "",
+            "callName": "",
+            "reminderOffset": "next-day",
+            "reminderTime": "09:00"
+          },
+          "exit": {
+            "mode": "manual",
+            "rules": []
+          }
         },
         {
           "key": "negotiation-4",
-          "label": "Negotiation"
+          "label": "Negotiation",
+          "description": "",
+          "entry": [],
+          "exitActions": [],
+          "idle": {
+            "on": false,
+            "days": 3,
+            "action": "",
+            "template": "",
+            "sequence": "",
+            "taskName": "",
+            "callName": "",
+            "reminderOffset": "next-day",
+            "reminderTime": "09:00"
+          },
+          "exit": {
+            "mode": "manual",
+            "rules": []
+          }
         },
         {
           "key": "closed-5",
-          "label": "Closed"
+          "label": "Closed",
+          "description": "",
+          "entry": [],
+          "exitActions": [],
+          "idle": {
+            "on": false,
+            "days": 3,
+            "action": "",
+            "template": "",
+            "sequence": "",
+            "taskName": "",
+            "callName": "",
+            "reminderOffset": "next-day",
+            "reminderTime": "09:00"
+          },
+          "exit": {
+            "mode": "manual",
+            "rules": []
+          }
         }
       ],
       "cards": [
@@ -1789,7 +1897,8 @@
       "emailIntake": {
         "enabled": true,
         "rule": "book sales meeting"
-      }
+      },
+      "defaultOwner": null
     }
   },
   "dashboard": {
