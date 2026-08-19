@@ -415,7 +415,7 @@
         },
         {
           "id": "graham-6",
-          "deal": "Seaside Food Processing: food-grade lubricant program",
+          "deal": "Seaside Food: food-grade lubricant program",
           "company": "Seaside Food Processing",
           "website": "https://www.hormelfoods.com",
           "location": "3890 Ocean View Boulevard, San Diego, CA",
@@ -471,7 +471,30 @@
             "label": "Monthly floor check",
             "date": "Overdue"
           },
-          "overdue": true
+          "overdue": true,
+          "noteHistory": [],
+          "upcomingActivities": [
+            {
+              "type": "visit",
+              "text": "Monthly floor check · Overdue",
+              "date": "Overdue"
+            },
+            {
+              "type": "task",
+              "text": "Follow-up overdue",
+              "overdue": true
+            }
+          ],
+          "currency": "$",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "autoLinkActivity": true,
+          "autoLinkScope": "contact",
+          "contactDepartment": "Plant maintenance",
+          "contactLocation": "San Diego, CA",
+          "contactLinkedin": "https://linkedin.com/in/evan-cole-maintenance",
+          "customFieldValues": {}
         },
         {
           "id": "graham-7",
