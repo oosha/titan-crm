@@ -667,7 +667,22 @@
       },
       "activeInstances": 0,
       "usedBy": [],
-      "steps": []
+      "steps": [
+        {
+          "id": "group-102",
+          "timing": "after",
+          "days": 1,
+          "actions": [
+            {
+              "id": "action-101",
+              "action": "call",
+              "title": "Follow-up call",
+              "reminderOffset": "next-day",
+              "reminderTime": "09:00"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "new-lead-follow-up",
