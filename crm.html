@@ -4500,8 +4500,18 @@
       renderBoard();
     }
 
+    function geoLocationUrl(card) {
+      const value = String((card && card.geoLocation) || '').trim();
+      if (!value) return '';
+      try {
+        const url = new URL(/^https?:\/\//i.test(value) ? value : 'https://' + value);
+        return /^https?:$/.test(url.protocol) ? url.href : '';
+      } catch (e) { return ''; }
+    }
+
     function renderPipelineList(board) {
       const hasMoney = currentHasMoney();
+      const showGeoLocation = window.titanSchema.resolve(PIPELINES[currentPipelineId]).on('geo-location');
       const list = document.createElement('div');
       list.className = 'pipeline-list ds-card ds-card--flat';
       const table = document.createElement('table');
@@ -4510,6 +4520,7 @@
         '<th scope="col">' + ((PIPELINES[currentPipelineId] || {}).entity || 'Record') + '</th>' +
         '<th scope="col">Contact</th>' +
         '<th scope="col">Company</th>' +
+        (showGeoLocation ? '<th scope="col">Geo location</th>' : '') +
         '<th scope="col">Stage</th>' +
         (hasMoney ? '<th scope="col">Value</th>' : '') +
         '<th scope="col">Activity</th>' +
@@ -4521,7 +4532,7 @@
         const row = document.createElement('tr');
         const cell = document.createElement('td');
         cell.className = 'pipeline-list__empty';
-        cell.colSpan = hasMoney ? 7 : 6;
+        cell.colSpan = (hasMoney ? 7 : 6) + (showGeoLocation ? 1 : 0);
         cell.textContent = 'No ' + CURRENT_ENTITY_PLURAL + ' yet';
         row.appendChild(cell);
         body.appendChild(row);
@@ -4562,6 +4573,22 @@
           companyCell.appendChild(company);
         } else companyCell.textContent = '—';
         row.appendChild(companyCell);
+
+        if (showGeoLocation) {
+          const geoLocationCell = document.createElement('td');
+          const geoUrl = geoLocationUrl(card);
+          if (geoUrl) {
+            const geoLink = document.createElement('a');
+            geoLink.className = 'ds-btn ds-btn--ghost ds-btn--sm';
+            geoLink.href = geoUrl;
+            geoLink.target = '_blank';
+            geoLink.rel = 'noopener noreferrer';
+            geoLink.textContent = 'Open map';
+            geoLink.addEventListener('click', function (event) { event.stopPropagation(); });
+            geoLocationCell.appendChild(geoLink);
+          } else geoLocationCell.textContent = '—';
+          row.appendChild(geoLocationCell);
+        }
 
         const stageCell = document.createElement('td');
         stageCell.className = 'pipeline-list__stage';

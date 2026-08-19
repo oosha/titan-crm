@@ -148,9 +148,15 @@
 
       <div class="ao-row">
         <div>
+          <div class="np-label">Geo location</div>
+          <input class="np-name-input" id="ao-geo-location" placeholder="https://maps.google.com/...">
+        </div>
+        <div>
           <div class="np-label">Company website</div>
           <input class="np-name-input" id="ao-website" placeholder="acme.com">
         </div>
+      </div>
+      <div class="ao-row">
         <div>
           <div class="np-label">Company LinkedIn</div>
           <input class="np-name-input" id="ao-company-linkedin" placeholder="linkedin.com/company/acme">
@@ -251,7 +257,7 @@
     document.getElementById('ao-heading-contact').textContent = schema.headings.contact;
 
     let companyShown = 0;
-    ['name', 'value', 'stage', 'status', 'close-date', 'source', 'note', 'company', 'location',
+    ['name', 'value', 'stage', 'status', 'close-date', 'source', 'note', 'company', 'location', 'geo-location',
      'website', 'company-linkedin', 'instagram', 'contact', 'contact-email', 'contact-phone',
      'contact-designation', 'contact-department', 'contact-location', 'contact-linkedin',
     ].forEach(function (key) {
@@ -451,6 +457,7 @@
       createdBy: (new URLSearchParams(location.search).get('by') || '').trim() || 'Usha Loutongbam',
       noteAuthor: (new URLSearchParams(location.search).get('by') || '').trim() || 'Usha',
       location: document.getElementById('ao-location').value.trim(),
+      geoLocation: document.getElementById('ao-geo-location').value.trim(),
       website: document.getElementById('ao-website').value.trim(),
       companyLinkedin: document.getElementById('ao-company-linkedin').value.trim(),
       instagram: document.getElementById('ao-instagram').value.trim(),

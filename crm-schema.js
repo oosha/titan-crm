@@ -27,7 +27,7 @@
   // Field order is display order, and the groups are the settings page's sections.
   var ORDER = [
     'name', 'value', 'stage', 'status', 'close-date', 'source', 'note',
-    'company', 'location', 'website', 'company-linkedin', 'instagram',
+    'company', 'location', 'geo-location', 'website', 'company-linkedin', 'instagram',
     'contact', 'contact-name', 'contact-email', 'contact-phone',
     'contact-designation', 'contact-department', 'contact-location', 'contact-linkedin',
   ];
@@ -35,7 +35,7 @@
     name: 'record', value: 'record', stage: 'record', status: 'record',
     'close-date': 'record',
     source: 'record', note: 'record',
-    company: 'company', location: 'company', website: 'company',
+    company: 'company', location: 'company', 'geo-location': 'company', website: 'company',
     'company-linkedin': 'company', instagram: 'company',
     contact: 'contact', 'contact-name': 'contact', 'contact-email': 'contact',
     'contact-phone': 'contact', 'contact-designation': 'contact',
@@ -68,7 +68,8 @@
     'source':                    '+-++-',
     'note':                      '+++++',
     'company':                   '+++++',
-    'location':                  '--+--',   // + on Order — it's the delivery address
+    'location':                  '+-+x-',   // company/delivery address; optional on projects and custom records
+    'geo-location':              '+-+x-',   // default on for opportunities/orders; optional on projects/records; absent for candidates
     'website':                   '+++x-',
     'company-linkedin':          '+--x-',
     'instagram':                 '---x-',
@@ -90,7 +91,7 @@
     // "Customer"/"Client" (see COMPANY_WORD below); a bare "Customer" as a
     // *field* label reads as if it wants a person's name, right above a
     // "Contact person" field that actually does.
-    'company': 'Company name', 'location': 'Location',
+    'company': 'Company name', 'location': 'Company address', 'geo-location': 'Geo location',
     'website': 'Company website', 'company-linkedin': 'Company LinkedIn',
     'instagram': 'Company Instagram',
     'contact': 'Contact person', 'contact-name': 'Contact name',
@@ -112,7 +113,7 @@
     Order: {
       'name': 'Order name', 'value': 'Order total', 'stage': 'Order stage',
       'close-date': 'Expected delivery date', 'source': 'Order channel',
-      'location': 'Delivery address',
+      'location': 'Delivery address', 'geo-location': 'Delivery map',
     },
     Candidate: {
       'name': 'Candidate name', 'stage': 'Candidate stage',
