@@ -11,10 +11,10 @@ window.TITAN_PERSONAS.graham = {
 
   account: {
     name: 'Graham Northcutt',
-    email: 'graham@northcuttlubricants.example',
+    email: 'graham@northcuttlubricants.com',
     brand: 'Northcutt Industrial Lubricants',
     title: 'Outside technical sales',
-    website: 'northcuttlubricants.example',
+    website: 'northcuttlubricants.com',
     avatar: 'G',
     region: 'San Diego, CA',
     currency: { code: 'USD', symbol: '$' },
@@ -26,7 +26,7 @@ window.TITAN_PERSONAS.graham = {
       name: 'Field sales',
       entity: 'Opportunity',
       color: '#54759c',
-      defaultOwner: { name: 'Graham Northcutt', email: 'graham@northcuttlubricants.example' },
+      defaultOwner: { name: 'Graham Northcutt', email: 'graham@northcuttlubricants.com' },
       stages: ['Mapped', 'Visit planned', 'Assessment', 'Quote sent', 'First order', 'Active customer'],
       cards: [
         { id: 'graham-1', deal: 'Harbor Hauling: fleet assessment', company: 'Harbor Hauling', website: 'https://www.wm.com', contact: 'Maya Ortega', value: 0, stage: 'Mapped', leadSource: 'Google Maps', lastActivity: 'Today', activityType: 'Prospect mapped', nextActivity: { type: 'visit', label: 'Plan an introductory stop', date: 'Tomorrow' } },

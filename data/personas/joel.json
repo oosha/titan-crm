@@ -1,0 +1,651 @@
+{
+  "currentPipelineId": "strategic-partnerships",
+  "pipelineSeq": 1,
+  "pipelines": {
+    "strategic-partnerships": {
+      "id": "strategic-partnerships",
+      "name": "Strategic Partnerships",
+      "entity": "Opportunity",
+      "plural": "opportunities",
+      "color": "#6b5aa8",
+      "type": "sales",
+      "subject": "company",
+      "defaultOwner": {
+        "name": "Joel Rasquinha",
+        "email": "joel.rasquinha@radix.website"
+      },
+      "stages": [
+        {
+          "key": "target-account",
+          "label": "Target account",
+          "description": "A potential strategic partner is being researched."
+        },
+        {
+          "key": "outreach",
+          "label": "Outreach",
+          "description": "An introduction is underway."
+        },
+        {
+          "key": "discovery",
+          "label": "Discovery",
+          "description": "The teams are exploring partner goals and fit."
+        },
+        {
+          "key": "solution-fit",
+          "label": "Solution fit",
+          "description": "Product, launch and operating fit are being validated."
+        },
+        {
+          "key": "commercials",
+          "label": "Commercials",
+          "description": "Commercial terms and the joint plan are under review."
+        },
+        {
+          "key": "contract-review",
+          "label": "Contract review",
+          "description": "The agreement is in legal review."
+        },
+        {
+          "key": "closed",
+          "label": "Closed",
+          "description": "The opportunity is won or lost."
+        }
+      ],
+      "cards": [
+        {
+          "id": "joel-1",
+          "deal": "GoDaddy registry partnership",
+          "company": "GoDaddy",
+          "website": "https://godaddy.com",
+          "location": "Singapore",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=Singapore",
+          "contact": "Maya Singh",
+          "contactEmail": "maya.singh@godaddy.com",
+          "contactPhone": "+65 5550 0141",
+          "contactDesignation": "VP, Partnerships",
+          "contacts": [
+            {
+              "name": "Maya Singh",
+              "email": "maya.singh@godaddy.com",
+              "phone": "+65 5550 0141",
+              "designation": "VP, Partnerships",
+              "department": "Partnerships",
+              "location": "Singapore",
+              "linkedin": "https://linkedin.com/in/maya-singh-atlas"
+            },
+            {
+              "name": "Eli Tan",
+              "email": "eli.tan@godaddy.com",
+              "phone": "+65 5550 0142",
+              "designation": "Director, Product",
+              "department": "Product",
+              "location": "Singapore",
+              "linkedin": "https://linkedin.com/in/eli-tan-atlas"
+            }
+          ],
+          "owner": {
+            "name": "Joel Rasquinha",
+            "email": "joel.rasquinha@radix.website"
+          },
+          "value": 180000,
+          "stage": "target-account",
+          "leadSource": "Market research",
+          "source": "Market research",
+          "note": "Strong registrar footprint in Southeast Asia. Map the portfolio and the partnership decision group before outreach.",
+          "lastActivity": "5d ago",
+          "activityType": "Account researched",
+          "nextActivity": {
+            "type": "task",
+            "label": "Map decision makers",
+            "date": "Aug 22"
+          },
+          "files": [
+            {
+              "name": "GoDaddy partner research brief.pdf",
+              "size": "482 KB",
+              "direction": "sent"
+            }
+          ]
+        },
+        {
+          "id": "joel-2",
+          "deal": "Hostinger channel integration",
+          "company": "Hostinger",
+          "website": "https://hostinger.com",
+          "location": "Austin, TX",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=Austin%2C%20TX",
+          "contact": "Daniel Cho",
+          "contactEmail": "daniel.cho@hostinger.com",
+          "contactPhone": "+1 512 555 0184",
+          "contactDesignation": "Head of Partnerships",
+          "contacts": [
+            {
+              "name": "Daniel Cho",
+              "email": "daniel.cho@hostinger.com",
+              "phone": "+1 512 555 0184",
+              "designation": "Head of Partnerships",
+              "department": "Partnerships",
+              "location": "Austin, TX",
+              "linkedin": "https://linkedin.com/in/daniel-cho-orbit"
+            },
+            {
+              "name": "Nora Price",
+              "email": "nora.price@hostinger.com",
+              "phone": "+1 512 555 0185",
+              "designation": "Product Partnerships Manager",
+              "department": "Product",
+              "location": "Austin, TX",
+              "linkedin": "https://linkedin.com/in/nora-price-orbit"
+            }
+          ],
+          "owner": {
+            "name": "Joel Rasquinha",
+            "email": "joel.rasquinha@radix.website"
+          },
+          "value": 120000,
+          "stage": "outreach",
+          "leadSource": "Conference",
+          "source": "Industry conference",
+          "note": "Met Daniel at the partner forum. Introductory call is being scheduled with the partnerships lead.",
+          "lastActivity": "1d ago",
+          "activityType": "Email sent",
+          "nextActivity": {
+            "type": "meeting",
+            "label": "Introductory partnership call",
+            "date": "Aug 21, 4:00pm"
+          },
+          "upcomingActivities": [
+            {
+              "type": "meeting",
+              "text": "Introductory partnership call",
+              "date": "Aug 21"
+            }
+          ]
+        },
+        {
+          "id": "joel-3",
+          "deal": "Wix domain portfolio partnership",
+          "company": "Wix",
+          "website": "https://wix.com",
+          "location": "London, UK",
+          "geoLocation": "https://maps.app.goo.gl/5pgo1UWrAUjt3Q8A7",
+          "contact": "Priya Nair",
+          "contactEmail": "priya.nair@wix.com",
+          "contactPhone": "+44 20 5550 0188",
+          "contactDesignation": "VP, Growth",
+          "contacts": [
+            {
+              "name": "Priya Nair",
+              "email": "priya.nair@wix.com",
+              "phone": "+44 20 5550 0188",
+              "designation": "VP, Growth",
+              "department": "Growth",
+              "location": "London, UK",
+              "linkedin": "https://linkedin.com/in/priya-nair-webnest"
+            },
+            {
+              "name": "Jon Bell",
+              "email": "jon.bell@wix.com",
+              "phone": "+44 20 5550 0189",
+              "designation": "Director, Product",
+              "department": "Product",
+              "location": "London, UK",
+              "linkedin": "https://linkedin.com/in/jon-bell-webnest"
+            },
+            {
+              "name": "Grace Liu",
+              "email": "grace.liu@wix.com",
+              "phone": "+44 20 5550 0190",
+              "designation": "Partnerships Operations Lead",
+              "department": "Partnerships",
+              "location": "London, UK",
+              "linkedin": "https://linkedin.com/in/grace-liu-webnest"
+            }
+          ],
+          "owner": {
+            "name": "Joel Rasquinha",
+            "email": "joel.rasquinha@radix.website"
+          },
+          "value": 240000,
+          "stage": "discovery",
+          "leadSource": "Inbound",
+          "source": "Website inquiry",
+          "note": "Wix wants a focused portfolio migration plan and launch support for its creator segment.",
+          "noteAuthor": "Joel Rasquinha",
+          "noteDate": "Today",
+          "noteHistory": [
+            {
+              "text": "Priya is focused on a simple launch story for creators. Jon needs confidence that the portfolio and provisioning flow will not add friction to the existing customer journey.",
+              "author": "Joel Rasquinha",
+              "date": "Today, 10:15am"
+            },
+            {
+              "text": "Grace confirmed that partnerships operations can support a phased pilot if product signs off on the initial domain set.",
+              "author": "Joel Rasquinha",
+              "date": "14 Aug"
+            }
+          ],
+          "recentActivities": [
+            {
+              "type": "email",
+              "text": "Inbound partnership inquiry",
+              "snippet": "Priya asked about the registry portfolio and launch support.",
+              "date": "30 Jul"
+            },
+            {
+              "type": "call",
+              "text": "Qualification call with Priya",
+              "snippet": "Confirmed the opportunity is a creator-focused domain portfolio, not a broad migration. Priya brought in Jon for product validation.",
+              "date": "5 Aug"
+            },
+            {
+              "type": "note",
+              "text": "Pilot scope agreed",
+              "snippet": "Start with a limited set of domains and a clearly defined success measure before discussing a wider rollout.",
+              "date": "14 Aug"
+            },
+            {
+              "type": "meeting",
+              "text": "Discovery workshop",
+              "snippet": "Reviewed audience, migration timing and promotional domain needs.",
+              "date": "Today"
+            },
+            {
+              "type": "task",
+              "text": "Discovery follow-up sent",
+              "snippet": "Shared the workshop summary, open questions and a proposed next session with product and growth.",
+              "date": "Today, 1:40pm"
+            }
+          ],
+          "upcomingActivities": [
+            {
+              "type": "meeting",
+              "text": "Product and growth solution workshop",
+              "date": "Aug 26"
+            },
+            {
+              "type": "task",
+              "text": "Send pilot domain shortlist",
+              "date": "Aug 27"
+            }
+          ],
+          "files": [
+            {
+              "name": "Wix discovery notes.pdf",
+              "size": "612 KB",
+              "direction": "sent"
+            },
+            {
+              "name": "Wix portfolio migration outline.pdf",
+              "size": "1.1 MB",
+              "direction": "sent"
+            },
+            {
+              "name": "Wix discovery workshop recording.mp4",
+              "size": "84.6 MB",
+              "direction": "received"
+            },
+            {
+              "name": "Wix pilot domain shortlist.xlsx",
+              "size": "168 KB",
+              "direction": "sent"
+            },
+            {
+              "name": "Wix launch success metrics.pdf",
+              "size": "426 KB",
+              "direction": "sent"
+            }
+          ],
+          "lastActivity": "3h ago",
+          "activityType": "Meeting held",
+          "nextActivity": {
+            "type": "meeting",
+            "label": "Product and growth solution workshop",
+            "date": "Aug 26, 2:00pm"
+          },
+          "currency": "$",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "autoLinkActivity": true,
+          "autoLinkScope": "contact",
+          "contactDepartment": "Growth",
+          "contactLocation": "London, UK",
+          "contactLinkedin": "https://linkedin.com/in/priya-nair-webnest",
+          "customFieldValues": {}
+        },
+        {
+          "id": "joel-4",
+          "deal": "Squarespace marketplace integration",
+          "company": "Squarespace",
+          "website": "https://squarespace.com",
+          "location": "Toronto, Canada",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=Toronto%2C%20Canada",
+          "contact": "Avery Morgan",
+          "contactEmail": "avery.morgan@squarespace.com",
+          "contactPhone": "+1 416 555 0118",
+          "contactDesignation": "Director, Platform Partnerships",
+          "contacts": [
+            {
+              "name": "Avery Morgan",
+              "email": "avery.morgan@squarespace.com",
+              "phone": "+1 416 555 0118",
+              "designation": "Director, Platform Partnerships",
+              "department": "Platform",
+              "location": "Toronto, Canada",
+              "linkedin": "https://linkedin.com/in/avery-morgan-cloudharbor"
+            },
+            {
+              "name": "Samir Patel",
+              "email": "samir.patel@squarespace.com",
+              "phone": "+1 416 555 0119",
+              "designation": "Solutions Architect",
+              "department": "Engineering",
+              "location": "Toronto, Canada",
+              "linkedin": "https://linkedin.com/in/samir-patel-cloudharbor"
+            }
+          ],
+          "owner": {
+            "name": "Joel Rasquinha",
+            "email": "joel.rasquinha@radix.website"
+          },
+          "value": 165000,
+          "stage": "solution-fit",
+          "leadSource": "Partner referral",
+          "source": "Partner referral",
+          "note": "The marketplace flow is promising. Confirm provisioning, support ownership and shared reporting before commercials.",
+          "lastActivity": "2d ago",
+          "activityType": "Technical review",
+          "nextActivity": {
+            "type": "meeting",
+            "label": "Integration design review",
+            "date": "Aug 25, 3:00pm"
+          },
+          "files": [
+            {
+              "name": "Squarespace integration requirements.pdf",
+              "size": "768 KB",
+              "direction": "received"
+            }
+          ]
+        },
+        {
+          "id": "joel-5",
+          "deal": "Shopify co-sell proposal",
+          "company": "Shopify",
+          "website": "https://shopify.com",
+          "location": "New York, NY",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=New%20York%2C%20NY",
+          "contact": "Sofia Alvarez",
+          "contactEmail": "sofia.alvarez@shopify.com",
+          "contactPhone": "+1 212 555 0168",
+          "contactDesignation": "VP, Business Development",
+          "contacts": [
+            {
+              "name": "Sofia Alvarez",
+              "email": "sofia.alvarez@shopify.com",
+              "phone": "+1 212 555 0168",
+              "designation": "VP, Business Development",
+              "department": "Business development",
+              "location": "New York, NY",
+              "linkedin": "https://linkedin.com/in/sofia-alvarez-forgecart"
+            },
+            {
+              "name": "Camille Reed",
+              "email": "camille.reed@shopify.com",
+              "phone": "+1 212 555 0169",
+              "designation": "Finance Business Partner",
+              "department": "Finance",
+              "location": "New York, NY",
+              "linkedin": "https://linkedin.com/in/camille-reed-forgecart"
+            }
+          ],
+          "owner": {
+            "name": "Joel Rasquinha",
+            "email": "joel.rasquinha@radix.website"
+          },
+          "value": 320000,
+          "stage": "commercials",
+          "leadSource": "Outbound",
+          "source": "Targeted outreach",
+          "note": "Proposal includes a phased domain launch, co-marketing contribution and quarterly growth review.",
+          "recentActivities": [
+            {
+              "type": "meeting",
+              "text": "Commercial model review",
+              "snippet": "Aligned on revenue-share scenarios and launch milestones.",
+              "date": "14 Aug"
+            },
+            {
+              "type": "email",
+              "text": "Co-sell proposal sent",
+              "snippet": "Sent the phased proposal for finance review.",
+              "date": "Today"
+            }
+          ],
+          "files": [
+            {
+              "name": "Shopify co-sell proposal.pdf",
+              "size": "1.4 MB",
+              "direction": "sent"
+            },
+            {
+              "name": "Shopify revenue model.xlsx",
+              "size": "284 KB",
+              "direction": "sent"
+            }
+          ],
+          "lastActivity": "Today",
+          "activityType": "Proposal sent",
+          "nextActivity": {
+            "type": "followup",
+            "label": "Review finance feedback",
+            "date": "Aug 23"
+          }
+        },
+        {
+          "id": "joel-6",
+          "deal": "Webflow reseller agreement",
+          "company": "Webflow",
+          "website": "https://webflow.com",
+          "location": "Berlin, Germany",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=Berlin%2C%20Germany",
+          "contact": "Theo Bennett",
+          "contactEmail": "theo.bennett@webflow.com",
+          "contactPhone": "+49 30 5550 0142",
+          "contactDesignation": "General Counsel",
+          "contacts": [
+            {
+              "name": "Theo Bennett",
+              "email": "theo.bennett@webflow.com",
+              "phone": "+49 30 5550 0142",
+              "designation": "General Counsel",
+              "department": "Legal",
+              "location": "Berlin, Germany",
+              "linkedin": "https://linkedin.com/in/theo-bennett-studio"
+            },
+            {
+              "name": "Ines Vogel",
+              "email": "ines.vogel@webflow.com",
+              "phone": "+49 30 5550 0143",
+              "designation": "Partner Programs Lead",
+              "department": "Partnerships",
+              "location": "Berlin, Germany",
+              "linkedin": "https://linkedin.com/in/ines-vogel-studio"
+            }
+          ],
+          "owner": {
+            "name": "Joel Rasquinha",
+            "email": "joel.rasquinha@radix.website"
+          },
+          "value": 275000,
+          "stage": "contract-review",
+          "leadSource": "Executive intro",
+          "source": "Executive introduction",
+          "note": "Only support boundaries and launch communications remain in redline review.",
+          "files": [
+            {
+              "name": "Webflow reseller agreement redlines.docx",
+              "size": "926 KB",
+              "direction": "received"
+            },
+            {
+              "name": "Webflow launch responsibilities.pdf",
+              "size": "438 KB",
+              "direction": "sent"
+            }
+          ],
+          "lastActivity": "4d ago",
+          "activityType": "Redlines received",
+          "nextActivity": {
+            "type": "task",
+            "label": "Return legal response",
+            "date": "Overdue"
+          },
+          "overdue": true
+        },
+        {
+          "id": "joel-7",
+          "deal": "BigCommerce launch partnership",
+          "company": "BigCommerce",
+          "website": "https://bigcommerce.com",
+          "location": "Dubai, UAE",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=Dubai%2C%20UAE",
+          "contact": "Leila Haddad",
+          "contactEmail": "leila.haddad@bigcommerce.com",
+          "contactPhone": "+971 4 555 0130",
+          "contactDesignation": "Chief Partnerships Officer",
+          "contacts": [
+            {
+              "name": "Leila Haddad",
+              "email": "leila.haddad@bigcommerce.com",
+              "phone": "+971 4 555 0130",
+              "designation": "Chief Partnerships Officer",
+              "department": "Partnerships",
+              "location": "Dubai, UAE",
+              "linkedin": "https://linkedin.com/in/leila-haddad-marketroot"
+            },
+            {
+              "name": "Owen Clarke",
+              "email": "owen.clarke@bigcommerce.com",
+              "phone": "+971 4 555 0131",
+              "designation": "Director, Growth",
+              "department": "Growth",
+              "location": "Dubai, UAE",
+              "linkedin": "https://linkedin.com/in/owen-clarke-marketroot"
+            }
+          ],
+          "owner": {
+            "name": "Joel Rasquinha",
+            "email": "joel.rasquinha@radix.website"
+          },
+          "value": 195000,
+          "stage": "closed",
+          "won": true,
+          "leadSource": "Partner referral",
+          "source": "Partner referral",
+          "note": "Agreement signed. Kickoff will cover launch milestones, campaign calendar and reporting cadence.",
+          "recentActivities": [
+            {
+              "type": "meeting",
+              "text": "Final commercial approval",
+              "snippet": "Confirmed launch investment and shared success metrics.",
+              "date": "6 Aug"
+            },
+            {
+              "type": "email",
+              "text": "Partnership agreement signed",
+              "snippet": "BigCommerce returned the completed agreement.",
+              "date": "11 Aug"
+            }
+          ],
+          "files": [
+            {
+              "name": "BigCommerce signed partnership agreement.pdf",
+              "size": "1.8 MB",
+              "direction": "received"
+            },
+            {
+              "name": "BigCommerce joint launch plan.pdf",
+              "size": "1.2 MB",
+              "direction": "sent"
+            }
+          ],
+          "lastActivity": "8d ago",
+          "activityType": "Agreement signed"
+        },
+        {
+          "id": "joel-8",
+          "deal": "SiteGround reseller opportunity",
+          "company": "SiteGround",
+          "website": "https://siteground.com",
+          "location": "Sydney, Australia",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=Sydney%2C%20Australia",
+          "contact": "Marcus Lee",
+          "contactEmail": "marcus.lee@siteground.com",
+          "contactPhone": "+61 2 5550 0159",
+          "contactDesignation": "VP, Strategy",
+          "contacts": [
+            {
+              "name": "Marcus Lee",
+              "email": "marcus.lee@siteground.com",
+              "phone": "+61 2 5550 0159",
+              "designation": "VP, Strategy",
+              "department": "Strategy",
+              "location": "Sydney, Australia",
+              "linkedin": "https://linkedin.com/in/marcus-lee-novapages"
+            }
+          ],
+          "owner": {
+            "name": "Joel Rasquinha",
+            "email": "joel.rasquinha@radix.website"
+          },
+          "value": 90000,
+          "stage": "closed",
+          "won": false,
+          "leadSource": "Outbound",
+          "source": "Targeted outreach",
+          "note": "Opportunity paused because SiteGround is not prioritising new partner work this quarter. Revisit in the next planning cycle.",
+          "recentActivities": [
+            {
+              "type": "email",
+              "text": "Partnership work paused",
+              "snippet": "Marcus asked to revisit after the next planning cycle.",
+              "date": "1 Aug"
+            }
+          ],
+          "lastActivity": "18d ago",
+          "activityType": "Opportunity closed lost"
+        }
+      ],
+      "hiddenFields": [
+        "company-linkedin",
+        "instagram",
+        "contact-linkedin"
+      ],
+      "customFieldDefs": [],
+      "contactsEnabled": true,
+      "shownFields": [
+        "name",
+        "value",
+        "stage",
+        "status",
+        "close-date",
+        "source",
+        "note",
+        "company",
+        "location",
+        "geo-location",
+        "website",
+        "contact",
+        "contact-name",
+        "contact-email",
+        "contact-phone",
+        "contact-designation",
+        "contact-department",
+        "contact-location",
+        "contact-linkedin"
+      ]
+    }
+  }
+}

@@ -11,8 +11,8 @@
       "type": "sales",
       "subject": "company",
       "defaultOwner": {
-        "name": "graham@northcuttlubricants.example",
-        "email": "graham@northcuttlubricants.example"
+        "name": "Graham Northcutt",
+        "email": "graham@northcuttlubricants.com"
       },
       "stages": [
         {
@@ -217,7 +217,7 @@
           ],
           "owner": {
             "name": "Graham Northcutt",
-            "email": "graham@northcuttlubricants.example"
+            "email": "graham@northcuttlubricants.com"
           },
           "value": 0,
           "stage": "mapped",
@@ -271,7 +271,7 @@
           ],
           "owner": {
             "name": "Graham Northcutt",
-            "email": "graham@northcuttlubricants.example"
+            "email": "graham@northcuttlubricants.com"
           },
           "value": 0,
           "stage": "visit-planned",
@@ -330,7 +330,7 @@
           ],
           "owner": {
             "name": "Graham Northcutt",
-            "email": "graham@northcuttlubricants.example"
+            "email": "graham@northcuttlubricants.com"
           },
           "value": 2840,
           "stage": "quote-sent",
@@ -463,7 +463,7 @@
           ],
           "owner": {
             "name": "Graham Northcutt",
-            "email": "graham@northcuttlubricants.example"
+            "email": "graham@northcuttlubricants.com"
           },
           "value": 6150,
           "stage": "assessment",
@@ -523,7 +523,7 @@
           ],
           "owner": {
             "name": "Graham Northcutt",
-            "email": "graham@northcuttlubricants.example"
+            "email": "graham@northcuttlubricants.com"
           },
           "value": 3920,
           "stage": "first-order",
@@ -583,7 +583,7 @@
           ],
           "owner": {
             "name": "Graham Northcutt",
-            "email": "graham@northcuttlubricants.example"
+            "email": "graham@northcuttlubricants.com"
           },
           "value": 1480,
           "stage": "active-customer",
@@ -732,7 +732,7 @@
           ],
           "owner": {
             "name": "Graham Northcutt",
-            "email": "graham@northcuttlubricants.example"
+            "email": "graham@northcuttlubricants.com"
           },
           "value": 5250,
           "stage": "quote-sent",
