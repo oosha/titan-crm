@@ -68,6 +68,8 @@
       name: 'New lead follow-up',
       description: 'Call and follow up with new leads.',
       weekdaysOnly: true,
+      schedule: { activeDays: ['mon', 'tue', 'wed', 'thu', 'fri'], startTime: '09:00', endTime: '17:00', timezone: 'contact' },
+      exitRules: { stopOnReply: true, stopOnBounce: true, allowReentry: false },
       activeInstances: 12,
       usedBy: ['Sales pipeline · Lead'],
       steps: [
@@ -90,6 +92,8 @@
       name: 'Discovery follow-up',
       description: 'Recap discovery and set the next task.',
       weekdaysOnly: true,
+      schedule: { activeDays: ['mon', 'tue', 'wed', 'thu', 'fri'], startTime: '09:00', endTime: '17:00', timezone: 'contact' },
+      exitRules: { stopOnReply: true, stopOnBounce: true, allowReentry: false },
       activeInstances: 6,
       usedBy: ['Sales pipeline · Discovery'],
       steps: [
@@ -112,6 +116,8 @@
       name: 'Proposal follow-up',
       description: 'Follow up on open proposals.',
       weekdaysOnly: true,
+      schedule: { activeDays: ['mon', 'tue', 'wed', 'thu', 'fri'], startTime: '09:00', endTime: '17:00', timezone: 'contact' },
+      exitRules: { stopOnReply: true, stopOnBounce: true, allowReentry: false },
       activeInstances: 4,
       usedBy: ['Sales pipeline · Proposal'],
       steps: [

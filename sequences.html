@@ -7,6 +7,14 @@
 <!-- Hotjar. One shared file rather than the snippet pasted into every page;
      see analytics.js. Loaded early so a session is recorded from first paint. -->
 <script src="/analytics.js"></script>
+<script>
+  (function () {
+    var parts = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
+    document.documentElement.dataset.sequenceMode = parts[0] === 'crm' && parts[1] === 'sequences' && !!parts[2]
+      ? 'editor'
+      : 'library';
+  })();
+</script>
 <link rel="stylesheet" href="/design-system/tokens.css">
 <link rel="stylesheet" href="/design-system/components.css">
 <link rel="stylesheet" href="/titan-sidebar.css">
@@ -15,29 +23,92 @@
     height: 100%; min-height: 0; overflow: hidden;
     background: var(--surface-page);
   }
-  .seq-workspace {
-    width: 100%; height: 100%; min-height: 0; display: grid;
-    grid-template-columns: minmax(0, 10fr) minmax(0, 24fr); gap: 0;
+  html[data-sequence-mode="editor"] .seq-library-only,
+  html[data-sequence-mode="library"] .seq-editor-only { display: none; }
+  .seq-library-view {
+    height: 100%; min-height: 0; overflow-y: auto;
+    padding: var(--space-400);
   }
-  .seq-library,
-  .seq-editor {
-    min-height: 0; overflow: hidden; display: flex; flex-direction: column;
+  .seq-library-frame {
+    width: min(100%, calc(var(--space-400) * 36)); margin-inline: auto;
   }
-  .seq-library {
-    padding: var(--space-400); border-right: var(--btn-border-width) solid var(--border-default);
-    background: var(--surface-page);
-  }
-  .seq-library-head {
-    flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;
-    width: min(100%, calc(var(--space-400) * 11)); margin-left: auto;
-    gap: var(--space-100); margin-bottom: var(--space-300);
+  .seq-library-intro {
+    display: grid; gap: var(--space-075); margin-bottom: var(--space-300);
   }
   .seq-library-title {
-    color: var(--text-heading); font-size: var(--text-lg); font-weight: var(--weight-semi);
+    color: var(--text-heading); font-size: var(--text-xl); font-weight: var(--weight-semi);
   }
+  .seq-library-copy {
+    max-width: calc(var(--input-height) * 13); color: var(--text-secondary);
+    font-size: var(--text-sm); line-height: 1.5;
+  }
+  .seq-list {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--input-height) * 7)), 1fr));
+    gap: var(--space-300);
+  }
+  .seq-list-item {
+    min-height: calc(var(--input-height) * 5); padding: var(--space-300);
+    display: flex; flex-direction: column; gap: var(--space-200);
+    color: inherit; text-decoration: none; transition: var(--motion-hover);
+  }
+  .seq-list-item:hover {
+    border-color: var(--border-accent); background: var(--surface-hover);
+    box-shadow: var(--elevation-card); transform: translateY(calc(var(--space-025) * -1));
+  }
+  .seq-list-item:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .seq-list-head { display: flex; align-items: flex-start; gap: var(--space-150); }
+  .seq-list-icon {
+    width: var(--btn-height); height: var(--btn-height); flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-control); background: var(--accent-subtle); color: var(--text-accent);
+  }
+  .seq-list-name {
+    min-width: 0; color: var(--text-heading); font-size: var(--text-md);
+    font-weight: var(--weight-semi); line-height: 1.35;
+  }
+  .seq-list-description {
+    color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5;
+  }
+  .seq-list-meta {
+    margin-top: auto; padding-top: var(--space-150); display: flex; align-items: center; flex-wrap: wrap;
+    justify-content: space-between; gap: var(--space-100);
+    border-top: var(--btn-border-width) solid var(--border-subtle);
+    color: var(--text-muted); font-size: var(--text-xs);
+  }
+  .seq-editor-status {
+    color: var(--text-secondary); font-size: var(--text-sm);
+  }
+  .seq-editor-only .subpage-back {
+    flex-shrink: 0;
+  }
+  .seq-editor-layout { width: 100%; height: 100%; min-height: 0; display: flex; }
+  .seq-settings-rail {
+    width: calc(var(--input-height) * 6); flex: 0 0 auto; overflow-y: auto;
+    padding: var(--space-400) var(--space-150); background: var(--surface-primary);
+    border-right: var(--btn-border-width) solid var(--border-subtle);
+  }
+  .seq-settings-nav { display: flex; flex-direction: column; gap: var(--space-025); }
+  .seq-settings-nav-item {
+    width: 100%; padding: var(--space-125) var(--space-150);
+    display: flex; align-items: center; gap: var(--space-100);
+    border: 0; border-radius: var(--radius-control); background: transparent;
+    color: var(--text-primary); font: inherit; font-size: var(--text-md); text-align: left;
+    cursor: pointer; transition: var(--motion-hover);
+  }
+  .seq-settings-nav-item:hover { background: var(--surface-hover); }
+  .seq-settings-nav-item.is-active { background: var(--surface-selected); color: var(--text-accent); font-weight: var(--weight-semi); }
+  .seq-settings-nav-label { min-width: 0; flex: 1; }
+  .seq-settings-nav-caret { display: none; flex: 0 0 auto; }
+  .seq-settings-nav-item.is-active .seq-settings-nav-caret { display: inline-flex; }
+  .seq-editor-content {
+    position: relative; min-width: 0; min-height: 0; flex: 1 1 auto;
+    overflow: hidden; overflow: clip;
+  }
+  .seq-editor-pane { display: none; width: 100%; height: 100%; min-height: 0; }
+  .seq-editor-pane.is-active { display: block; }
   .seq-editor {
-    width: 100%; padding: 0;
-    justify-self: stretch;
+    width: 100%; height: 100%; min-height: 0; overflow: hidden;
+    display: flex; flex-direction: column;
     background-color: color-mix(in srgb, var(--surface-primary) 35%, var(--surface-pressed));
     background-image: radial-gradient(
       circle,
@@ -46,33 +117,55 @@
     );
     background-size: var(--space-200) var(--space-200);
   }
-  .seq-list {
-    width: min(100%, calc(var(--space-400) * 11)); min-height: 0; flex: 1 1 auto;
-    margin-left: auto; overflow-y: auto; display: grid; align-content: start; gap: var(--space-150);
+  .seq-editor.seq-editor-pane { display: none; }
+  .seq-editor.seq-editor-pane.is-active { display: flex; }
+  .seq-settings-scroll {
+    width: 100%; height: 100%; overflow-y: auto; padding: var(--space-400) var(--space-300);
+    background: var(--surface-page);
   }
-  .seq-list-item {
-    width: 100%; display: block; padding: var(--space-200);
-    border: var(--btn-border-width) solid var(--border-subtle);
-    border-radius: var(--radius-control); background: var(--surface-primary); text-align: left;
-    color: inherit; font: inherit; cursor: pointer; transition: var(--motion-hover);
+  .seq-settings-frame { width: min(100%, calc(var(--space-400) * 24)); margin-inline: auto; }
+  .seq-settings-heading { display: grid; gap: var(--space-075); margin-bottom: var(--space-300); }
+  .seq-settings-title { color: var(--text-heading); font-size: var(--text-xl); font-weight: var(--weight-semi); }
+  .seq-settings-copy { color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5; }
+  .seq-settings-card { padding: var(--space-300); display: grid; gap: var(--space-300); }
+  .seq-settings-card + .seq-settings-card { margin-top: var(--space-300); }
+  .seq-settings-card-title { color: var(--text-heading); font-size: var(--text-md); font-weight: var(--weight-semi); }
+  .seq-settings-fields { display: grid; gap: var(--space-300); }
+  .seq-settings-two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-200); }
+  .seq-day-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-075); }
+  .seq-day-option { position: relative; min-width: 0; cursor: pointer; }
+  .seq-day-option input {
+    position: absolute; width: var(--btn-border-width); height: var(--btn-border-width);
+    opacity: 0; pointer-events: none;
   }
-  .seq-list-item:hover { border-color: var(--border-default); background: var(--surface-hover); }
-  .seq-list-item.is-selected {
-    border-color: var(--border-accent); background: var(--surface-selected);
+  .seq-day-option span {
+    min-height: var(--btn-height); display: flex; align-items: center; justify-content: center;
+    border: var(--btn-border-width) solid var(--border-default); border-radius: var(--radius-control);
+    background: var(--surface-primary); color: var(--text-secondary);
+    font-size: var(--text-sm); font-weight: var(--weight-semi); transition: var(--motion-hover);
   }
-  .seq-list-name {
-    color: var(--text-heading); font-size: var(--text-md);
-    font-weight: var(--weight-semi); line-height: 1.35;
+  .seq-day-option:hover span { background: var(--surface-hover); border-color: var(--border-accent); }
+  .seq-day-option input:checked + span { background: var(--surface-selected); border-color: var(--border-accent); color: var(--text-accent); }
+  .seq-day-option input:focus-visible + span { box-shadow: var(--focus-ring); }
+  .seq-rule-list { display: grid; gap: var(--space-100); }
+  .seq-rule-row {
+    min-height: calc(var(--input-height) + var(--space-200)); padding: var(--space-150);
+    display: flex; align-items: center; gap: var(--space-200);
+    border: var(--btn-border-width) solid var(--border-subtle); border-radius: var(--radius-control);
+    background: var(--surface-primary);
   }
-  .seq-list-meta {
-    margin-top: var(--space-125); display: flex; align-items: center;
-    justify-content: space-between; gap: var(--space-100);
-    color: var(--text-muted); font-size: var(--text-xs);
+  .seq-rule-copy { min-width: 0; flex: 1; display: grid; gap: var(--space-050); }
+  .seq-rule-title { color: var(--text-heading); font-size: var(--text-sm); font-weight: var(--weight-semi); }
+  .seq-rule-hint { color: var(--text-muted); font-size: var(--text-xs); line-height: 1.45; }
+  .seq-settings-note {
+    padding: var(--space-150); border-radius: var(--radius-control);
+    background: var(--surface-recessed); color: var(--text-secondary); font-size: var(--text-xs); line-height: 1.5;
   }
   .seq-editor-scroll {
     min-height: 0; flex: 1 1 auto; overflow-y: auto; display: grid; align-content: start; justify-items: center;
     width: 100%; box-sizing: border-box;
-    padding: calc(var(--space-400) + var(--space-100)) var(--space-300) var(--space-300);
+    padding: calc(var(--space-400) + var(--space-100)) var(--space-300) max(calc(var(--space-400) * 5), 38vh);
+    transition: padding-right var(--dur-base) var(--ease-standard);
   }
   .seq-flow-settings {
     width: min(100%, calc(var(--space-400) * 22)); margin-inline: auto;
@@ -91,11 +184,6 @@
   .seq-name-edit:hover { color: var(--text-accent); }
   .seq-name-edit[data-save-sequence-name] { color: var(--text-accent); }
   .seq-name-edit[data-save-sequence-name]:disabled { color: var(--text-disabled); }
-  .seq-weekdays-setting {
-    flex: 0 0 auto; display: inline-flex; align-items: center; gap: var(--space-125);
-    color: var(--text-secondary); font-size: var(--text-sm); font-weight: var(--weight-semi);
-    cursor: pointer;
-  }
   .seq-switch {
     position: relative; width: calc(var(--space-400) + var(--space-050));
     height: calc(var(--space-200) + var(--space-050)); margin: 0;
@@ -112,6 +200,215 @@
   .seq-switch:checked { border-color: var(--accent-primary); background: var(--accent-primary); }
   .seq-switch:checked::after { transform: translateX(var(--space-200)); }
   .seq-switch:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .seq-flow-lane {
+    position: relative; width: min(100%, calc(var(--input-height) * 16));
+    margin: var(--space-300) auto 0; display: grid; gap: var(--space-300);
+  }
+  .seq-flow-lane::before {
+    content: ''; position: absolute; z-index: 0; top: var(--space-200); bottom: var(--space-200);
+    left: 50%; border-left: var(--btn-border-width) solid var(--border-default);
+    transform: translateX(-50%);
+  }
+  .seq-flow-node { position: relative; z-index: 1; display: flex; justify-content: center; }
+  .seq-flow-add-node { margin-top: var(--space-400); }
+  .seq-flow-entity-wrap {
+    position: relative; width: min(100%, calc(var(--input-height) * 13));
+    display: flex; align-items: center; justify-content: center;
+  }
+  .seq-flow-entity-wrap::after {
+    content: ''; position: absolute; z-index: 0; left: 100%; top: 50%;
+    width: calc(var(--space-100) + var(--btn-height) + var(--space-100));
+    height: calc(var(--btn-height) + var(--space-200)); transform: translateY(-50%);
+  }
+  .seq-flow-entity-wrap--condition { width: fit-content; max-width: min(100%, calc(var(--input-height) * 10)); }
+  .seq-flow-entity-delete {
+    position: absolute; z-index: 1; left: calc(100% + var(--space-100)); top: 50%;
+    color: var(--status-danger); background: var(--surface-primary);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: translate(calc(var(--space-050) * -1), -50%);
+    transition: opacity var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard), visibility 0s linear var(--dur-fast);
+  }
+  .seq-flow-entity-wrap:hover .seq-flow-entity-delete,
+  .seq-flow-entity-wrap:focus-within .seq-flow-entity-delete {
+    opacity: 1; visibility: visible; pointer-events: auto; transform: translate(0, -50%); transition-delay: 0s;
+  }
+  .seq-flow-entity-delete:hover { color: var(--status-danger); background: var(--status-danger-subtle); border-color: var(--status-danger); }
+  .seq-activity-card {
+    width: 100%; padding: var(--space-300);
+    display: grid; gap: var(--space-150); border-color: var(--border-default);
+    color: inherit; font: inherit; text-align: left; cursor: pointer; transition: var(--motion-hover);
+  }
+  .seq-activity-card:hover {
+    border-color: var(--border-accent);
+    box-shadow: var(--elevation-card); transform: translateY(calc(var(--space-025) * -1));
+  }
+  .seq-activity-card.is-selected {
+    border-color: var(--border-accent);
+    box-shadow: var(--focus-ring), var(--elevation-card); transform: none;
+  }
+  .seq-activity-card:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .seq-activity-head { display: flex; align-items: center; gap: var(--space-150); }
+  .seq-activity-icon {
+    width: var(--btn-height); height: var(--btn-height); flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-control); background: var(--accent-subtle); color: var(--text-accent);
+  }
+  .seq-activity-copy { min-width: 0; flex: 1; display: grid; gap: var(--space-050); }
+  .seq-activity-type { color: var(--text-heading); font-size: var(--text-md); font-weight: var(--weight-semi); }
+  .seq-activity-summary { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); font-size: var(--text-sm); }
+  .seq-day-badge { flex: 0 0 auto; }
+  .seq-activity-detail {
+    padding-top: var(--space-150); border-top: var(--btn-border-width) solid var(--border-subtle);
+    color: var(--text-muted); font-size: var(--text-xs); line-height: 1.5;
+  }
+  .seq-activity-schedule {
+    padding-top: var(--space-150); display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-200);
+    border-top: var(--btn-border-width) solid var(--border-subtle);
+  }
+  .seq-activity-schedule-field {
+    min-width: 0; display: inline-flex; align-items: center; gap: var(--space-075);
+  }
+  .seq-activity-schedule-field + .seq-activity-schedule-field { padding-left: var(--space-200); border-left: var(--btn-border-width) solid var(--border-subtle); }
+  .seq-activity-schedule-label { color: var(--text-muted); font-size: var(--text-xs); font-weight: var(--weight-semi); }
+  .seq-activity-schedule-value {
+    min-width: 0; display: inline-flex; align-items: center; gap: var(--space-075);
+    color: var(--text-primary); font-size: var(--text-sm); font-weight: var(--weight-semi);
+  }
+  .seq-condition-card {
+    width: fit-content; max-width: min(100%, calc(var(--input-height) * 10));
+    min-height: var(--btn-height); padding: var(--space-125) var(--space-200);
+    display: inline-flex; align-items: center; gap: var(--space-100);
+    border: var(--btn-border-width) solid color-mix(in srgb, var(--status-warning) 30%, var(--border-default));
+    border-radius: var(--radius-control); background: var(--status-warning-subtle);
+    color: var(--label-amber-fg); font: inherit; font-size: var(--text-sm); font-weight: var(--weight-semi);
+    cursor: pointer; transition: var(--motion-hover);
+  }
+  .seq-condition-card:hover { border-color: var(--status-warning); box-shadow: var(--elevation-raise); }
+  .seq-condition-card.is-selected {
+    border-color: var(--border-accent); box-shadow: var(--focus-ring), var(--elevation-card);
+  }
+  .seq-condition-card:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .seq-flow-add-wrap { position: relative; width: min(100%, calc(var(--input-height) * 16)); display: grid; justify-items: center; gap: var(--space-150); }
+  .seq-flow-add-button {
+    min-width: calc(var(--input-height) * 4); box-shadow: var(--elevation-raise);
+  }
+  .seq-flow-add-menu {
+    width: min(100%, calc(var(--input-height) * 15)); padding: var(--space-300);
+    display: grid; gap: var(--space-200); border: var(--btn-border-width) solid var(--border-default);
+    border-radius: var(--radius-control); background: var(--surface-primary); box-shadow: var(--elevation-menu);
+  }
+  .seq-flow-add-menu[hidden] { display: none; }
+  .seq-flow-add-group { display: grid; gap: var(--space-100); }
+  .seq-flow-add-label { color: var(--text-muted); font-size: var(--text-xs); font-weight: var(--weight-semi); text-transform: uppercase; }
+  .seq-flow-add-options {
+    display: grid; grid-template-columns: minmax(max-content, 1fr) minmax(max-content, 1.35fr) minmax(max-content, 1fr);
+    gap: var(--space-150);
+  }
+  .seq-flow-add-option { min-height: var(--btn-height); white-space: nowrap; }
+  .seq-flow-empty {
+    width: min(100%, calc(var(--input-height) * 13)); padding: var(--space-400);
+    border: var(--btn-border-width) dashed var(--border-default); border-radius: var(--radius-control);
+    background: var(--surface-primary); color: var(--text-secondary); font-size: var(--text-sm); text-align: center;
+  }
+  .seq-flow-lane--starter::before { display: none; }
+  .seq-flow-starter {
+    width: min(100%, calc(var(--input-height) * 16)); padding: calc(var(--space-400) + var(--space-100));
+    display: grid; justify-items: center; gap: 0; text-align: center;
+  }
+  .seq-flow-starter-icon {
+    width: calc(var(--input-height) + var(--space-100)); height: calc(var(--input-height) + var(--space-100));
+    margin-bottom: var(--space-200);
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-full); background: var(--accent-subtle); color: var(--text-accent);
+  }
+  .seq-flow-starter-heading { margin-bottom: var(--space-075); }
+  .seq-flow-starter-title { margin: 0; color: var(--text-heading); font-size: var(--text-xl); font-weight: var(--weight-semi); }
+  .seq-flow-starter-copy { max-width: calc(var(--input-height) * 11); margin: 0; color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.55; }
+  .seq-flow-starter-options {
+    width: 100%; margin-top: var(--space-300); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-150);
+  }
+  .seq-flow-starter-option {
+    min-width: 0; min-height: calc(var(--input-height) * 2.5); padding: var(--space-200);
+    display: grid; justify-items: center; align-content: center; gap: var(--space-125);
+    border: var(--btn-border-width) solid var(--border-default); border-radius: var(--radius-control);
+    background: var(--surface-primary); color: inherit; font: inherit; text-align: center; cursor: pointer;
+    transition: var(--motion-hover);
+  }
+  .seq-flow-starter-option:hover { border-color: var(--border-accent); background: var(--surface-hover); box-shadow: var(--elevation-card); }
+  .seq-flow-starter-option:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .seq-flow-starter-option-icon {
+    width: var(--btn-height); height: var(--btn-height); display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-control); background: var(--accent-subtle); color: var(--text-accent);
+  }
+  .seq-flow-starter-option-title { color: var(--text-heading); font-size: var(--text-sm); font-weight: var(--weight-semi); line-height: 1.35; white-space: nowrap; }
+  .seq-flow-drawer {
+    position: absolute; z-index: 25; top: 0; right: 0; bottom: 0;
+    width: min(calc(var(--input-height) * 10), 100%); display: flex; flex-direction: column;
+    border-left: var(--btn-border-width) solid var(--border-default); background: var(--surface-primary);
+    box-shadow: var(--elevation-raise); transform: translateX(100%); visibility: hidden;
+    transition: transform var(--dur-base) var(--ease-standard), visibility 0s linear var(--dur-base);
+  }
+  .seq-flow-drawer.is-open {
+    transform: translateX(0); visibility: visible; transition-delay: 0s;
+  }
+  .seq-flow-drawer-head {
+    padding: var(--space-200); display: flex; align-items: center; gap: var(--space-150);
+    border-bottom: var(--btn-border-width) solid var(--border-subtle);
+  }
+  .seq-flow-drawer-title {
+    min-width: 0; flex: 1; display: flex; align-items: center; gap: var(--space-100);
+    color: var(--text-heading); font-size: var(--text-lg); font-weight: var(--weight-semi);
+  }
+  .seq-flow-drawer-body { min-height: 0; flex: 1 1 auto; overflow-y: auto; padding: var(--space-300); display: grid; align-content: start; gap: var(--space-300); }
+  .seq-flow-drawer-section { display: grid; gap: var(--space-200); }
+  .seq-reminder-menu-anchor { width: 100%; display: block; }
+  .seq-activity-type-menu-anchor { width: 100%; display: block; }
+  .seq-activity-type-trigger {
+    display: flex; align-items: center; gap: var(--space-100); text-align: left; cursor: pointer;
+  }
+  .seq-activity-type-trigger > [data-ds-icon] { flex: 0 0 auto; color: var(--text-accent); }
+  .seq-activity-type-trigger-label { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .seq-activity-type-menu { width: 100%; min-width: 100%; }
+  .seq-activity-type-menu .ds-menu__item.is-selected { background: var(--surface-selected); color: var(--text-accent); }
+  .seq-reminder-trigger {
+    display: flex; align-items: center; gap: var(--space-100); text-align: left; cursor: pointer;
+  }
+  .seq-reminder-trigger-label { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .seq-reminder-trigger-day { flex: 0 0 auto; color: var(--text-muted); font-size: var(--text-xs); font-weight: var(--weight-semi); }
+  .seq-reminder-menu { width: 100%; min-width: 100%; }
+  .seq-reminder-menu .ds-menu__item.is-selected { background: var(--surface-selected); color: var(--text-accent); }
+  .seq-reminder-option-check { visibility: hidden; }
+  .seq-reminder-menu .ds-menu__item.is-selected .seq-reminder-option-check { visibility: visible; color: var(--text-accent); }
+  .seq-flow-drawer-foot {
+    padding: var(--space-200); display: flex; justify-content: flex-end; gap: var(--space-100);
+    border-top: var(--btn-border-width) solid var(--border-subtle);
+  }
+  .seq-flow-drawer-foot:empty { display: none; }
+  .seq-drawer-template-preview {
+    padding: var(--space-200); display: grid; gap: var(--space-125);
+    border-radius: var(--radius-control); background: var(--surface-recessed);
+  }
+  .seq-drawer-template-subject { color: var(--text-heading); font-size: var(--text-sm); font-weight: var(--weight-semi); }
+  .seq-drawer-template-body { color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.55; }
+  @media (min-width: 72rem) {
+    .seq-editor-content.has-open-flow-drawer .seq-editor-scroll {
+      padding-right: calc(var(--space-300) + (var(--input-height) * 10));
+    }
+  }
+  @media (max-width: 54rem) {
+    .seq-editor-layout { flex-direction: column; }
+    .seq-settings-rail {
+      width: auto; padding: var(--space-100) var(--space-150); overflow-x: auto;
+      border-right: 0; border-bottom: var(--btn-border-width) solid var(--border-subtle);
+    }
+    .seq-settings-nav { flex-direction: row; }
+    .seq-settings-nav-item { width: auto; white-space: nowrap; }
+    .seq-settings-nav-item.is-active .seq-settings-nav-caret { display: none; }
+    .seq-settings-two-col { grid-template-columns: minmax(0, 1fr); }
+    .seq-day-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .seq-flow-add-options { grid-template-columns: minmax(0, 1fr); }
+    .seq-flow-starter-options { grid-template-columns: minmax(0, 1fr); }
+  }
   .seq-timeline {
     position: relative; display: grid; gap: calc(var(--space-400) + var(--space-200));
     width: min(100%, calc(var(--space-400) * 22)); margin: var(--space-300) auto 0;
@@ -124,18 +421,13 @@
     position: relative; z-index: 1; display: grid;
     grid-template-columns: var(--btn-height) minmax(0, 1fr); gap: var(--space-200);
   }
-  .seq-start-node,
   .seq-condition-node,
-  .seq-add-step-node,
-  .seq-end-node { align-items: center; }
-  .seq-start-marker,
+  .seq-add-step-node { align-items: center; }
   .seq-condition-marker,
-  .seq-add-step-marker,
-  .seq-end-marker {
+  .seq-add-step-marker {
     width: var(--space-100); height: var(--space-100); align-self: center; justify-self: center;
     border-radius: var(--radius-full);
   }
-  .seq-start-marker { background: var(--accent-primary); }
   .seq-condition-marker { background: var(--label-amber-fg); }
   .seq-add-step-marker {
     width: calc(var(--space-200) + var(--space-050));
@@ -143,7 +435,6 @@
     display: inline-flex; align-items: center; justify-content: center;
     background: var(--accent-primary); color: var(--text-on-accent); line-height: 0;
   }
-  .seq-end-marker { background: var(--status-danger); }
   .seq-condition-node .seq-delay-panel { align-self: center; }
   .seq-step-marker {
     position: relative; z-index: 1; width: var(--btn-height); height: var(--btn-height);
@@ -156,11 +447,6 @@
     margin-top: var(--space-025); background: var(--accent-subtle); color: var(--text-accent);
     box-shadow: inset 0 0 0 var(--btn-border-width) color-mix(in srgb, var(--accent-primary) 35%, var(--border-default));
   }
-  .seq-start-copy {
-    display: flex; align-items: center; gap: var(--space-125);
-    min-height: var(--btn-height); color: var(--text-secondary); font-size: var(--text-sm);
-  }
-  .seq-start-copy strong { color: var(--text-heading); font-weight: var(--weight-semi); }
   .seq-step-group { display: grid; gap: calc(var(--space-400) + var(--space-200)); }
   .seq-delay-panel {
     width: fit-content; max-width: 100%; min-height: calc(var(--input-height) + var(--space-300));
@@ -183,16 +469,7 @@
   .seq-actions-list { display: grid; gap: var(--space-200); }
   .seq-action-item { display: grid; gap: var(--space-300); }
   .seq-action-type-row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-100); }
-  .seq-action-picker {
-    height: auto; padding: 0; gap: 0; overflow: hidden; font-size: var(--text-sm);
-    border: var(--btn-border-width) solid color-mix(in srgb, var(--accent-primary) 18%, var(--border-default));
-    border-radius: var(--radius-control); background: var(--surface-primary);
-  }
-  .seq-action-picker > button {
-    height: var(--btn-height-sm); padding: 0 var(--space-150); border-radius: 0;
-  }
-  .seq-action-picker > button + button { border-left: var(--btn-border-width) solid var(--border-default); }
-  .seq-action-picker > button[aria-pressed="true"] { background: var(--accent-muted); box-shadow: none; }
+  .seq-action-type-select { width: min(100%, calc(var(--input-height) * 6)); }
   .seq-remove-action { margin-left: auto; flex: 0 0 auto; }
   .seq-add-action {
     display: flex; align-items: center;
@@ -313,10 +590,6 @@
     transform: translateY(calc(var(--space-025) * -1)); box-shadow: var(--elevation-card);
   }
   .seq-add-step-choice:active { transform: translateY(0); }
-  .seq-end-copy {
-    min-height: var(--btn-height); display: flex; align-items: center;
-    color: var(--text-heading); font-size: var(--text-sm); font-weight: var(--weight-semi);
-  }
   .seq-template-dialog[hidden] { display: none; }
   .seq-template-dialog {
     position: fixed; inset: 0; z-index: 30; display: grid; place-items: center;
@@ -366,26 +639,187 @@
 </head>
 <body data-subpage="sequences">
 <div class="app-window">
-  <div id="sidebar-mount"></div>
+  <script>
+    if (document.documentElement.dataset.sequenceMode === 'library') {
+      var sidebarMount = document.createElement('div');
+      sidebarMount.id = 'sidebar-mount';
+      document.currentScript.after(sidebarMount);
+    }
+  </script>
   <main class="main-area">
+    <header class="subpage-top seq-library-only">
+      <span class="subpage-title">Sequences</span>
+      <button class="ds-btn ds-btn--primary" type="button" id="seq-create">
+        <span data-ds-icon="plus" data-size="14"></span>
+        New sequence
+      </button>
+    </header>
+    <header class="subpage-top seq-editor-only">
+      <button class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm subpage-back" type="button" data-sequences-back aria-label="Back to sequences">
+        <span data-ds-icon="back" data-size="13"></span>
+      </button>
+      <span class="subpage-title" id="seq-editor-page-title">Sequence</span>
+      <span class="seq-editor-status">Changes are kept for this visit</span>
+      <button class="ds-btn ds-btn--primary" type="button" data-sequences-back>Done</button>
+    </header>
     <div class="subpage-body">
       <div class="seq-page">
-        <div class="seq-workspace">
-          <section class="seq-library" aria-label="Sequences">
-            <div class="seq-library-head">
-              <h1 class="seq-library-title">Your Sequences</h1>
-              <button class="ds-btn ds-btn--primary ds-btn--sm" type="button" id="seq-create">
-                <span data-ds-icon="plus" data-size="13"></span>
-                New Sequence
-              </button>
+        <section class="seq-library-view seq-library-only" aria-labelledby="seq-library-title">
+          <div class="seq-library-frame">
+            <div class="seq-library-intro">
+              <h1 class="seq-library-title" id="seq-library-title">Your sequences</h1>
+              <p class="seq-library-copy">Build reusable follow-up flows with emails, call reminders, and tasks.</p>
             </div>
             <div class="seq-list" id="seq-list"></div>
-          </section>
+          </div>
+        </section>
 
-          <section class="seq-editor" aria-label="Sequence editor">
-            <div class="seq-editor-scroll" id="seq-editor"></div>
-            <div class="seq-motion-status" id="seq-motion-status" role="status" aria-live="polite"></div>
-          </section>
+        <div class="seq-editor-layout seq-editor-only">
+          <aside class="seq-settings-rail">
+            <nav class="seq-settings-nav" aria-label="Sequence settings sections">
+              <button class="seq-settings-nav-item is-active" type="button" data-sequence-nav="flow">
+                <span data-ds-icon="paper-plane-tilt" data-size="15"></span>
+                <span class="seq-settings-nav-label">Sequence flow</span>
+                <span class="seq-settings-nav-caret" data-ds-icon="caret-right" data-size="14"></span>
+              </button>
+              <button class="seq-settings-nav-item" type="button" data-sequence-nav="details">
+                <span data-ds-icon="edit" data-size="15"></span>
+                <span class="seq-settings-nav-label">Details</span>
+                <span class="seq-settings-nav-caret" data-ds-icon="caret-right" data-size="14"></span>
+              </button>
+              <button class="seq-settings-nav-item" type="button" data-sequence-nav="schedule">
+                <span data-ds-icon="clock" data-size="15"></span>
+                <span class="seq-settings-nav-label">Sending schedule</span>
+                <span class="seq-settings-nav-caret" data-ds-icon="caret-right" data-size="14"></span>
+              </button>
+              <button class="seq-settings-nav-item" type="button" data-sequence-nav="rules">
+                <span data-ds-icon="check" data-size="15"></span>
+                <span class="seq-settings-nav-label">Exit rules</span>
+                <span class="seq-settings-nav-caret" data-ds-icon="caret-right" data-size="14"></span>
+              </button>
+            </nav>
+          </aside>
+
+          <div class="seq-editor-content">
+            <section class="seq-editor seq-editor-pane is-active" data-sequence-pane="flow" aria-label="Sequence flow">
+              <div class="seq-editor-scroll" id="seq-editor"></div>
+              <div class="seq-motion-status" id="seq-motion-status" role="status" aria-live="polite"></div>
+            </section>
+
+            <section class="seq-editor-pane" data-sequence-pane="details" aria-labelledby="seq-details-title">
+              <div class="seq-settings-scroll">
+                <div class="seq-settings-frame">
+                  <header class="seq-settings-heading">
+                    <h2 class="seq-settings-title" id="seq-details-title">Details</h2>
+                    <p class="seq-settings-copy">Name the sequence and explain when the team should use it.</p>
+                  </header>
+                  <div class="ds-card seq-settings-card">
+                    <div class="seq-settings-fields">
+                      <label class="ds-field">
+                        <span class="ds-field-label">Sequence name</span>
+                        <input class="ds-input" id="seq-details-name" maxlength="80">
+                      </label>
+                      <label class="ds-field">
+                        <span class="ds-field-label">Description</span>
+                        <textarea class="ds-input" id="seq-details-description" maxlength="240" placeholder="Describe the purpose of this sequence"></textarea>
+                        <span class="ds-field-hint">Shown on the sequence library card.</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="seq-editor-pane" data-sequence-pane="schedule" aria-labelledby="seq-schedule-title">
+              <div class="seq-settings-scroll">
+                <div class="seq-settings-frame">
+                  <header class="seq-settings-heading">
+                    <h2 class="seq-settings-title" id="seq-schedule-title">Sending schedule</h2>
+                    <p class="seq-settings-copy">Choose the days and local-time window when queued sequence actions may run.</p>
+                  </header>
+                  <div class="ds-card seq-settings-card">
+                    <div class="seq-settings-card-title">Active days</div>
+                    <div class="seq-day-grid" role="group" aria-label="Days this sequence is active">
+                      <label class="seq-day-option"><input type="checkbox" value="mon" data-sequence-day><span>Mon</span></label>
+                      <label class="seq-day-option"><input type="checkbox" value="tue" data-sequence-day><span>Tue</span></label>
+                      <label class="seq-day-option"><input type="checkbox" value="wed" data-sequence-day><span>Wed</span></label>
+                      <label class="seq-day-option"><input type="checkbox" value="thu" data-sequence-day><span>Thu</span></label>
+                      <label class="seq-day-option"><input type="checkbox" value="fri" data-sequence-day><span>Fri</span></label>
+                      <label class="seq-day-option"><input type="checkbox" value="sat" data-sequence-day><span>Sat</span></label>
+                      <label class="seq-day-option"><input type="checkbox" value="sun" data-sequence-day><span>Sun</span></label>
+                    </div>
+                    <div class="ds-field-error" id="seq-days-error" hidden>Select at least one active day.</div>
+                  </div>
+                  <div class="ds-card seq-settings-card">
+                    <div class="seq-settings-card-title">Sending window</div>
+                    <div class="seq-settings-two-col">
+                      <label class="ds-field">
+                        <span class="ds-field-label">Start time</span>
+                        <input class="ds-input" id="seq-schedule-start" type="time">
+                      </label>
+                      <label class="ds-field">
+                        <span class="ds-field-label">End time</span>
+                        <input class="ds-input" id="seq-schedule-end" type="time">
+                      </label>
+                    </div>
+                    <label class="ds-field">
+                      <span class="ds-field-label">Time zone</span>
+                      <select class="ds-input" id="seq-schedule-timezone">
+                        <option value="contact">Contact’s local time</option>
+                        <option value="account">Account time zone</option>
+                        <option value="UTC">UTC</option>
+                        <option value="America/New_York">Eastern Time</option>
+                        <option value="Europe/London">London</option>
+                        <option value="Asia/Kolkata">India Standard Time</option>
+                      </select>
+                      <span class="ds-field-hint">Day-based waits resume inside this window.</span>
+                    </label>
+                    <div class="ds-field-error" id="seq-window-error" hidden>End time must be later than start time.</div>
+                    <div class="seq-settings-note">Scheduling is configuration-only in this prototype; no sender or scheduler executes it yet.</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="seq-editor-pane" data-sequence-pane="rules" aria-labelledby="seq-rules-title">
+              <div class="seq-settings-scroll">
+                <div class="seq-settings-frame">
+                  <header class="seq-settings-heading">
+                    <h2 class="seq-settings-title" id="seq-rules-title">Exit rules</h2>
+                    <p class="seq-settings-copy">Control when a contact leaves the sequence and whether they may enter it again.</p>
+                  </header>
+                  <div class="ds-card seq-settings-card">
+                    <div class="seq-rule-list">
+                      <label class="seq-rule-row">
+                        <span class="seq-rule-copy"><span class="seq-rule-title">Stop when the contact replies</span><span class="seq-rule-hint">Cancel all remaining actions after an email reply.</span></span>
+                        <input class="seq-switch" type="checkbox" role="switch" id="seq-rule-reply">
+                      </label>
+                      <label class="seq-rule-row">
+                        <span class="seq-rule-copy"><span class="seq-rule-title">Stop after a hard bounce</span><span class="seq-rule-hint">Do not queue more email actions for an unreachable address.</span></span>
+                        <input class="seq-switch" type="checkbox" role="switch" id="seq-rule-bounce">
+                      </label>
+                      <label class="seq-rule-row">
+                        <span class="seq-rule-copy"><span class="seq-rule-title">Allow re-enrollment</span><span class="seq-rule-hint">Let a contact enter this sequence again after completing or exiting it.</span></span>
+                        <input class="seq-switch" type="checkbox" role="switch" id="seq-rule-reentry">
+                      </label>
+                    </div>
+                    <div class="seq-settings-note">These rules are stored with the in-memory draft; execution remains intentionally unconnected.</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <aside class="seq-flow-drawer" id="seq-flow-drawer" aria-hidden="true" aria-labelledby="seq-flow-drawer-title" inert>
+              <header class="seq-flow-drawer-head">
+                <h2 class="seq-flow-drawer-title" id="seq-flow-drawer-title"><span id="seq-flow-drawer-title-label">Activity settings</span><span class="ds-badge ds-badge--pill ds-badge--accent" id="seq-flow-drawer-day" hidden></span></h2>
+                <button class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm" type="button" data-close-flow-drawer aria-label="Close settings">
+                  <span data-ds-icon="x" data-size="14"></span>
+                </button>
+              </header>
+              <div class="seq-flow-drawer-body" id="seq-flow-drawer-body"></div>
+              <footer class="seq-flow-drawer-foot" id="seq-flow-drawer-foot"></footer>
+            </aside>
+          </div>
         </div>
       </div>
     </div>
@@ -408,8 +842,15 @@
 </div>
 
 <script src="/design-system/components/icon.js"></script>
+<script src="/design-system/components/menu.js"></script>
 <script src="/titan-sequences.js"></script>
-<script src="/titan-sidebar.js"></script>
+<script>
+  if (document.documentElement.dataset.sequenceMode === 'library') {
+    var sidebarScript = document.createElement('script');
+    sidebarScript.src = '/titan-sidebar.js';
+    document.head.appendChild(sidebarScript);
+  }
+</script>
 <script>
   const sequenceDrafts = window.titanSequenceLibrary.clone(window.titanSequenceLibrary.sequences);
   const templates = window.titanSequenceLibrary.templates;
@@ -421,14 +862,30 @@
     { value: '3-days', label: 'In three days' },
     { value: 'custom-days', label: 'Custom' },
   ];
+  const ACTIVITY_OPTIONS = [
+    { value: 'email', label: 'Send an email', icon: 'envelope' },
+    { value: 'call', label: 'Set a call reminder', icon: 'phone' },
+    { value: 'task', label: 'Create a task', icon: 'clipboard-text' },
+  ];
   const DAY_REMINDER_OPTIONS = ['next-day', '2-days', '3-days', 'custom-days'];
-  let selectedId = decodeURIComponent((location.hash || '').replace(/^#/, '')) ||
-    new URLSearchParams(location.search).get('sequence') || (sequenceDrafts[0] && sequenceDrafts[0].id);
+  const SEQUENCE_PANES = ['flow', 'details', 'schedule', 'rules'];
+  const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri'];
+  const ALL_DAYS = WEEKDAYS.concat(['sat', 'sun']);
+  const sequenceMode = document.documentElement.dataset.sequenceMode;
+  const sequencePathParts = location.pathname.replace(/^\/+|\/+$/g, '').split('/');
+  const routeSequenceId = sequenceMode === 'editor' ? decodeURIComponent(sequencePathParts[2]) : '';
+  const sequenceHash = decodeURIComponent((location.hash || '').replace(/^#/, ''));
+  const legacySequenceId = (sequenceHash && !SEQUENCE_PANES.includes(sequenceHash) ? sequenceHash : '') ||
+    new URLSearchParams(location.search).get('sequence') || '';
+  let selectedId = routeSequenceId;
+  let activeSequencePane = SEQUENCE_PANES.includes(sequenceHash) ? sequenceHash : 'flow';
   let stepSequence = 100;
   let templateDialogTrigger = null;
   let editingSequenceId = null;
   let sequenceNameDraft = '';
   let timelineMotionBusy = false;
+  let flowDrawerSelection = null;
+  let flowDrawerTrigger = null;
   const expandedTemplatePreviews = new Set();
 
   function esc(value) {
@@ -441,26 +898,79 @@
     return sequenceDrafts.find(function (sequence) { return sequence.id === selectedId; }) || null;
   }
 
-  function writeSelection(id) {
-    selectedId = id;
-    editingSequenceId = null;
-    sequenceNameDraft = '';
+  function ensureSequenceSettings(sequence) {
+    if (!sequence) return null;
+    if (!sequence.schedule || typeof sequence.schedule !== 'object') {
+      sequence.schedule = {
+        activeDays: sequence.weekdaysOnly === false ? ALL_DAYS.slice() : WEEKDAYS.slice(),
+        startTime: '09:00',
+        endTime: '17:00',
+        timezone: 'contact',
+      };
+    }
+    sequence.schedule.activeDays = Array.isArray(sequence.schedule.activeDays)
+      ? sequence.schedule.activeDays.filter(function (day) { return ALL_DAYS.includes(day); })
+      : WEEKDAYS.slice();
+    sequence.schedule.startTime = sequence.schedule.startTime || '09:00';
+    sequence.schedule.endTime = sequence.schedule.endTime || '17:00';
+    sequence.schedule.timezone = sequence.schedule.timezone || 'contact';
+    if (!sequence.exitRules || typeof sequence.exitRules !== 'object') {
+      sequence.exitRules = { stopOnReply: true, stopOnBounce: true, allowReentry: false };
+    }
+    if (typeof sequence.exitRules.stopOnReply !== 'boolean') sequence.exitRules.stopOnReply = true;
+    if (typeof sequence.exitRules.stopOnBounce !== 'boolean') sequence.exitRules.stopOnBounce = true;
+    if (typeof sequence.exitRules.allowReentry !== 'boolean') sequence.exitRules.allowReentry = false;
+    return sequence;
+  }
+
+  function showSequencePane(name, updateUrl) {
+    if (!SEQUENCE_PANES.includes(name)) name = 'flow';
+    if (name !== 'flow' && flowDrawerSelection) closeFlowDrawer();
+    activeSequencePane = name;
+    document.querySelectorAll('[data-sequence-nav]').forEach(function (item) {
+      const active = item.dataset.sequenceNav === name;
+      item.classList.toggle('is-active', active);
+      if (active) item.setAttribute('aria-current', 'page');
+      else item.removeAttribute('aria-current');
+    });
+    document.querySelectorAll('[data-sequence-pane]').forEach(function (pane) {
+      pane.classList.toggle('is-active', pane.dataset.sequencePane === name);
+    });
+    if (name === 'flow') renderEditor();
+    else renderSequenceSettings();
+    if (updateUrl !== false) {
+      history.replaceState(null, '', location.pathname + location.search + '#' + name);
+    }
+  }
+
+  function sequencesUrl() {
     const params = new URLSearchParams(location.search);
     params.delete('sequence');
-    history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params.toString() : '') + '#' + encodeURIComponent(id));
+    return '/crm/sequences' + (params.toString() ? '?' + params.toString() : '');
+  }
+
+  function sequenceUrl(id) {
+    const params = new URLSearchParams(location.search);
+    params.delete('sequence');
+    return '/crm/sequences/' + encodeURIComponent(id) + (params.toString() ? '?' + params.toString() : '');
+  }
+
+  function goToSequence(id) {
+    location.href = sequenceUrl(id);
   }
 
   function renderLibrary() {
     const list = document.getElementById('seq-list');
     list.innerHTML = sequenceDrafts.map(function (sequence) {
-      const active = sequence.id === selectedId;
-      const stepCount = sequence.steps.length;
+      const activityCount = sequence.steps.reduce(function (count, group) { return count + group.actions.length; }, 0);
       const activeInstances = Math.max(0, Number(sequence.activeInstances) || 0);
-      return '<button class="seq-list-item' + (active ? ' is-selected' : '') + '" type="button" data-sequence-id="' + esc(sequence.id) + '" aria-pressed="' + active + '">' +
-        '<div class="seq-list-name">' + esc(sequence.name || 'Untitled sequence') + '</div>' +
-        '<div class="seq-list-meta"><span>' + stepCount + (stepCount === 1 ? ' step' : ' steps') + '</span>' +
+      return '<a class="ds-card seq-list-item" href="' + esc(sequenceUrl(sequence.id)) + '" data-sequence-id="' + esc(sequence.id) + '">' +
+        '<div class="seq-list-head"><span class="seq-list-icon" aria-hidden="true"><span data-ds-icon="paper-plane-tilt" data-size="17"></span></span>' +
+        '<div class="seq-list-name">' + esc(sequence.name || 'Untitled sequence') + '</div></div>' +
+        '<div class="seq-list-description">' + esc(sequence.description || 'A reusable follow-up sequence.') + '</div>' +
+        '<div class="seq-list-meta"><span>' + activityCount + (activityCount === 1 ? ' activity' : ' activities') + '</span>' +
         '<span>' + activeInstances + ' active ' + (activeInstances === 1 ? 'instance' : 'instances') + '</span></div>' +
-      '</button>';
+      '</a>';
     }).join('');
   }
 
@@ -544,76 +1054,419 @@
       '</div>';
   }
 
-  function renderAction(action, stepIndex, actionIndex) {
-    return '<div class="ds-card seq-action-panel seq-action-item">' +
-      '<div class="seq-action-type-row">' +
-        '<div class="ds-segmented seq-action-picker" role="group" aria-label="Action ' + (actionIndex + 1) + ' in action box ' + (stepIndex + 1) + '">' +
-          '<button type="button" data-set-action="email" data-step-index="' + stepIndex + '" data-action-index="' + actionIndex + '" aria-pressed="' + (action.action === 'email') + '"><span data-ds-icon="envelope" data-size="14"></span>Send an email</button>' +
-          '<button type="button" data-set-action="call" data-step-index="' + stepIndex + '" data-action-index="' + actionIndex + '" aria-pressed="' + (action.action === 'call') + '"><span data-ds-icon="phone" data-size="14"></span>Set a call reminder</button>' +
-          '<button type="button" data-set-action="task" data-step-index="' + stepIndex + '" data-action-index="' + actionIndex + '" aria-pressed="' + (action.action === 'task') + '"><span data-ds-icon="clipboard-text" data-size="14"></span>Create a task</button>' +
-        '</div>' +
-        '<button class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm seq-remove-action" type="button" data-remove-action="' + actionIndex + '" data-step-index="' + stepIndex + '" title="Remove action"><span data-ds-icon="trash" data-size="14"></span></button>' +
+  function reminderDayOffset(reminderOffset, reminderDays) {
+    if (reminderOffset === 'custom-days') return Math.max(1, Number(reminderDays) || 4);
+    return { 'next-day': 1, '2-days': 2, '3-days': 3 }[reminderOffset] || 0;
+  }
+
+  function reminderSchedule(action, activityDay) {
+    const reminderOffset = action.reminderOffset || 'next-day';
+    const isDayReminder = DAY_REMINDER_OPTIONS.includes(reminderOffset);
+    const dayOffset = reminderDayOffset(reminderOffset, action.reminderDays);
+    return {
+      day: 'Day ' + (activityDay + dayOffset),
+      timing: isDayReminder ? (action.reminderTime || '09:00') :
+        (reminderOffset === '1-hour' ? 'In 1 hour' : 'Immediately'),
+      timingIcon: isDayReminder ? 'clock' : 'scheduled',
+    };
+  }
+
+  function activityPresentation(action, activityDay) {
+    if (action.action === 'email') {
+      const template = templates.find(function (item) { return item.id === action.templateId; }) || templates[0];
+      return {
+        icon: 'envelope', label: 'Send an email',
+        summary: template ? template.name : 'Choose an email template',
+        detail: template ? 'Subject: ' + template.subject : 'No template selected',
+      };
+    }
+    const isCall = action.action === 'call';
+    return {
+      icon: isCall ? 'phone' : 'clipboard-text',
+      label: isCall ? 'Set a call reminder' : 'Create a task',
+      summary: action.title || (isCall ? 'Follow-up call' : 'Follow up on this record'),
+      schedule: typeof activityDay === 'number' ? reminderSchedule(action, activityDay) : null,
+    };
+  }
+
+  function normalizeActivityGroups(sequence) {
+    const normalized = [];
+    sequence.steps.forEach(function (group) {
+      if (group.actions.length <= 1) {
+        normalized.push(group);
+        return;
+      }
+      group.actions.forEach(function (action, actionIndex) {
+        normalized.push({
+          id: actionIndex === 0 ? group.id : group.id + '-' + action.id,
+          timing: actionIndex === 0 ? group.timing : 'immediate',
+          days: actionIndex === 0 ? group.days : 0,
+          actions: [action],
+        });
+      });
+    });
+    sequence.steps = normalized;
+  }
+
+  function removeFlowActivity(sequence, groupIndex, actionIndex) {
+    const group = sequence && sequence.steps[groupIndex];
+    if (!group || !group.actions[actionIndex]) return false;
+    group.actions.splice(actionIndex, 1);
+    const trailingGroup = groupIndex === sequence.steps.length - 1;
+    if (!group.actions.length && (!trailingGroup || groupIndex === 0 || group.timing === 'immediate')) {
+      sequence.steps.splice(groupIndex, 1);
+    }
+    if (sequence.steps[0]) {
+      sequence.steps[0].timing = 'immediate';
+      sequence.steps[0].days = 0;
+    }
+    return true;
+  }
+
+  function removeFlowDelay(sequence, groupIndex) {
+    const group = sequence && sequence.steps[groupIndex];
+    if (!group || group.timing === 'immediate') return false;
+    if (group.actions.length) {
+      group.timing = 'immediate';
+      group.days = 0;
+    } else {
+      sequence.steps.splice(groupIndex, 1);
+    }
+    return true;
+  }
+
+  function conditionText(group) {
+    const days = Math.max(1, Number(group.days) || 1);
+    if (group.timing === 'no-reply') return 'Wait ' + days + (days === 1 ? ' day' : ' days') + ' · Continue if there is no reply';
+    if (group.timing === 'after') return 'Wait ' + days + (days === 1 ? ' day' : ' days');
+    return '';
+  }
+
+  function activityDayForGroup(sequence, targetGroupIndex) {
+    let day = 1;
+    let activityCount = 0;
+    for (let groupIndex = 0; groupIndex < sequence.steps.length; groupIndex += 1) {
+      const group = sequence.steps[groupIndex];
+      if (activityCount > 0 && group.timing !== 'immediate') {
+        day += Math.max(1, Number(group.days) || 1);
+      }
+      if (groupIndex === targetGroupIndex) return day;
+      activityCount += group.actions.length;
+    }
+    return day;
+  }
+
+  function isFlowEntitySelected(kind, groupIndex, actionIndex) {
+    if (!flowDrawerSelection || flowDrawerSelection.kind !== kind || flowDrawerSelection.groupIndex !== groupIndex) return false;
+    return kind === 'delay' || flowDrawerSelection.actionIndex === actionIndex;
+  }
+
+  function updateFlowSelectionState() {
+    document.querySelectorAll('[data-edit-activity], [data-edit-delay]').forEach(function (item) {
+      const kind = item.hasAttribute('data-edit-delay') ? 'delay' : 'activity';
+      const selected = isFlowEntitySelected(kind, Number(item.dataset.stepIndex), Number(item.dataset.actionIndex));
+      item.classList.toggle('is-selected', selected);
+      item.setAttribute('aria-pressed', String(selected));
+    });
+  }
+
+  function renderActivity(action, groupIndex, actionIndex, day) {
+    const presentation = activityPresentation(action, day);
+    const selected = isFlowEntitySelected('activity', groupIndex, actionIndex);
+    const detail = presentation.schedule
+      ? '<div class="seq-activity-schedule" aria-label="Reminder set for ' + esc(presentation.schedule.day + ' at ' + presentation.schedule.timing) + '">' +
+          '<span class="seq-activity-schedule-field"><span class="seq-activity-schedule-label">Reminder day</span><span class="seq-activity-schedule-value"><span data-ds-icon="calendar" data-size="14"></span>' + esc(presentation.schedule.day) + '</span></span>' +
+          '<span class="seq-activity-schedule-field"><span class="seq-activity-schedule-label">Time</span><span class="seq-activity-schedule-value"><span data-ds-icon="' + presentation.schedule.timingIcon + '" data-size="14"></span>' + esc(presentation.schedule.timing) + '</span></span>' +
+        '</div>'
+      : '<div class="seq-activity-detail">' + esc(presentation.detail) + '</div>';
+    return '<div class="seq-flow-node" data-timeline-key="activity-' + esc(action.id) + '">' +
+      '<div class="seq-flow-entity-wrap">' +
+        '<button class="ds-card seq-activity-card' + (selected ? ' is-selected' : '') + '" type="button" data-edit-activity data-step-index="' + groupIndex + '" data-action-index="' + actionIndex + '" aria-pressed="' + selected + '">' +
+          '<div class="seq-activity-head">' +
+            '<span class="seq-activity-icon" aria-hidden="true"><span data-ds-icon="' + presentation.icon + '" data-size="17"></span></span>' +
+            '<span class="seq-activity-copy"><span class="seq-activity-type">' + esc(presentation.label) + '</span>' + (presentation.summary ? '<span class="seq-activity-summary">' + esc(presentation.summary) + '</span>' : '') + '</span>' +
+            '<span class="ds-badge ds-badge--pill seq-day-badge">Day ' + day + '</span>' +
+          '</div>' +
+          detail +
+        '</button>' +
+        '<button class="ds-btn ds-btn--secondary ds-btn--icon seq-flow-entity-delete" type="button" data-delete-flow-activity data-step-index="' + groupIndex + '" data-action-index="' + actionIndex + '" aria-label="Delete activity"><span data-ds-icon="trash" data-size="14"></span></button>' +
       '</div>' +
-      '<div class="seq-control-grid">' + actionControls(action, stepIndex, actionIndex) + '</div>' +
     '</div>';
   }
 
-  function renderStep(step, index, total) {
-    const addActionLabel = step.actions.length ? 'Add another action' : 'Add action';
-    const addActionButton = '<button class="ds-btn ds-btn--secondary ds-btn--sm" type="button" data-add-action-to-step="' + index + '"><span data-ds-icon="plus" data-size="13"></span>' + addActionLabel + '</button>';
-    const actionContent = step.actions.length ?
-      '<div class="seq-actions-list">' + step.actions.map(function (action, actionIndex) { return renderAction(action, index, actionIndex); }).join('') + '</div>' +
-      '<div class="seq-add-action">' + addActionButton + '</div>' :
-      '<div class="seq-action-empty"><span class="seq-action-empty-copy">No actions yet</span><div class="seq-add-action">' + addActionButton + '</div>' +
-        (total > 1 ? '<button class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm seq-remove-point" type="button" data-remove-step="' + index + '" title="Remove empty point"><span data-ds-icon="trash" data-size="14"></span></button>' : '') + '</div>';
-    return '<article class="seq-step-group" data-timeline-key="step-' + esc(step.id) + '">' +
-      delayControls(step, index) +
-      '<div class="seq-timeline-node">' +
-        '<div class="seq-step-marker" aria-hidden="true">' + (index + 1) + '</div>' +
-        '<div class="seq-action-group">' + actionContent + '</div>' +
+  function renderSequenceStarter() {
+    return '<div class="seq-flow-lane seq-flow-lane--starter">' +
+      '<div class="seq-flow-node" data-timeline-key="starter">' +
+        '<section class="ds-card seq-flow-starter" aria-labelledby="seq-flow-starter-title">' +
+          '<span class="seq-flow-starter-icon" aria-hidden="true"><span data-ds-icon="paper-plane-tilt" data-size="22"></span></span>' +
+          '<div class="seq-flow-starter-heading"><h2 class="seq-flow-starter-title" id="seq-flow-starter-title">Starting point</h2></div>' +
+          '<p class="seq-flow-starter-copy">Choose an activity to begin your sequence.</p>' +
+          '<div class="seq-flow-starter-options">' +
+            ACTIVITY_OPTIONS.map(function (option) {
+              return '<button class="seq-flow-starter-option" type="button" data-add-flow-activity="' + option.value + '">' +
+                '<span class="seq-flow-starter-option-icon" aria-hidden="true"><span data-ds-icon="' + option.icon + '" data-size="16"></span></span>' +
+                '<span class="seq-flow-starter-option-title">' + esc(option.label) + '</span>' +
+              '</button>';
+            }).join('') +
+          '</div>' +
+        '</section>' +
       '</div>' +
-    '</article>';
+    '</div>';
   }
 
   function renderEditor() {
     const host = document.getElementById('seq-editor');
     const sequence = selectedSequence();
     if (!sequence) {
-      host.innerHTML = '<div class="seq-empty">Select a sequence to see its steps.</div>';
+      document.title = 'Sequence not found — Titan CRM';
+      document.getElementById('seq-editor-page-title').textContent = 'Sequence not found';
+      host.innerHTML = '<div class="seq-empty"><div><strong>Sequence not found</strong><br>Return to the sequence library and choose an existing sequence.</div></div>';
       return;
     }
-    const weekdaysOnly = sequence.weekdaysOnly !== false;
-    const editingName = editingSequenceId === sequence.id;
-    host.innerHTML = '<div class="seq-flow-settings">' +
-        '<div class="seq-flow-heading">' +
-          (editingName ?
-            '<input class="ds-input seq-name-input" type="text" data-sequence-name-input maxlength="80" value="' + esc(sequenceNameDraft) + '" aria-label="Sequence name">' +
-            '<button class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm seq-name-edit" type="button" data-save-sequence-name aria-label="Save sequence name"' + (sequenceNameDraft.trim() ? '' : ' disabled') + '><span data-ds-icon="check" data-size="14"></span></button>' :
-            '<h2 class="seq-flow-title">' + esc(sequence.name || 'Untitled sequence') + '</h2>' +
-            '<button class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm seq-name-edit" type="button" data-edit-sequence-name aria-label="Edit sequence name"><span data-ds-icon="edit" data-size="14"></span></button>') +
-        '</div>' +
-        '<label class="seq-weekdays-setting" title="Skip Saturday and Sunday">' +
-          '<span>Weekdays only</span>' +
-          '<input class="seq-switch" type="checkbox" role="switch" data-weekdays-only aria-label="Run this sequence on weekdays only"' + (weekdaysOnly ? ' checked' : '') + '>' +
-        '</label>' +
-      '</div>' +
-      '<div class="seq-timeline">' +
-        '<div class="seq-timeline-node seq-start-node" data-timeline-key="start"><span class="seq-start-marker" aria-hidden="true"></span><div class="seq-start-copy"><strong>Start of sequence</strong></div></div>' +
-        sequence.steps.map(function (step, index) { return renderStep(step, index, sequence.steps.length); }).join('') +
-        '<div class="seq-timeline-node seq-add-step-node" data-timeline-key="add-step"><span class="seq-add-step-marker" aria-hidden="true"><span data-ds-icon="plus" data-size="12"></span></span>' +
-          '<div class="seq-add-step"><div class="seq-add-step-title">Add another step</div><div class="seq-add-step-actions">' +
-            '<button class="ds-btn ds-btn--secondary seq-add-step-choice" type="button" data-add-action-box="email"><span data-ds-icon="envelope" data-size="14"></span>Send an email</button>' +
-            '<button class="ds-btn ds-btn--secondary seq-add-step-choice" type="button" data-add-action-box="call"><span data-ds-icon="phone" data-size="14"></span>Set a call reminder</button>' +
-            '<button class="ds-btn ds-btn--secondary seq-add-step-choice" type="button" data-add-action-box="task"><span data-ds-icon="clipboard-text" data-size="14"></span>Create a task</button>' +
-          '</div></div>' +
-        '</div>' +
-        '<div class="seq-timeline-node seq-end-node" data-timeline-key="end"><span class="seq-end-marker" aria-hidden="true"></span><div class="seq-end-copy">End of sequence</div></div>' +
+    document.title = (sequence.name || 'Untitled sequence') + ' — Titan CRM';
+    document.getElementById('seq-editor-page-title').textContent = sequence.name || 'Untitled sequence';
+    normalizeActivityGroups(sequence);
+    if (sequence.steps[0]) {
+      sequence.steps[0].timing = 'immediate';
+      sequence.steps[0].days = 0;
+    }
+    let day = 1;
+    let activityCount = 0;
+    const flowNodes = [];
+    sequence.steps.forEach(function (group, groupIndex) {
+      const followsActivity = activityCount > 0;
+      if (followsActivity && group.timing !== 'immediate') {
+        day += Math.max(1, Number(group.days) || 1);
+        const selected = isFlowEntitySelected('delay', groupIndex);
+        flowNodes.push('<div class="seq-flow-node" data-timeline-key="condition-' + esc(group.id) + '">' +
+          '<div class="seq-flow-entity-wrap seq-flow-entity-wrap--condition">' +
+            '<button class="seq-condition-card' + (selected ? ' is-selected' : '') + '" type="button" data-edit-delay data-step-index="' + groupIndex + '" aria-pressed="' + selected + '">' +
+              '<span data-ds-icon="clock" data-size="14"></span><span>' + esc(conditionText(group)) + '</span>' +
+            '</button>' +
+            '<button class="ds-btn ds-btn--secondary ds-btn--icon seq-flow-entity-delete" type="button" data-delete-flow-delay data-step-index="' + groupIndex + '" aria-label="Delete delay"><span data-ds-icon="trash" data-size="14"></span></button>' +
+          '</div>' +
+        '</div>');
+      }
+      group.actions.forEach(function (action, actionIndex) {
+        flowNodes.push(renderActivity(action, groupIndex, actionIndex, day));
+        activityCount += 1;
+      });
+    });
+    if (!activityCount) {
+      host.innerHTML = renderSequenceStarter();
+      return;
+    }
+    const trailingGroup = sequence.steps[sequence.steps.length - 1];
+    const hasPendingDelay = !!trailingGroup && trailingGroup.actions.length === 0 && activityCount > 0;
+    host.innerHTML = '<div class="seq-flow-lane">' +
+        (flowNodes.length ? flowNodes.join('') : '<div class="seq-flow-node"><div class="seq-flow-empty">This sequence has no activities yet. Add the first one below.</div></div>') +
+        '<div class="seq-flow-node seq-flow-add-node" data-timeline-key="add-flow"><div class="seq-flow-add-wrap">' +
+          '<button class="ds-btn ds-btn--primary seq-flow-add-button" type="button" data-toggle-flow-add aria-expanded="false"><span data-ds-icon="plus" data-size="14"></span>Add to sequence</button>' +
+          '<div class="seq-flow-add-menu" id="seq-flow-add-menu" hidden>' +
+            (!activityCount || hasPendingDelay ? '' : '<div class="seq-flow-add-group"><div class="seq-flow-add-label">Timing</div><button class="ds-btn ds-btn--secondary seq-flow-add-option" type="button" data-add-flow-delay><span data-ds-icon="clock" data-size="15"></span>Add a delay</button></div>') +
+            '<div class="seq-flow-add-group"><div class="seq-flow-add-label">' + (hasPendingDelay ? 'Activity after this delay' : 'Activity') + '</div><div class="seq-flow-add-options">' +
+              '<button class="ds-btn ds-btn--secondary seq-flow-add-option" type="button" data-add-flow-activity="email"><span data-ds-icon="envelope" data-size="15"></span>Send an email</button>' +
+              '<button class="ds-btn ds-btn--secondary seq-flow-add-option" type="button" data-add-flow-activity="call"><span data-ds-icon="phone" data-size="15"></span>Set a call reminder</button>' +
+              '<button class="ds-btn ds-btn--secondary seq-flow-add-option" type="button" data-add-flow-activity="task"><span data-ds-icon="clipboard-text" data-size="15"></span>Create a task</button>' +
+            '</div></div>' +
+          '</div>' +
+        '</div></div>' +
       '</div>';
   }
 
+  function bringFlowAddMenuIntoSafeArea(menu) {
+    requestAnimationFrame(function () {
+      const scroller = menu.closest('.seq-editor-scroll');
+      if (!scroller || menu.hidden) return;
+      const scrollerRect = scroller.getBoundingClientRect();
+      const menuRect = menu.getBoundingClientRect();
+      const safeTop = scrollerRect.top + (scroller.clientHeight * 0.18);
+      const safeBottom = scrollerRect.top + (scroller.clientHeight * 0.8);
+      if (menuRect.top >= safeTop && menuRect.bottom <= safeBottom) return;
+      const targetTop = scrollerRect.top + (scroller.clientHeight * 0.28);
+      scroller.scrollTo({
+        top: scroller.scrollTop + menuRect.top - targetTop,
+        behavior: 'smooth'
+      });
+    });
+  }
+
+  function openFlowDrawer(kind, groupIndex, actionIndex) {
+    flowDrawerTrigger = document.activeElement;
+    flowDrawerSelection = { kind: kind, groupIndex: groupIndex, actionIndex: actionIndex };
+    const addMenu = document.getElementById('seq-flow-add-menu');
+    const addButton = document.querySelector('[data-toggle-flow-add]');
+    if (addMenu) addMenu.hidden = true;
+    if (addButton) addButton.setAttribute('aria-expanded', 'false');
+    renderFlowDrawer();
+    const drawer = document.getElementById('seq-flow-drawer');
+    drawer.closest('.seq-editor-content').classList.add('has-open-flow-drawer');
+    drawer.classList.add('is-open');
+    drawer.setAttribute('aria-hidden', 'false');
+    drawer.inert = false;
+    updateFlowSelectionState();
+    window.requestAnimationFrame(function () {
+      const focusTarget = drawer.querySelector('.seq-flow-drawer-body select, .seq-flow-drawer-body input') ||
+        drawer.querySelector('button');
+      if (focusTarget) focusTarget.focus({ preventScroll: true });
+    });
+  }
+
+  function closeFlowDrawer() {
+    const drawer = document.getElementById('seq-flow-drawer');
+    drawer.closest('.seq-editor-content').classList.remove('has-open-flow-drawer');
+    drawer.classList.remove('is-open');
+    drawer.setAttribute('aria-hidden', 'true');
+    drawer.inert = true;
+    flowDrawerSelection = null;
+    updateFlowSelectionState();
+    if (flowDrawerTrigger && flowDrawerTrigger.isConnected) flowDrawerTrigger.focus({ preventScroll: true });
+    flowDrawerTrigger = null;
+  }
+
+  function renderReminderPicker(action, activityDay) {
+    const reminderOffset = action.reminderOffset || 'next-day';
+    const selectedOption = REMINDER_OPTIONS.find(function (option) { return option.value === reminderOffset; }) || REMINDER_OPTIONS[2];
+    const selectedDay = 'Day ' + (activityDay + reminderDayOffset(reminderOffset, action.reminderDays));
+    return '<div class="ds-field"><span class="ds-field-label">Remind me</span>' +
+      '<div class="ds-menu-anchor seq-reminder-menu-anchor">' +
+        '<button class="ds-input seq-reminder-trigger" type="button" data-ds-menu="seq-reminder-menu" aria-haspopup="menu" aria-expanded="false">' +
+          '<span class="seq-reminder-trigger-label">' + esc(selectedOption.label) + '</span>' +
+          '<span class="seq-reminder-trigger-day" data-current-reminder-day>' + selectedDay + '</span>' +
+          '<span class="ds-menu-caret" data-ds-icon="caret-down" data-size="13"></span>' +
+        '</button>' +
+        '<div class="ds-menu ds-menu--below seq-reminder-menu" id="seq-reminder-menu" role="menu" aria-label="Reminder timing">' +
+          REMINDER_OPTIONS.map(function (option) {
+            const optionDay = 'Day ' + (activityDay + reminderDayOffset(option.value, action.reminderDays));
+            const selected = option.value === reminderOffset;
+            const showOptionDay = option.value !== 'custom-days' || selected;
+            return '<button class="ds-menu__item' + (selected ? ' is-selected' : '') + '" type="button" role="menuitemradio" aria-checked="' + selected + '" data-select-drawer-reminder="' + option.value + '">' +
+              '<span class="seq-reminder-option-check" data-ds-icon="check" data-size="13"></span>' +
+              '<span>' + esc(option.label) + '</span>' +
+              (showOptionDay ? '<span class="ds-menu__meta" data-reminder-option-day="' + option.value + '">' + optionDay + '</span>' : '') +
+            '</button>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderActivityTypePicker(action) {
+    const selectedOption = ACTIVITY_OPTIONS.find(function (option) { return option.value === action.action; }) || ACTIVITY_OPTIONS[0];
+    return '<div class="ds-field"><span class="ds-field-label">Activity type</span>' +
+      '<div class="ds-menu-anchor seq-activity-type-menu-anchor">' +
+        '<button class="ds-input seq-activity-type-trigger" type="button" data-ds-menu="seq-activity-type-menu" aria-haspopup="menu" aria-expanded="false">' +
+          '<span data-ds-icon="' + selectedOption.icon + '" data-size="15"></span>' +
+          '<span class="seq-activity-type-trigger-label">' + esc(selectedOption.label) + '</span>' +
+          '<span class="ds-menu-caret" data-ds-icon="caret-down" data-size="13"></span>' +
+        '</button>' +
+        '<div class="ds-menu ds-menu--below seq-activity-type-menu" id="seq-activity-type-menu" role="menu" aria-label="Activity type">' +
+          ACTIVITY_OPTIONS.map(function (option) {
+            const selected = option.value === selectedOption.value;
+            return '<button class="ds-menu__item' + (selected ? ' is-selected' : '') + '" type="button" role="menuitemradio" aria-checked="' + selected + '" data-select-drawer-action-type="' + option.value + '">' +
+              '<span data-ds-icon="' + option.icon + '" data-size="14"></span>' +
+              '<span>' + esc(option.label) + '</span>' +
+              (selected ? '<span class="ds-menu__meta" aria-hidden="true"><span data-ds-icon="check" data-size="13"></span></span>' : '') +
+            '</button>';
+          }).join('') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderFlowDrawer() {
+    if (!flowDrawerSelection) return;
+    const sequence = selectedSequence();
+    const group = sequence && sequence.steps[flowDrawerSelection.groupIndex];
+    const drawer = document.getElementById('seq-flow-drawer');
+    const title = document.getElementById('seq-flow-drawer-title-label');
+    const titleDay = document.getElementById('seq-flow-drawer-day');
+    const body = document.getElementById('seq-flow-drawer-body');
+    const foot = document.getElementById('seq-flow-drawer-foot');
+    if (!group) { closeFlowDrawer(); return; }
+
+    if (flowDrawerSelection.kind === 'delay') {
+      title.textContent = 'Delay settings';
+      titleDay.hidden = true;
+      body.innerHTML = '<div class="seq-flow-drawer-section">' +
+        '<label class="ds-field"><span class="ds-field-label">Delay behavior</span><select class="ds-input" data-drawer-delay-mode>' +
+          '<option value="after"' + (group.timing === 'after' ? ' selected' : '') + '>Wait for a duration</option>' +
+          '<option value="no-reply"' + (group.timing === 'no-reply' ? ' selected' : '') + '>Wait, then continue if there is no reply</option>' +
+        '</select></label>' +
+        '<label class="ds-field"><span class="ds-field-label">Number of days</span><input class="ds-input" type="number" min="1" value="' + esc(group.days || 1) + '" data-drawer-delay-days><span class="ds-field-hint">Day labels on later activities update from this delay.</span></label>' +
+        '</div>';
+      foot.innerHTML = '<button class="ds-btn ds-btn--destructive-quiet" type="button" data-remove-drawer-delay><span data-ds-icon="trash" data-size="14"></span>Remove delay</button>';
+      return;
+    }
+
+    const action = group.actions[flowDrawerSelection.actionIndex];
+    if (!action) { closeFlowDrawer(); return; }
+    const activityDay = activityDayForGroup(sequence, flowDrawerSelection.groupIndex);
+    title.textContent = 'Runs on';
+    titleDay.textContent = 'Day ' + activityDay;
+    titleDay.hidden = false;
+    let controls = renderActivityTypePicker(action);
+
+    if (action.action === 'email') {
+      const template = templates.find(function (item) { return item.id === action.templateId; }) || templates[0];
+      controls += '<label class="ds-field"><span class="ds-field-label">Email template</span><select class="ds-input" data-drawer-template>' +
+        templates.map(function (item) { return '<option value="' + esc(item.id) + '"' + (template && item.id === template.id ? ' selected' : '') + '>' + esc(item.name) + '</option>'; }).join('') +
+      '</select></label>' +
+      (template ? '<div class="seq-drawer-template-preview"><div class="seq-drawer-template-subject">' + esc(template.subject) + '</div><div class="seq-drawer-template-body">' + renderTemplateText(template.body || template.preview) + '</div></div>' : '');
+    } else {
+      const isCall = action.action === 'call';
+      const reminderOffset = action.reminderOffset || 'next-day';
+      const usesDay = DAY_REMINDER_OPTIONS.includes(reminderOffset);
+      controls += '<label class="ds-field"><span class="ds-field-label">' + (isCall ? 'Reminder title' : 'Task title') + '</span><input class="ds-input" value="' + esc(action.title || '') + '" data-drawer-action-title></label>' +
+        renderReminderPicker(action, activityDay) +
+        (reminderOffset === 'custom-days' ? '<label class="ds-field"><span class="ds-field-label">Days later</span><input class="ds-input" type="number" min="1" value="' + esc(action.reminderDays || 4) + '" data-drawer-reminder-days></label>' : '') +
+        (usesDay ? '<label class="ds-field"><span class="ds-field-label">Reminder time</span><input class="ds-input" type="time" value="' + esc(action.reminderTime || '09:00') + '" data-drawer-reminder-time></label>' : '');
+    }
+    body.innerHTML = '<div class="seq-flow-drawer-section">' + controls + '</div>';
+    foot.innerHTML = '<button class="ds-btn ds-btn--destructive-quiet" type="button" data-remove-drawer-activity><span data-ds-icon="trash" data-size="14"></span>Remove activity</button>';
+  }
+
+  function validateSequenceSchedule(sequence) {
+    const settings = ensureSequenceSettings(sequence);
+    if (!settings) return;
+    const noDays = settings.schedule.activeDays.length === 0;
+    const badWindow = !!settings.schedule.startTime && !!settings.schedule.endTime &&
+      settings.schedule.endTime <= settings.schedule.startTime;
+    const daysError = document.getElementById('seq-days-error');
+    const windowError = document.getElementById('seq-window-error');
+    const start = document.getElementById('seq-schedule-start');
+    const end = document.getElementById('seq-schedule-end');
+    if (daysError) daysError.hidden = !noDays;
+    if (windowError) windowError.hidden = !badWindow;
+    if (start) start.setAttribute('aria-invalid', String(badWindow));
+    if (end) end.setAttribute('aria-invalid', String(badWindow));
+  }
+
+  function renderSequenceSettings() {
+    const sequence = ensureSequenceSettings(selectedSequence());
+    if (!sequence) return;
+    document.getElementById('seq-details-name').value = sequence.name || '';
+    document.getElementById('seq-details-description').value = sequence.description || '';
+    document.querySelectorAll('[data-sequence-day]').forEach(function (input) {
+      input.checked = sequence.schedule.activeDays.includes(input.value);
+    });
+    document.getElementById('seq-schedule-start').value = sequence.schedule.startTime;
+    document.getElementById('seq-schedule-end').value = sequence.schedule.endTime;
+    const timezone = document.getElementById('seq-schedule-timezone');
+    const knownTimezone = Array.from(timezone.options).some(function (option) { return option.value === sequence.schedule.timezone; });
+    timezone.value = knownTimezone ? sequence.schedule.timezone : 'contact';
+    document.getElementById('seq-rule-reply').checked = sequence.exitRules.stopOnReply;
+    document.getElementById('seq-rule-bounce').checked = sequence.exitRules.stopOnBounce;
+    document.getElementById('seq-rule-reentry').checked = sequence.exitRules.allowReentry;
+    validateSequenceSchedule(sequence);
+  }
+
   function renderAll() {
-    renderLibrary();
-    renderEditor();
+    if (sequenceMode === 'editor') {
+      renderEditor();
+      renderSequenceSettings();
+      showSequencePane(activeSequencePane, false);
+    } else renderLibrary();
   }
 
   function makeAction(type, templateIndex) {
@@ -628,22 +1481,24 @@
   }
 
   function createSequence() {
-    const id = 'sequence-' + Date.now();
-    sequenceDrafts.unshift({
-      id: id,
+    goToSequence('new');
+  }
+
+  function createNewSequenceDraft() {
+    const sequence = {
+      id: 'new',
       name: 'Untitled sequence',
       description: 'Simple sales follow-up.',
       weekdaysOnly: true,
+      schedule: { activeDays: WEEKDAYS.slice(), startTime: '09:00', endTime: '17:00', timezone: 'contact' },
+      exitRules: { stopOnReply: true, stopOnBounce: true, allowReentry: false },
       activeInstances: 0,
       usedBy: [],
-      steps: [{ id: 'step-' + (++stepSequence), timing: 'no-reply', days: 1, actions: [makeAction('email', 0)] }],
-    });
-    writeSelection(id);
-    editingSequenceId = id;
-    sequenceNameDraft = 'Untitled sequence';
-    renderAll();
-    const nameInput = document.querySelector('[data-sequence-name-input]');
-    if (nameInput) { nameInput.focus(); nameInput.select(); }
+      steps: [],
+    };
+    sequenceDrafts.unshift(sequence);
+    editingSequenceId = sequence.id;
+    sequenceNameDraft = sequence.name;
   }
 
   function saveSequenceName() {
@@ -749,6 +1604,36 @@
     });
   }
 
+  async function deleteFlowEntityWithMotion(sequence, kind, groupIndex, actionIndex) {
+    if (timelineMotionBusy) return false;
+    const group = sequence && sequence.steps[groupIndex];
+    const action = kind === 'activity' && group ? group.actions[actionIndex] : null;
+    if (!group || (kind === 'activity' && !action) || (kind === 'delay' && group.timing === 'immediate')) return false;
+    const key = kind === 'activity' ? 'activity-' + action.id : 'condition-' + group.id;
+    const item = timelineItem(key);
+    const positions = captureTimelinePositions();
+    timelineMotionBusy = true;
+    try {
+      if (item && !timelineMotionReduced()) {
+        await item.animate([
+          { opacity: 1, transform: 'scale(1)' },
+          { opacity: 0, transform: 'scale(0.88)' },
+        ], { duration: 220, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' }).finished.catch(function () {});
+      }
+      const drawer = document.getElementById('seq-flow-drawer');
+      if (drawer.classList.contains('is-open')) closeFlowDrawer();
+      const removed = kind === 'activity'
+        ? removeFlowActivity(sequence, groupIndex, actionIndex)
+        : removeFlowDelay(sequence, groupIndex);
+      if (!removed) return false;
+      renderEditor();
+      await animateTimelineReflow(positions, { message: kind === 'activity' ? 'Activity removed' : 'Delay removed' });
+      return true;
+    } finally {
+      timelineMotionBusy = false;
+    }
+  }
+
   async function removeStepWithMotion(sequence, index) {
     if (timelineMotionBusy || sequence.steps.length <= 1) return;
     const step = sequence.steps[index];
@@ -821,11 +1706,160 @@
   }
 
   document.getElementById('seq-create').addEventListener('click', createSequence);
-  document.getElementById('seq-list').addEventListener('click', function (event) {
-    const row = event.target.closest('[data-sequence-id]');
-    if (!row) return;
-    writeSelection(row.dataset.sequenceId);
-    renderAll();
+  document.querySelectorAll('[data-sequences-back]').forEach(function (button) {
+    button.addEventListener('click', function () { location.href = sequencesUrl(); });
+  });
+  document.querySelectorAll('[data-sequence-nav]').forEach(function (button) {
+    button.addEventListener('click', function () { showSequencePane(button.dataset.sequenceNav); });
+  });
+
+  document.getElementById('seq-details-name').addEventListener('input', function (event) {
+    const sequence = selectedSequence();
+    if (!sequence) return;
+    sequence.name = event.target.value;
+    document.title = (sequence.name || 'Untitled sequence') + ' — Titan CRM';
+    document.getElementById('seq-editor-page-title').textContent = sequence.name || 'Untitled sequence';
+    if (editingSequenceId === sequence.id) sequenceNameDraft = event.target.value;
+  });
+  document.getElementById('seq-details-description').addEventListener('input', function (event) {
+    const sequence = selectedSequence();
+    if (sequence) sequence.description = event.target.value;
+  });
+  document.querySelectorAll('[data-sequence-day]').forEach(function (input) {
+    input.addEventListener('change', function () {
+      const sequence = ensureSequenceSettings(selectedSequence());
+      if (!sequence) return;
+      sequence.schedule.activeDays = Array.from(document.querySelectorAll('[data-sequence-day]:checked'))
+        .map(function (item) { return item.value; });
+      sequence.weekdaysOnly = sequence.schedule.activeDays.length === WEEKDAYS.length &&
+        WEEKDAYS.every(function (day) { return sequence.schedule.activeDays.includes(day); });
+      validateSequenceSchedule(sequence);
+    });
+  });
+  document.getElementById('seq-schedule-start').addEventListener('input', function (event) {
+    const sequence = ensureSequenceSettings(selectedSequence());
+    if (!sequence) return;
+    sequence.schedule.startTime = event.target.value;
+    validateSequenceSchedule(sequence);
+  });
+  document.getElementById('seq-schedule-end').addEventListener('input', function (event) {
+    const sequence = ensureSequenceSettings(selectedSequence());
+    if (!sequence) return;
+    sequence.schedule.endTime = event.target.value;
+    validateSequenceSchedule(sequence);
+  });
+  document.getElementById('seq-schedule-timezone').addEventListener('change', function (event) {
+    const sequence = ensureSequenceSettings(selectedSequence());
+    if (sequence) sequence.schedule.timezone = event.target.value;
+  });
+  document.getElementById('seq-rule-reply').addEventListener('change', function (event) {
+    const sequence = ensureSequenceSettings(selectedSequence());
+    if (sequence) sequence.exitRules.stopOnReply = event.target.checked;
+  });
+  document.getElementById('seq-rule-bounce').addEventListener('change', function (event) {
+    const sequence = ensureSequenceSettings(selectedSequence());
+    if (sequence) sequence.exitRules.stopOnBounce = event.target.checked;
+  });
+  document.getElementById('seq-rule-reentry').addEventListener('change', function (event) {
+    const sequence = ensureSequenceSettings(selectedSequence());
+    if (sequence) sequence.exitRules.allowReentry = event.target.checked;
+  });
+
+  document.getElementById('seq-flow-drawer').addEventListener('input', function (event) {
+    if (!flowDrawerSelection) return;
+    const sequence = selectedSequence();
+    const group = sequence && sequence.steps[flowDrawerSelection.groupIndex];
+    if (!group) return;
+    const action = flowDrawerSelection.kind === 'activity' ? group.actions[flowDrawerSelection.actionIndex] : null;
+    if (event.target.dataset.drawerActionTitle !== undefined && action) {
+      action.title = event.target.value;
+      renderEditor();
+    } else if (event.target.dataset.drawerReminderDays !== undefined && action) {
+      action.reminderDays = Math.max(1, Number(event.target.value) || 1);
+      renderEditor();
+      const activityDay = activityDayForGroup(sequence, flowDrawerSelection.groupIndex);
+      const customDay = 'Day ' + (activityDay + reminderDayOffset('custom-days', action.reminderDays));
+      const currentDay = document.querySelector('[data-current-reminder-day]');
+      const customOptionDay = document.querySelector('[data-reminder-option-day="custom-days"]');
+      if (currentDay) currentDay.textContent = customDay;
+      if (customOptionDay) customOptionDay.textContent = customDay;
+    } else if (event.target.dataset.drawerReminderTime !== undefined && action) {
+      action.reminderTime = event.target.value;
+      renderEditor();
+    } else if (event.target.dataset.drawerDelayDays !== undefined) {
+      group.days = Math.max(1, Number(event.target.value) || 1);
+      renderEditor();
+    }
+  });
+
+  document.getElementById('seq-flow-drawer').addEventListener('change', function (event) {
+    if (!flowDrawerSelection) return;
+    const sequence = selectedSequence();
+    const group = sequence && sequence.steps[flowDrawerSelection.groupIndex];
+    if (!group) return;
+    const action = flowDrawerSelection.kind === 'activity' ? group.actions[flowDrawerSelection.actionIndex] : null;
+    if (event.target.dataset.drawerTemplate !== undefined && action) {
+      action.templateId = event.target.value;
+    } else if (event.target.dataset.drawerDelayMode !== undefined) {
+      group.timing = event.target.value;
+      group.days = Math.max(1, Number(group.days) || 1);
+    }
+    renderEditor();
+    renderFlowDrawer();
+  });
+
+  document.getElementById('seq-flow-drawer').addEventListener('click', async function (event) {
+    if (event.target.closest('[data-close-flow-drawer]')) {
+      closeFlowDrawer();
+      return;
+    }
+    if (!flowDrawerSelection) return;
+    const sequence = selectedSequence();
+    const groupIndex = flowDrawerSelection.groupIndex;
+    const group = sequence && sequence.steps[groupIndex];
+    if (!group) return;
+    const activityTypeChoice = event.target.closest('[data-select-drawer-action-type]');
+    if (activityTypeChoice && flowDrawerSelection.kind === 'activity') {
+      const action = group.actions[flowDrawerSelection.actionIndex];
+      if (!action) return;
+      action.action = activityTypeChoice.dataset.selectDrawerActionType;
+      if (action.action === 'email' && !action.templateId) action.templateId = templates[0].id;
+      if ((action.action === 'call' || action.action === 'task') && !action.reminderOffset) {
+        action.reminderOffset = 'next-day';
+        action.reminderTime = '09:00';
+      }
+      renderEditor();
+      renderFlowDrawer();
+      return;
+    }
+    const reminderChoice = event.target.closest('[data-select-drawer-reminder]');
+    if (reminderChoice && flowDrawerSelection.kind === 'activity') {
+      const action = group.actions[flowDrawerSelection.actionIndex];
+      if (!action) return;
+      action.reminderOffset = reminderChoice.dataset.selectDrawerReminder;
+      if (DAY_REMINDER_OPTIONS.includes(action.reminderOffset) && !action.reminderTime) action.reminderTime = '09:00';
+      if (action.reminderOffset === 'custom-days' && !action.reminderDays) action.reminderDays = 4;
+      renderEditor();
+      renderFlowDrawer();
+      return;
+    }
+    if (event.target.closest('[data-remove-drawer-delay]') && flowDrawerSelection.kind === 'delay') {
+      await deleteFlowEntityWithMotion(sequence, 'delay', groupIndex);
+      return;
+    }
+    if (!event.target.closest('[data-remove-drawer-activity]') || flowDrawerSelection.kind !== 'activity') return;
+    await deleteFlowEntityWithMotion(sequence, 'activity', groupIndex, flowDrawerSelection.actionIndex);
+  });
+
+  document.getElementById('seq-flow-drawer').addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape' || !window.dsMenu) return;
+    const openMenu = window.dsMenu.current();
+    if (openMenu !== 'seq-reminder-menu' && openMenu !== 'seq-activity-type-menu') return;
+    event.preventDefault();
+    event.stopPropagation();
+    window.dsMenu.close(openMenu);
+    const trigger = document.querySelector('[data-ds-menu="' + openMenu + '"]');
+    if (trigger) trigger.focus({ preventScroll: true });
   });
 
   document.getElementById('seq-editor').addEventListener('input', function (event) {
@@ -848,8 +1882,15 @@
     const sequence = selectedSequence();
     if (!sequence) return;
     let index;
-    if (event.target.dataset.weekdaysOnly !== undefined) {
-      sequence.weekdaysOnly = event.target.checked;
+    if (event.target.dataset.setAction !== undefined) {
+      const action = sequence.steps[Number(event.target.dataset.stepIndex)].actions[Number(event.target.dataset.actionIndex)];
+      action.action = event.target.value;
+      if (action.action === 'email' && !action.templateId) action.templateId = templates[0].id;
+      if ((action.action === 'call' || action.action === 'task') && !action.reminderOffset) {
+        action.reminderOffset = 'next-day';
+        action.reminderTime = '09:00';
+      }
+      renderAll();
     } else if (event.target.dataset.stepCondition !== undefined) {
       index = Number(event.target.dataset.stepCondition);
       sequence.steps[index].timing = event.target.value;
@@ -871,6 +1912,62 @@
   document.getElementById('seq-editor').addEventListener('click', async function (event) {
     const sequence = selectedSequence();
     if (!sequence) return;
+    const quickDeleteActivity = event.target.closest('[data-delete-flow-activity]');
+    if (quickDeleteActivity) {
+      await deleteFlowEntityWithMotion(sequence, 'activity', Number(quickDeleteActivity.dataset.stepIndex), Number(quickDeleteActivity.dataset.actionIndex));
+      return;
+    }
+    const quickDeleteDelay = event.target.closest('[data-delete-flow-delay]');
+    if (quickDeleteDelay) {
+      await deleteFlowEntityWithMotion(sequence, 'delay', Number(quickDeleteDelay.dataset.stepIndex));
+      return;
+    }
+    const editActivity = event.target.closest('[data-edit-activity]');
+    if (editActivity) {
+      openFlowDrawer('activity', Number(editActivity.dataset.stepIndex), Number(editActivity.dataset.actionIndex));
+      return;
+    }
+    const editDelay = event.target.closest('[data-edit-delay]');
+    if (editDelay) {
+      openFlowDrawer('delay', Number(editDelay.dataset.stepIndex));
+      return;
+    }
+    const toggleFlowAdd = event.target.closest('[data-toggle-flow-add]');
+    if (toggleFlowAdd) {
+      const menu = document.getElementById('seq-flow-add-menu');
+      const open = menu.hidden;
+      menu.hidden = !open;
+      toggleFlowAdd.setAttribute('aria-expanded', String(open));
+      if (open) bringFlowAddMenuIntoSafeArea(menu);
+      return;
+    }
+    if (event.target.closest('[data-add-flow-delay]')) {
+      const positions = captureTimelinePositions();
+      const group = { id: 'group-' + (++stepSequence), timing: 'after', days: 1, actions: [] };
+      sequence.steps.push(group);
+      renderEditor();
+      await animateTimelineReflow(positions, { addedKey: 'condition-' + group.id, focusKey: 'condition-' + group.id, message: 'Delay added' });
+      openFlowDrawer('delay', sequence.steps.length - 1);
+      return;
+    }
+    const addFlowActivity = event.target.closest('[data-add-flow-activity]');
+    if (addFlowActivity) {
+      const positions = captureTimelinePositions();
+      const actionType = addFlowActivity.dataset.addFlowActivity;
+      const action = makeAction(actionType, actionType === 'email' ? 0 : 0);
+      let groupIndex = sequence.steps.length - 1;
+      let group = sequence.steps[groupIndex];
+      if (!group || group.actions.length) {
+        group = { id: 'group-' + (++stepSequence), timing: sequence.steps.length ? 'immediate' : 'immediate', days: 0, actions: [] };
+        sequence.steps.push(group);
+        groupIndex = sequence.steps.length - 1;
+      }
+      group.actions.push(action);
+      renderEditor();
+      await animateTimelineReflow(positions, { addedKey: 'activity-' + action.id, focusKey: 'activity-' + action.id, message: 'Activity added' });
+      openFlowDrawer('activity', groupIndex, group.actions.length - 1);
+      return;
+    }
     const editSequenceName = event.target.closest('[data-edit-sequence-name]');
     if (editSequenceName) {
       editingSequenceId = sequence.id;
@@ -921,18 +2018,6 @@
       if (previewLabel) previewLabel.textContent = expanded ? 'Collapse' : 'Expand';
       return;
     }
-    const setAction = event.target.closest('[data-set-action]');
-    if (setAction) {
-      const action = sequence.steps[Number(setAction.dataset.stepIndex)].actions[Number(setAction.dataset.actionIndex)];
-      action.action = setAction.dataset.setAction;
-      if (action.action === 'email' && !action.templateId) action.templateId = templates[0].id;
-      if ((action.action === 'call' || action.action === 'task') && !action.reminderOffset) {
-        action.reminderOffset = 'next-day';
-        action.reminderTime = '09:00';
-      }
-      renderAll();
-      return;
-    }
     const addActionToStep = event.target.closest('[data-add-action-to-step]');
     if (addActionToStep) {
       sequence.steps[Number(addActionToStep.dataset.addActionToStep)].actions.push(makeAction('email', 0));
@@ -980,10 +2065,24 @@
     if (event.target.closest('[data-close-template-dialog]')) closeTemplateDialog();
   });
   document.addEventListener('click', function (event) {
+    const flowAddMenu = document.getElementById('seq-flow-add-menu');
+    if (flowAddMenu && !flowAddMenu.hidden &&
+        !event.target.closest('[data-toggle-flow-add]') &&
+        !event.target.closest('#seq-flow-add-menu')) {
+      flowAddMenu.hidden = true;
+      const flowAddButton = document.querySelector('[data-toggle-flow-add]');
+      if (flowAddButton) flowAddButton.setAttribute('aria-expanded', 'false');
+    }
     if (event.target.closest('.seq-template-control')) return;
     closeTemplateMenus();
   });
   document.addEventListener('keydown', function (event) {
+    const flowDrawer = document.getElementById('seq-flow-drawer');
+    if (event.key === 'Escape' && flowDrawer.classList.contains('is-open')) {
+      event.preventDefault();
+      closeFlowDrawer();
+      return;
+    }
     const dialog = document.getElementById('seq-template-dialog');
     if (dialog.hidden) {
       if (event.target.matches('[data-sequence-name-input]') && event.key === 'Enter') {
@@ -1022,9 +2121,22 @@
   window.addEventListener('resize', function () {
     closeTemplateMenus();
   });
+  window.addEventListener('hashchange', function () {
+    if (sequenceMode !== 'editor') return;
+    const pane = decodeURIComponent((location.hash || '').replace(/^#/, ''));
+    showSequencePane(SEQUENCE_PANES.includes(pane) ? pane : 'flow', false);
+  });
 
-  if (!selectedSequence() && sequenceDrafts.length) writeSelection(sequenceDrafts[0].id);
-  renderAll();
+  if (sequenceMode === 'library' && legacySequenceId) {
+    location.replace(sequenceUrl(legacySequenceId));
+  } else {
+    if (sequenceMode === 'editor' && selectedId === 'new') createNewSequenceDraft();
+    renderAll();
+    if (editingSequenceId) {
+      const nameInput = document.querySelector('[data-sequence-name-input]');
+      if (nameInput) { nameInput.focus(); nameInput.select(); }
+    }
+  }
 </script>
 </body>
 </html>

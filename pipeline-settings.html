@@ -1214,7 +1214,7 @@
       if (!sequenceId) return;
       stashSettingsDraft();
       const params = new URLSearchParams(location.search);
-      location.href = '/crm/sequences' + (params.toString() ? '?' + params.toString() : '') + '#' + encodeURIComponent(sequenceId);
+      location.href = '/crm/sequences/' + encodeURIComponent(sequenceId) + (params.toString() ? '?' + params.toString() : '');
     }
 
     function renderActionRow(section, actions, action, ai) {

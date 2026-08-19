@@ -37,7 +37,7 @@ Multi-page app. Routes are rewrites in `vercel.json`; each route is its own docu
 | `/crm/pipeline/:id/setting` | `pipeline-settings.html` | Stages, fields |
 | `/crm/pipeline/:id/record-setting` | `opportunity-settings.html` | |
 | `/crm/contacts`, `/crm/companies` | `contacts.html`, `companies.html` | Directory pages |
-| `/crm/sequences` | `sequences.html` | Global prototype sequence library + linear editor |
+| `/crm/sequences`, `/crm/sequences/:id` | `sequences.html` | Global prototype sequence grid + full-page linear editor |
 | `/crm/forms` | `forms.html` | One row per pipeline: its intake form, or the offer of one |
 | `/crm/pipeline/:id/form` | `form-settings.html` | Deep link to one form's editor |
 | `/f/:token` | `form.html` | **Public.** The intake form itself — no auth, no sidebar |
@@ -202,40 +202,55 @@ a contract: rename one of those and the board's sidebar breaks.
 
 ## Sequences
 
-`/crm/sequences` is a global, frontend-only prototype library. `titan-sequences.js` owns
+`/crm/sequences` is a global, frontend-only prototype library. It shows the existing
+sequences as a grid; selecting one opens its full-page editor at `/crm/sequences/:id`,
+which follows the Full-page settings pattern and does not mount the global CRM sidebar.
+Its page-local rail sits below the full-width header and has four hash-addressable sections:
+Sequence flow, Details, Sending schedule and Exit rules. Both routes preserve `?u=<persona>`
+and survive a cold load. `titan-sequences.js` owns
 the small shared set of sales email templates and linear sequences, and both
-`sequences.html` and `pipeline-settings.html` read it. A sequence step is a timing group
-with actions that send an email, set a call reminder, or create a task. Actions in the same
-group run together, and each action renders as its own card. A group may temporarily be
-empty while editing, in which case the editor shows a compact add-action state. Calls and
-tasks represent new items that would appear in Upcoming
+`sequences.html` and `pipeline-settings.html` read it. The stored model uses timing groups,
+but the UI deliberately never calls them steps or numbers them. It renders one centred,
+top-to-bottom flow lane of activity cards—send an email, set a call reminder, or create a
+task—with compact orange timing cards only where an actual delay exists. Consecutive
+activities may run immediately with no timing card between them. Calls and tasks represent new items that would appear in Upcoming
 activities; they are not reusable task definitions. Both use the same reminder schedule:
 immediately, in one hour, the next day, in two days, in three days, or a custom number of days.
+The reminder menu pairs every relative option with its computed sequence day on the right,
+and the activity inspector header reads `Runs on` with the activity's highlighted Day N.
 Every day-based choice also stores an exact `reminderTime` (default `09:00`), while custom uses
-`reminderDays` for the relative day count. Before each action group, the editor
-shows one compact control with three modes: continue immediately, continue after a delay
-of N days, or continue if there is no reply for N days. New action groups default to the
-no-reply option with a one-day wait. Waits are relative to the previous action (or the sequence
-trigger for step one). Condition cards use a small solid amber-brown timeline dot rather than
-the more prominent numbered circles reserved for action steps. The add-step control uses a
-compact blue circle with a white plus. Every flow begins with a small blue dot labeled `Start of sequence`
-and finishes with a small red dot labeled `End of sequence`. A reply stops the remaining linear sequence. Only the
-no-email-reply condition is supported; there is no branching model.
-The gray template summary beneath the selector is an inline disclosure: its Expand control
-reveals the recipient and full body in place, and changes to Collapse without rerendering
-the action card. The adjacent Add another template button is intentionally disabled in this
-prototype and does not open another surface. Each sequence also has a `weekdaysOnly`
-setting, enabled by default, that represents skipping Saturday and Sunday when execution
-is eventually connected to a scheduler. The selected sequence name is edited inline in the
-flow header. Template selectors use a viewport-positioned menu so the editor's scrolling
-timeline cannot clip their options; the active timeline node is raised above its siblings
-while that menu is open so later cards cannot cover it. Editor labels distinguish adding another action
-inside the current step from adding another step to the sequence. Adding a step uses a smooth
-entrance, scrolls the new step into view and animates the lower timeline items into their new
-positions. Removing a step first scrolls it into view, animates it out, then smoothly reflows
-the remaining keyed timeline items. These effects use the Web Animations API, announce the
-result through an ARIA live region and respect `prefers-reduced-motion`; do not add GSAP for them.
-Sequence list cards show the number of steps (not the total actions nested inside them) and
+`reminderDays` for the relative day count. The first activity starts on Day 1. Each later
+activity displays its cumulative day from the start: delays add their day count, while an
+immediate relationship stays on the same day. Orange timing cards have two modes: wait for
+N days, or wait for N days and continue only if there is no reply. Removing a timing card
+preserves its following activity and reconnects it immediately; a trailing delay with no
+activity is removed outright.
+The flow has no Start/End pointer or numbered markers.
+
+Activity and condition cards are summaries, not forms. Clicking either opens a page-local
+inspector that slides in from the right; all mutable activity type, template, reminder,
+title and timing controls live there. The entity being edited keeps an obvious selected
+border/ring without tinting the card surface, plus `aria-pressed="true"`, until the inspector closes. Activity and orange
+timing cards also reveal an adjacent quick-delete button on hover or keyboard focus; deletion
+requires no confirmation, scales/fades the entity out, then slides later entities upward. The
+inspector retains its own remove action. On wide screens the flow lane recentres within the
+remaining canvas while the inspector is open; narrower screens keep it as an overlay rather
+than squeezing the cards. The final `Add to sequence` control offers either a
+delay or a new email, call-reminder or task activity. A delay may temporarily exist without
+a following activity while the editor waits for that choice. By default, a reply stops the remaining
+linear sequence. Only the no-email-reply condition is supported; there is no branching model. Stop-on-reply is enabled
+by default but is configurable in Exit rules, alongside hard-bounce exit and re-enrollment.
+Email template selection and its content preview live in the inspector. Each sequence has a `schedule` with
+`activeDays[]`, `startTime`, `endTime` and `timezone`; the default is Monday–Friday,
+09:00–17:00 in the contact's local time. `weekdaysOnly` remains as a compatibility mirror
+for older callers, not the editor's source of truth. Details owns the editable name and
+description; the full-page header displays the current name while the flow canvas does not
+repeat it. Adding an activity or
+delay uses the Web Animations API, scrolls the new card into view, announces the result through
+an ARIA live region and respects `prefers-reduced-motion`; do not add GSAP for these effects.
+New sequence drafts begin with an empty `steps` array and render a tutorial-style Starting
+point card with all three first-activity choices; do not pre-create an email or another activity.
+Sequence list cards show the number of activities and
 `activeInstances`, the representative number of pipeline-record sequence instances currently active. This is intentionally different from `usedBy`, which
 describes stage configuration references rather than live record-level instances.
 
