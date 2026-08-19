@@ -2001,6 +2001,12 @@
               "sendTime": "09:00"
             }
           ]
+        },
+        {
+          "id": "group-105",
+          "timing": "after",
+          "days": 1,
+          "actions": []
         }
       ]
     },
