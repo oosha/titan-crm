@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="/design-system/components.css">
 <link rel="stylesheet" href="/titan-sidebar.css">
 <link rel="stylesheet" href="/crm-directory.css">
+<link rel="stylesheet" href="/titan-assistant.css">
 <style>
   /* Dashboard — a read-only "cockpit" for a pipeline, laid out as a bento of
      self-contained tiles, with a mocked "Ask Titan" copilot docked on the right.
@@ -242,126 +243,8 @@
   @keyframes tile-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   .bento > .tile { animation: tile-in 320ms cubic-bezier(0.22,0.61,0.36,1) both; }
 
-  /* ── Copilot rail ──────────────────────────────────────────────────────────
-     The signature: a docked assistant that reads live from the same data. It's a
-     preview — it answers a fixed set of prompts from real numbers rather than a
-     model, and says so. */
-  .ai-rail {
-    width: var(--rail-w); flex-shrink: 0; background: var(--dir-surface);
-    border-left: 1px solid var(--dir-line); display: flex; flex-direction: column; overflow: hidden;
-  }
-  .ai-rail.is-hidden { display: none; }
-  .ai-head { display: flex; align-items: center; gap: 11px; padding: 15px 16px; border-bottom: 1px solid var(--dir-hair); flex-shrink: 0; }
-  /* The one hex left in this rail. #7a6ba3 is the assistant's mark colour and the
-     design system has no token for it — no purple ramp, nothing matching it. That
-     needs a token added, which is the system owner's call, not something to
-     invent here. The blue stop is --accent-primary and reads it properly. */
-  .ai-mark {
-    width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; color: var(--text-on-accent);
-    display: inline-flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, var(--accent-primary), #7a6ba3);
-  }
-  .ai-id { flex: 1; min-width: 0; }
-  .ai-name { font-size: 14px; font-weight: 700; color: var(--dir-ink); display: flex; align-items: center; gap: 7px; }
-  .ai-sub { font-size: 11.5px; color: var(--dir-muted); margin-top: 1px; }
-  /* Close and New chat are ds-btn ghosts in the markup. All that is left here is
-     whether they show — the rest is the component's. */
-  .ai-new[hidden] { display: none; }
-
-  .ai-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-  .ai-msg { max-width: 90%; font-size: 13px; line-height: 1.5; }
-  .ai-msg.bot { align-self: flex-start; color: var(--dir-body); }
-  .ai-msg.bot .bubble { background: var(--dir-canvas); border: 1px solid var(--dir-hair); border-radius: 4px 13px 13px 13px; padding: 10px 13px; }
-  .ai-msg.me { align-self: flex-end; }
-  .ai-msg.me .bubble { background: var(--dir-accent); color: var(--text-on-accent); border-radius: 13px 13px 4px 13px; padding: 10px 13px; }
-  .bubble p { margin: 0; }
-  .bubble p + p { margin-top: 7px; }
-  .bubble b { font-weight: 700; }
-  /* The assistant answers in two registers only: prose, or a table. No tiles, no
-     bars, no chrome of its own — a number is emphasised by weight, nothing else.
-     The draft is prose too, kept as pre-wrap so its line breaks survive. */
-  .bubble .draft { display: block; margin-top: 8px; white-space: pre-wrap; }
-  /* A bubble is shrink-to-fit, which would squeeze a table into its longest word.
-     One carrying a table takes the full rail width instead. */
-  .ai-msg.bot:has(.ai-table) { width: 100%; }
-  .ai-table { width: 100%; min-width: 210px; border-collapse: collapse; margin-top: 8px; font-size: 12.5px; }
-  .bubble .ai-table + p { margin-top: 9px; }
-  .ai-table th {
-    text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em;
-    text-transform: uppercase; color: var(--dir-muted); padding: 0 0 5px;
-  }
-  .ai-table th:last-child, .ai-table td:last-child { text-align: right; }
-  .ai-table td {
-    padding: 6px 0; border-top: 1px solid var(--dir-hair); color: var(--dir-body);
-    overflow: hidden; text-overflow: ellipsis;
-  }
-  .ai-table td:first-child { max-width: 0; width: 62%; }   /* the label column is the one that clips */
-  .ai-table td b { color: var(--dir-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
-
-  /* ── Confirm card ──────────────────────────────────────────────────────────
-     The assistant never writes on its own; it proposes, and this is the
-     proposal. It shows every field that would change, old → new, because the
-     user is usually mid-call and half-listening — the card has to be readable
-     at a glance or the confirmation is meaningless. Full rail width: a
-     shrink-to-fit bubble would squeeze the two value columns together. */
-  .ai-act { width: 100%; align-self: stretch; }
-  .ai-act-card {
-    border: 1px solid var(--dir-line); border-left: 3px solid var(--dir-accent);
-    border-radius: 10px; background: var(--dir-surface); overflow: hidden;
-  }
-  .ai-act-head { padding: 11px 13px 9px; border-bottom: 1px solid var(--dir-hair); }
-  .ai-act-kind {
-    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--dir-accent);
-  }
-  .ai-act-rec { font-size: 13px; font-weight: 650; color: var(--dir-ink); margin-top: 2px; }
-  .ai-act-where { font-size: 11.5px; color: var(--dir-muted); margin-top: 1px; }
-  .ai-act-body { padding: 4px 13px 10px; }
-  .ai-act-row { display: flex; align-items: baseline; gap: 8px; padding: 7px 0; font-size: 12.5px; }
-  .ai-act-row + .ai-act-row { border-top: 1px solid var(--dir-hair); }
-  .ai-act-f { flex: 0 0 34%; color: var(--dir-muted); }
-  .ai-act-v { flex: 1; min-width: 0; color: var(--dir-ink); }
-  .ai-act-old { color: var(--dir-muted); text-decoration: line-through; }
-  .ai-act-arrow { color: var(--dir-faint); margin: 0 5px; }
-  .ai-act-note { font-size: 12.5px; line-height: 1.5; color: var(--dir-ink); white-space: pre-wrap; padding: 8px 0 2px; }
-  .ai-act-foot { display: flex; align-items: center; gap: 8px; padding: 10px 13px; border-top: 1px solid var(--dir-hair); background: var(--dir-canvas); }
-  /* Apply / Discard / Undo / View are ds-btn in the markup. What stays here is
-     where the status sits and what the stripe means — both page layout. */
-  .ai-act-state { margin-left: auto; }
-  .ai-act-card.is-done { border-left-color: var(--status-success); }
-  .ai-act-card.is-dropped { border-left-color: var(--border-default); opacity: 0.6; }
-  .ai-act-card.is-failed { border-left-color: var(--status-danger); }
-  .ai-link { width: 100%; align-self: stretch; }
-  .ai-link-steps { font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); margin-top: var(--space-075); }
-
-  .ai-typing { display: inline-flex; gap: 4px; padding: 12px 14px; background: var(--dir-canvas); border: 1px solid var(--dir-hair); border-radius: 4px 13px 13px 13px; }
-  .ai-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--dir-faint); animation: ai-blink 1.2s infinite both; }
-  .ai-typing i:nth-child(2) { animation-delay: 0.2s; }
-  .ai-typing i:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes ai-blink { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }
-
-  .ai-chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 16px 12px; flex-shrink: 0; }
-  /* ds-btn--secondary + ds-btn--sm in the markup. A chip is that button with a
-     pill radius and room to wrap onto a second line — a call-site adjustment,
-     not a new control. */
-  /* min-height rather than height: a chip matches the other small buttons on one
-     line, but a long suggestion has to be able to wrap rather than overflow. */
-  .ai-chip { border-radius: 999px; white-space: normal; height: auto; min-height: var(--btn-height-sm);
-    padding-top: var(--space-050); padding-bottom: var(--space-050); }
-
-  .ai-input { display: flex; align-items: flex-end; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--dir-hair); flex-shrink: 0; }
-  .ai-input textarea {
-    flex: 1; resize: none; font: inherit; font-size: 13px; color: var(--dir-body); line-height: 1.4;
-    border: 1px solid var(--dir-line); border-radius: 11px; padding: 9px 12px; outline: none; max-height: 96px; background: var(--dir-surface);
-  }
-  .ai-input textarea:focus { border-color: var(--border-focus); box-shadow: var(--focus-ring); }
-  /* ds-btn--primary + ds-btn--icon in the markup; the softer radius is this rail's. */
-  .ai-send { border-radius: 11px; }
-  .ai-send:disabled { opacity: 0.45; cursor: default; }
-
-  /* Below this the rail would crush the bento, so it collapses to a floating
-     toggle and the board gets the full width. */
-  @media (max-width: 1000px) { .ai-rail:not(.is-hidden) { position: fixed; top: 0; right: 0; bottom: 0; z-index: 60; box-shadow: -8px 0 28px rgba(0,0,0,0.12); } }
+  /* The assistant's styles — the rail included — live in titan-assistant.css,
+     because the same markup is also the floating panel on every other CRM page. */
 
   @media (prefers-reduced-motion: reduce) {
     .bento > .tile { animation: none; }
@@ -455,6 +338,7 @@
 <script src="/crm-status.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
+<script src="/titan-assistant.js"></script>
 <script>
   // ── Palette ────────────────────────────────────────────────────────────────
   // No categorical set here any more. Nothing on this board plots two or more
@@ -1164,22 +1048,22 @@
     });
   }
 
-  // ── Copilot rail ────────────────────────────────────────────────────────────
-  // Backed by /api/assistant. The greeting below is still computed locally from
-  // the tiles, so the rail says something useful before anyone types and on a
-  // deployment with no key at all.
-  //
-  // Two read prompts and two write prompts, so the write half is discoverable —
-  // nobody guesses they can dictate a record change at a chat box.
-  const CHIPS = [
-    'Summarize this pipeline',
-    'What needs attention?',
-    'Add a note to…',
-    'Move a deal to the next stage',
-  ];
-  let aiMsgs = [];
+  // Names the current scope for the greeting: one pipeline by name, otherwise a
+  // phrase. Lived in the copilot block and came out with it.
+  function scopeName() {
+    const pls = scopedPipelines();
+    if (pls.length === 1) return pls[0].name;
+    return typesPresent().length > 1 ? 'all ' + activeType().label.toLowerCase() + ' pipelines' : 'all pipelines';
+  }
 
-  // Everything the rail can say, read once. `money` decides what "the most" means:
+  // ── Ask Titan ───────────────────────────────────────────────────────────────
+  // The engine is titan-assistant.js, shared with the floating button on every other
+  // CRM page. What stays here is the half that is genuinely the dashboard's: a greeting
+  // computed from the tiles' own numbers, and a redraw after a write so the tiles do
+  // not quietly disagree with the record the user just changed.
+  let assistant = null;
+
+  // Everything the greeting can say, read once. `money` decides what "the most" means:
   // the biggest amount on a sales board, the busiest stage on one without amounts.
   function aiRead() {
     const money = hasMoney();
@@ -1188,400 +1072,48 @@
     const overdue = open.filter(function (e) { return e.card.overdue; });
     const settled = closed.length + lost.length;
     const rate = settled ? Math.round((closed.length / settled) * 100) : 0;
-    const top = money
-      ? (open.slice().sort(function (a, b) { return (Number(b.card.value) || 0) - (Number(a.card.value) || 0); })[0] || null)
-      : (overdue[0] || open[0] || null);
     const byStage = {};
-    open.forEach(function (e) { const l = stageLabel(e.pipeline, e.card.stage); if (!byStage[l]) byStage[l] = { v: 0, n: 0, cur: e.card.currency || window.defaultCurrency() }; byStage[l].v += Number(e.card.value) || 0; byStage[l].n++; });
-    const weight = function (k) { return money ? byStage[k].v : byStage[k].n; };
-    let topStage = null; Object.keys(byStage).forEach(function (k) { if (!topStage || weight(k) > weight(topStage)) topStage = k; });
-    return { money: money, all: all, open: open, closed: closed, overdue: overdue, rate: rate, top: top,
-      byStage: byStage, topStage: topStage, weight: weight,
-      openMoney: moneyText(moneyByCurrency(open)) };
-  }
-  function firstName(entry) {
-    if (!entry) return 'there';
-    const list = window.contactsOf(entry.card) || [];
-    const nm = (list[0] && list[0].name) || entry.card.contact || '';
-    return (nm.split(/\s+/)[0]) || 'there';
+    open.forEach(function (e) {
+      const l = stageLabel(e.pipeline, e.card.stage);
+      if (!byStage[l]) byStage[l] = { v: 0, n: 0, cur: e.card.currency || window.defaultCurrency() };
+      byStage[l].v += Number(e.card.value) || 0; byStage[l].n++;
+    });
+    return { money: money, all: all, open: open, closed: closed, overdue: overdue, rate: rate,
+             openMoney: moneyText(moneyByCurrency(open)) };
   }
 
-  // The only structure an answer is allowed beyond a paragraph: label left, the
-  // figure right and bold. Pass head=null for a bare two-column list.
-  function aiTable(head, rows) {
-    if (!rows.length) return '';
-    return '<table class="ai-table">' +
-      (head ? '<thead><tr><th>' + esc(head[0]) + '</th><th>' + esc(head[1]) + '</th></tr></thead>' : '') +
-      '<tbody>' + rows.map(function (r) {
-        return '<tr><td title="' + esc(r[0]) + '">' + esc(r[0]) + '</td><td><b>' + esc(r[1]) + '</b></td></tr>';
-      }).join('') + '</tbody></table>';
-  }
-  function scopeName() {
-    const pls = scopedPipelines();
-    if (pls.length === 1) return pls[0].name;
-    return typesPresent().length > 1 ? 'all ' + activeType().label.toLowerCase() + ' pipelines' : 'all pipelines';
-  }
-
-  // Model replies come back as plain text. Split on blank lines so a two-part
-  // answer reads as two paragraphs rather than one wall.
-  function textToHtml(t) {
-    return String(t || '').split(/\n{2,}/).map(function (para) {
-      return '<p>' + esc(para.trim()).replace(/\n/g, '<br>') + '</p>';
-    }).join('');
-  }
-
-  // ── Action cards ────────────────────────────────────────────────────────────
-  // One card per change. Changes arrive already written — the card shows what
-  // happened and offers Undo. See the safety model in api/_assistant.js for why
-  // nothing waits for approval.
-  //
-  // The `pending` branch below is no longer reachable from a new turn: the server
-  // stopped producing that state when the confirmation gate was removed. It stays
-  // because a transcript saved before then can still hold one, and sessionStorage
-  // outlives the deploy — a restored card with no footer would be a dead end.
-  function actionCardHTML(m, idx) {
-    const a = m.action;
-    const isNote = a.type === 'add_note' || a.type === 'restore_note';
-    const s = m.state;
-
-    const body = isNote
-      ? (a.note
-          ? '<div class="ai-act-note">' + esc(a.note) + '</div>'
-          : '<div class="ai-act-note ai-act-old">(no note)</div>') +
-        (a.existingNote ? '<div class="ai-act-row"><div class="ai-act-f">Replaces</div>' +
-          '<div class="ai-act-v ai-act-old">' + esc(a.existingNote) + '</div></div>' : '')
-      : (a.changes || []).map(function (c) {
-          return '<div class="ai-act-row">' +
-            '<div class="ai-act-f">' + esc(c.label) + '</div>' +
-            '<div class="ai-act-v">' +
-              (c.beforeText ? '<span class="ai-act-old">' + esc(c.beforeText) + '</span><span class="ai-act-arrow">→</span>' : '') +
-              '<b>' + esc(c.afterText) + '</b>' +
-            '</div></div>';
-        }).join('');
-
-    let kind;
-    if (a.type === 'restore_note') kind = 'Note restored';
-    else if (s === 'done' || s === 'undoing') kind = isNote ? 'Note added' : 'Record updated';
-    else kind = isNote ? 'Add a note' : 'Update record';
-
-    // A real link, not a scripted button: the card summarises the change, but
-    // seeing it in place is the only way to check it landed on the right record.
-    // Navigating in place is fine now that the transcript survives a page load —
-    // coming back leaves the conversation, and this card, where they were.
-    const view = (a.pipelineId && a.recordId)
-      ? '<a class="ai-act-view ds-btn ds-btn--secondary ds-btn--sm" href="' + esc(window.crmPath('/crm/pipeline/' +
-          encodeURIComponent(a.pipelineId) + '/record/' + encodeURIComponent(a.recordId))) + '">View</a>'
-      : '';
-
-    let foot;
-    if (s === 'done') {
-      // Undo is the whole reason this saved without asking, so it is a real
-      // button rather than a quiet link.
-      foot = (a.undo ? '<button class="ai-act-undo ds-btn ds-btn--secondary ds-btn--sm" type="button" data-undo="' + idx + '">Undo</button>' : '') +
-        view +
-        (m.error
-          ? '<div class="ai-act-state ds-badge ds-badge--danger">' + esc(m.error) + '</div>'
-          : '<div class="ai-act-state ds-badge ds-badge--success">Saved</div>');
-    } else if (s === 'undoing') {
-      foot = '<div class="ai-act-state ds-badge">Undoing…</div>';
-    } else if (s === 'undone') {
-      foot = view + '<div class="ai-act-state ds-badge">Undone</div>';
-    } else if (s === 'dropped') {
-      foot = '<div class="ai-act-state ds-badge">Discarded</div>';
-    } else if (s === 'failed') {
-      foot = '<div class="ai-act-state ds-badge ds-badge--danger">' + esc(m.error || 'Couldn’t save that.') + '</div>';
-    } else {
-      // Legacy only — see the note above this function.
-      const busy = s === 'busy';
-      foot =
-        '<button class="ds-btn ds-btn--primary ds-btn--sm" type="button" data-apply="' + idx + '"' + (busy ? ' disabled' : '') + '>' +
-          (busy ? 'Saving…' : (isNote ? 'Add note' : 'Apply change')) + '</button>' +
-        '<button class="ds-btn ds-btn--ghost ds-btn--sm" type="button" data-skip="' + idx + '">Discard</button>' +
-        (m.error ? '<div class="ai-act-state ds-badge ds-badge--danger">' + esc(m.error) + '</div>' : '');
-    }
-
-    return '<div class="ai-msg ai-act">' +
-      '<div class="ai-act-card' + (s === 'done' ? ' is-done' : '') +
-        (s === 'dropped' || s === 'undone' ? ' is-dropped' : '') +
-        (s === 'failed' ? ' is-failed' : '') + '">' +
-        '<div class="ai-act-head">' +
-          '<div class="ai-act-kind">' + kind + '</div>' +
-          '<div class="ai-act-rec">' + esc(a.recordName) + '</div>' +
-          '<div class="ai-act-where">' + esc(a.pipelineName) + '</div>' +
-        '</div>' +
-        '<div class="ai-act-body">' + body + '</div>' +
-        '<div class="ai-act-foot">' + foot + '</div>' +
-      '</div></div>';
-  }
-
-  // ── Where-to-do-it links ────────────────────────────────────────────────────
-  // The assistant can't delete anything, so it hands over the screen that can.
-  // The path comes from the server against the real routes — the model is never
-  // asked to write a URL, because a plausible-looking 404 is worse than a refusal.
-  function linkCardHTML(link) {
-    // crmPath carries the ?u= persona through, which every CRM link here needs.
-    const href = window.crmPath(link.path);
-    return '<div class="ai-msg ai-link">' +
-      '<a class="ds-btn ds-btn--secondary ds-btn--sm" href="' + esc(href) + '">' + esc(link.label) + ' →</a>' +
-      (link.steps ? '<div class="ai-link-steps">' + esc(link.steps) + '</div>' : '') +
-      '</div>';
-  }
-
-  function renderMsgs(typing) {
-    const box = document.getElementById('ai-msgs');
-    box.innerHTML = aiMsgs.map(function (m, i) {
-      if (m.role === 'act') return actionCardHTML(m, i);
-      if (m.role === 'link') return linkCardHTML(m.link);
-      const inner = m.role === 'me' ? '<p>' + esc(m.text) + '</p>' : (m.html || textToHtml(m.text));
-      return '<div class="ai-msg ' + m.role + '"><div class="bubble">' + inner + '</div></div>';
-    }).join('') + (typing ? '<div class="ai-msg bot"><div class="ai-typing"><i></i><i></i><i></i></div></div>' : '');
-    box.scrollTop = box.scrollHeight;
-  }
-  function renderChips() {
-    document.getElementById('ai-chips').innerHTML = CHIPS.map(function (c) {
-      return '<button class="ai-chip ds-btn ds-btn--secondary ds-btn--sm" type="button">' + esc(c) + '</button>';
-    }).join('');
-  }
-  // Only the spoken turns go back to the model — the greeting is computed
-  // locally and the confirm cards are interface state, not conversation.
-  function apiHistory() {
-    return aiMsgs
-      .filter(function (m) { return (m.role === 'me' || m.role === 'bot') && !m.local; })
-      .map(function (m) {
-        return { role: m.role === 'me' ? 'user' : 'assistant', content: m.text || '' };
-      })
-      .filter(function (m) { return m.content; });
-  }
-
-  let aiBusy = false;
-
-  async function ask(text) {
-    text = String(text || '').trim();
-    if (!text || aiBusy) return;
-    aiBusy = true;
-    aiMsgs.push({ role: 'me', text: text });
-    renderMsgs(true);
-
-    try {
-      const res = await fetch('/api/assistant?persona=' + encodeURIComponent(window.PERSONA_ID), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiHistory(), account: accountName() }),
-      });
-      const body = await res.json().catch(function () { return {}; });
-
-      if (!res.ok) {
-        // Server messages are already written as instructions, so show as-is.
-        aiMsgs.push({ role: 'bot', local: true, html: '<p>' + esc(body.error || 'Something went wrong. Try again in a moment.') + '</p>' });
-      } else {
-        if (body.reply) aiMsgs.push({ role: 'bot', text: body.reply });
-        (body.links || []).forEach(function (l) { aiMsgs.push({ role: 'link', link: l }); });
-        let wrote = false;
-        (body.actions || []).forEach(function (a) {
-          // The server decides the state: anything it already applied comes back
-          // as "done", so trusting a local default here would show an Apply
-          // button for a change that has already happened.
-          aiMsgs.push({ role: 'act', action: a, state: a.state || 'pending', error: a.error || '' });
-          if (a.state === 'done') wrote = true;
-        });
-        // Tiles were computed from data fetched at load, so an applied change
-        // isn't in them yet. Re-pull rather than leave the dashboard quietly
-        // disagreeing with the record the user is looking at.
-        if (wrote) { try { await fetchPipelineData(); render(); } catch (e) {} }
-      }
-    } catch (e) {
-      aiMsgs.push({ role: 'bot', local: true, html: '<p>Couldn’t reach the assistant. Check your connection and try again.</p>' });
-    } finally {
-      aiBusy = false;
-      renderMsgs(false);
-      saveChat();
-      syncNewChat();
-    }
-  }
-
-  async function applyAction(idx) {
-    const m = aiMsgs[idx];
-    if (!m || m.role !== 'act' || m.state !== 'pending') return;
-    m.state = 'busy';
-    m.error = '';
-    renderMsgs(false);
-    try {
-      const res = await fetch('/api/assistant-apply?persona=' + encodeURIComponent(window.PERSONA_ID), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: m.action }),
-      });
-      const body = await res.json().catch(function () { return {}; });
-      if (!res.ok) {
-        m.state = 'pending';
-        m.error = body.error || 'Couldn’t save that.';
-      } else {
-        m.state = 'done';
-        // The tiles were computed from data fetched at load, so a saved change
-        // isn't reflected in them. Re-pull and redraw rather than leaving the
-        // dashboard quietly disagreeing with the record.
-        try { await fetchPipelineData(); render(); } catch (e) {}
-      }
-    } catch (e) {
-      m.state = 'pending';
-      m.error = 'Couldn’t reach the server.';
-    }
-    renderMsgs(false);
-    saveChat();
-  }
-
-  // Undo posts the inverse action the server handed back with the change. It goes
-  // through the same apply endpoint and the same validation — an undo is an
-  // ordinary edit that happens to restore old values, not a privileged rewind.
-  async function undoAction(idx) {
-    const m = aiMsgs[idx];
-    if (!m || m.role !== 'act' || m.state !== 'done' || !m.action.undo) return;
-    m.state = 'undoing';
-    m.error = '';
-    renderMsgs(false);
-    try {
-      const res = await fetch('/api/assistant-apply?persona=' + encodeURIComponent(window.PERSONA_ID), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: m.action.undo }),
-      });
-      const body = await res.json().catch(function () { return {}; });
-      if (!res.ok) {
-        m.state = 'done';
-        m.error = body.error || 'Couldn’t undo that.';
-      } else {
-        m.state = 'undone';
-        try { await fetchPipelineData(); render(); } catch (e) {}
-      }
-    } catch (e) {
-      m.state = 'done';
-      m.error = 'Couldn’t reach the server.';
-    }
-    renderMsgs(false);
-    saveChat();
-  }
-
-  function accountName() {
-    const p = (window.TITAN_PERSONAS || {})[window.PERSONA_ID];
-    return (p && p.account && p.account.name) || 'Ella Henderson';
-  }
-  // ── Keeping the transcript ──────────────────────────────────────────────────
-  // sessionStorage, which CLAUDE.md otherwise reserves for handing state between
-  // pages. The rule it sets out — don't put data here, fetch it from /api/data —
-  // is about CRM records, which have a server that owns them. A chat transcript
-  // has no such owner: it isn't in the document, and putting it there would make
-  // every message a commit and show one person's conversation to everyone else
-  // on the same ?u= link.
-  //
-  // Scoped per persona so switching accounts doesn't inherit someone else's
-  // thread, and per tab, which is what sessionStorage gives us — see the note in
-  // CLAUDE.md about what that does and doesn't survive.
-  const CHAT_KEY = 'titan-crm-chat:' + window.PERSONA_ID;
-  const CHAT_MAX = 60;          // messages kept, oldest dropped first
-  const CHAT_BYTES = 150000;    // well under the quota, which throws when hit
-
-  function saveChat() {
-    try {
-      // Skips everything marked `local`: the greeting, which is recomputed on
-      // load so storing it would resurrect stale figures, and the "couldn't
-      // reach the assistant" bubbles, which are about a moment rather than the
-      // conversation. Those are also the only messages carrying pre-rendered
-      // HTML, so what gets stored is plain text and plain data — nothing here
-      // comes back out through innerHTML unescaped.
-      let keep = aiMsgs.filter(function (m) { return !m.local; }).slice(-CHAT_MAX);
-      let blob = JSON.stringify(keep);
-      while (blob.length > CHAT_BYTES && keep.length > 1) {
-        keep = keep.slice(1);
-        blob = JSON.stringify(keep);
-      }
-      sessionStorage.setItem(CHAT_KEY, blob);
-    } catch (e) { /* private mode or quota — the rail still works, it just forgets */ }
-  }
-
-  function loadChat() {
-    try {
-      const raw = sessionStorage.getItem(CHAT_KEY);
-      if (!raw) return [];
-      const list = JSON.parse(raw);
-      if (!Array.isArray(list)) return [];
-      // A card left mid-flight when the page went away is not still in flight.
-      list.forEach(function (m) { if (m && m.state === 'busy') m.state = 'pending'; });
-      return list.filter(function (m) { return m && typeof m.role === 'string'; });
-    } catch (e) { return []; }
-  }
-
-  // Numbers in the greeting are read at render time, so it is rebuilt rather than
-  // restored — a transcript from an hour ago shouldn't open with figures that
-  // look current.
+  // Numbers are read at render time, so this is rebuilt rather than restored — a
+  // transcript from an hour ago shouldn't open with figures that look current.
+  // `local` keeps it out of the history sent to the model: it is computed from the
+  // tiles, so replaying it would just be the model reading its own summary back.
   function greetingMsg() {
     const d = aiRead();
-    // `local` keeps it out of the history sent to the model — it's computed here
-    // from the tiles' own numbers, so replaying it would just be the model
-    // reading its own summary back. `greeting` marks it as the rebuilt one.
+    const T = window.titanAssistant;
     return { role: 'bot', local: true, greeting: true, html:
-      '<p>Hi ' + esc(accountName().split(/\s+/)[0]) + ' — here’s a quick read on <b>' + esc(scopeName()) + '</b>.</p>' +
-      (d.all.length ? aiTable(null, (d.money ? [['Open amount', d.openMoney]] : [['Active ' + noun(d.open.length), String(d.open.length)]])
-        .concat([[activeType().rateLabel.replace(/^./, function (ch) { return ch.toUpperCase(); }), d.rate + '%'], ['Overdue', String(d.overdue.length)]])) : '') +
+      '<p>Hi ' + esc(T.accountName().split(/\s+/)[0]) + ' — here’s a quick read on <b>' + esc(scopeName()) + '</b>.</p>' +
+      (d.all.length ? T.aiTable(null,
+        (d.money ? [['Open amount', d.openMoney]] : [['Active ' + noun(d.open.length), String(d.open.length)]])
+          .concat([[activeType().rateLabel.replace(/^./, function (ch) { return ch.toUpperCase(); }), d.rate + '%'],
+                   ['Overdue', String(d.overdue.length)]])) : '') +
       '<p>Ask me anything below, or tap a suggestion.</p>' };
   }
 
-  // Swaps the greeting for one with current numbers and leaves the conversation
-  // alone. Changing the pipeline dropdown used to wipe the transcript, which is
-  // a lot to lose for glancing at another board — especially as the scope never
-  // constrained the assistant, which always sees every pipeline.
-  function refreshGreeting() {
-    const rest = aiMsgs.filter(function (m) { return !m.greeting; });
-    aiMsgs = [greetingMsg()].concat(rest);
-    renderMsgs(false);
-  }
+  // Swaps the greeting for one with current numbers and leaves the conversation alone.
+  // Changing the pipeline dropdown used to wipe the transcript, which is a lot to lose
+  // for glancing at another board — the scope never constrained the assistant anyway.
+  function refreshGreeting() { if (assistant) assistant.refreshGreeting(); }
 
-  // The deliberate clear, behind the New chat button.
-  function resetAssistant() {
-    aiMsgs = [greetingMsg()];
-    saveChat();
-    renderMsgs(false);
-    syncNewChat();
-  }
-
-  function syncNewChat() {
-    const btn = document.getElementById('ai-new');
-    if (btn) btn.hidden = !aiMsgs.some(function (m) { return !m.greeting; });
-  }
   function wireAssistant() {
-    renderChips();
-    aiMsgs = [greetingMsg()].concat(loadChat());
-    renderMsgs(false);
-    syncNewChat();
-    const text = document.getElementById('ai-text'), send = document.getElementById('ai-send'), form = document.getElementById('ai-form');
-    function sync() { send.disabled = !text.value.trim(); text.style.height = 'auto'; text.style.height = Math.min(text.scrollHeight, 96) + 'px'; }
-    text.addEventListener('input', sync);
-    text.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (text.value.trim()) { ask(text.value); text.value = ''; sync(); } } });
-    form.addEventListener('submit', function (e) { e.preventDefault(); if (text.value.trim()) { ask(text.value); text.value = ''; sync(); } });
-    document.getElementById('ai-chips').addEventListener('click', function (e) {
-      const chip = e.target.closest('.ai-chip');
-      if (!chip) return;
-      // The two write chips are openers, not questions — drop them in the box so
-      // the user finishes the sentence rather than sending a half-formed ask.
-      if (/…$/.test(chip.textContent) || /^Move a deal/.test(chip.textContent)) {
-        text.value = chip.textContent.replace(/…$/, '');
-        text.focus();
-        sync();
-        return;
-      }
-      ask(chip.textContent);
-    });
-
-    // Delegated so cards re-rendered on every message keep working.
-    document.getElementById('ai-msgs').addEventListener('click', function (e) {
-      const apply = e.target.closest('[data-apply]');
-      if (apply) { applyAction(Number(apply.dataset.apply)); return; }
-      const undo = e.target.closest('[data-undo]');
-      if (undo) { undoAction(Number(undo.dataset.undo)); return; }
-      const skip = e.target.closest('[data-skip]');
-      if (skip) {
-        const m = aiMsgs[Number(skip.dataset.skip)];
-        if (m && m.state === 'pending') { m.state = 'dropped'; renderMsgs(false); saveChat(); }
-      }
+    assistant = window.titanAssistant.create({
+      els: {
+        msgs: document.getElementById('ai-msgs'), chips: document.getElementById('ai-chips'),
+        form: document.getElementById('ai-form'), text: document.getElementById('ai-text'),
+        send: document.getElementById('ai-send'), newBtn: document.getElementById('ai-new'),
+      },
+      greeting: greetingMsg,
+      // Tiles were computed from data fetched at load, so an applied change isn't in
+      // them yet. Re-pull rather than leave the dashboard disagreeing with the record.
+      onWrite: async function () { await fetchPipelineData(); render(); },
     });
 
     const rail = document.getElementById('ai-rail'), toggle = document.getElementById('d-ai-toggle');
@@ -1592,8 +1124,8 @@
     }
     toggle.addEventListener('click', function () { setOpen(rail.classList.contains('is-hidden')); });
     document.getElementById('ai-close').addEventListener('click', function () { setOpen(false); });
-    document.getElementById('ai-new').addEventListener('click', resetAssistant);
   }
+
 
   // ── Init ──────────────────────────────────────────────────────────────────────
   (async function init() {
