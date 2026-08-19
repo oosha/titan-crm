@@ -39,7 +39,7 @@
     font-size: var(--text-xs); color: var(--text-primary);
   }
   .cf7-await {
-    display: flex; align-items: center; gap: var(--space-100);
+    display: flex; align-items: center; gap: var(--space-100); flex-wrap: wrap;
     background: var(--accent-subtle); border: 1px solid var(--border-accent, var(--accent-primary));
     border-radius: 8px; padding: var(--space-125) var(--space-150); margin-top: var(--space-150);
     font-size: var(--text-sm); color: var(--text-primary);
@@ -173,9 +173,12 @@
     // The total is only meaningful once records are actually being created; before
     // that the state line is already saying nothing has arrived.
     const n = submissionCount(conn);
+    const fresh = (conn.newFields || []).length;
     const count = mapped
       ? '<span class="int-sep">\u00b7</span>' +
-        '<span class="int-conn-count">' + countLabel(n) + '</span>'
+        '<span class="int-conn-count">' + countLabel(n) + '</span>' +
+        (fresh ? '<span class="int-sep">\u00b7</span>' +
+          '<span class="int-conn-new">' + fresh + (fresh === 1 ? ' new field' : ' new fields') + '</span>' : '')
       : '';
     const menuId = 'int-menu-' + esc(conn.id || String(i));
     return '<div class="int-conn">' +
@@ -205,6 +208,12 @@
         '</span>' +
       '</div>' +
       '</div>' +
+      (mapped && (conn.newFields || []).length
+        ? '<div class="cf7-await"><span class="cf7-dot"></span>' +
+          'This form started sending ' + esc((conn.newFields || []).join(', ')) +
+          '. They are going into the note until you map them.' +
+          '<button class="dir-btn" type="button" data-map="' + i + '">Review</button></div>'
+        : '') +
       (conn.sample && !mapped
         ? '<div class="cf7-await"><span class="cf7-dot"></span>' +
           'A submission arrived with ' + Object.keys(conn.sample.values).length +
@@ -252,10 +261,19 @@
     else done();
   }
 
+  // Numbered on creation so five webhooks are not five rows called "Contact Form 7".
+  // It is a placeholder — the setup modal asks for the real name.
+  function nextDefaultName() {
+    const base = 'Untitled form';
+    const taken = connections.map(function (c) { return c.name || ''; });
+    if (taken.indexOf(base) === -1) return base;
+    for (let i = 2; i < 99; i++) if (taken.indexOf(base + ' ' + i) === -1) return base + ' ' + i;
+    return base;
+  }
   async function createConnection() {
     await fetch('/api/inbound-config?persona=' + encodeURIComponent(window.PERSONA_ID), {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ provider: 'cf7', name: 'Contact Form 7' }),
+      body: JSON.stringify({ provider: 'cf7', name: nextDefaultName() }),
     });
     await loadConnections();
   }
@@ -271,8 +289,17 @@
   // about what CF7 forms look like — that is the whole reason the first submission
   // is held rather than imported.
   function openMapping(conn) {
-    const fields = Object.keys((conn.sample && conn.sample.values) || conn.map || {});
-    const draft = { pipelineId: conn.pipelineId || '', stage: conn.stage || '',
+    // Every field this form has ever sent, not just the held sample: once a connection
+    // is live there is no sample, and a field that arrived last week still needs a row.
+    const fields = [];
+    [Object.keys((conn.sample && conn.sample.values) || {}),
+     Object.keys(conn.map || {}),
+     conn.knownFields || []].forEach(function (list) {
+      list.forEach(function (k) { if (fields.indexOf(k) === -1) fields.push(k); });
+    });
+    const isNew = {};
+    (conn.newFields || []).forEach(function (k) { isNew[k] = true; });
+    const draft = { name: conn.name || '', pipelineId: conn.pipelineId || '', stage: conn.stage || '',
                     source: conn.source || 'Contact Form 7',
                     map: Object.assign({}, conn.suggested || {}, conn.map || {}) };
     const targets = [['', 'Don’t import'], ['name', 'Contact name'], ['email', 'Contact email'],
@@ -303,6 +330,14 @@
       const bad = clashes();
       body.innerHTML =
         '<div class="int-sec">' +
+          '<div class="int-sec-title">This form</div>' +
+          '<div class="int-sec-blurb">What to call it in Titan. Five webhooks all named ' +
+            '\u201cContact Form 7\u201d are impossible to tell apart.</div>' +
+          '<div class="int-row"><div class="int-label">Form name</div>' +
+            '<input class="int-text" id="cf7-name" value="' + esc(draft.name) + '" ' +
+            'placeholder="e.g. Homepage enquiry form" maxlength="60"></div>' +
+        '</div>' +
+        '<div class="int-sec">' +
           '<div class="int-sec-title">Where these submissions go</div>' +
           '<div class="int-sec-blurb">Every submission to this form becomes one record.</div>' +
           '<div class="int-row"><div class="int-label">Pipeline</div>' +
@@ -328,12 +363,15 @@
         '</div>' +
         '<div class="int-sec">' +
           '<div class="int-sec-title">What each answer becomes</div>' +
-          '<div class="int-sec-blurb">These are the fields this form actually sent.</div>' +
+          '<div class="int-sec-blurb">' + (Object.keys(isNew).length
+              ? 'Fields marked New started arriving after this form was set up.'
+              : 'These are the fields this form actually sent.') + '</div>' +
           '<div class="int-map-head"><span>Field on your form</span><span>Saved in Titan as</span></div>' +
           fields.map(function (key) {
             const val = String(sample[key] == null ? '' : sample[key]);
-            return '<div class="int-map-row' + (bad[key] ? ' is-clash' : '') + '">' +
+            return '<div class="int-map-row' + (bad[key] ? ' is-clash' : '') + (isNew[key] ? ' is-new' : '') + '">' +
               '<div class="int-map-from">' + esc(key) +
+                (isNew[key] ? '<span class="int-map-new">New</span>' : '') +
                 (val ? '<span class="int-map-sample">' + esc(val) + '</span>' : '') +
               '</div>' +
               '<select class="int-text" data-field="' + esc(key) + '">' +
@@ -352,6 +390,8 @@
       };
       const stageSel = body.querySelector('#cf7-stage');
       if (stageSel) stageSel.onchange = function () { draft.stage = this.value; };
+      const nameEl = body.querySelector('#cf7-name');
+      if (nameEl) nameEl.oninput = function () { draft.name = this.value; };
       const srcEl = body.querySelector('#cf7-source');
       if (srcEl) srcEl.oninput = function () { draft.source = this.value; };
       body.querySelectorAll('[data-field]').forEach(function (sel) {
@@ -383,7 +423,8 @@
         try {
           await fetch('/api/inbound-config?persona=' + encodeURIComponent(window.PERSONA_ID), {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: conn.id, pipelineId: draft.pipelineId, stage: draft.stage,
+            body: JSON.stringify({ id: conn.id, name: draft.name.trim() || conn.name,
+                                   pipelineId: draft.pipelineId, stage: draft.stage,
                                    source: draft.source, map: draft.map }),
           });
           modal.close();

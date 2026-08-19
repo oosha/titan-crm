@@ -33,6 +33,7 @@ const LIMITS = {
   valueLen: 4000,
   samples: 1,        // held submissions per connection
   seen: 200,         // dedupe ring
+  connections: 20,   // per persona
 };
 
 function connectionsOf(data) {
@@ -220,6 +221,81 @@ function formShapeFor(conn, values, extraNoteKey, dropKeys) {
   };
 }
 
+// A form that gains a field after it was set up keeps working — the new answer falls
+// into the note with the other unmapped ones, so nothing is lost. But nobody is told,
+// and the field stays out of the CRM's own columns forever.
+//
+// We cannot ask a form what it contains: CF7 pushes to us and has no API to read. So
+// the next submission is the only place a new field can be discovered, and this is
+// where that happens. The names are remembered so the modal can mark them, and cleared
+// when the mapping is next saved.
+function noteNewFields(conn, values) {
+  var known = Array.isArray(conn.knownFields) ? conn.knownFields : [];
+  var map = conn.map || {};
+  var fresh = Object.keys(values).filter(function (k) {
+    return known.indexOf(k) === -1 && !Object.prototype.hasOwnProperty.call(map, k);
+  });
+  conn.knownFields = known.concat(Object.keys(values).filter(function (k) {
+    return known.indexOf(k) === -1;
+  })).slice(0, LIMITS.keys);
+  if (!fresh.length) return;
+  conn.newFields = (conn.newFields || []).concat(fresh.filter(function (k) {
+    return (conn.newFields || []).indexOf(k) === -1;
+  })).slice(0, LIMITS.keys);
+}
+
+// Applying a saved connection form. Both api/inbound-config.js and dev-server.js used
+// to hold their own copy of this, and the copies drifted the moment one of them learned
+// something — which is the whole reason this file exists.
+//
+// Mutates `doc`. Returns the connection.
+function saveConnection(doc, personaId, body, newToken) {
+  var inbound = ensureInbound(doc);
+  var list = inbound.connections;
+  var conn = body.id ? list.filter(function (c) { return c.id === body.id; })[0] : null;
+
+  if (!conn) {
+    if (list.length >= LIMITS.connections) throw new Error('Too many connections.');
+    conn = { id: 'in' + Date.now().toString(36), token: newToken(personaId),
+             provider: String(body.provider || 'cf7').slice(0, 32), seen: [] };
+    list.push(conn);
+  }
+
+  if (body.name !== undefined) conn.name = String(body.name || '').slice(0, 120);
+  if (body.pipelineId !== undefined) conn.pipelineId = String(body.pipelineId || '');
+  if (body.stage !== undefined) conn.stage = String(body.stage || '');
+  if (body.source !== undefined) conn.source = String(body.source || '').slice(0, 60);
+  if (body.enabled !== undefined) conn.enabled = body.enabled !== false;
+
+  if (body.map && typeof body.map === 'object') {
+    // Rebuilt rather than trusted — this arrives from a browser. Only targets we
+    // understand survive.
+    var clean = {};
+    Object.keys(body.map).slice(0, LIMITS.keys).forEach(function (k) {
+      var t = String(body.map[k] || '');
+      if (t && !Object.prototype.hasOwnProperty.call(F.TARGETS, t)) return;
+      clean[String(k).slice(0, LIMITS.keyLen)] = t;
+    });
+    conn.map = clean;
+    // Saving the mapping is the acknowledgement: whatever was flagged as newly
+    // arrived has now been looked at, whether it was mapped or left out on purpose.
+    delete conn.newFields;
+    var known = Array.isArray(conn.knownFields) ? conn.knownFields : [];
+    Object.keys(clean).forEach(function (k) { if (known.indexOf(k) === -1) known.push(k); });
+    conn.knownFields = known;
+  }
+
+  // The submission that taught us the shape becomes a record the moment the mapping
+  // it was waiting for exists.
+  if (conn.sample && isMapped(conn)) {
+    var held = conn.sample.values;
+    delete conn.sample;
+    delete conn.suggested;
+    receive(doc, conn, held);
+  }
+  return conn;
+}
+
 function isMapped(conn) {
   const map = conn && conn.map;
   if (!map) return false;
@@ -263,6 +339,7 @@ function receive(doc, conn, body) {
   // length stops being the answer to "how many has this form sent us?".
   conn.count = (conn.count || 0) + 1;
   conn.lastAt = Date.now();
+  noteNewFields(conn, values);
   delete conn.sample;
   delete conn.suggested;
   return { status: 'added', changed: true, cardId: card.id };
@@ -274,6 +351,8 @@ module.exports = {
   extrasNote: extrasNote,
   valuesWithExtras: valuesWithExtras,
   connectionsOf: connectionsOf,
+  saveConnection: saveConnection,
+  noteNewFields: noteNewFields,
   ensureInbound: ensureInbound,
   findByToken: findByToken,
   flatten: flatten,

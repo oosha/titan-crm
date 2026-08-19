@@ -36,49 +36,7 @@ module.exports = async function handler(req, res) {
       const body = req.body || {};
       let saved = null;
       await updateJsonFile(path, function (doc) {
-        const inbound = IN.ensureInbound(doc);
-        const list = inbound.connections;
-        let conn = body.id ? list.filter(function (c) { return c.id === body.id; })[0] : null;
-
-        if (!conn) {
-          if (list.length >= MAX_CONNECTIONS) throw new Error('Too many connections.');
-          conn = {
-            id: 'in' + Date.now().toString(36),
-            token: newToken(personaId),
-            provider: String(body.provider || 'cf7').slice(0, 32),
-            seen: [],
-          };
-          list.push(conn);
-        }
-
-        if (body.name !== undefined) conn.name = String(body.name || '').slice(0, 120);
-        if (body.pipelineId !== undefined) conn.pipelineId = String(body.pipelineId || '');
-        if (body.stage !== undefined) conn.stage = String(body.stage || '');
-        if (body.source !== undefined) conn.source = String(body.source || '').slice(0, 60);
-        if (body.enabled !== undefined) conn.enabled = body.enabled !== false;
-        if (body.map && typeof body.map === 'object') {
-          // Only keys the sample actually carried, and only targets we understand —
-          // this arrives from a browser, so the stored mapping is rebuilt rather
-          // than trusted.
-          const clean = {};
-          Object.keys(body.map).slice(0, 60).forEach(function (k) {
-            const t = String(body.map[k] || '');
-            if (t && !Object.prototype.hasOwnProperty.call(require('./_form').TARGETS, t)) return;
-            clean[String(k).slice(0, 120)] = t;
-          });
-          conn.map = clean;
-        }
-
-        // A held sample becomes a record the moment the mapping that was missing
-        // exists — the submission that taught us the shape isn't thrown away.
-        if (conn.sample && IN.isMapped(conn)) {
-          const held = conn.sample.values;
-          delete conn.sample;
-          delete conn.suggested;
-          IN.receive(doc, conn, held);
-        }
-
-        saved = conn;
+        saved = IN.saveConnection(doc, personaId, body, newToken);
         return doc;
       }, 'Inbound: save connection');
 

@@ -41,7 +41,7 @@
     </div>
 
     <div class="subpage-body">
-      <div class="int-wrap">
+      <div class="int-wrap int-wrap--index">
         <p class="int-intro">Connect the tools you already use, so information arrives in
           Titan without anyone retyping it.</p>
         <div class="int-grid" id="int-list"></div>
@@ -70,7 +70,7 @@
   const PROVIDERS = [{
     id: 'cf7',
     name: 'Contact Form 7',
-    blurb: 'Turn form submissions into records automatically',
+    blurb: 'WordPress forms, via a free webhook add-on',
     logo: '/assets/logo-cf7.svg',
     path: '/crm/integrations/cf7',
     // No credential to check, unlike HubSpot: CF7 pushes to a URL we hand out, so
@@ -97,7 +97,7 @@
   }, {
     id: 'hubspot',
     name: 'HubSpot Forms',
-    blurb: 'Turn form submissions into records automatically',
+    blurb: 'Pulls new submissions from your HubSpot forms',
     logo: '/assets/logo-hubspot.svg',
     path: '/crm/integrations/hubspot',
     // Whether a key exists is the one thing this page can't read from the data
@@ -126,14 +126,14 @@
   // rather than new server code — see that file's header. Listed with no route, because
   // a row that opens an empty page is worse than a row that says "not yet".
   const COMING_SOON = [
-    { id: 'wpforms',      name: 'WPForms',       blurb: 'WordPress forms',            logo: '/assets/logo-wpforms.svg' },
-    { id: 'elementor',    name: 'Elementor',     blurb: 'WordPress page builder forms', logo: '/assets/logo-elementor.svg' },
-    { id: 'gravityforms', name: 'Gravity Forms', blurb: 'WordPress forms',            logo: '/assets/logo-gravityforms.svg' },
-    { id: 'wix',          name: 'Wix Forms',     blurb: 'Wix site forms',             logo: '/assets/logo-wix.svg' },
-    { id: 'mailchimp',    name: 'Mailchimp',     blurb: 'Signup and landing pages',   logo: '/assets/logo-mailchimp.svg' },
-    { id: 'googleforms',  name: 'Google Forms',  blurb: 'Google Workspace forms',     logo: '/assets/logo-googleforms.svg' },
-    { id: 'typeform',     name: 'Typeform',      blurb: 'Conversational forms',       logo: '/assets/logo-typeform.svg' },
-    { id: 'jotform',      name: 'Jotform',       blurb: 'Online form builder',        logo: '/assets/logo-jotform.svg' },
+    { id: 'wpforms',      name: 'WPForms',       blurb: 'WordPress forms, Elite plan',      logo: '/assets/logo-wpforms.svg' },
+    { id: 'elementor',    name: 'Elementor',     blurb: 'Built into Elementor Pro forms',   logo: '/assets/logo-elementor.svg' },
+    { id: 'gravityforms', name: 'Gravity Forms', blurb: 'WordPress forms, Elite licence',   logo: '/assets/logo-gravityforms.svg' },
+    { id: 'wix',          name: 'Wix Forms',     blurb: 'Contact forms on a Wix site',      logo: '/assets/logo-wix.svg' },
+    { id: 'mailchimp',    name: 'Mailchimp',     blurb: 'Signups and landing page forms',   logo: '/assets/logo-mailchimp.svg' },
+    { id: 'googleforms',  name: 'Google Forms',  blurb: 'Responses from a Google Form',     logo: '/assets/logo-googleforms.svg' },
+    { id: 'typeform',     name: 'Typeform',      blurb: 'One-question-at-a-time forms',     logo: '/assets/logo-typeform.svg' },
+    { id: 'jotform',      name: 'Jotform',       blurb: 'Jotform submissions',              logo: '/assets/logo-jotform.svg' },
   ];
 
   function renderList(data, connectedById) {

@@ -3,6 +3,9 @@
    and empty states all come from there. */
 
 .int-wrap { max-width: 720px; padding: var(--space-300); }
+/* The index shows three across; the detail pages are a single column of settings and
+   stay narrow, so the width belongs to the page rather than to .int-wrap. */
+.int-wrap--index { max-width: 980px; }
 
 .int-intro {
   font-size: var(--text-sm); line-height: 1.6; color: var(--text-secondary); margin: 0 0 var(--space-200);
@@ -11,6 +14,9 @@
 /* ── Index: a grid of provider cards ─────────────────────────────────────── */
 /* auto-fill rather than a hard `1fr 1fr`: two to a row at this page's width, one
    when the window is narrow, without a media query guessing where that is. */
+/* Three across on this page: at 980px with a 12px gap, a 280px minimum fits exactly
+   three and not four, and it drops to two then one as the window narrows — without a
+   media query having to guess where. */
 .int-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-150);
@@ -211,3 +217,18 @@
 /* The auto-check toast is NOT here: titan-sidebar.js renders it on every CRM
    page, but this stylesheet is only loaded by the two integrations pages. Its
    styles live in titan-sidebar.css alongside the script that creates it. */
+
+/* A field that started arriving after the form was set up. */
+.int-conn-new {
+  font-size: var(--text-xs); font-weight: var(--weight-semi); color: var(--accent-primary);
+}
+.int-map-row.is-new .int-map-from { color: var(--text-primary); }
+.int-map-new {
+  display: inline-block; margin-left: var(--space-075);
+  font-size: var(--text-2xs); font-weight: var(--weight-semi); letter-spacing: .04em;
+  text-transform: uppercase; color: var(--accent-primary);
+  background: var(--surface-selected, var(--surface-recessed));
+  border-radius: 20px; padding: 0 var(--space-075); vertical-align: middle;
+}
+/* The awaiting/review notice can now carry an action. */
+.cf7-await .dir-btn { margin-left: auto; flex-shrink: 0; }
