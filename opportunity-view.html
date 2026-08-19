@@ -171,7 +171,7 @@
      otherwise a closed row offers a destructive action and nothing else. */
   .ov-contact.is-collapsed .ov-contact-grid,
   .ov-contact.is-collapsed .ov-contact-remove { display: none; }
-  .ov-contact-namerow { margin-bottom: var(--space-100); }
+  .ov-contact-namerow { grid-template-columns: 1fr; margin-bottom: var(--space-100); }
   .ov-contact-row { display: flex; align-items: center; gap: var(--space-125); min-width: 0; cursor: pointer; flex: 1; }
   .ov-contact-id { display: flex; flex-direction: column; gap: var(--space-025); min-width: 0; }
   .ov-contact-name { font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-primary); white-space: nowrap; }
@@ -1531,10 +1531,11 @@
             '<span class="ov-contact-caret"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.5 6.5L8 10l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
           '</div>' +
         '</div>' +
-        (nameHidden ? '' : '<div class="ov-contact-grid ov-contact-namerow">' +
-          '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-name')) + '</div>' +
-          '<input class="ds-input" placeholder="Name" value="' + esc(c.name) + '" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);"></div></div>') +
         '<div class="ov-contact-grid">' +
+          (nameHidden ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-name')) + '</div>' +
+            '<input class="ds-input" placeholder="Name" value="' + esc(c.name) + '" oninput="setContactField(' + i + ',\'name\',this.value); updateContactAvatar(' + i + ',this);"></div>') +
+          (fieldHidden('contact-location') ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-location')) + '</div>' +
+            '<input class="ds-input" value="' + esc(c.location) + '" oninput="setContactField(' + i + ',\'location\',this.value)"></div>') +
           (fieldHidden('contact-email') ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-email')) + '</div>' +
             '<input class="ds-input" value="' + esc(c.email) + '" oninput="setContactField(' + i + ',\'email\',this.value)"></div>') +
           (fieldHidden('contact-designation') ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-designation')) + '</div>' +
@@ -1543,8 +1544,6 @@
             '<input class="ds-input" value="' + esc(c.phone) + '" oninput="setContactField(' + i + ',\'phone\',this.value)"></div>') +
           (fieldHidden('contact-department') ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-department')) + '</div>' +
             '<input class="ds-input" value="' + esc(c.department) + '" oninput="setContactField(' + i + ',\'department\',this.value)"></div>') +
-          (fieldHidden('contact-location') ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-location')) + '</div>' +
-            '<input class="ds-input" value="' + esc(c.location) + '" oninput="setContactField(' + i + ',\'location\',this.value)"></div>') +
           (fieldHidden('contact-linkedin') ? '' : '<div class="ov-field"><div class="ov-field-label">' + esc(fieldLabel('contact-linkedin')) + '</div>' +
             '<input class="ds-input" value="' + esc(c.linkedin) + '" oninput="setContactField(' + i + ',\'linkedin\',this.value)"></div>') +
         '</div>' +

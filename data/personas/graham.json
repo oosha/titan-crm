@@ -55,9 +55,14 @@
           "location": "2180 Main Street, San Diego, CA",
           "geoLocation": "https://www.google.com/maps/search/?api=1&query=2180%20Main%20Street%2C%20San%20Diego%2C%20CA",
           "contact": "Maya Ortega",
-          "contactEmail": "maya.ortega@harborhauling.example",
+          "contactEmail": "maya.ortega@wm.com",
           "contactPhone": "+1 619 555 0141",
           "contactDesignation": "Fleet maintenance manager",
+          "contacts": [
+            { "name": "Maya Ortega", "email": "maya.ortega@wm.com", "phone": "+1 619 555 0141", "designation": "Fleet maintenance manager", "department": "Fleet operations", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/maya-ortega-fleet" },
+            { "name": "Eric Doyle", "email": "eric.doyle@wm.com", "phone": "+1 619 555 0142", "designation": "Operations manager", "department": "Operations", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/eric-doyle-operations" },
+            { "name": "Priya Shah", "email": "priya.shah@wm.com", "phone": "+1 619 555 0143", "designation": "Accounts payable specialist", "department": "Finance", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/priya-shah-finance" }
+          ],
           "owner": {
             "name": "Graham Northcutt",
             "email": "graham@northcuttlubricants.example"
@@ -85,9 +90,14 @@
           "location": "1445 Innovation Way, Escondido, CA",
           "geoLocation": "https://www.google.com/maps/search/?api=1&query=1445%20Innovation%20Way%2C%20Escondido%2C%20CA",
           "contact": "Derrick Shaw",
-          "contactEmail": "derrick.shaw@northcountypaving.example",
+          "contactEmail": "derrick.shaw@graniteconstruction.com",
           "contactPhone": "+1 760 555 0198",
           "contactDesignation": "Yard foreman",
+          "contacts": [
+            { "name": "Derrick Shaw", "email": "derrick.shaw@graniteconstruction.com", "phone": "+1 760 555 0198", "designation": "Yard foreman", "department": "Field operations", "location": "Escondido, CA", "linkedin": "https://linkedin.com/in/derrick-shaw-paving" },
+            { "name": "Alana Price", "email": "alana.price@graniteconstruction.com", "phone": "+1 760 555 0199", "designation": "Equipment superintendent", "department": "Equipment", "location": "Escondido, CA", "linkedin": "https://linkedin.com/in/alana-price-equipment" },
+            { "name": "Martin Reyes", "email": "martin.reyes@graniteconstruction.com", "phone": "+1 760 555 0187", "designation": "Project manager", "department": "Project delivery", "location": "Escondido, CA", "linkedin": "https://linkedin.com/in/martin-reyes-projects" }
+          ],
           "owner": {
             "name": "Graham Northcutt",
             "email": "graham@northcuttlubricants.example"
@@ -115,20 +125,76 @@
           "location": "7070 Convoy Court, San Diego, CA",
           "geoLocation": "https://www.google.com/maps/search/?api=1&query=7070%20Convoy%20Court%2C%20San%20Diego%2C%20CA",
           "contact": "Luis Moreno",
-          "contactEmail": "luis.moreno@mesaconcrete.example",
+          "contactEmail": "luis.moreno@cemexusa.com",
           "contactPhone": "+1 858 555 0126",
           "contactDesignation": "Yard foreman",
+          "contacts": [
+            { "name": "Luis Moreno", "email": "luis.moreno@cemexusa.com", "phone": "+1 858 555 0126", "designation": "Yard foreman", "department": "Yard operations", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/luis-moreno-concrete" },
+            { "name": "Dana Kim", "email": "dana.kim@cemexusa.com", "phone": "+1 858 555 0127", "designation": "Maintenance supervisor", "department": "Maintenance", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/dana-kim-maintenance" },
+            { "name": "Omar Collins", "email": "omar.collins@cemexusa.com", "phone": "+1 858 555 0128", "designation": "Purchasing coordinator", "department": "Procurement", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/omar-collins-procurement" }
+          ],
           "owner": {
             "name": "Graham Northcutt",
             "email": "graham@northcuttlubricants.example"
           },
           "value": 2840,
-          "stage": "assessment",
+          "stage": "quote-sent",
           "leadSource": "Drive-by",
           "source": "Route research",
           "equipment": "Mixers, loaders and hydraulic attachments",
           "netsuiteRef": "Estimate EST-10482",
-          "note": "Completed a walk-through. Luis wants a compatible hydraulic oil option and a grease recommendation for the loader pins.",
+          "note": "Site visit complete with Luis. The loader fleet is running hot during long shifts, and the service team is topping off hydraulic oil more often than expected. Luis asked for a compatible hydraulic oil recommendation, a 55-gallon and drum comparison, and a grease option for the loader pins.",
+          "noteAuthor": "Graham Northcutt",
+          "noteDate": "15 Aug, 11:20am",
+          "recentActivities": [
+            {
+              "type": "note",
+              "author": "Graham Northcutt",
+              "text": "Walked the yard with Luis. Captured the loader, mixer, attachment and storage-rack photos. The two older loaders are the priority for the hydraulic oil recommendation.",
+              "date": "15 Aug, 11:20am"
+            },
+            {
+              "type": "task",
+              "text": "Prepare the recommendation and estimate",
+              "snippet": "Game plan: confirm hydraulic-oil compatibility, price both 55-gallon and drum quantities, include grease for loader pins, then send the NetSuite estimate before close of business.",
+              "date": "16 Aug, 9:10am"
+            },
+            {
+              "type": "email",
+              "text": "Hydraulic oil recommendation sent",
+              "snippet": "Shared the equipment summary and quotation EST-10482 with Luis for review.",
+              "date": "Yesterday, 2:10pm"
+            }
+          ],
+          "upcomingActivities": [
+            {
+              "type": "followup",
+              "text": "Confirm the quantity and delivery window with Luis",
+              "date": "Tomorrow"
+            },
+            {
+              "type": "task",
+              "text": "Add the first delivery stop to the route if approved",
+              "date": "This week"
+            }
+          ],
+          "files": [
+            {
+              "name": "Mesa Concrete site visit photos.zip",
+              "size": "18.4 MB",
+              "direction": "received"
+            },
+            {
+              "name": "Mesa Concrete equipment inventory.pdf",
+              "size": "1.2 MB",
+              "direction": "sent"
+            },
+            {
+              "name": "EST-10482 Mesa Concrete quotation.pdf",
+              "size": "248 KB",
+              "direction": "sent"
+            }
+          ],
           "lastActivity": "2h ago",
           "activityType": "Site visit",
           "nextActivity": {
@@ -136,7 +202,29 @@
             "label": "Build hydraulic oil recommendation",
             "date": "Today"
           },
-          "overdue": false
+          "overdue": false,
+          "noteHistory": [
+            {
+              "text": "Walked the yard with Luis. Captured the loader, mixer, attachment and storage-rack photos. The two older loaders are the priority for the hydraulic oil recommendation.",
+              "author": "Graham Northcutt",
+              "date": "Today, 11:20am"
+            }
+          ],
+          "currency": "$",
+          "companyLinkedin": "",
+          "instagram": "",
+          "closeDate": "",
+          "autoLinkActivity": true,
+          "autoLinkScope": "contact",
+          "contacts": [
+            { "name": "Luis Moreno", "email": "luis.moreno@cemexusa.com", "phone": "+1 858 555 0126", "designation": "Yard foreman", "department": "Yard operations", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/luis-moreno-concrete" },
+            { "name": "Dana Kim", "email": "dana.kim@cemexusa.com", "phone": "+1 858 555 0127", "designation": "Maintenance supervisor", "department": "Maintenance", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/dana-kim-maintenance" },
+            { "name": "Omar Collins", "email": "omar.collins@cemexusa.com", "phone": "+1 858 555 0128", "designation": "Purchasing coordinator", "department": "Procurement", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/omar-collins-procurement" }
+          ],
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
         },
         {
           "id": "graham-4",
@@ -146,15 +234,20 @@
           "location": "3800 El Cajon Boulevard, San Diego, CA",
           "geoLocation": "https://www.google.com/maps/search/?api=1&query=3800%20El%20Cajon%20Boulevard%2C%20San%20Diego%2C%20CA",
           "contact": "Anita Patel",
-          "contactEmail": "anita.patel@coastalwater.example",
+          "contactEmail": "anita.patel@acwa.com",
           "contactPhone": "+1 619 555 0179",
           "contactDesignation": "Maintenance supervisor",
+          "contacts": [
+            { "name": "Anita Patel", "email": "anita.patel@acwa.com", "phone": "+1 619 555 0179", "designation": "Maintenance supervisor", "department": "Fleet maintenance", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/anita-patel-water" },
+            { "name": "Jon Bell", "email": "jon.bell@acwa.com", "phone": "+1 619 555 0180", "designation": "Utilities operations manager", "department": "Operations", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/jon-bell-utilities" },
+            { "name": "Rosa Nguyen", "email": "rosa.nguyen@acwa.com", "phone": "+1 619 555 0181", "designation": "Buyer", "department": "Procurement", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/rosa-nguyen-buyer" }
+          ],
           "owner": {
             "name": "Graham Northcutt",
             "email": "graham@northcuttlubricants.example"
           },
           "value": 6150,
-          "stage": "quote-sent",
+          "stage": "assessment",
           "leadSource": "LinkedIn",
           "source": "LinkedIn research",
           "equipment": "Utility trucks, pumps and generators",
@@ -177,9 +270,14 @@
           "location": "9055 Airway Road, San Diego, CA",
           "geoLocation": "https://www.google.com/maps/search/?api=1&query=9055%20Airway%20Road%2C%20San%20Diego%2C%20CA",
           "contact": "Naomi Brooks",
-          "contactEmail": "naomi.brooks@canyonequipment.example",
+          "contactEmail": "naomi.brooks@sunbeltrentals.com",
           "contactPhone": "+1 858 555 0163",
           "contactDesignation": "Service manager",
+          "contacts": [
+            { "name": "Naomi Brooks", "email": "naomi.brooks@sunbeltrentals.com", "phone": "+1 858 555 0163", "designation": "Service manager", "department": "Service", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/naomi-brooks-service" },
+            { "name": "Cameron Wells", "email": "cameron.wells@sunbeltrentals.com", "phone": "+1 858 555 0164", "designation": "Branch manager", "department": "Branch operations", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/cameron-wells-rental" },
+            { "name": "Leah Torres", "email": "leah.torres@sunbeltrentals.com", "phone": "+1 858 555 0165", "designation": "Accounts payable analyst", "department": "Finance", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/leah-torres-finance" }
+          ],
           "owner": {
             "name": "Graham Northcutt",
             "email": "graham@northcuttlubricants.example"
@@ -208,9 +306,14 @@
           "location": "3890 Ocean View Boulevard, San Diego, CA",
           "geoLocation": "https://www.google.com/maps/search/?api=1&query=3890%20Ocean%20View%20Boulevard%2C%20San%20Diego%2C%20CA",
           "contact": "Evan Cole",
-          "contactEmail": "evan.cole@seasidefood.example",
+          "contactEmail": "evan.cole@hormelfoods.com",
           "contactPhone": "+1 619 555 0113",
           "contactDesignation": "Plant maintenance manager",
+          "contacts": [
+            { "name": "Evan Cole", "email": "evan.cole@hormelfoods.com", "phone": "+1 619 555 0113", "designation": "Plant maintenance manager", "department": "Plant maintenance", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/evan-cole-maintenance" },
+            { "name": "Sofia Grant", "email": "sofia.grant@hormelfoods.com", "phone": "+1 619 555 0114", "designation": "Reliability engineer", "department": "Engineering", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/sofia-grant-reliability" },
+            { "name": "Paul Martin", "email": "paul.martin@hormelfoods.com", "phone": "+1 619 555 0115", "designation": "Sanitation manager", "department": "Food safety", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/paul-martin-safety" }
+          ],
           "owner": {
             "name": "Graham Northcutt",
             "email": "graham@northcuttlubricants.example"
@@ -239,9 +342,14 @@
           "location": "1090 Heritage Road, San Diego, CA",
           "geoLocation": "https://www.google.com/maps/search/?api=1&query=1090%20Heritage%20Road%2C%20San%20Diego%2C%20CA",
           "contact": "Chris Bennett",
-          "contactEmail": "chris.bennett@missionrecycling.example",
+          "contactEmail": "chris.bennett@republicservices.com",
           "contactPhone": "+1 619 555 0188",
           "contactDesignation": "Yard foreman",
+          "contacts": [
+            { "name": "Chris Bennett", "email": "chris.bennett@republicservices.com", "phone": "+1 619 555 0188", "designation": "Yard foreman", "department": "Yard operations", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/chris-bennett-recycling" },
+            { "name": "Tina Flores", "email": "tina.flores@republicservices.com", "phone": "+1 619 555 0189", "designation": "Maintenance planner", "department": "Fleet maintenance", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/tina-flores-maintenance" },
+            { "name": "Gabe Miller", "email": "gabe.miller@republicservices.com", "phone": "+1 619 555 0190", "designation": "Site manager", "department": "Operations", "location": "San Diego, CA", "linkedin": "https://linkedin.com/in/gabe-miller-operations" }
+          ],
           "owner": {
             "name": "Graham Northcutt",
             "email": "graham@northcuttlubricants.example"
@@ -264,9 +372,8 @@
         }
       ],
       "hiddenFields": [
+        "company-linkedin",
         "instagram",
-        "contact-department",
-        "contact-location",
         "contact-linkedin"
       ],
       "customFieldDefs": [],
@@ -283,12 +390,13 @@
         "location",
         "geo-location",
         "website",
-        "company-linkedin",
         "contact",
         "contact-name",
         "contact-email",
         "contact-phone",
-        "contact-designation"
+        "contact-designation",
+        "contact-department",
+        "contact-location"
       ]
     }
   }

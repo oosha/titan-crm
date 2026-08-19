@@ -43,7 +43,7 @@ window.TITAN_PERSONAS.graham = {
   mailbox: {
     threads: [
       {
-        id: 'thread-mesa-quote', from: 'Luis Moreno', email: 'luis.moreno@mesaconcrete.example',
+        id: 'thread-mesa-quote', from: 'Luis Moreno', email: 'luis.moreno@cemexusa.com',
         subject: 'Re: Hydraulic oil recommendation for the loader fleet', date: 'Today', unread: true,
         pipelineRef: { pipeline: 'field-sales', stage: 'Assessment', cardId: 'graham-3' },
         messages: [
@@ -61,7 +61,7 @@ window.TITAN_PERSONAS.graham = {
         ],
       },
       {
-        id: 'thread-coastal-quote', from: 'Anita Patel', email: 'anita.patel@coastalwater.example',
+        id: 'thread-coastal-quote', from: 'Anita Patel', email: 'anita.patel@acwa.com',
         subject: 'Re: Seasonal fleet lubrication estimate', date: 'Yesterday', unread: false,
         pipelineRef: { pipeline: 'field-sales', stage: 'Quote sent', cardId: 'graham-4' },
         messages: [
@@ -79,7 +79,7 @@ window.TITAN_PERSONAS.graham = {
         ],
       },
       {
-        id: 'thread-canyon-order', from: 'Naomi Brooks', email: 'naomi.brooks@canyonequipment.example',
+        id: 'thread-canyon-order', from: 'Naomi Brooks', email: 'naomi.brooks@sunbeltrentals.com',
         subject: 'Re: First grease delivery: Canyon Equipment Rental', date: 'Today', unread: false,
         pipelineRef: { pipeline: 'field-sales', stage: 'First order', cardId: 'graham-5' },
         messages: [
@@ -96,7 +96,7 @@ window.TITAN_PERSONAS.graham = {
         ],
       },
       {
-        id: 'thread-seaside-reorder', from: 'Evan Cole', email: 'evan.cole@seasidefood.example',
+        id: 'thread-seaside-reorder', from: 'Evan Cole', email: 'evan.cole@hormelfoods.com',
         subject: 'September food-grade lubricant order', date: '2d ago', unread: true,
         pipelineRef: { pipeline: 'field-sales', stage: 'Active customer', cardId: 'graham-6' },
         messages: [
@@ -113,7 +113,7 @@ window.TITAN_PERSONAS.graham = {
         ],
       },
       {
-        id: 'thread-mission-checkin', from: 'Chris Bennett', email: 'chris.bennett@missionrecycling.example',
+        id: 'thread-mission-checkin', from: 'Chris Bennett', email: 'chris.bennett@republicservices.com',
         subject: 'Re: Invoice INV-48096 and next yard stop', date: '5d ago', unread: false,
         pipelineRef: { pipeline: 'field-sales', stage: 'Active customer', cardId: 'graham-7' },
         messages: [
@@ -132,12 +132,12 @@ window.TITAN_PERSONAS.graham = {
   },
 
   contacts: [
-    { name: 'Maya Ortega', email: 'maya.ortega@harborhauling.example', source: 'Google Maps' },
-    { name: 'Derrick Shaw', email: 'derrick.shaw@northcountypaving.example', source: 'Referral' },
-    { name: 'Luis Moreno', email: 'luis.moreno@mesaconcrete.example', source: 'Field visit' },
-    { name: 'Anita Patel', email: 'anita.patel@coastalwater.example', source: 'LinkedIn' },
-    { name: 'Naomi Brooks', email: 'naomi.brooks@canyonequipment.example', source: 'Referral' },
-    { name: 'Evan Cole', email: 'evan.cole@seasidefood.example', source: 'Customer' },
-    { name: 'Chris Bennett', email: 'chris.bennett@missionrecycling.example', source: 'Customer' },
+    { name: 'Maya Ortega', email: 'maya.ortega@wm.com', source: 'Google Maps' },
+    { name: 'Derrick Shaw', email: 'derrick.shaw@graniteconstruction.com', source: 'Referral' },
+    { name: 'Luis Moreno', email: 'luis.moreno@cemexusa.com', source: 'Field visit' },
+    { name: 'Anita Patel', email: 'anita.patel@acwa.com', source: 'LinkedIn' },
+    { name: 'Naomi Brooks', email: 'naomi.brooks@sunbeltrentals.com', source: 'Referral' },
+    { name: 'Evan Cole', email: 'evan.cole@hormelfoods.com', source: 'Customer' },
+    { name: 'Chris Bennett', email: 'chris.bennett@republicservices.com', source: 'Customer' },
   ],
 };
