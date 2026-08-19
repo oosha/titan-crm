@@ -1,5 +1,5 @@
 {
-  "currentPipelineId": "p6",
+  "currentPipelineId": "neo",
   "pipelineSeq": 7,
   "pipelines": {
     "neo": {
@@ -731,48 +731,6 @@
           "overdue": false,
           "createdBy": "Form",
           "customFieldValues": {}
-        },
-        {
-          "id": 210,
-          "company": "",
-          "contact": "Mathews D",
-          "initials": "M",
-          "deal": "Neo Leads submission",
-          "value": 0,
-          "stage": "lead",
-          "lastActivity": "just now",
-          "activityType": "Form submission",
-          "overdue": false,
-          "upcomingActivities": [],
-          "createdBy": "HubSpot",
-          "note": "I am applying for a product designer role",
-          "noteDate": "",
-          "currency": "$",
-          "location": "",
-          "website": "",
-          "companyLinkedin": "",
-          "instagram": "",
-          "closeDate": "",
-          "source": "HubSpot form",
-          "contacts": [
-            {
-              "name": "Mathews D",
-              "email": "mathewsd@gmail.com",
-              "phone": "",
-              "designation": "",
-              "department": "",
-              "location": "",
-              "linkedin": ""
-            }
-          ],
-          "contactEmail": "mathewsd@gmail.com",
-          "contactPhone": "",
-          "contactDesignation": "",
-          "contactDepartment": "",
-          "contactLocation": "",
-          "contactLinkedin": "",
-          "customFieldValues": {},
-          "hubspotSubmissionKey": "c:28ac0d55-3575-4c62-9d7b-7192b1c0f63e"
         },
         {
           "id": 211,
