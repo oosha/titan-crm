@@ -63,9 +63,13 @@ function isConfigured() {
 }
 
 // Something the person reading the rail can act on, as opposed to a fault.
-function userError(message) {
+// `upstream` is the status the model API gave us, carried through to the response so a
+// misconfigured deployment can be told apart from a real outage without shell access to
+// the logs. It is a status code, never a body and never the key.
+function userError(message, upstream) {
   const e = new Error(message);
   e.isUserError = true;
+  if (upstream) e.upstream = upstream;
   return e;
 }
 
@@ -532,9 +536,20 @@ async function callModel(body) {
 
   if (!res.ok) {
     const text = (await res.text()).slice(0, 300);
-    if (res.status === 401) throw userError('The assistant isn’t set up correctly on this deployment.');
-    if (res.status === 429) throw userError('The assistant is busy right now. Try again in a moment.');
-    if (res.status >= 500) throw userError('The assistant is temporarily unavailable. Try again in a moment.');
+    // Logged for every failure, not just the ones we re-throw raw. The 5xx branch used
+    // to discard this, which made "temporarily unavailable" indistinguishable from a
+    // base URL pointing somewhere dead — the upstream said why and we dropped it.
+    // The key is never in here; the URL and the body are what identify the fault.
+    if (typeof console !== 'undefined' && console.error) {
+      console.error('[assistant] upstream ' + res.status + ' from ' + ANTHROPIC_URL + ': ' + text);
+    }
+    if (res.status === 401 || res.status === 403) {
+      throw userError('The assistant isn’t set up correctly on this deployment.', res.status);
+    }
+    if (res.status === 429) throw userError('The assistant is busy right now. Try again in a moment.', 429);
+    if (res.status >= 500) {
+      throw userError('The assistant is temporarily unavailable. Try again in a moment.', res.status);
+    }
     throw new Error('Anthropic request failed (' + res.status + '): ' + text);
   }
   return res.json();

@@ -85,6 +85,10 @@ module.exports = async function handler(req, res) {
 
     res.status(200).json(out);
   } catch (err) {
-    res.status(err && err.isUserError ? 400 : 500).json({ error: String((err && err.message) || err) });
+    // The upstream status rides along so a deployment fault is diagnosable from the
+    // response alone. Nothing else about the upstream call is exposed.
+    const out = { error: String((err && err.message) || err) };
+    if (err && err.upstream) out.upstream = err.upstream;
+    res.status(err && err.isUserError ? 400 : 500).json(out);
   }
 };
