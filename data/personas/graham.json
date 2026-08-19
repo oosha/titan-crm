@@ -784,7 +784,7 @@
     },
     {
       "id": "proposal-follow-up",
-      "name": "Quot follow-up",
+      "name": "Quotes follow-up",
       "description": "Follow up on open proposals.",
       "weekdaysOnly": true,
       "schedule": {
