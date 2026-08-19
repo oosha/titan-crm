@@ -11,39 +11,167 @@
       "type": "sales",
       "subject": "company",
       "defaultOwner": {
-        "name": "Graham Northcutt",
+        "name": "graham@northcuttlubricants.example",
         "email": "graham@northcuttlubricants.example"
       },
       "stages": [
         {
           "key": "mapped",
           "label": "Mapped",
-          "description": "A prospect identified through a referral or route research."
+          "description": "A prospect identified through a referral or route research.",
+          "entry": [],
+          "exitActions": [],
+          "idle": {
+            "on": false,
+            "days": 3,
+            "action": "",
+            "template": "",
+            "sequence": "",
+            "taskName": "",
+            "callName": "",
+            "reminderOffset": "next-day",
+            "reminderTime": "09:00"
+          },
+          "exit": {
+            "mode": "manual",
+            "rules": []
+          }
         },
         {
           "key": "visit-planned",
           "label": "Visit planned",
-          "description": "An introductory site visit is on the route."
+          "description": "An introductory site visit is on the route.",
+          "entry": [],
+          "exitActions": [],
+          "idle": {
+            "on": false,
+            "days": 3,
+            "action": "",
+            "template": "",
+            "sequence": "",
+            "taskName": "",
+            "callName": "",
+            "reminderOffset": "next-day",
+            "reminderTime": "09:00"
+          },
+          "exit": {
+            "mode": "manual",
+            "rules": []
+          }
         },
         {
           "key": "assessment",
           "label": "Assessment",
-          "description": "Equipment and lubricant needs are being assessed on site."
+          "description": "Equipment and lubricant needs are being assessed on site.",
+          "entry": [],
+          "exitActions": [],
+          "idle": {
+            "on": false,
+            "days": 3,
+            "action": "",
+            "template": "",
+            "sequence": "",
+            "taskName": "",
+            "callName": "",
+            "reminderOffset": "next-day",
+            "reminderTime": "09:00"
+          },
+          "exit": {
+            "mode": "manual",
+            "rules": []
+          }
         },
         {
           "key": "quote-sent",
           "label": "Quote sent",
-          "description": "A recommendation or NetSuite estimate has been shared."
+          "description": "A recommendation or NetSuite estimate has been shared.",
+          "entry": [
+            {
+              "id": "sequence-1787145654218",
+              "type": "sequence",
+              "value": "proposal-follow-up",
+              "name": "",
+              "reminderOffset": "next-day",
+              "reminderTime": "09:00"
+            },
+            {
+              "id": "task-1787145672079",
+              "type": "task",
+              "value": "",
+              "name": "Agree on quotes terms",
+              "reminderOffset": "3-days",
+              "reminderTime": "12:00pm"
+            }
+          ],
+          "exitActions": [],
+          "idle": {
+            "on": false,
+            "days": 3,
+            "action": "",
+            "template": "",
+            "sequence": "",
+            "taskName": "",
+            "callName": "",
+            "reminderOffset": "next-day",
+            "reminderTime": "09:00"
+          },
+          "exit": {
+            "mode": "auto",
+            "rules": [
+              {
+                "id": "rule-1787145663623",
+                "when": "task",
+                "task": "Agree on quotes terms",
+                "field": "",
+                "days": 7,
+                "join": "or"
+              }
+            ]
+          }
         },
         {
           "key": "first-order",
           "label": "First order",
-          "description": "The first order is being delivered and followed up."
+          "description": "The first order is being delivered and followed up.",
+          "entry": [],
+          "exitActions": [],
+          "idle": {
+            "on": false,
+            "days": 3,
+            "action": "",
+            "template": "",
+            "sequence": "",
+            "taskName": "",
+            "callName": "",
+            "reminderOffset": "next-day",
+            "reminderTime": "09:00"
+          },
+          "exit": {
+            "mode": "manual",
+            "rules": []
+          }
         },
         {
           "key": "active-customer",
           "label": "Active customer",
-          "description": "An ongoing account with a planned service cadence."
+          "description": "An ongoing account with a planned service cadence.",
+          "entry": [],
+          "exitActions": [],
+          "idle": {
+            "on": false,
+            "days": 3,
+            "action": "",
+            "template": "",
+            "sequence": "",
+            "taskName": "",
+            "callName": "",
+            "reminderOffset": "next-day",
+            "reminderTime": "09:00"
+          },
+          "exit": {
+            "mode": "manual",
+            "rules": []
+          }
         }
       ],
       "cards": [
