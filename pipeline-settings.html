@@ -181,7 +181,9 @@
   .np-header {
     padding: 18px 24px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
   }
-  .np-header .np-title { font-size: var(--text-md); font-weight: var(--weight-semi); color: var(--text-primary); flex: 1; }
+  /* --text-lg, not --text-md: at 14px the title matched the field labels below it
+     and stopped reading as the title. */
+  .np-header .np-title { font-size: var(--text-lg); font-weight: var(--weight-semi); color: var(--text-primary); flex: 1; }
   .np-close { cursor: pointer; color: var(--text-secondary); font-size: var(--text-xl); line-height: 1; padding: 0 var(--space-025); }
   .np-body { padding: 4px 24px 24px; overflow-y: auto; }
   .np-footer {

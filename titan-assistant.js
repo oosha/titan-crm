@@ -373,7 +373,7 @@
     fab.setAttribute('aria-controls', 'ai-panel');
     fab.setAttribute('aria-label', 'Ask Titan');
     fab.title = 'Ask Titan';
-    fab.innerHTML = '<svg width="22" height="22" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+    fab.innerHTML = '<svg width="26" height="26" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
       '<path d="M8 1.6l1.5 3.9 3.9 1.5-3.9 1.5L8 12.4 6.5 8.5 2.6 7l3.9-1.5L8 1.6z" fill="currentColor"/></svg>';
 
     var panel = document.createElement('div');

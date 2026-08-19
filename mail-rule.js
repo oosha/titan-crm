@@ -126,34 +126,34 @@
       var addBtn = host.querySelector('[data-mr-add]');
 
       function drawMailboxes() {
-        // Every mailbox is on screen at once, as a toggle. Nothing opens, so nothing
-        // shifts underneath it, and with one shared domain the addresses collapse to
-        // their local part — six full addresses would wrap to four lines and say the
-        // same thing four times.
-        var domain = (boxes[0] && boxes[0].email.split('@')[1]) || '';
-        var allSame = boxes.every(function (b) { return b.email.split('@')[1] === domain; });
-        mbHint.textContent = allSame
-          ? 'All @' + domain + '. Mail arriving in the ones you pick is checked against the conditions below.'
-          : 'Mail arriving in the ones you pick is checked against the conditions below.';
+        // A list, not pills. Full addresses are long and near-identical up to the local
+        // part; side by side they wrapped unpredictably and the eye had to re-read each
+        // one. Stacked, they line up and scan in a column. The dialog scrolls — that is
+        // a fair price for showing the real address.
+        mbHint.textContent = 'Mail arriving in the ones you pick is checked against the conditions below.';
 
         panel.innerHTML = boxes.map(function (b) {
-          var label = allSame ? b.email.split('@')[0] : b.email;
           if (!b.owned) {
             var asked = state.requested.indexOf(b.email) !== -1;
-            return '<button type="button" class="mr-mb' + (asked ? ' is-pending' : ' is-locked') + '" ' +
-              (asked ? 'disabled ' : '') + 'data-mr-ask="' + esc(b.email) + '" ' +
-              'title="' + esc(b.email) + ' — ' + esc(b.sub) + '">' +
-              '<span class="mr-mb-icon" data-ds-icon="' + (asked ? 'clock' : 'add-person') + '" data-size="13"></span>' +
-              '<span class="mr-mb-name">' + esc(label) + '</span>' +
-              '<span class="mr-mb-note">' + (asked ? 'Requested' : 'Ask') + '</span>' +
-            '</button>';
+            return '<div class="mr-mb is-locked' + (asked ? ' is-pending' : '') + '">' +
+              '<span class="mr-mb-icon" data-ds-icon="' + (asked ? 'clock' : 'add-person') + '" data-size="15"></span>' +
+              '<span class="mr-mb-text">' +
+                '<span class="mr-mb-email">' + esc(b.email) + '</span>' +
+                '<span class="mr-mb-sub">' + esc(b.sub) + '</span>' +
+              '</span>' +
+              (asked
+                ? '<span class="mr-mb-pending">Access requested</span>'
+                : '<button type="button" class="mr-mb-ask" data-mr-ask="' + esc(b.email) + '">Request access</button>') +
+            '</div>';
           }
           var on = state.mailboxes.indexOf(b.email) !== -1;
           return '<button type="button" class="mr-mb' + (on ? ' is-on' : '') + '" ' +
-            'aria-pressed="' + on + '" data-mr-mb="' + esc(b.email) + '" ' +
-            'title="' + esc(b.email) + ' — ' + esc(b.sub) + '">' +
-            '<span class="mr-mb-icon" data-ds-icon="' + (on ? 'check' : 'plus') + '" data-size="13"></span>' +
-            '<span class="mr-mb-name">' + esc(label) + '</span>' +
+            'role="checkbox" aria-checked="' + on + '" data-mr-mb="' + esc(b.email) + '">' +
+            '<span class="mr-mb-box" data-ds-icon="check" data-size="12"></span>' +
+            '<span class="mr-mb-text">' +
+              '<span class="mr-mb-email">' + esc(b.email) + '</span>' +
+              '<span class="mr-mb-sub">' + esc(b.sub) + '</span>' +
+            '</span>' +
           '</button>';
         }).join('');
         if (window.dsIcon) window.dsIcon.hydrate(panel);
