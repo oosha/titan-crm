@@ -667,7 +667,21 @@
       },
       "activeInstances": 0,
       "usedBy": [],
-      "steps": []
+      "steps": [
+        {
+          "id": "group-110",
+          "timing": "immediate",
+          "days": 0,
+          "actions": [
+            {
+              "id": "action-109",
+              "action": "email",
+              "templateId": "initial-outreach",
+              "sendTime": "09:00"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "sequence-mt06x9yw-07efm",
