@@ -745,7 +745,13 @@
             }
           ],
           "noteDate": "7 Aug",
-          "autoLinkActivity": true
+          "autoLinkActivity": true,
+          "geoLocation": "https://maps.app.goo.gl/qDuMLroEE9eUV8Qj9",
+          "owner": {
+            "name": "Ella Henderson",
+            "email": "ella.henderson@avontechlabs.com"
+          },
+          "autoLinkScope": "contact"
         },
         {
           "id": 104,
