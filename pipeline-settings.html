@@ -162,6 +162,22 @@
   /* After .np-modal, not before: same specificity, so source order decides. The rule
      builder puts four controls on a row and 520px squeezes the values to nothing. */
   .np-modal--wide { width: 720px; }
+  .ps-template-modal { width: min(1040px, calc(100vw - 64px)); max-height: 92vh; }
+  .ps-template-header { justify-content: center; position: relative; min-height: 64px; border-bottom: 1px solid var(--border-subtle); }
+  .ps-template-header .np-title { font-size: var(--text-2xl); font-weight: var(--weight-semi); color: var(--text-heading); }
+  .ps-template-header .np-close { position: absolute; right: var(--space-200); top: 50%; transform: translateY(-50%); }
+  .ps-template-modal-body { padding: var(--space-300); overflow: auto; }
+  .ps-template-editor { border: 1px solid var(--border-strong); border-radius: var(--radius-md); overflow: hidden; }
+  .ps-template-name-row, .ps-template-subject-row { display: flex; align-items: center; gap: var(--space-150); padding: var(--space-200); font-size: var(--text-md); }
+  .ps-template-name-row { border-bottom: 1px solid var(--border-subtle); }
+  .ps-template-name-label { color: var(--text-secondary); }
+  .ps-template-name-value { font-weight: var(--weight-semi); color: var(--text-heading); }
+  .ps-template-subject-row { justify-content: space-between; border-bottom: 1px solid var(--border-subtle); }
+  .ps-template-subject { min-width: 0; color: var(--text-primary); }
+  .ps-template-recipient { color: var(--text-muted); font-size: var(--text-sm); white-space: nowrap; }
+  .ps-template-preview-body { min-height: 340px; padding: var(--space-300); white-space: pre-wrap; line-height: 1.65; font-size: var(--text-md); color: var(--text-primary); }
+  .ps-template-toolbar { display: flex; align-items: center; gap: var(--space-150); height: 48px; padding: 0 var(--space-150); border-top: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: var(--text-sm); }
+  .ps-template-toolbar strong { color: var(--text-primary); font-size: var(--text-lg); }
   .np-header {
     padding: 18px 24px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
   }
@@ -373,12 +389,13 @@
   .ps-add-action { width: 170px; min-width: 170px; margin-top: var(--space-200); }
   .ps-add-condition { margin-top: var(--space-200); }
   .ps-stage-row .ps-action-text { flex: 1; min-width: 220px; max-width: 340px; }
+  .ps-stage-row .ps-task-name-input { flex: 1 1 360px; min-width: 300px; max-width: 440px; }
   .ps-stage-row .ps-number { width: 64px; min-width: 64px; }
   .ps-reminder-schedule { min-width: 0; flex: 1 1 auto; display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--space-100); }
-  .ps-stage-row .ps-reminder-offset { width: 180px; min-width: 180px; }
+  .ps-stage-row .ps-reminder-offset { width: 148px; min-width: 148px; }
   .ps-stage-row .ps-reminder-days { width: 72px; min-width: 72px; }
-  .ps-stage-row .ps-reminder-time { width: 128px; min-width: 128px; }
-  .ps-reminder-copy { color: var(--text-secondary); font-size: var(--text-sm); font-weight: var(--weight-semi); }
+  .ps-stage-row .ps-reminder-time { width: 68px; min-width: 68px; }
+  .ps-reminder-copy { color: var(--text-primary); font-size: var(--text-md); font-weight: var(--weight-regular); }
   .ps-stage-row:has(.ps-condition-join) { display: grid; grid-template-columns: 96px 200px 200px; gap: var(--space-100); }
   .ps-stage-row:has(.ps-condition-join) .ps-condition-join { width: 96px; min-width: 96px; margin: 0; }
   .ps-stage-row:has(.ps-condition-join) select:nth-of-type(3) { margin-left: var(--space-100); }
@@ -400,6 +417,8 @@
   }
   .ps-task-pill-x { cursor: pointer; color: #b0b5bb; font-size: 15px; line-height: 1; }
   .ps-task-pill-x:hover { color: #dc2626; }
+  .ps-entry-task-pill { min-height: var(--btn-height-sm); padding-top: var(--space-050); padding-bottom: var(--space-050); }
+  .ps-entry-task-edit { margin-left: var(--space-050); }
   /* Inline field rows — dropdowns/inputs sit on one line (Send email, advance). */
   .ps-inline-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .ps-inline-label { font-size: 14px; color: #555; }
@@ -596,6 +615,25 @@
   </div>
 </div>
 
+<!-- Read-only preview for a template used by a stage action. Editing the template
+     belongs to the email library, not inside a pipeline rule. -->
+<div class="np-overlay" id="ps-template-overlay" onclick="if(event.target===this) closeTemplatePreview()">
+  <div class="np-modal ps-template-modal">
+    <div class="np-header ps-template-header">
+      <span class="np-title" id="ps-template-title">Email template</span>
+      <span class="np-close" onclick="closeTemplatePreview()">&times;</span>
+    </div>
+    <div class="np-body ps-template-modal-body">
+      <div class="ps-template-editor">
+        <div class="ps-template-name-row"><span class="ps-template-name-label">Template name</span><span class="ps-template-name-value" id="ps-template-name"></span></div>
+        <div class="ps-template-subject-row"><span class="ps-template-subject" id="ps-template-subject"></span><span class="ps-template-recipient">To: <span id="ps-template-to"></span></span></div>
+        <div class="ps-template-preview-body" id="ps-template-body"></div>
+        <div class="ps-template-toolbar" aria-hidden="true"><span>Sans Serif</span><span>11</span><strong>B</strong><em>I</em><u>U</u><span>☷</span><span>☷</span><span>↗</span><span>⌁</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="np-toast" id="np-toast"></div>
 
 <script>
@@ -620,6 +658,26 @@
   try { editSource = JSON.parse(sessionStorage.getItem('titan-crm-edit-pipeline') || 'null'); } catch (e) {}
   let pipeline = (editSource && editSource.pipelineKey === pipelineKey) ? editSource.pipeline : null;
   function goBack() { location.href = '/crm/pipeline/' + encodeURIComponent(pipelineKey) + location.search; }
+  function openTemplatePreview(templateId) {
+    const template = window.titanSequenceLibrary.getTemplate(templateId);
+    if (!template) return;
+    document.getElementById('ps-template-title').textContent = template.name;
+    document.getElementById('ps-template-name').textContent = template.name;
+    document.getElementById('ps-template-to').textContent = template.to || '';
+    document.getElementById('ps-template-subject').textContent = template.subject || '';
+    document.getElementById('ps-template-body').textContent = template.body || template.preview || '';
+    document.getElementById('ps-template-overlay').classList.add('open');
+  }
+  function closeTemplatePreview() {
+    document.getElementById('ps-template-overlay').classList.remove('open');
+  }
+  function templateViewButton(templateId) {
+    const view = document.createElement('button');
+    view.type = 'button'; view.className = 'ds-btn ds-btn--secondary ds-btn--sm';
+    view.textContent = 'View template'; view.disabled = !templateId;
+    view.addEventListener('click', function () { openTemplatePreview(templateId); });
+    return view;
+  }
 
   // ── Settings sections ──
   // One section on screen at a time. The pane lives in the hash so a reload, a
@@ -1163,7 +1221,7 @@
 
     const stageName = stage.label || 'this stage';
     const entrySection = addSection(
-      'On entry · ' + stageName,
+      'On entry',
       '');
     function optionMarkup(options, selected, placeholder) {
       return '<option value="">' + placeholder + '</option>' + options.filter(function (option) {
@@ -1225,7 +1283,7 @@
         const at = document.createElement('span');
         at.className = 'ps-reminder-copy'; at.textContent = 'at'; schedule.appendChild(at);
         const time = document.createElement('input');
-        time.className = 'ds-input ps-reminder-time'; time.type = 'time'; time.value = config.reminderTime || '09:00';
+        time.className = 'ds-input ps-reminder-time'; time.type = 'text'; time.inputMode = 'numeric'; time.placeholder = '9:00'; time.value = config.reminderTime || '09:00';
         time.setAttribute('aria-label', 'Reminder time');
         time.addEventListener('input', function () { config.reminderTime = time.value; });
         schedule.appendChild(time);
@@ -1265,7 +1323,7 @@
         picker.value = action.value || '';
         picker.addEventListener('change', function () {
           action.value = picker.value;
-          if (type === 'sequence') renderStageDetails();
+          renderStageDetails();
         });
         row.insertBefore(picker, row.lastChild);
         if (type === 'sequence') {
@@ -1274,7 +1332,54 @@
           edit.textContent = 'View steps'; edit.disabled = !action.value;
           edit.addEventListener('click', function () { openSequence(action.value); });
           row.insertBefore(edit, row.lastChild);
+        } else if (type === 'email' && action.value) {
+          row.insertBefore(templateViewButton(action.value), row.lastChild);
         }
+      } else if (type === 'task') {
+        // A task needs a meaningful title before it becomes a reusable stage action.
+        // Match the prior flow: collect that title first, then lock it into a pill.
+        if (!action.name) {
+          const name = document.createElement('input');
+          name.className = 'ds-input ps-action-text ps-task-name-input';
+          name.placeholder = 'e.g. Prepare the proposal';
+          name.setAttribute('aria-label', 'Task name');
+          row.insertBefore(name, row.lastChild);
+          appendReminderSchedule(row, action, row.lastChild);
+          const add = document.createElement('button');
+          add.type = 'button'; add.className = 'ds-btn ds-btn--primary ds-btn--sm'; add.textContent = 'Add';
+          const commit = function () {
+            const taskName = name.value.trim();
+            if (!taskName) { name.focus(); return; }
+            action.name = taskName;
+            renderStageDetails();
+          };
+          add.addEventListener('click', commit);
+          name.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') { event.preventDefault(); commit(); }
+          });
+          row.insertBefore(add, row.lastChild);
+          section.appendChild(row);
+          return;
+        }
+        const taskPill = document.createElement('span');
+        taskPill.className = 'ps-task-pill ps-entry-task-pill';
+        const taskLabel = document.createElement('span');
+        taskLabel.textContent = 'Task: ' + action.name;
+        taskPill.appendChild(taskLabel);
+        row.insertBefore(taskPill, row.lastChild);
+        const edit = document.createElement('button');
+        edit.type = 'button'; edit.className = 'ds-btn ds-btn--secondary ds-btn--sm ps-entry-task-edit';
+        edit.textContent = 'Edit';
+        edit.addEventListener('click', function () {
+          const nextName = window.prompt('Task name', action.name);
+          if (nextName === null) return;
+          const trimmed = nextName.trim();
+          if (!trimmed) return;
+          action.name = trimmed;
+          renderStageDetails();
+        });
+        row.insertBefore(edit, row.lastChild);
+        appendReminderSchedule(row, action, row.lastChild);
       } else {
         const name = document.createElement('input');
         name.className = 'ds-input ps-action-text';
@@ -1303,7 +1408,7 @@
     addActionPicker(entrySection, stage.entry);
 
     const idleSection = addSection(
-      'No email reply',
+      'No email reply or meeting',
       '');
     const idleRow = document.createElement('div');
     idleRow.className = 'ps-stage-row';
@@ -1329,7 +1434,9 @@
       const row = document.createElement('div'); row.className = 'ps-stage-row ps-stage-row--compact';
       const picker = document.createElement('select'); picker.className = 'ds-input ps-entry-value';
       picker.innerHTML = optionMarkup(EMAIL_TEMPLATE_OPTIONS, stage.idle.template || '', 'Select email template'); picker.value = stage.idle.template || '';
-      picker.addEventListener('change', function () { stage.idle.template = picker.value; }); row.appendChild(picker); idleSection.appendChild(row);
+      picker.addEventListener('change', function () { stage.idle.template = picker.value; renderStageDetails(); }); row.appendChild(picker);
+      if (stage.idle.template) row.appendChild(templateViewButton(stage.idle.template));
+      idleSection.appendChild(row);
     } else if (stage.idle.on && (stage.idle.action === 'task' || stage.idle.action === 'call')) {
       const row = document.createElement('div'); row.className = 'ps-stage-row ps-stage-row--compact';
       const name = document.createElement('input'); name.className = 'ds-input ps-action-text';
