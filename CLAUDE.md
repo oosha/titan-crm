@@ -37,7 +37,7 @@ Multi-page app. Routes are rewrites in `vercel.json`; each route is its own docu
 | `/crm/pipeline/:id/setting` | `pipeline-settings.html` | Stages, fields |
 | `/crm/pipeline/:id/record-setting` | `opportunity-settings.html` | |
 | `/crm/contacts`, `/crm/companies` | `contacts.html`, `companies.html` | Directory pages |
-| `/crm/sequences`, `/crm/sequences/:id` | `sequences.html` | Global prototype sequence grid + full-page linear editor |
+| `/crm/sequences`, `/crm/sequences/:id` | `sequences.html` | Global sequence performance table + full-page linear editor |
 | `/crm/forms` | `forms.html` | One row per pipeline: its intake form, or the offer of one |
 | `/crm/pipeline/:id/form` | `form-settings.html` | Deep link to one form's editor |
 | `/f/:token` | `form.html` | **Public.** The intake form itself — no auth, no sidebar |
@@ -202,57 +202,94 @@ a contract: rename one of those and the board's sidebar breaks.
 
 ## Sequences
 
-`/crm/sequences` is a global, frontend-only prototype library. It shows the existing
-sequences as a grid; selecting one opens its full-page editor at `/crm/sequences/:id`,
+`/crm/sequences` is a global, frontend-only prototype library. It shows existing
+sequences in a performance table; selecting one opens its full-page editor at `/crm/sequences/:id`,
 which follows the Full-page settings pattern and does not mount the global CRM sidebar.
 Its page-local rail sits below the full-width header and has four hash-addressable sections:
-Sequence flow, Details, Sending schedule and Exit rules. Both routes preserve `?u=<persona>`
+Sequence flow, Performance, Details and Sending schedule. Both routes preserve `?u=<persona>`
 and survive a cold load. `titan-sequences.js` owns
 the small shared set of sales email templates and linear sequences, and both
-`sequences.html` and `pipeline-settings.html` read it. The stored model uses timing groups,
-but the UI deliberately never calls them steps or numbers them. It renders one centred,
-top-to-bottom flow lane of activity cards—send an email, set a call reminder, or create a
-task—with compact orange timing cards only where an actual delay exists. Consecutive
-activities may run immediately with no timing card between them. Calls and tasks represent new items that would appear in Upcoming
+`sequences.html` and `pipeline-settings.html` read it. The stored model internally uses timing groups,
+but the UI deliberately never calls them steps or numbers them. The visible hierarchy is a
+sequence containing a flow, and that flow containing actions and delays. It renders one centred,
+top-to-bottom flow lane of action cards—send an email, set a call reminder, or create a
+task—with compact orange delay cards only where an actual delay exists. Consecutive
+actions may run immediately with no delay card between them. Calls and tasks represent new items that would appear in Upcoming
 activities; they are not reusable task definitions. Both use the same reminder schedule:
-immediately, in one hour, the next day, in two days, in three days, or a custom number of days.
-The reminder menu pairs every relative option with its computed sequence day on the right,
-and the activity inspector header reads `Runs on` with the activity's highlighted Day N.
-Every day-based choice also stores an exact `reminderTime` (default `09:00`), while custom uses
-`reminderDays` for the relative day count. The first activity starts on Day 1. Each later
-activity displays its cumulative day from the start: delays add their day count, while an
-immediate relationship stays on the same day. Orange timing cards have two modes: wait for
-N days, or wait for N days and continue only if there is no reply. Removing a timing card
-preserves its following activity and reconnects it immediately; a trailing delay with no
-activity is removed outright.
+the same day, the next available day, in two days, in three days, or a custom number of days.
+Every choice allows an exact reminder time. Reminder choices remain relative and never show a
+cumulative sequence-day number. Every day-based choice also stores an exact `reminderTime`
+(default `09:00`), while custom uses `reminderDays` for the relative day count. Action cards
+present reminder timing as a natural relative sentence such as `Reminder will trigger the
+next available day at h:mm AM/PM`. Neither action cards, their inspectors, reminder menus,
+nor Performance rows expose Day N badges or labels; internal timing groups may still calculate
+relative execution order. Orange delay cards have three modes: wait for
+N days, wait for N days and continue only if there is no reply, or wait and continue when an
+earlier email was opened but received no reply. Its visible label reads `If email opened but
+no reply`. The opened-without-reply condition is available
+only when an email exists earlier in the sequence. The Delay settings inspector keeps wait duration
+and condition as separate settings: every delay card has a duration, while its condition may
+be none, no reply, or opened without a reply. Duration uses a sentence-like `Wait for [N]
+day(s)` control with its singular/plural unit immediately beside the number. The condition
+control is presented in plain language as `After delay, continue` rather than as an abstract
+`Condition` field; its unconditional option reads `As scheduled`. Removing a delay card
+preserves its following action and reconnects it immediately; a trailing delay with no
+action is removed outright.
 The flow has no Start/End pointer or numbered markers.
 
-Activity and condition cards are summaries, not forms. Clicking either opens a page-local
-inspector that slides in from the right; all mutable activity type, template, reminder,
-title and timing controls live there. The entity being edited keeps an obvious selected
-border/ring without tinting the card surface, plus `aria-pressed="true"`, until the inspector closes. Activity and orange
-timing cards also reveal an adjacent quick-delete button on hover or keyboard focus; deletion
+Action and delay cards are summaries, not forms. Clicking either opens a page-local
+inspector that slides in from the right; all mutable action type, template, reminder,
+title and delay controls live there. The entity being edited keeps an obvious selected
+border/ring without tinting the card surface, plus `aria-pressed="true"`, until the inspector closes. Action and orange
+delay cards also reveal an adjacent quick-delete button on hover or keyboard focus; deletion
 requires no confirmation, scales/fades the entity out, then slides later entities upward. The
-inspector retains its own remove action. On wide screens the flow lane recentres within the
+inspector retains its own remove control. On wide screens the flow lane recentres within the
 remaining canvas while the inspector is open; narrower screens keep it as an overlay rather
-than squeezing the cards. The final `Add to sequence` control offers either a
-delay or a new email, call-reminder or task activity. A delay may temporarily exist without
-a following activity while the editor waits for that choice. By default, a reply stops the remaining
-linear sequence. Only the no-email-reply condition is supported; there is no branching model. Stop-on-reply is enabled
-by default but is configurable in Exit rules, alongside hard-bounce exit and re-enrollment.
-Email template selection and its content preview live in the inspector. Each sequence has a `schedule` with
+than squeezing the cards. The final flow control is a compact blue circular plus button with
+the accessible label `Add to flow`; it offers either a delay or a new email, call-reminder or
+task action. A delay may temporarily exist without
+a following action while the editor waits for that choice. While a trailing delay is waiting
+for its action, the add menu keeps the Delay section visible with a disabled `Delay already
+added` button instead of hiding that option. The Action section always appears before the
+Delay section. The supported conditions are no
+email reply and an earlier email opened but not replied to; there is no branching model. The
+prototype has no Exit rules section or `exitRules` data.
+Email template selection and its content preview live in the inspector. Each email action
+also stores `sendTime` (default `09:00`). Its flow card replaces the
+template subject summary with `Email will be sent at h:mm AM/PM`, and Send time is editable in
+the action inspector. Each sequence has a `schedule` with
 `activeDays[]`, `startTime`, `endTime` and `timezone`; the default is Monday–Friday,
-09:00–17:00 in the contact's local time. `weekdaysOnly` remains as a compatibility mirror
+09:00–17:00 in the contact's local time. Stored times remain 24-hour `HH:MM`, while every
+visible time summary uses 12-hour `h:mm AM/PM` and time inputs show a live AM/PM indicator.
+`weekdaysOnly` remains as a compatibility mirror
 for older callers, not the editor's source of truth. Details owns the editable name and
 description; the full-page header displays the current name while the flow canvas does not
-repeat it. Adding an activity or
+repeat it. Adding an action or
 delay uses the Web Animations API, scrolls the new card into view, announces the result through
 an ARIA live region and respects `prefers-reduced-motion`; do not add GSAP for these effects.
 New sequence drafts begin with an empty `steps` array and render a tutorial-style Starting
-point card with all three first-activity choices; do not pre-create an email or another activity.
-Sequence list cards show the number of activities and
-`activeInstances`, the representative number of pipeline-record sequence instances currently active. This is intentionally different from `usedBy`, which
-describes stage configuration references rather than live record-level instances.
+point card with all three first-action choices; do not pre-create an email or another action.
+The sequence library is a searchable, filterable performance table rather than a card grid.
+Each row shows the sequence identity alongside total enrollments, email open
+rate, contact reply rate and `activeInstances`, the representative number of pipeline-record
+sequence instances currently active. The library has no repeated title, explanatory copy, or
+sequence count above the table. Users can search by sequence name or description, choose the
+performance duration, and sort by name or any performance column. The library deliberately
+omits action-type and enrollment-status filters as well as meeting rate, owner and modified date
+because the current model does not produce those values. `activeInstances` is intentionally
+different from `usedBy`, which describes stage configuration references rather than live
+record-level instances.
+The Performance section uses fixture data because the prototype has no analytics backend, but
+does not expose an `Illustrative data` tag in the interface. It is deliberately limited to
+events this sequence model can produce or track: total and currently active enrollments;
+emails sent, opened and replied to; call reminders set; and tasks created. Its Duration
+selector supports the last 7, 30 or 90 days and all time, updating every period-based metric,
+chart and action result. `Active now` remains a current-state count rather than a duration-
+bound metric. The section shows total enrollments, active now, email open rate and contact
+reply rate, followed by enrollment trend, action totals and a per-action table with
+Triggered, Opened and Replied columns. Opened and Replied are blank for call reminders and
+tasks. It does not show meetings, clicks, bounces, unsubscribes, call connections, task
+completion, enrollment rate, or deal/revenue attribution.
 
 There is deliberately no scheduler, sender or sequence API yet. The editor keeps changes
 in memory and says so in the UI; a reload restores the shared sample definitions. Do not

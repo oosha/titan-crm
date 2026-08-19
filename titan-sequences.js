@@ -69,21 +69,20 @@
       description: 'Call and follow up with new leads.',
       weekdaysOnly: true,
       schedule: { activeDays: ['mon', 'tue', 'wed', 'thu', 'fri'], startTime: '09:00', endTime: '17:00', timezone: 'contact' },
-      exitRules: { stopOnReply: true, stopOnBounce: true, allowReentry: false },
       activeInstances: 12,
       usedBy: ['Sales pipeline · Lead'],
       steps: [
         {
           id: 'lead-call-group', timing: 'immediate', days: 0,
-          actions: [{ id: 'lead-call', action: 'call', title: 'Call the new lead', reminderOffset: 'now' }],
+          actions: [{ id: 'lead-call', action: 'call', title: 'Call the new lead', reminderOffset: 'same-day', reminderTime: '09:00' }],
         },
         {
           id: 'lead-email-group', timing: 'after', days: 1,
-          actions: [{ id: 'lead-email', action: 'email', templateId: 'initial-outreach' }],
+          actions: [{ id: 'lead-email', action: 'email', templateId: 'initial-outreach', sendTime: '09:00' }],
         },
         {
           id: 'lead-follow-up-group', timing: 'no-reply', days: 3,
-          actions: [{ id: 'lead-follow-up', action: 'email', templateId: 'follow-up' }],
+          actions: [{ id: 'lead-follow-up', action: 'email', templateId: 'follow-up', sendTime: '09:00' }],
         },
       ],
     },
@@ -93,13 +92,12 @@
       description: 'Recap discovery and set the next task.',
       weekdaysOnly: true,
       schedule: { activeDays: ['mon', 'tue', 'wed', 'thu', 'fri'], startTime: '09:00', endTime: '17:00', timezone: 'contact' },
-      exitRules: { stopOnReply: true, stopOnBounce: true, allowReentry: false },
       activeInstances: 6,
       usedBy: ['Sales pipeline · Discovery'],
       steps: [
         {
           id: 'discovery-recap-group', timing: 'immediate', days: 0,
-          actions: [{ id: 'discovery-recap', action: 'email', templateId: 'post-call-recap' }],
+          actions: [{ id: 'discovery-recap', action: 'email', templateId: 'post-call-recap', sendTime: '09:00' }],
         },
         {
           id: 'discovery-task-group', timing: 'after', days: 1,
@@ -117,13 +115,12 @@
       description: 'Follow up on open proposals.',
       weekdaysOnly: true,
       schedule: { activeDays: ['mon', 'tue', 'wed', 'thu', 'fri'], startTime: '09:00', endTime: '17:00', timezone: 'contact' },
-      exitRules: { stopOnReply: true, stopOnBounce: true, allowReentry: false },
       activeInstances: 4,
       usedBy: ['Sales pipeline · Proposal'],
       steps: [
         {
           id: 'proposal-email-group', timing: 'immediate', days: 0,
-          actions: [{ id: 'proposal-email', action: 'email', templateId: 'proposal' }],
+          actions: [{ id: 'proposal-email', action: 'email', templateId: 'proposal', sendTime: '09:00' }],
         },
         {
           id: 'proposal-call-group', timing: 'no-reply', days: 3,
@@ -131,7 +128,7 @@
         },
         {
           id: 'proposal-final-group', timing: 'no-reply', days: 5,
-          actions: [{ id: 'proposal-final', action: 'email', templateId: 'final-check-in' }],
+          actions: [{ id: 'proposal-final', action: 'email', templateId: 'final-check-in', sendTime: '09:00' }],
         },
       ],
     },
