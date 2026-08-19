@@ -2888,7 +2888,8 @@
     .crm-social-icon.linkedin { background: #0a66c2; }
     .crm-social-icon.instagram { background: linear-gradient(135deg, #f58529, #dd2a7b 45%, #8134af 75%, #515bd4); }
     .crm-social-icon.location { background: #e5484d; }
-    .crm-company-location-inline { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: #888; }
+    .crm-company-location-inline { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: #888; text-decoration: none; }
+    .crm-company-location-inline:hover { color: #2170f4; }
 
     /* ── Contacts list: primary contact (2 rows) + secondary contacts (1 row) ── */
     .crm-contacts-list { display: flex; flex-direction: column; }
@@ -4146,10 +4147,10 @@
                 <a class="crm-social-icon website" id="crm-opp-website" href="https://meridianlabs.com" target="_blank" rel="noopener" title="meridianlabs.com"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M2 8h12M8 2c1.7 1.7 2.6 3.8 2.6 6s-.9 4.3-2.6 6c-1.7-1.7-2.6-3.8-2.6-6s.9-4.3 2.6-6Z" stroke="currentColor" stroke-width="1.2"/></svg></a>
                 <a class="crm-social-icon linkedin" id="crm-opp-company-linkedin" href="https://linkedin.com/company/meridianlabs" target="_blank" rel="noopener" title="linkedin.com/company/meridianlabs"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.3" y="6.3" width="2.4" height="7" fill="currentColor"/><circle cx="3.5" cy="3.3" r="1.4" fill="currentColor"/><path d="M7 6.3h2.3v1.1c.5-.7 1.3-1.3 2.4-1.3 2 0 2.6 1.2 2.6 3.1v4.1h-2.4V9.7c0-.9-.3-1.5-1.1-1.5-.8 0-1.4.6-1.4 1.6v3.5H7V6.3Z" fill="currentColor"/></svg></a>
                 <a class="crm-social-icon instagram" id="crm-opp-instagram" href="https://instagram.com/meridianlabs" target="_blank" rel="noopener" title="instagram.com/meridianlabs"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="12" height="12" rx="3.2" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.3"/><circle cx="11.3" cy="4.7" r="0.8" fill="currentColor"/></svg></a>
-                <span class="crm-company-location-inline" title="San Jose, US">
+                <a class="crm-company-location-inline" id="crm-company-location-link" href="https://www.google.com/maps/search/?api=1&query=San%20Jose%2C%20US" target="_blank" rel="noopener noreferrer" title="Open San Jose, US in Maps">
                   <span class="crm-social-icon location"><svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M8 1.5A4.7 4.7 0 0 0 3.3 6.2C3.3 9.7 8 14.5 8 14.5s4.7-4.8 4.7-8.3A4.7 4.7 0 0 0 8 1.5Zm0 6.3a1.7 1.7 0 1 1 0-3.4 1.7 1.7 0 0 1 0 3.4Z"/></svg></span>
                   <span id="crm-company-location">San Jose, US</span>
-                </span>
+                </a>
               </div>
 
               <div class="crm-ps-wrap" style="margin-top:12px;">
@@ -6266,7 +6267,15 @@
       if (typeof PERSONA === 'undefined' || !PERSONA || !PERSONA.mailbox) return;
       PERSONA.mailbox.threads.forEach(function (t) {
         if (!t.pipelineRef) return;
-        THREAD_LINKS[t.id] = { pipeline: t.pipelineRef.pipeline, recordId: t.pipelineRef.pipeline + '-' + t.pipelineRef.cardId };
+        const pipeline = REAL_PIPELINES && REAL_PIPELINES[t.pipelineRef.pipeline];
+        const rawId = String(t.pipelineRef.cardId || '');
+        // Older persona fixtures used short IDs (for example inquiries-i3), while
+        // newer ones store the card's real ID. Prefer an exact match so either
+        // fixture links the Mail panel to its actual CRM record.
+        const recordId = pipeline && pipeline.cards.some(function (card) { return String(card.id) === rawId; })
+          ? rawId
+          : t.pipelineRef.pipeline + '-' + rawId;
+        THREAD_LINKS[t.id] = { pipeline: t.pipelineRef.pipeline, recordId: recordId };
       });
     }
 
@@ -6487,7 +6496,38 @@
       '</div>';
     }
 
-    // Drives the (rich) CRM panel from a real pipeline record — company/value/note/
+    function panelUrl(value) {
+      const raw = String(value || '').trim();
+      return raw ? (/^https?:\/\//i.test(raw) ? raw : 'https://' + raw) : '';
+    }
+    function renderPanelCompanyContext(panel, card) {
+      const iconRow = panel.querySelector('.crm-company-icon-row');
+      if (!iconRow) return;
+      const site = document.getElementById('crm-opp-website');
+      const linkedin = document.getElementById('crm-opp-company-linkedin');
+      const instagram = document.getElementById('crm-opp-instagram');
+      const locationLink = document.getElementById('crm-company-location-link');
+      const locationText = document.getElementById('crm-company-location');
+      const websiteUrl = panelUrl(card && card.website);
+      const linkedinUrl = panelUrl(card && card.companyLinkedin);
+      const instagramUrl = panelUrl(card && card.instagram);
+      const mapUrl = panelUrl(card && card.geoLocation);
+      const address = String((card && card.location) || '').trim();
+      iconRow.style.display = (websiteUrl || linkedinUrl || instagramUrl || address || mapUrl) ? '' : 'none';
+      [[site, websiteUrl], [linkedin, linkedinUrl], [instagram, instagramUrl]].forEach(function (entry) {
+        const el = entry[0], url = entry[1];
+        if (!el) return;
+        el.href = url || '#'; el.title = url || ''; el.style.display = url ? '' : 'none';
+      });
+      if (locationLink) {
+        locationLink.href = mapUrl || '#';
+        locationLink.title = mapUrl ? 'Open ' + (address || 'location') + ' in Maps' : (address || '');
+        locationLink.style.display = (address || mapUrl) ? '' : 'none';
+      }
+      if (locationText) locationText.textContent = address;
+    }
+
+    // Drives the rich CRM panel from a real pipeline record: company, value, note,
     // contacts/AI summary/activity/files — same job fillPersonaPanel does for personas,
     // just reading from /api/data instead of a persona file.
     function fillRealPanel(card, pl) {
@@ -6501,23 +6541,7 @@
       renderCompanyLogoPanel(card);
       renderPanelOwner(card, pl);
 
-      const iconRow = panel.querySelector('.crm-company-icon-row');
-      if (iconRow) {
-        const hasAny = card.website || card.companyLinkedin || card.instagram || card.location;
-        iconRow.style.display = hasAny ? '' : 'none';
-        const site = document.getElementById('crm-opp-website');
-        if (site) { if (card.website) { site.href = /^https?:/.test(card.website) ? card.website : 'https://' + card.website; site.title = card.website; site.style.display = ''; } else site.style.display = 'none'; }
-        const li = document.getElementById('crm-opp-company-linkedin');
-        if (li) { if (card.companyLinkedin) { li.href = /^https?:/.test(card.companyLinkedin) ? card.companyLinkedin : 'https://' + card.companyLinkedin; li.title = card.companyLinkedin; li.style.display = ''; } else li.style.display = 'none'; }
-        const ig = document.getElementById('crm-opp-instagram');
-        if (ig) { if (card.instagram) { ig.href = /^https?:/.test(card.instagram) ? card.instagram : 'https://' + card.instagram; ig.title = card.instagram; ig.style.display = ''; } else ig.style.display = 'none'; }
-        const locWrap = panel.querySelector('.crm-company-location-inline');
-        if (locWrap) {
-          locWrap.style.display = card.location ? '' : 'none';
-          const locText = document.getElementById('crm-company-location'); if (locText) locText.textContent = card.location || '';
-          locWrap.title = card.location || '';
-        }
-      }
+      renderPanelCompanyContext(panel, card);
 
       const note = document.getElementById('crm-last-note');
       if (note) {
@@ -7023,9 +7047,7 @@
       renderCompanyLogoPanel(card);
       renderPanelOwner(card);
 
-      // Company website / LinkedIn / Instagram / location — persona clients have none → hide.
-      var iconRow = panel.querySelector('.crm-company-icon-row');
-      if (iconRow) iconRow.style.display = 'none';
+      renderPanelCompanyContext(panel, card || {});
 
       // Last note
       var note = document.getElementById('crm-last-note');

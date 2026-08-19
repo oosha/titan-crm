@@ -1,0 +1,295 @@
+{
+  "currentPipelineId": "field-sales",
+  "pipelineSeq": 1,
+  "pipelines": {
+    "field-sales": {
+      "id": "field-sales",
+      "name": "Field sales",
+      "entity": "Opportunity",
+      "plural": "opportunities",
+      "color": "#54759c",
+      "type": "sales",
+      "subject": "company",
+      "defaultOwner": {
+        "name": "Graham Northcutt",
+        "email": "graham@northcuttlubricants.example"
+      },
+      "stages": [
+        {
+          "key": "mapped",
+          "label": "Mapped",
+          "description": "A prospect identified through a referral or route research."
+        },
+        {
+          "key": "visit-planned",
+          "label": "Visit planned",
+          "description": "An introductory site visit is on the route."
+        },
+        {
+          "key": "assessment",
+          "label": "Assessment",
+          "description": "Equipment and lubricant needs are being assessed on site."
+        },
+        {
+          "key": "quote-sent",
+          "label": "Quote sent",
+          "description": "A recommendation or NetSuite estimate has been shared."
+        },
+        {
+          "key": "first-order",
+          "label": "First order",
+          "description": "The first order is being delivered and followed up."
+        },
+        {
+          "key": "active-customer",
+          "label": "Active customer",
+          "description": "An ongoing account with a planned service cadence."
+        }
+      ],
+      "cards": [
+        {
+          "id": "graham-1",
+          "deal": "Harbor Hauling: fleet assessment",
+          "company": "Harbor Hauling",
+          "website": "https://www.wm.com",
+          "location": "2180 Main Street, San Diego, CA",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=2180%20Main%20Street%2C%20San%20Diego%2C%20CA",
+          "contact": "Maya Ortega",
+          "contactEmail": "maya.ortega@harborhauling.example",
+          "contactPhone": "+1 619 555 0141",
+          "contactDesignation": "Fleet maintenance manager",
+          "owner": {
+            "name": "Graham Northcutt",
+            "email": "graham@northcuttlubricants.example"
+          },
+          "value": 0,
+          "stage": "mapped",
+          "leadSource": "Google Maps",
+          "source": "Google Maps route research",
+          "equipment": "Refuse trucks and hydraulic lifts",
+          "note": "Satellite view shows a service yard with multiple heavy vehicles. Find the maintenance manager before the first visit.",
+          "lastActivity": "Today",
+          "activityType": "Prospect mapped",
+          "nextActivity": {
+            "type": "visit",
+            "label": "Plan an introductory stop",
+            "date": "Tomorrow"
+          },
+          "overdue": false
+        },
+        {
+          "id": "graham-2",
+          "deal": "North County Paving: paver fleet",
+          "company": "North County Paving",
+          "website": "https://www.graniteconstruction.com",
+          "location": "1445 Innovation Way, Escondido, CA",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=1445%20Innovation%20Way%2C%20Escondido%2C%20CA",
+          "contact": "Derrick Shaw",
+          "contactEmail": "derrick.shaw@northcountypaving.example",
+          "contactPhone": "+1 760 555 0198",
+          "contactDesignation": "Yard foreman",
+          "owner": {
+            "name": "Graham Northcutt",
+            "email": "graham@northcuttlubricants.example"
+          },
+          "value": 0,
+          "stage": "visit-planned",
+          "leadSource": "Referral",
+          "source": "Contractor referral",
+          "equipment": "Pavers, rollers and service trucks",
+          "note": "Referral says they are seeing high oil consumption on two older pavers. Add this stop to the North County route.",
+          "lastActivity": "1d ago",
+          "activityType": "Call logged",
+          "nextActivity": {
+            "type": "visit",
+            "label": "Introductory yard visit",
+            "date": "Thu 9:30am"
+          },
+          "overdue": false
+        },
+        {
+          "id": "graham-3",
+          "deal": "Mesa Concrete: hydraulic oil quote",
+          "company": "Mesa Concrete",
+          "website": "https://www.cemexusa.com",
+          "location": "7070 Convoy Court, San Diego, CA",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=7070%20Convoy%20Court%2C%20San%20Diego%2C%20CA",
+          "contact": "Luis Moreno",
+          "contactEmail": "luis.moreno@mesaconcrete.example",
+          "contactPhone": "+1 858 555 0126",
+          "contactDesignation": "Yard foreman",
+          "owner": {
+            "name": "Graham Northcutt",
+            "email": "graham@northcuttlubricants.example"
+          },
+          "value": 2840,
+          "stage": "assessment",
+          "leadSource": "Drive-by",
+          "source": "Route research",
+          "equipment": "Mixers, loaders and hydraulic attachments",
+          "netsuiteRef": "Estimate EST-10482",
+          "note": "Completed a walk-through. Luis wants a compatible hydraulic oil option and a grease recommendation for the loader pins.",
+          "lastActivity": "2h ago",
+          "activityType": "Site visit",
+          "nextActivity": {
+            "type": "task",
+            "label": "Build hydraulic oil recommendation",
+            "date": "Today"
+          },
+          "overdue": false
+        },
+        {
+          "id": "graham-4",
+          "deal": "Coastal Water District: municipal fleet",
+          "company": "Coastal Water District",
+          "website": "https://www.acwa.com",
+          "location": "3800 El Cajon Boulevard, San Diego, CA",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=3800%20El%20Cajon%20Boulevard%2C%20San%20Diego%2C%20CA",
+          "contact": "Anita Patel",
+          "contactEmail": "anita.patel@coastalwater.example",
+          "contactPhone": "+1 619 555 0179",
+          "contactDesignation": "Maintenance supervisor",
+          "owner": {
+            "name": "Graham Northcutt",
+            "email": "graham@northcuttlubricants.example"
+          },
+          "value": 6150,
+          "stage": "quote-sent",
+          "leadSource": "LinkedIn",
+          "source": "LinkedIn research",
+          "equipment": "Utility trucks, pumps and generators",
+          "netsuiteRef": "Estimate EST-10477",
+          "note": "Sent the seasonal fleet lubrication estimate. Anita needs the estimate to include the department PO before submitting it internally.",
+          "lastActivity": "Yesterday",
+          "activityType": "Email sent",
+          "nextActivity": {
+            "type": "followup",
+            "label": "Check PO requirements",
+            "date": "Friday"
+          },
+          "overdue": false
+        },
+        {
+          "id": "graham-5",
+          "deal": "Canyon Equipment Rental: grease program",
+          "company": "Canyon Equipment Rental",
+          "website": "https://www.sunbeltrentals.com",
+          "location": "9055 Airway Road, San Diego, CA",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=9055%20Airway%20Road%2C%20San%20Diego%2C%20CA",
+          "contact": "Naomi Brooks",
+          "contactEmail": "naomi.brooks@canyonequipment.example",
+          "contactPhone": "+1 858 555 0163",
+          "contactDesignation": "Service manager",
+          "owner": {
+            "name": "Graham Northcutt",
+            "email": "graham@northcuttlubricants.example"
+          },
+          "value": 3920,
+          "stage": "first-order",
+          "leadSource": "Referral",
+          "source": "Customer referral",
+          "equipment": "Excavators, skid steers and compactors",
+          "netsuiteRef": "Sales order SO-48172",
+          "note": "First delivery is scheduled for the morning. Confirm the grease gun fittings on site and photograph the rack location for future route notes.",
+          "lastActivity": "3h ago",
+          "activityType": "Order confirmed",
+          "nextActivity": {
+            "type": "visit",
+            "label": "First delivery check-in",
+            "date": "Tomorrow 8:00am"
+          },
+          "overdue": false
+        },
+        {
+          "id": "graham-6",
+          "deal": "Seaside Food Processing: food-grade lubricant program",
+          "company": "Seaside Food Processing",
+          "website": "https://www.hormelfoods.com",
+          "location": "3890 Ocean View Boulevard, San Diego, CA",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=3890%20Ocean%20View%20Boulevard%2C%20San%20Diego%2C%20CA",
+          "contact": "Evan Cole",
+          "contactEmail": "evan.cole@seasidefood.example",
+          "contactPhone": "+1 619 555 0113",
+          "contactDesignation": "Plant maintenance manager",
+          "owner": {
+            "name": "Graham Northcutt",
+            "email": "graham@northcuttlubricants.example"
+          },
+          "value": 1480,
+          "stage": "active-customer",
+          "leadSource": "Referral",
+          "source": "Existing customer referral",
+          "equipment": "Packaging line bearings and conveyors",
+          "netsuiteRef": "Invoice INV-48131",
+          "note": "Monthly food-grade grease and chain lubricant account. Evan prefers a quick floor check during the first week of each month.",
+          "lastActivity": "2d ago",
+          "activityType": "Email received",
+          "nextActivity": {
+            "type": "visit",
+            "label": "Monthly floor check",
+            "date": "Sep 3"
+          },
+          "overdue": false
+        },
+        {
+          "id": "graham-7",
+          "deal": "Mission Recycling: bulk oil delivery",
+          "company": "Mission Recycling",
+          "website": "https://www.republicservices.com",
+          "location": "1090 Heritage Road, San Diego, CA",
+          "geoLocation": "https://www.google.com/maps/search/?api=1&query=1090%20Heritage%20Road%2C%20San%20Diego%2C%20CA",
+          "contact": "Chris Bennett",
+          "contactEmail": "chris.bennett@missionrecycling.example",
+          "contactPhone": "+1 619 555 0188",
+          "contactDesignation": "Yard foreman",
+          "owner": {
+            "name": "Graham Northcutt",
+            "email": "graham@northcuttlubricants.example"
+          },
+          "value": 5250,
+          "stage": "quote-sent",
+          "leadSource": "Drive-by",
+          "source": "Field prospecting",
+          "equipment": "Balers, forklifts and compactors",
+          "netsuiteRef": "Invoice INV-48096",
+          "note": "Quarterly bulk engine oil delivery. Check the used-oil tank area and ask Chris whether the forklift grease interval has changed.",
+          "lastActivity": "5d ago",
+          "activityType": "Invoice paid",
+          "nextActivity": {
+            "type": "followup",
+            "label": "Schedule quarterly yard stop",
+            "date": "Sep 12"
+          },
+          "overdue": false
+        }
+      ],
+      "hiddenFields": [
+        "instagram",
+        "contact-department",
+        "contact-location",
+        "contact-linkedin"
+      ],
+      "customFieldDefs": [],
+      "contactsEnabled": true,
+      "shownFields": [
+        "name",
+        "value",
+        "stage",
+        "status",
+        "close-date",
+        "source",
+        "note",
+        "company",
+        "location",
+        "geo-location",
+        "website",
+        "company-linkedin",
+        "contact",
+        "contact-name",
+        "contact-email",
+        "contact-phone",
+        "contact-designation"
+      ]
+    }
+  }
+}
