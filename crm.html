@@ -45,8 +45,10 @@
   <script src="/design-system/components/menu.js"></script>
   <link rel="stylesheet" href="/titan-sidebar.css">
   <link rel="stylesheet" href="/mail-rule.css">
+  <link rel="stylesheet" href="/crm-views.css">
   <script src="/crm-schema.js"></script>
   <script src="/mail-rule.js"></script>
+  <script src="/crm-views.js"></script>
   <script src="/crm-status.js"></script>
   <script src="/titan-sidebar.js"></script>
   <style>
@@ -2042,6 +2044,7 @@
     }
     .np-modal.np-step2-open { width: 900px; }
     .np-modal.np-step4-open { width: 760px; }
+    .np-modal--view { width: 620px; }
     .np-header {
       padding: 18px 24px; border-bottom: 1px solid #eee;
       display: flex; align-items: center; gap: 8px; flex-shrink: 0;
@@ -2605,6 +2608,10 @@
           <div class="board-title">
             <h1 id="pipeline-name-heading">Neo partnerships</h1>
             <p id="pipeline-total"></p>
+            <!-- Only rendered while a saved view is applied. A filtered board that
+                 looks identical to an unfiltered one is how people conclude their
+                 records have gone missing. -->
+            <div id="board-view-chip"></div>
           </div>
           <div class="board-header-actions">
             <!-- Two settings screens exist and they are easy to confuse: the pipeline's
@@ -3714,8 +3721,10 @@
         path += '/pipeline/' + encodeURIComponent(pipelineId);
         if (recordId) path += '/record/' + encodeURIComponent(recordId);
       }
-      const qs = location.search;
-      const url = path + qs;
+      const q = new URLSearchParams(location.search);
+      if (activeViewId) q.set('view', activeViewId); else q.delete('view');
+      const qs = q.toString();
+      const url = path + (qs ? '?' + qs : '');
       if (location.pathname + location.search !== url) history.replaceState(null, '', url);
     }
 
@@ -3785,6 +3794,10 @@
       updateBoardFormBtn();
 
       closeCardActionMenu();
+      // Views belong to a pipeline. activeView() already returns null for one that
+      // isn't this pipeline's, so nothing is mis-filtered; this drops the dead
+      // parameter from the URL so the address bar and the board agree.
+      if (activeViewId && !window.titanViews.byId(PIPELINES[id], activeViewId)) activeViewId = '';
       renderBoard();
       updateCrmUrl(id, null);
     }
@@ -4545,7 +4558,8 @@
       '</tr></thead>';
       const body = document.createElement('tbody');
 
-      if (!CARDS.length) {
+      const LIST_CARDS = visibleCards();
+      if (!LIST_CARDS.length) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
         cell.className = 'pipeline-list__empty';
@@ -4555,7 +4569,7 @@
         body.appendChild(row);
       }
 
-      CARDS.slice().sort(function (a, b) {
+      LIST_CARDS.slice().sort(function (a, b) {
         const difference = lastActivityAge(a) - lastActivityAge(b);
         return pipelineListSort.direction === 'asc' ? difference : -difference;
       }).forEach(function (card) {
@@ -4639,15 +4653,116 @@
       board.appendChild(list);
     }
 
+    // ── Saved views ───────────────────────────────────────────────────────────
+    // A view narrows what the board shows. It is in the URL rather than a variable so
+    // it survives a cold load and can be linked to — the sidebar rows are just links.
+    let activeViewId = new URLSearchParams(location.search).get('view') || '';
+    let cvEditor = null, cvEditingId = null;
+
+    function currentPipelineObj() { return PIPELINES[currentPipelineId] || null; }
+    function activeView() {
+      if (!activeViewId || !window.titanViews) return null;
+      return window.titanViews.byId(currentPipelineObj(), activeViewId);
+    }
+    function visibleCards() {
+      const v = activeView();
+      return v ? window.titanViews.apply(CARDS, v) : CARDS;
+    }
+
+    function renderViewChip() {
+      const host = document.getElementById('board-view-chip');
+      if (!host) return;
+      const v = activeView();
+      if (!v) { host.innerHTML = ''; return; }
+      const n = visibleCards().length;
+      host.innerHTML =
+        '<span class="cv-chip">' +
+          '<span class="cv-chip-name">' + escAttr(v.name) + '</span>' +
+          '<span class="cv-chip-count">' + n + ' of ' + CARDS.length + '</span>' +
+          '<button type="button" onclick="clearView()" aria-label="Clear this view">&times;</button>' +
+        '</span> ' +
+        '<button type="button" class="cv-chip-edit" onclick="openViewEditor(currentPipelineId, \'' +
+          escAttr(v.id) + '\')">Edit view</button>';
+    }
+
+    // Navigates rather than re-rendering in place: the URL is the source of truth, and
+    // the sidebar reads it to decide which row is active.
+    function clearView() {
+      const u = new URL(location.href);
+      u.searchParams.delete('view');
+      location.href = u.pathname + (u.searchParams.toString() ? '?' + u.searchParams : '') ;
+    }
+
+    function openViewEditor(pipelineId, viewId) {
+      const pl = PIPELINES[pipelineId] || currentPipelineObj();
+      if (!pl) return;
+      cvEditingId = viewId || null;
+      const existing = viewId ? window.titanViews.byId(pl, viewId) : null;
+      document.getElementById('cv-title').textContent = existing ? 'Edit view' : 'New view';
+      document.getElementById('cv-delete').style.display = existing ? '' : 'none';
+      cvEditor = window.titanViews.mountEditor(document.getElementById('cv-host'), {
+        pipeline: pl,
+        value: existing,
+        // Counted against this pipeline's cards, which are only loaded here — the
+        // reason the editor lives on the board and not in the sidebar.
+        countMatching: function (draft) {
+          const src = pl.id === currentPipelineId ? CARDS : (pl.cards || []);
+          return window.titanViews.apply(src, draft).length;
+        },
+      });
+      document.getElementById('cv-overlay').classList.add('open');
+    }
+    function closeViewEditor() {
+      document.getElementById('cv-overlay').classList.remove('open');
+      cvEditor = null; cvEditingId = null;
+    }
+    function saveViewEditor() {
+      if (!cvEditor) return;
+      const problem = cvEditor.validate();
+      if (problem) { npToast(problem); return; }
+      const pl = currentPipelineObj();
+      if (!pl) return;
+      // Seeded views are materialised on first edit — list() returns them, so writing
+      // the list back is what turns them from a default into this pipeline's own.
+      const all = window.titanViews.list(pl);
+      const draft = cvEditor.read();
+      const at = all.findIndex(function (v) { return v.id === draft.id; });
+      if (at === -1) all.push(draft); else all[at] = draft;
+      pl.views = all;
+      schedulePersist();
+      closeViewEditor();
+      if (window.titanSidebar) window.titanSidebar.setPipelines(Object.values(PIPELINES));
+      activeViewId = draft.id;
+      const u = new URL(location.href);
+      u.searchParams.set('view', draft.id);
+      history.replaceState(null, '', u.pathname + '?' + u.searchParams);
+      renderBoard(); renderViewChip();
+      npToast('View saved.', true);
+    }
+    function deleteCurrentView() {
+      const pl = currentPipelineObj();
+      if (!pl || !cvEditingId) return;
+      pl.views = window.titanViews.list(pl).filter(function (v) { return v.id !== cvEditingId; });
+      schedulePersist();
+      closeViewEditor();
+      if (window.titanSidebar) window.titanSidebar.setPipelines(Object.values(PIPELINES));
+      if (activeViewId === cvEditingId) { clearView(); return; }
+      renderBoard(); renderViewChip();
+    }
+
     function renderBoard() {
       const board = document.getElementById('kanban-board');
       if (!board) return;
       board.innerHTML = '';
+      // Here rather than at each call site: six of them redraw the board, and a chip
+      // that disagrees with the columns is worse than no chip.
+      renderViewChip();
 
+      const VISIBLE = visibleCards();
       if (boardView === 'list') {
         renderPipelineList(board);
       } else STAGES.forEach(function (stage, idx) {
-        const cardsInStage = CARDS.filter(function (c) { return c.stage === stage.key; });
+        const cardsInStage = VISIBLE.filter(function (c) { return c.stage === stage.key; });
         const total = cardsInStage.reduce(function (sum, c) { return sum + c.value; }, 0);
         const headerShade = blueShade(idx, STAGES.length);
         const titleColor = darken(CURRENT_PIPELINE_COLOR, 0.5);
@@ -5045,6 +5160,8 @@
       // Sent by the sidebar's three-dot menu and pipeline settings — the sources
       // modal lives here, so they navigate to the board and ask for it.
       else if (intent === 'add-records') openAddRecordsFor(currentPipelineId);
+      // The sidebar's "Add filter view" from a page that cannot open the editor.
+      else if (intent === 'new-view') openViewEditor(currentPipelineId, null);
     }
 
     function openNewPipeline() {
@@ -5724,6 +5841,24 @@
   </div>
 
   <!-- ── Add team: invite a teammate (same-domain dummy directory) to this pipeline ── -->
+  <!-- Saved view editor. Shares the np-* shell with New Pipeline rather than adding a
+       third modal; crm-views.js renders only the fields into the body. -->
+  <div class="np-overlay" id="cv-overlay" onclick="if(event.target===this) closeViewEditor()">
+    <div class="np-modal np-modal--view">
+      <div class="np-header">
+        <span class="np-title" id="cv-title">New view</span>
+        <span class="np-close" onclick="closeViewEditor()">&times;</span>
+      </div>
+      <div class="np-body"><div id="cv-host"></div></div>
+      <div class="np-footer">
+        <button type="button" class="ds-btn ds-btn--ghost" id="cv-delete"
+                onclick="deleteCurrentView()" style="margin-right:auto;">Delete view</button>
+        <button type="button" class="ds-btn ds-btn--ghost" onclick="closeViewEditor()">Cancel</button>
+        <button type="button" class="ds-btn ds-btn--primary" onclick="saveViewEditor()">Save view</button>
+      </div>
+    </div>
+  </div>
+
   <div class="np-overlay" id="at-overlay" onclick="if(event.target===this) closeAddTeamModal()">
     <div class="np-modal" style="width:420px; min-height:480px;">
       <div class="np-header">

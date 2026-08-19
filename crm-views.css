@@ -1,0 +1,63 @@
+/* The saved-view editor. Page-local names (cv-*), never ds-*, and every value a token. */
+.cv-sec + .cv-sec { margin-top: var(--space-300); }
+.cv-label {
+  font-size: var(--text-xs); font-weight: var(--weight-semi);
+  color: var(--text-secondary); margin-bottom: var(--space-075);
+}
+.cv-select, .cv-text {
+  padding: var(--space-100) var(--space-125); font: inherit; font-size: var(--text-sm);
+  color: var(--text-primary); background: var(--surface-primary);
+  border: 1px solid var(--border-subtle); border-radius: 7px; min-width: 0;
+}
+.cv-select:focus, .cv-text:focus { outline: 2px solid var(--accent-primary); outline-offset: -1px; }
+#cv-name { width: 100%; }
+
+.cv-conds { background: var(--surface-recessed); border-radius: 10px; padding: var(--space-150); }
+.cv-row { display: flex; align-items: center; gap: var(--space-100); }
+.cv-field { flex: 0 0 128px; }
+.cv-op { flex: 0 0 140px; }
+.cv-value { flex: 1; min-width: 0; }
+/* Stated, not implied by stacking — the same reason the mail rule spells it out. */
+.cv-and {
+  display: flex; align-items: center; gap: var(--space-100);
+  margin: var(--space-100) 0; font-size: var(--text-2xs); font-weight: var(--weight-semi);
+  color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em;
+}
+.cv-and::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+.cv-del {
+  flex: 0 0 auto; width: 32px; height: 34px; display: inline-flex;
+  align-items: center; justify-content: center; border: 0; background: none;
+  border-radius: 7px; cursor: pointer; color: var(--text-secondary);
+}
+.cv-del:hover { background: var(--surface-primary); color: var(--status-danger); }
+.cv-add {
+  font: inherit; font-size: var(--text-sm); font-weight: var(--weight-semi);
+  color: var(--accent-primary); background: none; border: 0; padding: 0;
+  margin-top: var(--space-125); cursor: pointer;
+}
+/* The live count is the point: it says whether the view you just described is worth
+   saving before you save it. */
+.cv-summary {
+  font-size: var(--text-xs); line-height: 1.6; color: var(--text-secondary);
+  margin-top: var(--space-125);
+}
+
+/* ── The active-view chip on the board ───────────────────────────────────── */
+.cv-chip {
+  display: inline-flex; align-items: center; gap: var(--space-075);
+  background: var(--surface-selected, var(--surface-recessed));
+  border: 1px solid var(--border-accent, var(--accent-primary));
+  border-radius: 20px; padding: var(--space-050) var(--space-125);
+  font-size: var(--text-xs); color: var(--text-primary);
+}
+.cv-chip-name { font-weight: var(--weight-semi); }
+.cv-chip-count { color: var(--text-secondary); }
+.cv-chip button {
+  border: 0; background: none; padding: 0; cursor: pointer; line-height: 1;
+  color: var(--text-secondary); font-size: var(--text-md);
+}
+.cv-chip button:hover { color: var(--text-primary); }
+.cv-chip-edit {
+  font: inherit; font-size: var(--text-xs); font-weight: var(--weight-semi);
+  color: var(--accent-primary); background: none; border: 0; cursor: pointer; padding: 0;
+}

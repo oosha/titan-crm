@@ -49,8 +49,21 @@
   // crmPath('/crm/dashboard') therefore sent the board to
   // /crm/pipeline/%2Fcrm%2Fdashboard. Anything the component links to goes through
   // titanSidebarGo, which nothing else defines.
+  // Merges rather than concatenates. This appended the current query wholesale, which
+  // was fine while every destination was a bare path — the moment one carried its own
+  // (?view=), it produced "/crm/pipeline/neo?view=a?view=b" and the param was lost.
+  // A destination that names no view does not inherit the one we are leaving.
   window.titanSidebarGo = function (path) {
-    location.href = path + location.search;
+    var at = path.indexOf('?');
+    var base = at === -1 ? path : path.slice(0, at);
+    var q = new URLSearchParams(location.search);          // ?u=<persona> travels
+    if (at === -1) {
+      q.delete('view');
+    } else {
+      new URLSearchParams(path.slice(at + 1)).forEach(function (v, k) { q.set(k, v); });
+    }
+    var qs = q.toString();
+    location.href = base + (qs ? '?' + qs : '');
   };
   function esc(s) {
     return typeof window.esc === 'function' ? window.esc(s)
@@ -283,12 +296,17 @@
   // belong to any other pipeline. Reading pl.views lets any pipeline carry them
   // and renders them the same everywhere; the "neo" pair below stands in until
   // the views move into the stored document.
-  var LEGACY_VIEWS = { neo: ['Deal over $10k', 'North America'] };
+  // crm-views.js owns what a view is, including the two the prototype has always
+  // shown. This used to hold their names and nothing else, which is why clicking one
+  // did nothing for so long.
+  function viewObjectsOf(pl) {
+    return (window.titanViews && window.titanViews.list) ? window.titanViews.list(pl) : [];
+  }
   function viewsOf(pl) {
-    if (Array.isArray(pl.views)) {
-      return pl.views.map(function (v) { return typeof v === 'string' ? v : (v && v.name) || ''; }).filter(Boolean);
-    }
-    return LEGACY_VIEWS[pl.id] || [];
+    return viewObjectsOf(pl).map(function (v) { return v.name; }).filter(Boolean);
+  }
+  function activeViewId() {
+    try { return new URLSearchParams(location.search).get('view') || ''; } catch (e) { return ''; }
   }
 
   function currentPipelineId() {
@@ -301,7 +319,8 @@
     if (!line) return;
 
     var current = currentPipelineId();
-    var sig = JSON.stringify([current, pipelines.map(function (p) { return [p.id, p.name, p.color, viewsOf(p)]; })]);
+    var sig = JSON.stringify([current, activeViewId(),
+      pipelines.map(function (p) { return [p.id, p.name, p.color, viewsOf(p)]; })]);
     if (sig === renderedSig) return;
     renderedSig = sig;
 
@@ -336,12 +355,20 @@
       after.after(item);
       after = item;
 
-      viewsOf(pl).forEach(function (name) {
+      viewObjectsOf(pl).forEach(function (v) {
         var view = document.createElement('div');
-        view.className = 'nav-item';
+        // Active when the board is showing this pipeline with this view applied —
+        // derived from the URL, like every other active state in this component.
+        var on = current === pl.id && activeViewId() === v.id;
+        view.className = 'nav-item' + (on ? ' active' : '');
         view.style.paddingLeft = '52px';
         view.innerHTML = '<span class="nav-item-label secondary"></span>';
-        view.querySelector('.nav-item-label').textContent = name;
+        view.querySelector('.nav-item-label').textContent = v.name;
+        view.title = (window.titanViews && window.titanViews.describe)
+          ? window.titanViews.describe(v) : v.name;
+        view.addEventListener('click', function () {
+          titanSidebarGo('/crm/pipeline/' + encodeURIComponent(pl.id) + '?view=' + encodeURIComponent(v.id));
+        });
         after.after(view);
         after = view;
       });
@@ -351,7 +378,7 @@
     // paint time instead of after that page's own /api/data round-trip.
     try {
       sessionStorage.setItem(NAV_CACHE, JSON.stringify(pipelines.map(function (p) {
-        return { id: p.id, name: p.name, color: p.color, entity: p.entity, views: viewsOf(p) };
+        return { id: p.id, name: p.name, color: p.color, entity: p.entity, views: viewObjectsOf(p) };
       })));
     } catch (e) { /* private mode or quota — the nav just loads late */ }
   }
@@ -380,7 +407,7 @@
           var pl = list[k]; return pl && typeof pl === 'object' ? (pl.id ? pl : Object.assign({ id: k }, pl)) : null;
         }).filter(Boolean);
     return arr.map(function (pl) {
-      return { id: pl.id, name: pl.name, color: pl.color, entity: pl.entity, views: pl.views };
+      return { id: pl.id, name: pl.name, color: pl.color, entity: pl.entity, views: viewObjectsOf(pl) };
     });
   }
 
@@ -501,7 +528,13 @@
       location.href = base + '?' + q.toString();
       return;
     }
-    if (kind === 'filter') { alert('Prototype only: "Add filter view" is not wired up yet.'); return; }
+    if (kind === 'filter') {
+      // Only crm.html can open the editor — it holds the modal shell and the cards the
+      // live match count is computed from. Elsewhere, travel there as an intent.
+      if (typeof window.openViewEditor === 'function') { window.openViewEditor(id, null); return; }
+      titanSidebarGo('/crm/pipeline/' + encodeURIComponent(id) + '?intent=new-view');
+      return;
+    }
     if (kind === 'add-team') { alert('Prototype only: "Invite team" is not wired up yet.'); return; }
     // No 'delete-pipeline' here: deleting a pipeline takes its records with it, so it
     // shouldn't sit one hover-and-click away in the nav. It lives on the pipeline
