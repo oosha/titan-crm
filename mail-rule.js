@@ -101,19 +101,12 @@
       var state = normalise(opts.value);
       var boxes = mailboxesFor(opts.accountEmail);
       var onChange = typeof opts.onChange === 'function' ? opts.onChange : function () {};
-      var open = false;
 
       host.innerHTML =
         '<div class="mr-sec">' +
           '<div class="mr-label">Which mailboxes should Titan watch?</div>' +
-          '<div class="mr-hint">Mail arriving in these is checked against the conditions below.</div>' +
-          '<div class="mr-mailbox-field" data-mr-mailbox>' +
-            '<button type="button" class="mr-mailbox-trigger" data-mr-toggle>' +
-              '<span class="mr-mailbox-summary" data-mr-mbsummary></span>' +
-              '<span class="mr-caret" data-ds-icon="caret-down" data-size="14"></span>' +
-            '</button>' +
-            '<div class="mr-mailbox-panel" data-mr-mbpanel></div>' +
-          '</div>' +
+          '<div class="mr-hint" data-mr-mbhint></div>' +
+          '<div class="mr-mailboxes" data-mr-mbpanel></div>' +
         '</div>' +
         '<div class="mr-sec">' +
           '<div class="mr-label">When an incoming email meets the below conditions</div>' +
@@ -127,42 +120,42 @@
         '</div>';
 
       var panel = host.querySelector('[data-mr-mbpanel]');
-      var mbField = host.querySelector('[data-mr-mailbox]');
-      var mbSummary = host.querySelector('[data-mr-mbsummary]');
+      var mbHint = host.querySelector('[data-mr-mbhint]');
       var condWrap = host.querySelector('[data-mr-conds]');
       var summaryEl = host.querySelector('[data-mr-summary]');
       var addBtn = host.querySelector('[data-mr-add]');
 
       function drawMailboxes() {
-        var mine = boxes.filter(function (b) { return b.owned; });
-        var others = boxes.filter(function (b) { return !b.owned; });
-        function row(b) {
-          var on = state.mailboxes.indexOf(b.email) !== -1;
+        // Every mailbox is on screen at once, as a toggle. Nothing opens, so nothing
+        // shifts underneath it, and with one shared domain the addresses collapse to
+        // their local part — six full addresses would wrap to four lines and say the
+        // same thing four times.
+        var domain = (boxes[0] && boxes[0].email.split('@')[1]) || '';
+        var allSame = boxes.every(function (b) { return b.email.split('@')[1] === domain; });
+        mbHint.textContent = allSame
+          ? 'All @' + domain + '. Mail arriving in the ones you pick is checked against the conditions below.'
+          : 'Mail arriving in the ones you pick is checked against the conditions below.';
+
+        panel.innerHTML = boxes.map(function (b) {
+          var label = allSame ? b.email.split('@')[0] : b.email;
           if (!b.owned) {
             var asked = state.requested.indexOf(b.email) !== -1;
-            return '<div class="mr-mb is-locked">' +
-              '<div class="mr-mb-text"><div class="mr-mb-email">' + esc(b.email) + '</div>' +
-                '<div class="mr-mb-sub">' + esc(b.sub) + '</div></div>' +
-              (asked
-                ? '<span class="mr-mb-pending"><span data-ds-icon="clock" data-size="13"></span>Access requested</span>'
-                : '<button type="button" class="mr-mb-ask" data-mr-ask="' + esc(b.email) + '">Request access</button>') +
-            '</div>';
+            return '<button type="button" class="mr-mb' + (asked ? ' is-pending' : ' is-locked') + '" ' +
+              (asked ? 'disabled ' : '') + 'data-mr-ask="' + esc(b.email) + '" ' +
+              'title="' + esc(b.email) + ' — ' + esc(b.sub) + '">' +
+              '<span class="mr-mb-icon" data-ds-icon="' + (asked ? 'clock' : 'add-person') + '" data-size="13"></span>' +
+              '<span class="mr-mb-name">' + esc(label) + '</span>' +
+              '<span class="mr-mb-note">' + (asked ? 'Requested' : 'Ask') + '</span>' +
+            '</button>';
           }
-          return '<label class="mr-mb is-selectable">' +
-            '<input type="checkbox" class="mr-mb-check" data-mr-mb="' + esc(b.email) + '"' + (on ? ' checked' : '') + '>' +
-            '<div class="mr-mb-text"><div class="mr-mb-email">' + esc(b.email) + '</div>' +
-              '<div class="mr-mb-sub">' + esc(b.sub) + '</div></div>' +
-          '</label>';
-        }
-        panel.innerHTML =
-          '<div class="mr-mb-group">Mailboxes you can use</div>' + mine.map(row).join('') +
-          (others.length ? '<div class="mr-mb-group">Needs the owner’s approval</div>' + others.map(row).join('') : '');
-
-        var n = state.mailboxes.length;
-        mbSummary.textContent = n === 0 ? 'Choose one or more mailboxes'
-          : n === 1 ? state.mailboxes[0]
-          : state.mailboxes[0] + ' and ' + (n - 1) + ' more';
-        mbSummary.classList.toggle('is-empty', n === 0);
+          var on = state.mailboxes.indexOf(b.email) !== -1;
+          return '<button type="button" class="mr-mb' + (on ? ' is-on' : '') + '" ' +
+            'aria-pressed="' + on + '" data-mr-mb="' + esc(b.email) + '" ' +
+            'title="' + esc(b.email) + ' — ' + esc(b.sub) + '">' +
+            '<span class="mr-mb-icon" data-ds-icon="' + (on ? 'check' : 'plus') + '" data-size="13"></span>' +
+            '<span class="mr-mb-name">' + esc(label) + '</span>' +
+          '</button>';
+        }).join('');
         if (window.dsIcon) window.dsIcon.hydrate(panel);
       }
 
@@ -225,8 +218,13 @@
       // to a row would be bound to an element that no longer exists.
       host.addEventListener('click', function (e) {
         var t = e.target;
-        var toggle = t.closest('[data-mr-toggle]');
-        if (toggle) { open = !open; mbField.classList.toggle('is-open', open); return; }
+        var mb = t.closest('[data-mr-mb]');
+        if (mb) {
+          var email = mb.getAttribute('data-mr-mb');
+          var at = state.mailboxes.indexOf(email);
+          if (at === -1) state.mailboxes.push(email); else state.mailboxes.splice(at, 1);
+          drawMailboxes(); changed(); return;
+        }
 
         var ask = t.closest('[data-mr-ask]');
         if (ask) {
@@ -251,10 +249,7 @@
         if (t.closest('[data-mr-add]')) { state.conditions.push(blankCondition()); drawConditions(); changed(); return; }
 
         var chips = t.closest('[data-mr-chips]');
-        if (chips) { var inp = chips.querySelector('.mr-chip-input'); if (inp) inp.focus(); return; }
-
-        // Clicking away closes the mailbox panel, but a click inside it must not.
-        if (open && !t.closest('[data-mr-mailbox]')) { open = false; mbField.classList.remove('is-open'); }
+        if (chips) { var inp = chips.querySelector('.mr-chip-input'); if (inp) inp.focus(); }
       });
 
       host.addEventListener('change', function (e) {
@@ -268,13 +263,6 @@
         }
         var m = e.target.getAttribute && e.target.getAttribute('data-mr-mode');
         if (m !== null && m !== undefined) { state.conditions[+m].mode = e.target.value; drawConditions(); changed(); return; }
-        var mb = e.target.getAttribute && e.target.getAttribute('data-mr-mb');
-        if (mb) {
-          var at = state.mailboxes.indexOf(mb);
-          if (e.target.checked && at === -1) state.mailboxes.push(mb);
-          else if (!e.target.checked && at !== -1) state.mailboxes.splice(at, 1);
-          drawMailboxes(); changed();
-        }
       });
 
       host.addEventListener('input', function (e) {
