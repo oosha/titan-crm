@@ -238,7 +238,7 @@ following action's inspector and by clicking the orange delay summary itself. Th
 and condition as separate settings: every delay has a duration, while its condition may
 be none, no reply, or opened without a reply. Duration uses a sentence-like `Wait for [N]
 day(s)` control with its singular/plural unit immediately beside the number. The condition
-control is presented in plain language as `After delay, continue` rather than as an abstract
+control is presented in plain language as `After wait, continue` rather than as an abstract
 `Condition` field; its unconditional option reads `Always`. Removing a delay card
 preserves its following action and reconnects it immediately.
 The flow has no Start/End pointer or numbered markers.
@@ -257,8 +257,9 @@ than squeezing the cards. The final flow control is a compact blue circular plus
 the accessible label `Add to flow`; it offers only the three actions: a new email, call reminder
 or task. Its popover is labelled `Choose an action`; clicking any action adds it immediately with
 no second confirmation button. The popover has an upward-pointing tail centered on the blue plus.
-Actions created from the starting point or final blue plus silently
-receive a one-day, unconditional delay by default. The delay and its action render as two distinct
+Actions created from the starting point or final blue plus silently receive a one-day delay by
+default. New delays default to `If there is no reply` whenever an earlier email exists; the first
+delay remains `Always` because there is no prior email to evaluate. The delay and its action render as two distinct
 flow entities, and the user can delete the orange delay entity to make the action run immediately;
 delay is not presented as a competing standalone add choice. The supported conditions are no
 email reply and an earlier email opened but not replied to; there is no branching model. The

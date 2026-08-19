@@ -1617,6 +1617,7 @@
     } else {
       sequence.steps.splice(groupIndex + 1, 0, delayGroup);
     }
+    delayGroup.timing = defaultDelayTiming(sequence, groupIndex + 1);
     return { groupIndex: groupIndex + 1, group: delayGroup };
   }
 
@@ -1632,6 +1633,10 @@
     return Boolean(sequence && sequence.steps.slice(0, targetGroupIndex).some(function (group) {
       return group.actions.some(function (action) { return action.action === 'email'; });
     }));
+  }
+
+  function defaultDelayTiming(sequence, targetGroupIndex) {
+    return hasEmailBeforeGroup(sequence, targetGroupIndex) ? 'no-reply' : 'after';
   }
 
   function isFlowEntitySelected(kind, groupIndex, actionIndex) {
@@ -1893,7 +1898,7 @@
     const hasEarlierEmail = hasEmailBeforeGroup(sequence, groupIndex);
     const waitDays = Math.max(1, Number(group.days) || 1);
     return '<label class="ds-field"><span class="ds-field-label">Wait for</span><span class="seq-delay-duration-control"><input class="ds-input seq-delay-duration-input" type="number" min="1" step="1" value="' + esc(waitDays) + '" data-drawer-delay-days aria-label="Wait duration in days"><span class="seq-delay-duration-unit" data-drawer-delay-unit>' + (waitDays === 1 ? 'day' : 'days') + '</span></span></label>' +
-      '<label class="ds-field"><span class="ds-field-label">After delay, continue</span><select class="ds-input" data-drawer-delay-condition>' +
+      '<label class="ds-field"><span class="ds-field-label">After wait, continue</span><select class="ds-input" data-drawer-delay-condition>' +
         '<option value="after"' + (group.timing === 'after' ? ' selected' : '') + '>Always</option>' +
         '<option value="no-reply"' + (group.timing === 'no-reply' ? ' selected' : '') + (hasEarlierEmail ? '' : ' disabled') + '>If there is no reply</option>' +
         '<option value="opened-no-reply"' + (group.timing === 'opened-no-reply' ? ' selected' : '') + (hasEarlierEmail ? '' : ' disabled') + '>If email opened but no reply</option>' +
@@ -2929,10 +2934,9 @@
         group = { id: 'group-' + (++stepSequence), timing: 'after', days: 1, actions: [] };
         sequence.steps.push(group);
         groupIndex = sequence.steps.length - 1;
-      } else {
-        group.timing = 'after';
-        group.days = 1;
       }
+      group.timing = defaultDelayTiming(sequence, groupIndex);
+      group.days = 1;
       group.actions.push(action);
       renderEditor();
       scheduleSequencePersist();
@@ -3012,8 +3016,9 @@
       timelineMotionBusy = true;
       const actionType = addActionBox.dataset.addActionBox;
       const positions = captureTimelinePositions();
+      const groupIndex = sequence.steps.length;
       const newStep = {
-        id: 'step-' + (++stepSequence), timing: 'after', days: 1,
+        id: 'step-' + (++stepSequence), timing: defaultDelayTiming(sequence, groupIndex), days: 1,
         actions: [makeAction(actionType, actionType === 'email' ? 1 : 0)],
       };
       sequence.steps.push(newStep);
