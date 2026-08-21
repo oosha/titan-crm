@@ -2613,51 +2613,53 @@
           <div class="board-title">
             <h1 id="pipeline-name-heading">Neo partnerships</h1>
             <p id="pipeline-total"></p>
-            <!-- Only rendered while a saved view is applied. A filtered board that
-                 looks identical to an unfiltered one is how people conclude their
-                 records have gone missing. -->
-            <div id="board-view-chip"></div>
-          </div>
-          <div class="board-header-actions">
-            <!-- Ad-hoc filtering. The same conditions a saved view is made of, applied
-                 without saving — and "Save as view" is how one becomes the other. -->
-            <div class="ds-menu-anchor">
-              <button type="button" id="board-filter-btn" class="ds-btn ds-btn--soft"
-                      onclick="toggleFilterPanel(event)" aria-haspopup="dialog" aria-expanded="false"
-                      title="Filter this pipeline">
-                <span data-ds-icon="filter" data-size="16"></span>
-                <span id="board-filter-label">Filter</span>
-              </button>
-              <div class="cv-filter-panel" id="board-filter-panel" role="dialog" aria-label="Filter records">
-                <div class="cv-filter-head">
-                  <span class="cv-filter-title">Filter records</span>
-                  <button type="button" class="cv-filter-x" onclick="closeFilterPanel()" aria-label="Close">
-                    <span data-ds-icon="close" data-size="13"></span>
-                  </button>
-                </div>
-                <div class="cv-filter-body"><div id="board-filter-host"></div></div>
-                <div class="cv-filter-foot" id="cv-filter-foot">
-                  <button type="button" class="cv-filter-clear" onclick="clearBoardFilter()">Clear</button>
-                  <button type="button" class="ds-btn ds-btn--ghost ds-btn--sm"
-                          onclick="startSaveAsView()">Save as view</button>
-                  <button type="button" class="ds-btn ds-btn--primary ds-btn--sm"
-                          onclick="applyBoardFilter()">Apply</button>
-                </div>
-                <!-- Inline, not a prompt(): prompt() returns null without a word in a
-                     sandboxed frame, and a Save button that silently does nothing is
-                     worse than no Save button. -->
-                <div class="cv-filter-foot cv-filter-name" id="cv-filter-name-row">
-                  <input class="cv-text" id="cv-filter-name" type="text" maxlength="40"
-                         placeholder="Name this view"
-                         onkeydown="if(event.key==='Enter'){event.preventDefault();commitSaveAsView();}
-                                    if(event.key==='Escape'){event.preventDefault();cancelSaveAsView();}">
-                  <button type="button" class="ds-btn ds-btn--ghost ds-btn--sm"
-                          onclick="cancelSaveAsView()">Cancel</button>
-                  <button type="button" class="ds-btn ds-btn--primary ds-btn--sm"
-                          onclick="commitSaveAsView()">Save view</button>
+            <!-- The filter control and the filter state, together. They used to sit at
+                 opposite ends of the header — the button on the right, what it had done
+                 on the left — which made them read as two unrelated things. -->
+            <div class="board-filter-bar">
+              <!-- Ad-hoc filtering. The same conditions a saved view is made of, applied
+                   without saving — and "Save as view" is how one becomes the other. -->
+              <div class="ds-menu-anchor">
+                <button type="button" id="board-filter-btn" class="ds-btn ds-btn--soft"
+                        onclick="toggleFilterPanel(event)" aria-haspopup="dialog" aria-expanded="false"
+                        title="Filter this pipeline">
+                  <span data-ds-icon="filter" data-size="16"></span>
+                  <span id="board-filter-label">Filter</span>
+                </button>
+                <div class="cv-filter-panel" id="board-filter-panel" role="dialog" aria-label="Filter records">
+                  <div class="cv-filter-head">
+                    <span class="cv-filter-title">Filter records</span>
+                    <button type="button" class="cv-filter-x" onclick="closeFilterPanel()" aria-label="Close">
+                      <span data-ds-icon="close" data-size="13"></span>
+                    </button>
+                  </div>
+                  <div class="cv-filter-body"><div id="board-filter-host"></div></div>
+                  <div class="cv-filter-foot" id="cv-filter-foot">
+                    <button type="button" class="cv-filter-clear" onclick="clearBoardFilter()">Clear</button>
+                    <button type="button" class="ds-btn ds-btn--ghost ds-btn--sm"
+                              onclick="startSaveAsView()">Save as view</button>
+                    <button type="button" class="ds-btn ds-btn--primary ds-btn--sm"
+                              onclick="applyBoardFilter()">Apply</button>
+                  </div>
+                  <!-- Inline, not a prompt(): prompt() returns null without a word in a
+                       sandboxed frame, and a Save button that silently does nothing is
+                       worse than no Save button. -->
+                  <div class="cv-filter-foot cv-filter-name" id="cv-filter-name-row">
+                    <input class="cv-text" id="cv-filter-name" type="text" maxlength="40"
+                             placeholder="Name this view"
+                             onkeydown="if(event.key==='Enter'){event.preventDefault();commitSaveAsView();}
+                                          if(event.key==='Escape'){event.preventDefault();cancelSaveAsView();}">
+                    <button type="button" class="ds-btn ds-btn--ghost ds-btn--sm"
+                              onclick="cancelSaveAsView()">Cancel</button>
+                    <button type="button" class="ds-btn ds-btn--primary ds-btn--sm"
+                              onclick="commitSaveAsView()">Save view</button>
+                  </div>
                 </div>
               </div>
+              <div id="board-view-chip"></div>
             </div>
+          </div>
+          <div class="board-header-actions">
             <!-- Two settings screens exist and they are easy to confuse: the pipeline's
                  (stages, colour, sources) and the record's (which fields a card carries).
                  A menu names both, so the choice happens before the navigation rather than
@@ -4856,16 +4858,16 @@
       const v = activeView();
       if (!v && boardFilter) {
         const fn = visibleCards().length;
+        // No "Filtered" label and no "Edit filter": the button beside this one already
+        // says Filter, already counts the conditions, and already opens the editor.
+        // Sitting next to each other, all this has left to add is the result.
         host.innerHTML =
           '<div class="cv-chip-row">' +
             '<span class="cv-chip">' +
-              '<span class="cv-chip-name">Filtered</span>' +
-              '<span class="cv-chip-sep" aria-hidden="true"></span>' +
-              '<span class="cv-chip-count">' + fn + ' of ' + CARDS.length + '</span>' +
+              '<span class="cv-chip-count">Showing <strong>' + fn + '</strong> of ' + CARDS.length + '</span>' +
               '<button type="button" class="cv-chip-x" onclick="clearBoardFilter()" ' +
                 'aria-label="Clear this filter"><span data-ds-icon="close" data-size="12"></span></button>' +
             '</span>' +
-            '<button type="button" class="cv-chip-edit" onclick="toggleFilterPanel(event)">Edit filter</button>' +
             '<button type="button" class="cv-chip-edit" onclick="saveFilterAsViewFromChip()">Save as view</button>' +
           '</div>';
         if (window.dsIcon) window.dsIcon.hydrate(host);

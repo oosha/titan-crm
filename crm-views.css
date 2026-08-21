@@ -47,7 +47,7 @@
    with the heading for the same line. */
 .cv-chip-row {
   display: flex; align-items: center; flex-wrap: wrap;
-  gap: var(--space-150); margin-top: var(--space-125);
+  gap: var(--space-150);
 }
 .cv-chip {
   display: inline-flex; align-items: center; gap: var(--space-100);
@@ -66,6 +66,9 @@
   background: var(--text-secondary); opacity: .5; flex-shrink: 0;
 }
 .cv-chip-count { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+/* The count is the whole message on an ad-hoc filter, so the number carries weight
+   while the words around it stay quiet. */
+.cv-chip-count strong { color: var(--text-primary); font-weight: var(--weight-semi); }
 /* Was an 8x14 glyph — technically clickable, practically not. */
 .cv-chip-x {
   width: 20px; height: 20px; flex-shrink: 0; margin-left: var(--space-025);
@@ -86,7 +89,7 @@
 /* Anchored under the Filter button. Not a modal: filtering is something you do to
    the board in front of you, and covering it to describe it is backwards. */
 .cv-filter-panel {
-  display: none; position: absolute; top: calc(100% + var(--space-075)); right: 0; z-index: 60;
+  display: none; position: absolute; top: calc(100% + var(--space-075)); left: 0; z-index: 60;
   width: 460px; max-width: calc(100vw - var(--space-400));
   background: var(--surface-primary); border: 1px solid var(--border-subtle);
   border-radius: 12px; box-shadow: 0 16px 44px rgba(20,22,26,0.20);
@@ -128,3 +131,13 @@
 .cv-filter-name { display: none; }
 .cv-filter-name.open { display: flex; }
 .cv-filter-name .cv-text { flex: 1; min-width: 0; }
+
+/* ── The filter strip ────────────────────────────────────────────────────── */
+/* Button first, then whatever it has done to the board. They were at opposite ends
+   of the header, which read as two unrelated controls rather than one and its state. */
+.board-filter-bar {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: var(--space-150); margin-top: var(--space-125);
+}
+/* Empty until a filter or a view is on, and it must not add a gap while empty. */
+#board-view-chip:empty { display: none; }
