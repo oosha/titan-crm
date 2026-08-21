@@ -385,8 +385,16 @@ body.fb-locked { overflow: hidden; }
   display: flex; align-items: center; gap: var(--space-100);
   width: 100%; cursor: pointer; text-align: left;
 }
+.fb-dest-value {
+  display: flex; align-items: center; gap: var(--space-075); flex: 1; min-width: 0;
+}
 .fb-dest-current {
-  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.fb-new-field-label {
+  flex: 0 0 auto; color: var(--text-muted); font-size: var(--text-2xs);
+  font-weight: var(--weight-bold); letter-spacing: 0.05em; line-height: 1;
+  text-transform: uppercase;
 }
 .fb-dest-trigger .ds-menu-caret { flex-shrink: 0; color: var(--text-muted); display: flex; }
 /* It is shaped like a field but behaves like a button, so it answers like one: a tint, not

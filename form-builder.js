@@ -621,8 +621,9 @@
       // decision this row carries. Until one is picked it says what it wants, the way the
       // input beside it does.
       const kindNow = KIND_BY_TYPE[f.type];
+      const isNewCustom = f.target === 'custom' && kindNow && !selectedAbove;
       const chosen = selectedAbove ? selectedAbove.label
-        : (staleLabel || (f.target === 'custom' && kindNow ? kindNow.label + ' — new field' : ''));
+        : (staleLabel || (isNewCustom ? kindNow.label : ''));
       const triggerLabel = chosen || 'Save to';
 
       return '<div class="fb-field' + (locked ? ' is-locked' : '') + '" data-i="' + i + '"' + (locked ? '' : ' draggable="true"') + '>' +
@@ -645,8 +646,8 @@
               ' title="' + esc(f.target === 'name'
                   ? 'Always asked — every record is listed by name'
                   : 'Always asked — email is how contacts are matched') + '">' +
-              '<span class="fb-dest-current">' +
-                esc(fieldLabel(schema, TARGET_BY[f.target])) + '</span>' +
+              '<span class="fb-dest-value"><span class="fb-dest-current">' +
+                esc(fieldLabel(schema, TARGET_BY[f.target])) + '</span></span>' +
               '<span class="ds-menu-caret">' +
                 (window.dsIcon ? window.dsIcon('caret-down', { size: 12 }) : '▾') + '</span>' +
             '</button>'
@@ -654,7 +655,10 @@
               '<button type="button" class="ds-input fb-dest-trigger' +
                 (chosen ? '' : ' is-empty') + '" data-act="dest"' +
                 ' data-ds-menu="' + esc(menuId) + '" aria-haspopup="menu" aria-expanded="false">' +
-                '<span class="fb-dest-current">' + esc(triggerLabel) + '</span>' +
+                '<span class="fb-dest-value">' +
+                  '<span class="fb-dest-current">' + esc(triggerLabel) + '</span>' +
+                  (isNewCustom ? '<span class="fb-new-field-label">New field</span>' : '') +
+                '</span>' +
                 '<span class="ds-menu-caret">' +
                   (window.dsIcon ? window.dsIcon('caret-down', { size: 12 }) : '▾') + '</span>' +
               '</button>' +

@@ -58,13 +58,11 @@
   .fl-main { min-width: 0; }
   .fl-name { font-size: 14.5px; font-weight: 650; color: var(--dir-ink); overflow: hidden; white-space: nowrap; }
   .fl-name-link {
-    display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+    display: inline-flex; align-items: center; max-width: 100%;
     color: inherit; text-decoration: none; vertical-align: middle;
   }
   .fl-name-link-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .fl-name-link-icon { color: var(--dir-muted); flex: 0 0 auto; position: relative; top: -1px; }
   .fl-name-link:hover { color: var(--dir-accent); }
-  .fl-name-link:hover .fl-name-link-icon { color: var(--dir-accent); }
   .fl-name-link:focus-visible { outline: 2px solid var(--dir-accent); outline-offset: 3px; border-radius: 3px; }
   .fl-meta { font-size: 12.5px; color: var(--dir-muted); margin-top: 6px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
   .fl-meta b { color: var(--dir-body); font-weight: 650; }
@@ -120,6 +118,11 @@
   const esc = window.esc;
 
   function formUrlFor(token) { return location.origin + '/f/' + encodeURIComponent(token); }
+  function formEditorUrlFor(pipelineId) {
+    const q = new URLSearchParams(location.search);
+    q.set('from', 'forms');
+    return '/crm/pipeline/' + encodeURIComponent(pipelineId) + '/form?' + q.toString();
+  }
 
   function submissionsFor(pl, form) {
     const label = (form && form.sourceLabel) || 'Form';
@@ -166,10 +169,9 @@
       '<div class="fl-card">' +
         '<span class="fl-icon" style="background:' + esc(colour) + '18; color:' + esc(colour) + ';">' + ICON_FORM + '</span>' +
         '<div class="fl-main">' +
-          '<div class="fl-name"><a class="fl-name-link" title="Open the form"' +
-            ' href="' + esc(formUrlFor(f.token)) + '" target="_blank" rel="noopener">' +
+          '<div class="fl-name"><a class="fl-name-link" title="Edit form"' +
+            ' href="' + esc(formEditorUrlFor(pl.id)) + '">' +
             '<span class="fl-name-link-text">' + esc(f.heading || 'Untitled form') + '</span>' +
-            '<span class="fl-name-link-icon" aria-hidden="true">' + ICON_OPEN + '</span>' +
           '</a></div>' +
           '<div class="fl-meta">' +
             // "Active" is gone with the pause control (see PAUSE_UI in form-builder.js):
@@ -199,9 +201,7 @@
   let PIPELINES = {};
   function editForm(pipelineId) {
     if (!PIPELINES[pipelineId]) return;
-    const q = new URLSearchParams(location.search);
-    q.set('from', 'forms');
-    location.href = '/crm/pipeline/' + encodeURIComponent(pipelineId) + '/form?' + q.toString();
+    location.href = formEditorUrlFor(pipelineId);
   }
 
   // The delete itself, shared by the row's button and the builder's. Restores the form
