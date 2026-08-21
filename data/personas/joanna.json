@@ -3,29 +3,614 @@
   "pipelineSeq": 2,
   "pipelines": {
     "inquiries": {
-      "id":"inquiries", "name":"Bouquet preservation inquiries", "entity":"Inquiry", "plural":"inquiries", "color":"#4f6d9e", "subject":"person",
-      "stages":[{"key":"new-inquiry","label":"New inquiry"},{"key":"replied","label":"Replied"},{"key":"nurturing","label":"Nurturing"},{"key":"quote-sent","label":"Quote sent"},{"key":"booked","label":"Booked"},{"key":"lost","label":"Lost"}],
-      "cards":[
-        {"id":"inq-1","deal":"Mia Thompson wedding bouquet","company":"Mia Thompson","contact":"Mia Thompson","stage":"new-inquiry","source":"Website contact form","contactEmail":"mia.thompson@gmail.com","contactPhone":"+61 412 334 551","instagram":"@miathompson","weddingDate":"2026-11-14","value":0,"lastActivity":"3h ago","activityType":"Email received","note":"Mia is deciding between a pressed frame and a shadow box.","noteHistory":[{"text":"Website enquiry received. Mia asked how soon after the wedding she should bring in the bouquet.","author":"Joanna","date":"Today"}],"upcomingActivities":[{"type":"task","text":"Reply to Mia with the bouquet preservation guide","date":"Today"}],"contacts":[{"name":"Mia Thompson","email":"mia.thompson@gmail.com","phone":"+61 412 334 551","instagram":"@miathompson"}],"owner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}},
-        {"id":"inq-2","deal":"Aisha Rahman memorial flowers","company":"Aisha Rahman","contact":"Aisha Rahman","stage":"replied","source":"Google search","contactEmail":"aisha.rahman@gmail.com","contactPhone":"+61 431 902 118","value":0,"lastActivity":"2d ago","activityType":"Email sent","note":"Aisha is considering a small keepsake using flowers from her grandmother's service.","noteHistory":[{"text":"Sent a gentle reply with options for a small pressed keepsake and an invitation to email photos of the flowers.","author":"Joanna","date":"19 Aug"}],"upcomingActivities":[{"type":"task","text":"Send a gentle follow-up","date":"Tomorrow"}],"contacts":[{"name":"Aisha Rahman","email":"aisha.rahman@gmail.com","phone":"+61 431 902 118"}],"owner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}},
-        {"id":"inq-3","deal":"Lily McGregor wedding bouquet","company":"Lily McGregor","contact":"Lily McGregor","stage":"nurturing","source":"Instagram","contactEmail":"lily.mcgregor@gmail.com","contactPhone":"+61 401 556 774","instagram":"@lilyandtom","weddingDate":"2027-03-14","value":480,"lastActivity":"Today","activityType":"Email received","threadRef":"thread-lily","note":"Lily would like a shadow box and asked for deposit details.","recentActivities":[{"type":"email","text":"Bouquet preservation for my March wedding","snippet":"Lily asked for shadow box options and the deposit details.","date":"Today"},{"type":"email","text":"Bouquet preservation for my March wedding","snippet":"Joanna explained the drying, design and framing process.","date":"19 Aug"}],"upcomingActivities":[{"type":"task","text":"Send shadow box options and deposit link","date":"Today"}],"files":[{"name":"Lily McGregor shadow box options.pdf","type":"pdf","date":"Today"},{"name":"Bouquet preservation guide.pdf","type":"pdf","date":"19 Aug"}],"contacts":[{"name":"Lily McGregor","email":"lily.mcgregor@gmail.com","phone":"+61 401 556 774","instagram":"@lilyandtom"}],"owner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}},
-        {"id":"inq-4","deal":"Chloe Watson wedding bouquet","company":"Chloe Watson","contact":"Chloe Watson","stage":"quote-sent","source":"Word of mouth","contactEmail":"chloe.watson@gmail.com","contactPhone":"+61 408 662 440","instagram":"@chloewatson","weddingDate":"2027-05-22","value":520,"lastActivity":"4d ago","activityType":"Email sent","note":"Chloe was referred by a past client and is planning well ahead.","upcomingActivities":[{"type":"task","text":"Follow up on quote","date":"26 Aug"}],"contacts":[{"name":"Chloe Watson","email":"chloe.watson@gmail.com","phone":"+61 408 662 440","instagram":"@chloewatson"}],"owner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}},
-        {"id":"inq-5","deal":"Sarah Chen wedding bouquet","company":"Sarah Chen","contact":"Sarah Chen","stage":"booked","source":"Website booking","contactEmail":"sarah.chen@outlook.com","contactPhone":"+61 414 228 690","instagram":"@sarahchen","weddingDate":"2026-08-07","value":460,"deposit":160,"lastActivity":"1d ago","activityType":"Payment received","threadRef":"thread-sarah-booking","note":"Deposit paid. Sarah booked her flower drop-off through the confirmation email.","contacts":[{"name":"Sarah Chen","email":"sarah.chen@outlook.com","phone":"+61 414 228 690","instagram":"@sarahchen"}],"owner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}},
-        {"id":"inq-6","deal":"Hannah Lee wedding bouquet","company":"Hannah Lee","contact":"Hannah Lee","stage":"lost","source":"Google search","contactEmail":"hannah.lee@gmail.com","value":0,"lastActivity":"3w ago","activityType":"Email sent","note":"Hannah chose a lower-cost option after receiving the quote.","contacts":[{"name":"Hannah Lee","email":"hannah.lee@gmail.com"}],"owner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}}
+      "id": "inquiries",
+      "name": "Bouquet preservation inquiries",
+      "entity": "Inquiry",
+      "plural": "inquiries",
+      "color": "#4f6d9e",
+      "subject": "person",
+      "stages": [
+        {
+          "key": "new-inquiry",
+          "label": "New inquiry"
+        },
+        {
+          "key": "replied",
+          "label": "Replied"
+        },
+        {
+          "key": "nurturing",
+          "label": "Nurturing"
+        },
+        {
+          "key": "quote-sent",
+          "label": "Quote sent"
+        },
+        {
+          "key": "booked",
+          "label": "Booked"
+        },
+        {
+          "key": "lost",
+          "label": "Lost"
+        }
       ],
-      "hiddenFields":["company-linkedin","contact-linkedin","contact-designation","contact-department","location","website"],"customFieldDefs":[{"key":"weddingDate","name":"Wedding date","type":"date"}],"contactsEnabled":true,"shownFields":["name","value","stage","source","note","contact","contact-name","contact-email","contact-phone","instagram"],"defaultOwner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}
+      "cards": [
+        {
+          "id": "inq-1",
+          "deal": "Mia Thompson wedding bouquet",
+          "company": "Mia Thompson",
+          "contact": "Mia Thompson",
+          "stage": "new-inquiry",
+          "source": "Website contact form",
+          "contactEmail": "mia.thompson@gmail.com",
+          "contactPhone": "+61 412 334 551",
+          "instagram": "@miathompson",
+          "weddingDate": "2026-11-14",
+          "value": 0,
+          "lastActivity": "3h ago",
+          "activityType": "Email received",
+          "note": "Mia is deciding between a pressed frame and a shadow box.",
+          "noteHistory": [
+            {
+              "text": "Website enquiry received. Mia asked how soon after the wedding she should bring in the bouquet.",
+              "author": "Joanna",
+              "date": "Today"
+            }
+          ],
+          "upcomingActivities": [
+            {
+              "type": "task",
+              "text": "Reply to Mia with the bouquet preservation guide",
+              "date": "Today"
+            }
+          ],
+          "contacts": [
+            {
+              "name": "Mia Thompson",
+              "email": "mia.thompson@gmail.com",
+              "phone": "+61 412 334 551",
+              "instagram": "@miathompson"
+            }
+          ],
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
+        },
+        {
+          "id": "inq-2",
+          "deal": "Aisha Rahman memorial flowers",
+          "company": "Aisha Rahman",
+          "contact": "Aisha Rahman",
+          "stage": "replied",
+          "source": "Google search",
+          "contactEmail": "aisha.rahman@gmail.com",
+          "contactPhone": "+61 431 902 118",
+          "value": 0,
+          "lastActivity": "2d ago",
+          "activityType": "Email sent",
+          "note": "Aisha is considering a small keepsake using flowers from her grandmother's service.",
+          "noteHistory": [
+            {
+              "text": "Sent a gentle reply with options for a small pressed keepsake and an invitation to email photos of the flowers.",
+              "author": "Joanna",
+              "date": "19 Aug"
+            }
+          ],
+          "upcomingActivities": [
+            {
+              "type": "task",
+              "text": "Send a gentle follow-up",
+              "date": "Tomorrow"
+            }
+          ],
+          "contacts": [
+            {
+              "name": "Aisha Rahman",
+              "email": "aisha.rahman@gmail.com",
+              "phone": "+61 431 902 118"
+            }
+          ],
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
+        },
+        {
+          "id": "inq-3",
+          "deal": "Lily McGregor wedding bouquet",
+          "company": "Lily McGregor",
+          "contact": "Lily McGregor",
+          "stage": "nurturing",
+          "source": "Instagram",
+          "contactEmail": "lily.mcgregor@gmail.com",
+          "contactPhone": "+61 401 556 774",
+          "instagram": "@lilyandtom",
+          "weddingDate": "2027-03-14",
+          "value": 480,
+          "lastActivity": "Today",
+          "activityType": "Email received",
+          "threadRef": "thread-lily",
+          "note": "Lily would like a shadow box and asked for deposit details.",
+          "recentActivities": [
+            {
+              "type": "email",
+              "text": "Bouquet preservation for my March wedding",
+              "snippet": "Lily asked for shadow box options and the deposit details.",
+              "date": "Today"
+            },
+            {
+              "type": "email",
+              "text": "Bouquet preservation for my March wedding",
+              "snippet": "Joanna explained the drying, design and framing process.",
+              "date": "19 Aug"
+            }
+          ],
+          "upcomingActivities": [
+            {
+              "type": "task",
+              "text": "Send shadow box options and deposit link",
+              "date": "Today"
+            }
+          ],
+          "files": [
+            {
+              "name": "Lily McGregor shadow box options.pdf",
+              "type": "pdf",
+              "date": "Today"
+            },
+            {
+              "name": "Bouquet preservation guide.pdf",
+              "type": "pdf",
+              "date": "19 Aug"
+            }
+          ],
+          "contacts": [
+            {
+              "name": "Lily McGregor",
+              "email": "lily.mcgregor@gmail.com",
+              "phone": "+61 401 556 774",
+              "instagram": "@lilyandtom"
+            }
+          ],
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
+        },
+        {
+          "id": "inq-4",
+          "deal": "Chloe Watson wedding bouquet",
+          "company": "Chloe Watson",
+          "contact": "Chloe Watson",
+          "stage": "quote-sent",
+          "source": "Word of mouth",
+          "contactEmail": "chloe.watson@gmail.com",
+          "contactPhone": "+61 408 662 440",
+          "instagram": "@chloewatson",
+          "weddingDate": "2027-05-22",
+          "value": 520,
+          "lastActivity": "4d ago",
+          "activityType": "Email sent",
+          "note": "Chloe was referred by a past client and is planning well ahead.",
+          "upcomingActivities": [
+            {
+              "type": "task",
+              "text": "Follow up on quote",
+              "date": "26 Aug"
+            }
+          ],
+          "contacts": [
+            {
+              "name": "Chloe Watson",
+              "email": "chloe.watson@gmail.com",
+              "phone": "+61 408 662 440",
+              "instagram": "@chloewatson"
+            }
+          ],
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
+        },
+        {
+          "id": "inq-5",
+          "deal": "Sarah Chen wedding bouquet",
+          "company": "Sarah Chen",
+          "contact": "Sarah Chen",
+          "stage": "booked",
+          "source": "Website booking",
+          "contactEmail": "sarah.chen@outlook.com",
+          "contactPhone": "+61 414 228 690",
+          "instagram": "@sarahchen",
+          "weddingDate": "2026-08-07",
+          "value": 460,
+          "deposit": 160,
+          "lastActivity": "1d ago",
+          "activityType": "Payment received",
+          "threadRef": "thread-sarah-booking",
+          "note": "Deposit paid. Sarah booked her flower drop-off through the confirmation email.",
+          "contacts": [
+            {
+              "name": "Sarah Chen",
+              "email": "sarah.chen@outlook.com",
+              "phone": "+61 414 228 690",
+              "instagram": "@sarahchen"
+            }
+          ],
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
+        },
+        {
+          "id": "inq-6",
+          "deal": "Hannah Lee wedding bouquet",
+          "company": "Hannah Lee",
+          "contact": "Hannah Lee",
+          "stage": "lost",
+          "source": "Google search",
+          "contactEmail": "hannah.lee@gmail.com",
+          "value": 0,
+          "lastActivity": "3w ago",
+          "activityType": "Email sent",
+          "note": "Hannah chose a lower-cost option after receiving the quote.",
+          "contacts": [
+            {
+              "name": "Hannah Lee",
+              "email": "hannah.lee@gmail.com"
+            }
+          ],
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
+        }
+      ],
+      "hiddenFields": [
+        "company-linkedin",
+        "contact-linkedin",
+        "contact-designation",
+        "contact-department",
+        "location",
+        "website"
+      ],
+      "customFieldDefs": [
+        {
+          "key": "weddingDate",
+          "name": "Wedding date",
+          "type": "date"
+        }
+      ],
+      "contactsEnabled": true,
+      "shownFields": [
+        "name",
+        "value",
+        "stage",
+        "source",
+        "note",
+        "contact",
+        "contact-name",
+        "contact-email",
+        "contact-phone",
+        "instagram"
+      ],
+      "defaultOwner": {
+        "name": "Joanna Hiu",
+        "email": "hello@joannahiuartist.com"
+      }
     },
     "projects": {
-      "id":"projects","name":"Preservation projects","entity":"Project","plural":"projects","color":"#3f8a7d","subject":"person",
-      "stages":[{"key":"drop-off-scheduled","label":"Drop-off scheduled"},{"key":"drying","label":"Drying"},{"key":"design-preparation","label":"Design preparation"},{"key":"design-choice","label":"Design choice"},{"key":"with-framer","label":"With framer"},{"key":"ready-for-pickup","label":"Ready for pickup"},{"key":"completed","label":"Completed"}],
-      "cards":[
-        {"id":"proj-1","deal":"Sarah Chen wedding bouquet","company":"Sarah Chen","contact":"Sarah Chen","stage":"ready-for-pickup","source":"Website booking","contactEmail":"sarah.chen@outlook.com","contactPhone":"+61 414 228 690","instagram":"@sarahchen","weddingDate":"2026-08-07","dropOffDate":"2026-08-10","value":460,"balance":0,"paymentStatus":"Paid in full","lastActivity":"Today","activityType":"Email received","threadRef":"thread-sarah-pickup","note":"Sarah chose option two with additional white ranunculus. The final invoice is paid and pickup is booked for Saturday at 11am.","noteHistory":[{"text":"Sarah selected design option two and asked for the white ranunculus to be more prominent in memory of her grandmother.","author":"Joanna","date":"13 Aug"},{"text":"Final invoice paid. Sarah has confirmed Saturday pickup with her mum.","author":"Joanna","date":"Today"}],"recentActivities":[{"type":"email","text":"Your bouquet preservation is ready for pickup","snippet":"Sarah confirmed Saturday at 11am for pickup.","date":"Today"},{"type":"email","text":"Your design choice","snippet":"Sarah selected option two and requested additional white ranunculus.","date":"13 Aug"},{"type":"email","text":"Four-week drying update","snippet":"Joanna shared that the flowers had dried beautifully and design preparation was starting.","date":"7 Aug"},{"type":"meeting","text":"Flower drop-off at the studio","snippet":"Sarah delivered her bouquet two days after the wedding.","date":"10 Aug"}],"upcomingActivities":[{"type":"meeting","text":"Bouquet pickup with Sarah","date":"Sat, 11:00am"}],"files":[{"name":"Sarah Chen booking confirmation.pdf","type":"pdf","date":"6 Aug"},{"name":"Xero invoice INV-1048.pdf","type":"pdf","date":"20 Aug"},{"name":"Sarah Chen design options.pdf","type":"pdf","date":"12 Aug"},{"name":"Sarah Chen final composition.jpg","type":"image","date":"19 Aug"},{"name":"Pickup instructions.pdf","type":"pdf","date":"20 Aug"}],"contacts":[{"name":"Sarah Chen","email":"sarah.chen@outlook.com","phone":"+61 414 228 690","instagram":"@sarahchen"}],"owner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}},
-        {"id":"proj-2","deal":"Emma Sinclair wedding bouquet","company":"Emma Sinclair","contact":"Emma Sinclair","stage":"drying","source":"Website booking","contactEmail":"emma.sinclair@gmail.com","contactPhone":"+61 419 774 215","weddingDate":"2026-07-18","dropOffDate":"2026-07-21","value":420,"lastActivity":"1w ago","activityType":"Email sent","note":"Flowers are pressing and drying. The four-week update is due soon.","upcomingActivities":[{"type":"task","text":"Send four-week drying update","date":"in 2d"}],"contacts":[{"name":"Emma Sinclair","email":"emma.sinclair@gmail.com","phone":"+61 419 774 215"}],"owner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}},
-        {"id":"proj-3","deal":"Olivia Brooks memorial flowers","company":"Olivia Brooks","contact":"Olivia Brooks","stage":"with-framer","source":"Email inquiry","contactEmail":"olivia.brooks@gmail.com","contactPhone":"+61 430 591 330","value":540,"lastActivity":"2d ago","activityType":"Phone call","overdue":true,"note":"The framing completion needs confirmation before Joanna updates Olivia.","upcomingActivities":[{"type":"task","text":"Confirm framing completion","date":"Overdue"}],"contacts":[{"name":"Olivia Brooks","email":"olivia.brooks@gmail.com","phone":"+61 430 591 330"}],"owner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}},
-        {"id":"proj-4","deal":"Grace Miller wedding bouquet","company":"Grace Miller","contact":"Grace Miller","stage":"design-choice","source":"Instagram","contactEmail":"grace.miller@gmail.com","contactPhone":"+61 405 269 770","instagram":"@graceandjack","value":390,"lastActivity":"3d ago","activityType":"Email sent","note":"Three design options were shared. Grace has not selected one yet.","upcomingActivities":[{"type":"task","text":"Confirm preferred design","date":"Tomorrow"}],"contacts":[{"name":"Grace Miller","email":"grace.miller@gmail.com","phone":"+61 405 269 770","instagram":"@graceandjack"}],"owner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}},
-        {"id":"proj-5","deal":"Amelia Reid wedding bouquet","company":"Amelia Reid","contact":"Amelia Reid","stage":"completed","source":"Word of mouth","contactEmail":"amelia.reid@gmail.com","value":450,"lastActivity":"2w ago","activityType":"Email sent","note":"Collected and completed. Amelia shared a kind Instagram story after pickup.","contacts":[{"name":"Amelia Reid","email":"amelia.reid@gmail.com","instagram":"@ameliacreates"}],"owner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}}
+      "id": "projects",
+      "name": "Preservation projects",
+      "entity": "Project",
+      "plural": "projects",
+      "color": "#3f8a7d",
+      "subject": "person",
+      "stages": [
+        {
+          "key": "drop-off-scheduled",
+          "label": "Drop-off scheduled"
+        },
+        {
+          "key": "drying",
+          "label": "Drying"
+        },
+        {
+          "key": "design-preparation",
+          "label": "Design preparation"
+        },
+        {
+          "key": "design-choice",
+          "label": "Design choice"
+        },
+        {
+          "key": "with-framer",
+          "label": "With framer"
+        },
+        {
+          "key": "ready-for-pickup",
+          "label": "Ready for pickup"
+        },
+        {
+          "key": "completed",
+          "label": "Completed"
+        }
       ],
-      "hiddenFields":["company-linkedin","contact-linkedin","contact-designation","contact-department","location","website"],"customFieldDefs":[{"key":"weddingDate","name":"Wedding date","type":"date"},{"key":"dropOffDate","name":"Flower drop-off","type":"date"},{"key":"paymentStatus","name":"Payment status","type":"text"}],"contactsEnabled":true,"shownFields":["name","value","stage","source","note","contact","contact-name","contact-email","contact-phone","instagram"],"defaultOwner":{"name":"Joanna Hiu","email":"hello@joannahiuartist.com"}
+      "cards": [
+        {
+          "id": "proj-1",
+          "deal": "Sarah Chen wedding bouquet",
+          "company": "Sarah Chen",
+          "contact": "Sarah Chen",
+          "stage": "ready-for-pickup",
+          "source": "Website booking",
+          "contactEmail": "sarah.chen@outlook.com",
+          "contactPhone": "+61 414 228 690",
+          "instagram": "@sarahchen",
+          "weddingDate": "2026-08-07",
+          "dropOffDate": "2026-08-10",
+          "value": 460,
+          "balance": 0,
+          "paymentStatus": "Paid in full",
+          "lastActivity": "Today",
+          "activityType": "Email received",
+          "threadRef": "thread-sarah-pickup",
+          "note": "Sarah chose option two with additional white ranunculus. The final invoice is paid and pickup is booked for Saturday at 11am.",
+          "noteHistory": [
+            {
+              "text": "Sarah selected design option two and asked for the white ranunculus to be more prominent in memory of her grandmother.",
+              "author": "Joanna",
+              "date": "13 Aug"
+            },
+            {
+              "text": "Final invoice paid. Sarah has confirmed Saturday pickup with her mum.",
+              "author": "Joanna",
+              "date": "Today"
+            }
+          ],
+          "recentActivities": [
+            {
+              "type": "email",
+              "text": "Your bouquet preservation is ready for pickup",
+              "snippet": "Sarah confirmed Saturday at 11am for pickup.",
+              "date": "Today"
+            },
+            {
+              "type": "email",
+              "text": "Your design choice",
+              "snippet": "Sarah selected option two and requested additional white ranunculus.",
+              "date": "13 Aug"
+            },
+            {
+              "type": "email",
+              "text": "Four-week drying update",
+              "snippet": "Joanna shared that the flowers had dried beautifully and design preparation was starting.",
+              "date": "7 Aug"
+            },
+            {
+              "type": "meeting",
+              "text": "Flower drop-off at the studio",
+              "snippet": "Sarah delivered her bouquet two days after the wedding.",
+              "date": "10 Aug"
+            }
+          ],
+          "upcomingActivities": [
+            {
+              "type": "meeting",
+              "text": "Bouquet pickup with Sarah",
+              "date": "Sat, 11:00am"
+            }
+          ],
+          "files": [
+            {
+              "name": "Sarah Chen booking confirmation.pdf",
+              "type": "pdf",
+              "date": "6 Aug"
+            },
+            {
+              "name": "Xero invoice INV-1048.pdf",
+              "type": "pdf",
+              "date": "20 Aug"
+            },
+            {
+              "name": "Sarah Chen design options.pdf",
+              "type": "pdf",
+              "date": "12 Aug"
+            },
+            {
+              "name": "Sarah Chen final composition.jpg",
+              "type": "image",
+              "date": "19 Aug"
+            },
+            {
+              "name": "Pickup instructions.pdf",
+              "type": "pdf",
+              "date": "20 Aug"
+            }
+          ],
+          "contacts": [
+            {
+              "name": "Sarah Chen",
+              "email": "sarah.chen@outlook.com",
+              "phone": "+61 414 228 690",
+              "instagram": "@sarahchen"
+            }
+          ],
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
+        },
+        {
+          "id": "proj-2",
+          "deal": "Emma Sinclair wedding bouquet",
+          "company": "Emma Sinclair",
+          "contact": "Emma Sinclair",
+          "stage": "drop-off-scheduled",
+          "source": "Website booking",
+          "contactEmail": "emma.sinclair@gmail.com",
+          "contactPhone": "+61 419 774 215",
+          "weddingDate": "2026-07-18",
+          "dropOffDate": "2026-07-21",
+          "value": 420,
+          "lastActivity": "just now",
+          "activityType": "Updated",
+          "note": "Flowers are pressing and drying. The four-week update is due soon.",
+          "upcomingActivities": [
+            {
+              "type": "task",
+              "text": "Send four-week drying update",
+              "date": "in 2d"
+            }
+          ],
+          "contacts": [
+            {
+              "name": "Emma Sinclair",
+              "email": "emma.sinclair@gmail.com",
+              "phone": "+61 419 774 215"
+            }
+          ],
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
+        },
+        {
+          "id": "proj-3",
+          "deal": "Olivia Brooks memorial flowers",
+          "company": "Olivia Brooks",
+          "contact": "Olivia Brooks",
+          "stage": "with-framer",
+          "source": "Email inquiry",
+          "contactEmail": "olivia.brooks@gmail.com",
+          "contactPhone": "+61 430 591 330",
+          "value": 540,
+          "lastActivity": "2d ago",
+          "activityType": "Phone call",
+          "overdue": true,
+          "note": "The framing completion needs confirmation before Joanna updates Olivia.",
+          "upcomingActivities": [
+            {
+              "type": "task",
+              "text": "Confirm framing completion",
+              "date": "Overdue"
+            }
+          ],
+          "contacts": [
+            {
+              "name": "Olivia Brooks",
+              "email": "olivia.brooks@gmail.com",
+              "phone": "+61 430 591 330"
+            }
+          ],
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
+        },
+        {
+          "id": "proj-4",
+          "deal": "Grace Miller wedding bouquet",
+          "company": "Grace Miller",
+          "contact": "Grace Miller",
+          "stage": "design-choice",
+          "source": "Instagram",
+          "contactEmail": "grace.miller@gmail.com",
+          "contactPhone": "+61 405 269 770",
+          "instagram": "@graceandjack",
+          "value": 390,
+          "lastActivity": "3d ago",
+          "activityType": "Email sent",
+          "note": "Three design options were shared. Grace has not selected one yet.",
+          "upcomingActivities": [
+            {
+              "type": "task",
+              "text": "Confirm preferred design",
+              "date": "Tomorrow"
+            }
+          ],
+          "contacts": [
+            {
+              "name": "Grace Miller",
+              "email": "grace.miller@gmail.com",
+              "phone": "+61 405 269 770",
+              "instagram": "@graceandjack"
+            }
+          ],
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
+        },
+        {
+          "id": "proj-5",
+          "deal": "Amelia Reid wedding bouquet",
+          "company": "Amelia Reid",
+          "contact": "Amelia Reid",
+          "stage": "completed",
+          "source": "Word of mouth",
+          "contactEmail": "amelia.reid@gmail.com",
+          "value": 450,
+          "lastActivity": "2w ago",
+          "activityType": "Email sent",
+          "note": "Collected and completed. Amelia shared a kind Instagram story after pickup.",
+          "contacts": [
+            {
+              "name": "Amelia Reid",
+              "email": "amelia.reid@gmail.com",
+              "instagram": "@ameliacreates"
+            }
+          ],
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
+        }
+      ],
+      "hiddenFields": [
+        "company-linkedin",
+        "contact-linkedin",
+        "contact-designation",
+        "contact-department",
+        "location",
+        "website"
+      ],
+      "customFieldDefs": [
+        {
+          "key": "weddingDate",
+          "name": "Wedding date",
+          "type": "date"
+        },
+        {
+          "key": "dropOffDate",
+          "name": "Flower drop-off",
+          "type": "date"
+        },
+        {
+          "key": "paymentStatus",
+          "name": "Payment status",
+          "type": "text"
+        }
+      ],
+      "contactsEnabled": true,
+      "shownFields": [
+        "name",
+        "value",
+        "stage",
+        "source",
+        "note",
+        "contact",
+        "contact-name",
+        "contact-email",
+        "contact-phone",
+        "instagram"
+      ],
+      "defaultOwner": {
+        "name": "Joanna Hiu",
+        "email": "hello@joannahiuartist.com"
+      }
     }
   }
 }
