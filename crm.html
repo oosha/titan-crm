@@ -49,6 +49,7 @@
   <link rel="stylesheet" href="/crm-views.css">
   <script src="/crm-schema.js"></script>
   <script src="/mail-rule.js"></script>
+  <script src="/crm-owner.js"></script>
   <script src="/crm-views.js"></script>
   <script src="/crm-status.js"></script>
   <script src="/titan-sidebar.js"></script>
@@ -2618,6 +2619,45 @@
             <div id="board-view-chip"></div>
           </div>
           <div class="board-header-actions">
+            <!-- Ad-hoc filtering. The same conditions a saved view is made of, applied
+                 without saving — and "Save as view" is how one becomes the other. -->
+            <div class="ds-menu-anchor">
+              <button type="button" id="board-filter-btn" class="ds-btn ds-btn--soft"
+                      onclick="toggleFilterPanel(event)" aria-haspopup="dialog" aria-expanded="false"
+                      title="Filter this pipeline">
+                <span data-ds-icon="filter" data-size="16"></span>
+                <span id="board-filter-label">Filter</span>
+              </button>
+              <div class="cv-filter-panel" id="board-filter-panel" role="dialog" aria-label="Filter records">
+                <div class="cv-filter-head">
+                  <span class="cv-filter-title">Filter records</span>
+                  <button type="button" class="cv-filter-x" onclick="closeFilterPanel()" aria-label="Close">
+                    <span data-ds-icon="close" data-size="13"></span>
+                  </button>
+                </div>
+                <div class="cv-filter-body"><div id="board-filter-host"></div></div>
+                <div class="cv-filter-foot" id="cv-filter-foot">
+                  <button type="button" class="cv-filter-clear" onclick="clearBoardFilter()">Clear</button>
+                  <button type="button" class="ds-btn ds-btn--ghost ds-btn--sm"
+                          onclick="startSaveAsView()">Save as view</button>
+                  <button type="button" class="ds-btn ds-btn--primary ds-btn--sm"
+                          onclick="applyBoardFilter()">Apply</button>
+                </div>
+                <!-- Inline, not a prompt(): prompt() returns null without a word in a
+                     sandboxed frame, and a Save button that silently does nothing is
+                     worse than no Save button. -->
+                <div class="cv-filter-foot cv-filter-name" id="cv-filter-name-row">
+                  <input class="cv-text" id="cv-filter-name" type="text" maxlength="40"
+                         placeholder="Name this view"
+                         onkeydown="if(event.key==='Enter'){event.preventDefault();commitSaveAsView();}
+                                    if(event.key==='Escape'){event.preventDefault();cancelSaveAsView();}">
+                  <button type="button" class="ds-btn ds-btn--ghost ds-btn--sm"
+                          onclick="cancelSaveAsView()">Cancel</button>
+                  <button type="button" class="ds-btn ds-btn--primary ds-btn--sm"
+                          onclick="commitSaveAsView()">Save view</button>
+                </div>
+              </div>
+            </div>
             <!-- Two settings screens exist and they are easy to confuse: the pipeline's
                  (stages, colour, sources) and the record's (which fields a card carries).
                  A menu names both, so the choice happens before the navigation rather than
@@ -3798,7 +3838,7 @@
       // Choosing the pipeline itself means "show me all of it", so the view goes.
       // Except during boot, which also comes through here — clearing then would eat
       // the ?view= the page was opened with.
-      if (boardBooted) activeViewId = '';
+      if (boardBooted) { activeViewId = ''; boardFilter = null; }
       else if (activeViewId && !window.titanViews.byId(PIPELINES[id], activeViewId)) activeViewId = '';
 
       // URL first, then the sidebar. Switching here doesn't navigate, so the component
@@ -4679,14 +4719,158 @@
       return window.titanViews.byId(currentPipelineObj(), activeViewId);
     }
     function visibleCards() {
+      if (boardFilter) return window.titanViews.apply(CARDS, boardFilter);
       const v = activeView();
       return v ? window.titanViews.apply(CARDS, v) : CARDS;
     }
 
+    // ── Ad-hoc filter ─────────────────────────────────────────────────────────
+    // The same shape as a saved view, minus the name and the id. It lives in memory
+    // rather than the URL: a saved view is a thing you return to and share, a filter
+    // is a thing you are doing right now.
+    let boardFilter = null, filterEditor = null;
+
+    function openFilterPanel() {
+      const pl = currentPipelineObj();
+      if (!pl) return;
+      filterEditor = window.titanViews.mountEditor(document.getElementById('board-filter-host'), {
+        pipeline: pl,
+        // Named views are edited from the sidebar; this panel is only ever conditions.
+        hideName: true,
+        value: boardFilter ? { conditions: boardFilter.conditions } : null,
+        countMatching: function (draft) { return window.titanViews.apply(CARDS, draft).length; },
+      });
+      cancelSaveAsView();
+      document.getElementById('board-filter-panel').classList.add('open');
+      document.getElementById('board-filter-btn').setAttribute('aria-expanded', 'true');
+    }
+    function closeFilterPanel() {
+      document.getElementById('board-filter-panel').classList.remove('open');
+      document.getElementById('board-filter-btn').setAttribute('aria-expanded', 'false');
+    }
+    function toggleFilterPanel(evt) {
+      if (evt) evt.stopPropagation();
+      const open = document.getElementById('board-filter-panel').classList.contains('open');
+      if (open) closeFilterPanel(); else openFilterPanel();
+    }
+    function applyBoardFilter() {
+      if (!filterEditor) return;
+      const draft = filterEditor.read();
+      const filled = (draft.conditions || []).filter(function (c) { return String(c.value || '').trim(); });
+      // Applying nothing is how you clear it, rather than leaving an empty filter that
+      // looks active and matches everything.
+      boardFilter = filled.length ? { conditions: filled } : null;
+      // A filter and a saved view are two answers to the same question; the newer wins.
+      if (boardFilter) { activeViewId = ''; updateCrmUrl(currentPipelineId, null); }
+      closeFilterPanel();
+      renderBoard();
+      if (window.titanSidebar) window.titanSidebar.setActivePipeline(currentPipelineId);
+    }
+    function clearBoardFilter() {
+      boardFilter = null;
+      closeFilterPanel();
+      renderBoard();
+    }
+    function startSaveAsView() {
+      if (!filterEditor) return;
+      const filled = filledConditions();
+      if (!filled.length) { npToast('Add a condition first.'); return; }
+      const pl = currentPipelineObj();
+      const input = document.getElementById('cv-filter-name');
+      // Pre-filled with what the filter says, because most views are named after what
+      // they do and retyping that is busywork.
+      input.value = window.titanViews.describe({ conditions: filled }, pl).slice(0, 40);
+      document.getElementById('cv-filter-foot').style.display = 'none';
+      document.getElementById('cv-filter-name-row').classList.add('open');
+      input.focus();
+      input.select();
+    }
+    function cancelSaveAsView() {
+      document.getElementById('cv-filter-name-row').classList.remove('open');
+      document.getElementById('cv-filter-foot').style.display = '';
+    }
+    function filledConditions() {
+      if (!filterEditor) return [];
+      return (filterEditor.read().conditions || [])
+        .filter(function (c) { return String(c.value || '').trim(); });
+    }
+    function commitSaveAsView() {
+      const filled = filledConditions();
+      if (!filled.length) { npToast('Add a condition first.'); return; }
+      const pl = currentPipelineObj();
+      if (!pl) return;
+      const name = String(document.getElementById('cv-filter-name').value || '').trim();
+      if (!name) { npToast('Give the view a name.'); return; }
+
+      const view = { id: window.titanViews.newId(), name: name, conditions: filled };
+      pl.views = window.titanViews.list(pl).concat([view]);
+      schedulePersist();
+      // It stops being a filter and becomes the view, applied — so the board does not
+      // change under someone who just saved what they were looking at.
+      boardFilter = null;
+      activeViewId = view.id;
+      cancelSaveAsView();
+      closeFilterPanel();
+      updateCrmUrl(currentPipelineId, null);
+      renderBoard();
+      if (window.titanSidebar) window.titanSidebar.setPipelines(Object.values(PIPELINES));
+      npToast('Saved “' + view.name + '” to the sidebar.', true);
+    }
+
+    // Reflects how many conditions are on, so a filtered board says so from the button
+    // as well as the chip.
+    // Delegated: the panel is in the markup from the start, but Escape and outside
+    // clicks are the two ways every other popover on this page closes.
+    document.addEventListener('click', function (e) {
+      const panel = document.getElementById('board-filter-panel');
+      if (!panel || !panel.classList.contains('open')) return;
+      if (e.target.closest('#board-filter-panel') || e.target.closest('#board-filter-btn')) return;
+      closeFilterPanel();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      const panel = document.getElementById('board-filter-panel');
+      if (panel && panel.classList.contains('open')) closeFilterPanel();
+    });
+
+    function renderFilterButton() {
+      const label = document.getElementById('board-filter-label');
+      const btn = document.getElementById('board-filter-btn');
+      if (!label || !btn) return;
+      const n = boardFilter ? boardFilter.conditions.length : 0;
+      label.textContent = n ? 'Filter · ' + n : 'Filter';
+      btn.classList.toggle('is-on', !!n);
+    }
+
+    // From the chip there is no mounted editor, so borrow the panel's.
+    function saveFilterAsViewFromChip() {
+      openFilterPanel();
+      startSaveAsView();
+    }
+
     function renderViewChip() {
+
       const host = document.getElementById('board-view-chip');
       if (!host) return;
+      renderFilterButton();
       const v = activeView();
+      if (!v && boardFilter) {
+        const fn = visibleCards().length;
+        host.innerHTML =
+          '<div class="cv-chip-row">' +
+            '<span class="cv-chip">' +
+              '<span class="cv-chip-name">Filtered</span>' +
+              '<span class="cv-chip-sep" aria-hidden="true"></span>' +
+              '<span class="cv-chip-count">' + fn + ' of ' + CARDS.length + '</span>' +
+              '<button type="button" class="cv-chip-x" onclick="clearBoardFilter()" ' +
+                'aria-label="Clear this filter"><span data-ds-icon="close" data-size="12"></span></button>' +
+            '</span>' +
+            '<button type="button" class="cv-chip-edit" onclick="toggleFilterPanel(event)">Edit filter</button>' +
+            '<button type="button" class="cv-chip-edit" onclick="saveFilterAsViewFromChip()">Save as view</button>' +
+          '</div>';
+        if (window.dsIcon) window.dsIcon.hydrate(host);
+        return;
+      }
       if (!v) { host.innerHTML = ''; return; }
       const n = visibleCards().length;
       host.innerHTML =

@@ -18,19 +18,23 @@
   'use strict';
 
   var FIELDS = [
-    { id: 'value',    label: 'Amount',   type: 'number' },
+    { id: 'owner',    label: 'Owner',    type: 'owner'  },
     { id: 'stage',    label: 'Stage',    type: 'stage'  },
     { id: 'status',   label: 'Status',   type: 'status' },
+    { id: 'value',    label: 'Amount',   type: 'number' },
     { id: 'company',  label: 'Company',  type: 'text'   },
-    { id: 'location', label: 'Location', type: 'text'   },
-    { id: 'source',   label: 'Source',   type: 'text'   },
     { id: 'contact',  label: 'Contact',  type: 'text'   },
+    { id: 'source',   label: 'Source',   type: 'text'   },
+    { id: 'location', label: 'Location', type: 'text'   },
+    { id: 'overdue',  label: 'Overdue',  type: 'bool'   },
   ];
   var OPS = {
     number: [['gt', 'is more than'], ['lt', 'is less than'], ['eq', 'is exactly']],
     text:   [['contains', 'contains'], ['is', 'is'], ['not', 'is not']],
     stage:  [['is', 'is'], ['not', 'is not']],
     status: [['is', 'is'], ['not', 'is not']],
+    owner:  [['is', 'is'], ['not', 'is not']],
+    bool:   [['is', 'is']],
   };
 
   // The two the prototype has always shown, given the definitions their names imply.
@@ -79,6 +83,10 @@
   // contact's, and a person filtering by region means either.
   function readField(card, field) {
     if (field === 'location') return card.location || card.contactLocation || '';
+    // Stored as {name, email} so a name survives someone leaving the team. Matched on
+    // email, which is the stable half.
+    if (field === 'owner') return (card.owner && card.owner.email) || '';
+    if (field === 'overdue') return card.overdue ? 'yes' : 'no';
     if (field === 'status') {
       if (window.titanStatus && window.titanStatus.current) {
         try { return window.titanStatus.current(card) || ''; } catch (e) { /* fall through */ }
@@ -119,12 +127,51 @@
     return (cards || []).filter(function (c) { return match(c, view); });
   }
 
-  function describe(view) {
+  function valueLabel(c, pipeline) {
+    var def = fieldDef(c.field);
+    // fromEmail(email, pipeline) — the arguments are that way round, and it returns an
+    // owner object, so the name has to come off it rather than the object being printed.
+    if (def.type === 'owner' && window.titanOwner && window.titanOwner.fromEmail) {
+      var who = window.titanOwner.fromEmail(c.value, pipeline);
+      if (who && who.name) return who.name;
+    }
+    if (def.type === 'bool') return c.value === 'no' ? 'No' : 'Yes';
+    if (def.type === 'stage' && pipeline) {
+      var st = (pipeline.stages || []).filter(function (x) { return x.key === c.value; })[0];
+      if (st) return st.label || st.key;
+    }
+    return c.value || '…';
+  }
+  function describe(view, pipeline) {
     var conds = (view && view.conditions) || [];
     if (!conds.length) return 'Shows every record';
     return conds.map(function (c) {
-      return fieldDef(c.field).label + ' ' + opLabel(c.field, c.op) + ' ' + (c.value || '…');
+      return fieldDef(c.field).label + ' ' + opLabel(c.field, c.op) + ' ' + valueLabel(c, pipeline);
     }).join(' and ');
+  }
+
+  // The value a select-backed field starts on. Text and number fields start empty,
+  // which reads as "not filled in yet" and filters nothing.
+  function firstValueFor(fieldId, pipeline) {
+    var t = fieldDef(fieldId).type;
+    if (t === 'stage') { var s0 = (pipeline && pipeline.stages || [])[0]; return s0 ? s0.key : ''; }
+    if (t === 'bool') return 'yes';
+    if (t === 'owner') {
+      var ppl = (window.titanOwner && window.titanOwner.people) ? window.titanOwner.people(pipeline) : [];
+      return ppl.length ? ppl[0].email : '';
+    }
+    if (t === 'status') {
+      var vals = [];
+      if (window.titanStatus && window.titanStatus.values) {
+        try { vals = window.titanStatus.values(pipeline && pipeline.entity) || []; } catch (e) { vals = []; }
+      }
+      vals = vals.map(function (v) { return typeof v === 'string' ? v : (v && (v.label || v.key)) || ''; }).filter(Boolean);
+      return vals.length ? vals[0] : 'New';
+    }
+    return '';
+  }
+  function blankCondition(pipeline) {
+    return { field: 'owner', op: 'is', value: firstValueFor('owner', pipeline) };
   }
 
   function newId() {
@@ -150,15 +197,18 @@
       name: (src && src.name) || '',
       conditions: (src && src.conditions && src.conditions.length)
         ? JSON.parse(JSON.stringify(src.conditions))
-        : [{ field: 'value', op: 'gt', value: '' }],
+        : [blankCondition(pipeline)],
     };
 
     host.innerHTML =
-      '<div class="cv-sec">' +
-        '<div class="cv-label">View name</div>' +
-        '<input class="cv-text" id="cv-name" type="text" maxlength="40" ' +
-          'placeholder="e.g. Deal over $10k" value="' + esc(state.name) + '">' +
-      '</div>' +
+      // The board's filter panel has no name field: it is not a view yet, and asking
+      // for a name before someone has decided to keep it is asking too early.
+      (opts.hideName ? '' :
+        '<div class="cv-sec">' +
+          '<div class="cv-label">View name</div>' +
+          '<input class="cv-text" id="cv-name" type="text" maxlength="40" ' +
+            'placeholder="e.g. Deal over $10k" value="' + esc(state.name) + '">' +
+        '</div>') +
       '<div class="cv-sec">' +
         '<div class="cv-label">Show records where</div>' +
         '<div class="cv-conds" data-cv-conds></div>' +
@@ -176,6 +226,22 @@
           (pipeline.stages || []).map(function (s) {
             return '<option value="' + esc(s.key) + '"' + (c.value === s.key ? ' selected' : '') + '>' +
               esc(s.label || s.key) + '</option>';
+          }).join('') + '</select>';
+      }
+      if (def.type === 'owner') {
+        var people = (window.titanOwner && window.titanOwner.people)
+          ? window.titanOwner.people(pipeline) : [];
+        if (!people.length) people = [{ name: 'Me', email: 'me@example.com' }];
+        return '<select class="cv-select cv-value" data-cv-value="' + i + '">' +
+          people.map(function (o) {
+            return '<option value="' + esc(o.email) + '"' + (c.value === o.email ? ' selected' : '') + '>' +
+              esc(o.name || o.email) + '</option>';
+          }).join('') + '</select>';
+      }
+      if (def.type === 'bool') {
+        return '<select class="cv-select cv-value" data-cv-value="' + i + '">' +
+          [['yes', 'Yes'], ['no', 'No']].map(function (o) {
+            return '<option value="' + o[0] + '"' + (c.value === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
           }).join('') + '</select>';
       }
       if (def.type === 'status') {
@@ -218,7 +284,7 @@
       }).join('');
       if (window.dsIcon) window.dsIcon.hydrate(wrap);
       var n = opts.countMatching ? opts.countMatching(read()) : null;
-      summary.textContent = describe(read()) + (n === null ? '' : ' — ' + n + (n === 1 ? ' record' : ' records') + ' right now');
+      summary.textContent = describe(read(), pipeline) + (n === null ? '' : ' — ' + n + (n === 1 ? ' record' : ' records') + ' right now');
     }
 
     function read() {
@@ -229,7 +295,7 @@
       var del = e.target.closest('[data-cv-del]');
       if (del) { state.conditions.splice(+del.getAttribute('data-cv-del'), 1); draw(); return; }
       if (e.target.closest('[data-cv-add]')) {
-        state.conditions.push({ field: 'value', op: 'gt', value: '' }); draw();
+        state.conditions.push(blankCondition(pipeline)); draw();
       }
     });
     host.addEventListener('change', function (e) {
@@ -239,8 +305,9 @@
         c.field = e.target.value;
         c.op = opsFor(c.field)[0][0];
         // The old value belongs to the old field's vocabulary; a stage key left in a
-        // number box would silently never match.
-        c.value = '';
+        // number box would silently never match. A field backed by a select takes its
+        // first option, because a select showing an option it has not stored is a lie.
+        c.value = firstValueFor(c.field, pipeline);
         draw(); return;
       }
       var o = e.target.getAttribute && e.target.getAttribute('data-cv-op');
@@ -258,7 +325,7 @@
     return {
       read: read,
       validate: function () {
-        if (!state.name.trim()) return 'Give the view a name.';
+        if (!opts.hideName && !state.name.trim()) return 'Give the view a name.';
         if (!state.conditions.some(function (c) { return String(c.value || '').trim(); })) {
           return 'Fill in at least one condition.';
         }
@@ -268,7 +335,7 @@
   }
 
   window.titanViews = {
-    FIELDS: FIELDS, OPS: OPS,
+    FIELDS: FIELDS, OPS: OPS, blankCondition: blankCondition, firstValueFor: firstValueFor,
     list: list, byId: byId, match: match, apply: apply, describe: describe,
     newId: newId, mountEditor: mountEditor,
   };

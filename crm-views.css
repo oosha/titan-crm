@@ -81,3 +81,50 @@
   padding: var(--space-050) 0;
 }
 .cv-chip-edit:hover { text-decoration: underline; }
+
+/* ── The board's filter panel ────────────────────────────────────────────── */
+/* Anchored under the Filter button. Not a modal: filtering is something you do to
+   the board in front of you, and covering it to describe it is backwards. */
+.cv-filter-panel {
+  display: none; position: absolute; top: calc(100% + var(--space-075)); right: 0; z-index: 60;
+  width: 460px; max-width: calc(100vw - var(--space-400));
+  background: var(--surface-primary); border: 1px solid var(--border-subtle);
+  border-radius: 12px; box-shadow: 0 16px 44px rgba(20,22,26,0.20);
+}
+.cv-filter-panel.open { display: block; }
+.cv-filter-head {
+  display: flex; align-items: center; gap: var(--space-100);
+  padding: var(--space-150) var(--space-150) var(--space-100);
+}
+.cv-filter-title { flex: 1; font-size: var(--text-sm); font-weight: var(--weight-semi); color: var(--text-primary); }
+.cv-filter-x {
+  width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center;
+  border: 0; background: none; border-radius: 50%; cursor: pointer; color: var(--text-secondary);
+}
+.cv-filter-x:hover { background: var(--surface-recessed); color: var(--text-primary); }
+.cv-filter-body { padding: 0 var(--space-150) var(--space-150); max-height: 52vh; overflow-y: auto; }
+/* The editor's first section carries its own top margin for the modal; here the head
+   above it already provides that. */
+.cv-filter-body .cv-sec:first-child { margin-top: 0; }
+.cv-filter-foot {
+  display: flex; align-items: center; gap: var(--space-100);
+  padding: var(--space-125) var(--space-150);
+  border-top: 1px solid var(--border-subtle);
+}
+/* Clear sits apart from the two that commit something. */
+.cv-filter-clear {
+  margin-right: auto; font: inherit; font-size: var(--text-xs); font-weight: var(--weight-semi);
+  color: var(--text-secondary); background: none; border: 0; padding: 0; cursor: pointer;
+}
+.cv-filter-clear:hover { color: var(--status-danger); }
+/* The button says how many conditions are on, so a filtered board reads as filtered
+   from the toolbar as well as from the chip. */
+#board-filter-btn.is-on {
+  background: var(--surface-selected, var(--accent-subtle));
+  border-color: var(--accent-primary); color: var(--accent-primary);
+}
+
+/* The naming row, revealed in place of the footer when a filter is being kept. */
+.cv-filter-name { display: none; }
+.cv-filter-name.open { display: flex; }
+.cv-filter-name .cv-text { flex: 1; min-width: 0; }

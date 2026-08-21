@@ -411,7 +411,7 @@
         view.innerHTML = '<span class="nav-item-label secondary"></span>';
         view.querySelector('.nav-item-label').textContent = v.name;
         view.title = (window.titanViews && window.titanViews.describe)
-          ? window.titanViews.describe(v) : v.name;
+          ? window.titanViews.describe(v, pl) : v.name;
         view.insertAdjacentHTML('beforeend',
           '<span class="nav-item-menu-btn" title="View actions">' + ICON.kebab + '</span>');
         view.addEventListener('click', function (e) {
