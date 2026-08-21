@@ -2661,6 +2661,10 @@
     }
     .pipeline-label:hover { background: #dbe8fd; }
     .pipeline-label .pl-icon { width: 12px; height: 12px; flex-shrink: 0; }
+    .pipeline-label.pc-suggested {
+      color: #2170f4; border: 1px dashed #a9c8f5; background: #f6faff;
+    }
+    .pipeline-label.pc-suggested:hover { background: #eaf1ff; }
 
     /* Preview + inline label share one line; preview truncates, label never wraps */
     .tile-preview-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -2740,6 +2744,79 @@
       color: #15803d; background: #f0fdf4; border-radius: 6px; display: none;
     }
     .pipeline-picker-confirm.show { display: block; }
+
+    /* CRM discovery modal: a small, generic invitation for someone who has not
+       created their first pipeline yet. Mail keeps its own visual language. */
+    .crm-discovery-overlay {
+      position: fixed; inset: 0; z-index: 700; display: none;
+      align-items: center; justify-content: center; padding: 24px;
+      background: rgba(25, 32, 45, 0.42); backdrop-filter: blur(3px);
+    }
+    .crm-discovery-overlay.open { display: flex; }
+    .crm-discovery-modal {
+      width: min(100%, 900px); min-height: 510px; display: grid; grid-template-columns: .93fr 1.07fr;
+      background: #fff; border-radius: 14px; box-shadow: 0 24px 60px rgba(21, 31, 48, 0.26); overflow: hidden;
+    }
+    .crm-discovery-left { display: flex; flex-direction: column; min-width: 0; }
+    .crm-discovery-body { padding: 42px 44px 30px; position: relative; display: flex; flex-direction: column; }
+    .crm-discovery-close {
+      position: absolute; top: 16px; right: 16px; width: 30px; height: 30px;
+      display: grid; place-items: center; border: 0; border-radius: 8px;
+      background: #f4f5f7; color: #687386; font: 24px/1 Arial, sans-serif; cursor: pointer;
+    }
+    .crm-discovery-close:hover { background: #e9edf3; color: #303846; }
+    .crm-discovery-mark { display: none; }
+    .crm-discovery-kicker { display: inline-flex; width: fit-content; padding: 5px 10px; border-radius: 999px; color: #fff; background: #6542df; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+    .crm-discovery-title { margin: 24px 26px 8px 0; color: #20242c; font-size: 27px; line-height: 1.18; letter-spacing: -.025em; }
+    .crm-discovery-copy { margin: 0; color: #687386; font-size: 14px; line-height: 1.5; }
+    .crm-discovery-record {
+      display: flex; align-items: center; gap: 12px; margin: 20px 0 20px; padding: 12px;
+      border: 1px solid #e1e6ee; border-radius: 11px; background: #fbfcfe;
+    }
+    .crm-discovery-avatar {
+      width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 auto;
+      border-radius: 10px; background: #e7f0fe; color: #246ff0; font-size: 13px; font-weight: 700;
+    }
+    .crm-discovery-name { color: #262b35; font-size: 14px; font-weight: 700; }
+    .crm-discovery-meta { margin-top: 3px; color: #7d8796; font-size: 12.5px; }
+    .crm-discovery-value { padding: 0; border: 0; background: transparent; }
+    .crm-discovery-value-title { color: #303846; font-size: 13px; font-weight: 700; }
+    .crm-discovery-value-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 14px; }
+    .crm-discovery-value-item { display: flex; align-items: flex-start; gap: 9px; color: #485363; font-size: 13px; line-height: 1.35; }
+    .crm-discovery-value-dot { width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: #367cf1; flex: 0 0 auto; }
+    .crm-discovery-footer { display: flex; flex-direction: column-reverse; align-items: stretch; gap: 10px; margin-top: auto; padding: 22px 0 0; border-top: 0; }
+    .crm-discovery-later { min-height: 38px; border: 1px solid #b9d2fb; border-radius: 7px; background: #fff; color: #246ff0; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .crm-discovery-later:hover { color: #303846; }
+    .crm-discovery-primary { min-height: 38px; border: 0; border-radius: 7px; padding: 10px 15px; background: #246ff0; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 1px 2px rgba(27, 86, 185, .28); }
+    .crm-discovery-primary:hover { background: #1d62d8; }
+    .crm-discovery-visual { position: relative; display: flex; align-items: center; justify-content: center; padding: 48px 38px 34px; background: #edf4ff; overflow: hidden; }
+    .crm-discovery-orbit { position: absolute; width: 420px; height: 420px; border: 36px solid rgba(111, 155, 233, .08); border-radius: 50%; }
+    .crm-discovery-product { position: relative; width: 100%; max-width: 430px; border: 1px solid #dbe4f2; border-radius: 10px; background: #fff; box-shadow: 0 14px 30px rgba(58, 87, 132, .16); overflow: hidden; }
+    .crm-discovery-product-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #edf0f5; color: #26354d; font-size: 12px; font-weight: 700; }
+    .crm-discovery-product-brand { display: flex; align-items: center; gap: 7px; }
+    .crm-discovery-product-brand::before { content: '✦'; display: grid; place-items: center; width: 19px; height: 19px; border-radius: 6px; color: #246ff0; background: #e8f0ff; font-size: 11px; }
+    .crm-discovery-product-live { color: #3a9a6c; font-size: 10px; font-weight: 700; }
+    .crm-discovery-product-body { padding: 16px 16px 14px; }
+    .crm-discovery-product-contact { display: flex; align-items: center; gap: 9px; }
+    .crm-discovery-product-contact b { display: block; color: #2b3442; font-size: 13px; }
+    .crm-discovery-product-contact span { display: block; margin-top: 2px; color: #8a94a3; font-size: 10.5px; }
+    .crm-discovery-product-avatar { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; background: #e8f0ff; color: #246ff0; font-size: 11px; font-weight: 700; }
+    .crm-discovery-product-stage { margin: 14px 0; padding: 8px 10px; border-radius: 6px; background: #eaf3ff; color: #246ff0; font-size: 11px; font-weight: 700; }
+    .crm-discovery-product-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 10px; }
+    .crm-discovery-product-card { padding: 10px; border: 1px solid #edf0f4; border-radius: 7px; }
+    .crm-discovery-product-label { color: #9aa3b0; font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .crm-discovery-product-line { height: 6px; margin-top: 8px; border-radius: 5px; background: #dfe8f6; }
+    .crm-discovery-product-line.short { width: 64%; }
+    .crm-discovery-product-file { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: #536074; font-size: 10px; }
+    .crm-discovery-product-file::before { content: ''; width: 7px; height: 9px; border: 1px solid #90a1ba; border-radius: 1px; }
+    @media (max-width: 520px) {
+      .crm-discovery-overlay { padding: 14px; }
+      .crm-discovery-modal { display: block; min-height: 0; }
+      .crm-discovery-visual { display: none; }
+      .crm-discovery-body { padding: 28px 22px 22px; }
+      .crm-discovery-footer { padding: 18px 0 0; }
+      .crm-discovery-primary { padding: 10px 12px; }
+    }
 
     /* ── CRM: Right panel (inline column, like Streak in Gmail — not an overlay) ── */
     .crm-panel {
@@ -6016,6 +6093,59 @@
       host.dataset.pipeline = key;
     }
 
+    // An unlinked customer email can suggest creating a first CRM lead. The
+    // suggestion belongs to the persona's mailbox data, so it never implies a
+    // record or pipeline already exists.
+    function renderPersonaLeadSuggestion(host, thread) {
+      if (!host || !thread || !thread.crmSuggestion) return;
+      var label = host.querySelector(':scope > .pipeline-label');
+      if (!label) {
+        label = document.createElement('span');
+        label.className = 'pipeline-label pc-suggested';
+        host.appendChild(label);
+      }
+      label.onclick = function (e) {
+        e.stopPropagation();
+        openCrmDiscovery(thread, label);
+        return false;
+      };
+      label.title = thread.crmSuggestion.title || 'Create as a lead';
+      label.innerHTML = PL_LABEL_ICON_STR + '<span>' + esc(thread.crmSuggestion.label || 'Create as a lead') + '</span>' +
+        '<svg class="pc-ai-spark" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 0L6 4L10 5L6 6L5 10L4 6L0 5L4 4Z" fill="currentColor"/></svg>';
+    }
+
+    var crmDiscoveryTrigger = null;
+    function openCrmDiscovery(thread, trigger) {
+      var modal = document.getElementById('crm-discovery-modal');
+      if (!modal || !thread || !thread.crmSuggestion) return;
+      var record = thread.crmSuggestion.suggestedRecord || {};
+      document.getElementById('crm-discovery-name').textContent = record.contact || thread.from || 'This contact';
+      document.getElementById('crm-discovery-meta').textContent = (record.name || 'New lead') + ' · ' + (record.source || thread.source || 'Email');
+      document.getElementById('crm-discovery-avatar').textContent = initialsOfName(record.contact || thread.from || '?');
+      crmDiscoveryTrigger = trigger || null;
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      var close = document.getElementById('crm-discovery-close');
+      if (close) close.focus();
+    }
+    function closeCrmDiscovery() {
+      var modal = document.getElementById('crm-discovery-modal');
+      if (!modal) return;
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      if (crmDiscoveryTrigger && crmDiscoveryTrigger.focus) crmDiscoveryTrigger.focus();
+      crmDiscoveryTrigger = null;
+    }
+    function startCrmPipelineSetup() {
+      var href = '/crm?intent=new-pipeline';
+      location.href = (typeof withPersona === 'function') ? withPersona(href) : href;
+    }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeCrmDiscovery();
+    });
+
     // Hydrate any pipeline label already in the static HTML (demo default state)
     // so its color always matches the current PIPELINES definition.
     document.querySelectorAll('[data-pipeline]').forEach(function (host) {
@@ -6378,7 +6508,10 @@
     function clearAllThreadLinks() {
       Object.keys(THREAD_LINKS).forEach(function (k) { delete THREAD_LINKS[k]; });
       document.querySelectorAll('.tile-preview-row, .thread-sticky-header').forEach(function (host) {
-        renderPipelineLabel(host, null);
+        var label = host.querySelector(':scope > .pipeline-label');
+        if (label && !label.classList.contains('pc-suggested')) label.remove();
+        delete host.dataset.pipeline;
+        delete host.dataset.stage;
       });
     }
 
@@ -7095,6 +7228,8 @@
         renderPipelineLabel(host, t.pipelineRef.pipeline);       // reuse the real default label renderer
         var lbl = tile.querySelector('.pipeline-label');
         if (lbl) lbl.onclick = function (e) { e.stopPropagation(); openPersonaRecord(t.id); };
+      } else if (t.crmSuggestion) {
+        renderPersonaLeadSuggestion(ensurePreviewRow(tile), t);
       }
       return tile;
     }
@@ -7138,6 +7273,8 @@
         renderPipelineLabel(header, t.pipelineRef.pipeline);      // identical UI to the default header label
         var lbl = header.querySelector('.pipeline-label');
         if (lbl) lbl.onclick = function (e) { e.stopPropagation(); openPersonaRecord(t.id); };
+      } else if (t.crmSuggestion) {
+        renderPersonaLeadSuggestion(header, t);
       }
     }
 
@@ -7285,6 +7422,54 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initMailCrmData);
     else initMailCrmData();
   </script>
+
+  <div class="crm-discovery-overlay" id="crm-discovery-modal" role="dialog" aria-modal="true" aria-labelledby="crm-discovery-title" aria-hidden="true" onclick="if (event.target === this) closeCrmDiscovery()">
+    <div class="crm-discovery-modal">
+      <div class="crm-discovery-left">
+        <div class="crm-discovery-body">
+          <button class="crm-discovery-close" id="crm-discovery-close" type="button" aria-label="Close" onclick="closeCrmDiscovery()">×</button>
+          <div class="crm-discovery-kicker">✦ Introducing Titan CRM ✦</div>
+          <h2 class="crm-discovery-title" id="crm-discovery-title">A home for every customer relationship</h2>
+          <p class="crm-discovery-copy">Keep this contact's related emails, meetings, notes, invoices, and files together in one place.</p>
+          <div class="crm-discovery-record">
+            <div class="crm-discovery-avatar" id="crm-discovery-avatar">D</div>
+            <div>
+              <div class="crm-discovery-name" id="crm-discovery-name">Daniel Harper</div>
+              <div class="crm-discovery-meta" id="crm-discovery-meta">New lead · Contact submission</div>
+            </div>
+          </div>
+          <div class="crm-discovery-value">
+            <div class="crm-discovery-value-title">Everything about this relationship, in context</div>
+            <div class="crm-discovery-value-grid">
+              <div class="crm-discovery-value-item"><span class="crm-discovery-value-dot"></span>Related emails</div>
+              <div class="crm-discovery-value-item"><span class="crm-discovery-value-dot"></span>Meetings and notes</div>
+              <div class="crm-discovery-value-item"><span class="crm-discovery-value-dot"></span>Invoices and files</div>
+              <div class="crm-discovery-value-item"><span class="crm-discovery-value-dot"></span>Progress in one pipeline</div>
+            </div>
+          </div>
+        </div>
+        <div class="crm-discovery-footer">
+          <button class="crm-discovery-later" type="button" onclick="closeCrmDiscovery()">Not now</button>
+          <button class="crm-discovery-primary" type="button" onclick="startCrmPipelineSetup()">Create pipeline and add lead</button>
+        </div>
+      </div>
+      <div class="crm-discovery-visual" aria-hidden="true">
+        <div class="crm-discovery-orbit"></div>
+        <div class="crm-discovery-product">
+          <div class="crm-discovery-product-head"><span class="crm-discovery-product-brand">Titan CRM</span><span class="crm-discovery-product-live">ALL TOGETHER</span></div>
+          <div class="crm-discovery-product-body">
+            <div class="crm-discovery-product-contact"><div class="crm-discovery-product-avatar">DH</div><div><b>Daniel Harper</b><span>Contact submission</span></div></div>
+            <div class="crm-discovery-product-stage">New lead</div>
+            <div class="crm-discovery-product-grid">
+              <div class="crm-discovery-product-card"><div class="crm-discovery-product-label">Recent activity</div><div class="crm-discovery-product-line"></div><div class="crm-discovery-product-line short"></div></div>
+              <div class="crm-discovery-product-card"><div class="crm-discovery-product-label">Next step</div><div class="crm-discovery-product-line short"></div></div>
+            </div>
+            <div class="crm-discovery-product-card" style="margin-top:10px;"><div class="crm-discovery-product-label">Files</div><div class="crm-discovery-product-file">Memorial flowers.pdf</div><div class="crm-discovery-product-file">Invoice.pdf</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Settings Sidebar Modal Drawer -->
   <div class="side-modal" id="settingsModal">
