@@ -943,6 +943,7 @@
 </div>
 <script src="/design-system/components/icon.js"></script>
 <script src="/crm-owner.js"></script>
+<script src="/crm-activities.js"></script>
 <!-- Shared CRM helpers. Pure IIFE, no auto-run DOM work; the four names it
      shares with this page are redefined by the inline script below, which runs
      after it. Needed here for writeContactEverywhere(). -->
@@ -1221,9 +1222,10 @@
     if (card.note) summary += ' ' + card.note;
     const next = card.nextActivity;
     const queued = !next && Array.isArray(card.upcomingActivities) && card.upcomingActivities[0];
+    const queuedDue = queued ? window.titanActivities.dueInfo(queued) : null;
     const nextAction = next
       ? formatNextActivity(next)
-      : (queued ? queued.text + (queued.date ? ' · ' + queued.date : '') : '');
+      : (queued ? queued.text + (queuedDue && !queuedDue.undated ? ' · ' + queuedDue.label : '') : '');
     const summaryEl = document.getElementById('ov-ai-summary-text');
     summaryEl.textContent = summary;
     const nextLine = document.createElement('span');
@@ -1670,29 +1672,6 @@
   function actIcon(type) { return '<span class="crm-act-ic ' + (type || '') + '"><svg viewBox="0 0 16 16" fill="none">' + (ACT_ICONS[type] || ACT_ICONS.task) + '</svg></span>'; }
   function actIconSvgOnly(type) { return '<svg width="12" height="12" viewBox="0 0 16 16" fill="none">' + (ACT_ICONS[type] || ACT_ICONS.email) + '</svg>'; }
 
-  // ── Is this date already behind us? ───────────────────────────────────────
-  // Activity dates are display strings, not timestamps — CLAUDE.md is explicit
-  // that the CRM does no date arithmetic. So this parses only the one shape that
-  // carries a real day ("Jul 30", "Jul 30, 3:00 PM") and leaves everything else
-  // alone. "Thu" and "Mon, 5pm" are genuinely ambiguous and stay unflagged rather
-  // than guessed at.
-  //
-  // Worth doing anyway because the unflagged case was actively wrong: Meridian
-  // showed a Jul 30 meeting under "Upcoming" a fortnight after it passed, styled
-  // exactly like a future one.
-  const MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-  function looksPast(dateStr) {
-    const m = String(dateStr || '').trim().match(/^([A-Za-z]{3})[a-z]*\s+(\d{1,2})\b/);
-    if (!m) return false;
-    const mi = MONTHS.indexOf(m[1].toLowerCase());
-    if (mi === -1) return false;
-    const now = new Date();
-    const when = new Date(now.getFullYear(), mi, parseInt(m[2], 10), 23, 59, 59);
-    // A month far ahead of today is last year's; one far behind is this year's.
-    if (mi - now.getMonth() > 6) when.setFullYear(now.getFullYear() - 1);
-    return when < now;
-  }
-
   // Position in the pipeline, drawn under the control that changes it. One
   // segment per stage, filled up to the current one.
   function renderStageBar() {
@@ -1740,6 +1719,7 @@
     const upItems = (card.upcomingActivities && card.upcomingActivities.length) ? card.upcomingActivities : upcomingActivityList();
     up.innerHTML = upItems.length
       ? upItems.map(function (a, i) {
+          const due = window.titanActivities.dueInfo(a);
           // Only a task gets a checkbox. Giving one to a meeting or an email implied
           // Titan could complete them, which it can't — those live in the calendar
           // and the mail client, so their rows carry their own icon and open the
@@ -1756,9 +1736,9 @@
             '<div class="crm-activity-text">' + esc(a.text) + '</div>' +
             (isTask ? '' : '<button class="ov-act-done" type="button" title="Move to Recent activity" ' +
               'onclick="event.stopPropagation(); toggleActTask(' + i + ')">Done</button>') +
-            (a.date
-              ? '<div class="crm-activity-date' + ((a.overdue || looksPast(a.date)) ? ' overdue' : '') + '">' + esc(a.date) + '</div>'
-              : '<div class="crm-activity-date is-undated">No date</div>') +
+            (!due.undated
+              ? '<div class="crm-activity-date' + (due.overdue ? ' overdue' : '') + '">' + esc(due.label) + '</div>'
+              : '<div class="crm-activity-date is-undated">No due date</div>') +
             '</div>';
         }).join('')
       : '<div class="crm-empty-state">Nothing scheduled yet.</div>';
@@ -2138,11 +2118,13 @@
     const dateEl = document.getElementById('ov-act-draft-date');
     if (!textEl) return;
     const text = (textEl.value || '').trim() || ACT_LABELS[kind] || 'Activity';
-    // Stored as the same kind of display string the rest of this data uses, so the
-    // list, looksPast() and the board all keep reading one format.
     const raw = (dateEl && dateEl.value || '').trim();
-    const date = raw ? formatDueStamp(new Date(raw)) : '';
-    upcomingActivityList().push({ type: kind, text: text, date: date });
+    const dueDate = raw ? new Date(raw) : null;
+    const dueAt = dueDate && !isNaN(dueDate.getTime()) ? dueDate.toISOString() : '';
+    // `dueAt` is canonical and preserves the exact instant. `date` remains as a
+    // temporary compatibility label for older surfaces while they migrate.
+    const date = dueDate && !isNaN(dueDate.getTime()) ? formatDueStamp(dueDate) : '';
+    upcomingActivityList().push({ type: kind, text: text, dueAt: dueAt, date: date });
     cancelActivity();
     renderActivityAndFiles();
     schedulePersist();

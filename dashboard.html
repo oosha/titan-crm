@@ -197,9 +197,9 @@
   .dash-tile-link:hover { text-decoration: underline; }
   .dash-email-range { width: auto; min-width: 132px; height: var(--btn-height-sm); padding-block: 0; font-size: var(--text-xs); }
   .dash-email-infographic {
-    flex: 1; display: grid; grid-template-columns: 92px minmax(72px, 1fr) 112px;
-    align-content: center; align-items: center; gap: var(--space-150) var(--space-125);
-    padding: var(--space-100) 0 var(--space-200);
+    flex: 1; display: grid; grid-template-columns: 92px minmax(72px, 1fr) auto;
+    align-content: center; align-items: center; row-gap: var(--space-200); column-gap: var(--space-125);
+    padding: var(--space-100) 0 var(--space-050);
   }
   .dash-email-row { display: contents; }
   .dash-email-name {
@@ -209,12 +209,12 @@
   .dash-email-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: var(--radius-full); }
   .dash-email-track { display: block; height: 22px; overflow: hidden; border-radius: var(--radius-sm); background: var(--surface-sunken); }
   .dash-email-fill { display: block; width: 0; height: 100%; border-radius: inherit; transition: width 520ms var(--ease-standard); }
-  .dash-email-result { min-width: 0; display: grid; justify-items: end; gap: 1px; text-align: right; }
-  .dash-email-figure { color: var(--text-heading); font-size: var(--text-lg); font-weight: var(--weight-semi); font-variant-numeric: tabular-nums; }
-  .dash-email-detail { overflow: hidden; max-width: 100%; color: var(--text-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+  .dash-email-result { min-width: 0; display: flex; align-items: baseline; gap: var(--space-050); white-space: nowrap; }
+  .dash-email-figure { color: var(--text-heading); font-size: var(--text-base); font-weight: var(--weight-semi); font-variant-numeric: tabular-nums; }
+  .dash-email-rate { color: var(--text-muted); font-size: var(--text-xs); font-variant-numeric: tabular-nums; }
   /* ── Upcoming activity preview ──────────────────────────────────────────── */
   .dash-activity-columns, .dash-activity-row {
-    display: grid; grid-template-columns: minmax(0, 1fr) 104px 180px;
+    display: grid; grid-template-columns: minmax(0, 1fr) 104px 200px;
     gap: var(--space-100); align-items: center;
   }
   .dash-activity-columns {
@@ -245,6 +245,8 @@
     color: var(--text-secondary); font-size: 10px; font-weight: var(--weight-semi);
   }
   .dash-activity-owner-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dash-activity-columns > :nth-child(3),
+  .dash-activity-due { padding-left: var(--space-200); }
   .dash-activity-due { color: var(--text-secondary); font-size: var(--text-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .dash-activity-due.is-overdue { color: var(--status-danger); font-weight: var(--weight-semi); }
   .dash-activity-due.is-undated { color: var(--text-muted); }
@@ -261,7 +263,7 @@
     }
     .dash-activity-main { grid-area: activity; }
     .dash-activity-owner { grid-area: owner; }
-    .dash-activity-due { grid-area: due; text-align: right; }
+    .dash-activity-due { grid-area: due; padding-left: 0; text-align: right; }
   }
 
   /* ── Top opportunities ───────────────────────────────────────────────────── */
@@ -865,8 +867,8 @@
         const owner = window.titanOwner.label(row.card.owner) || 'Unassigned';
         const ownerInitial = window.titanOwner.initial(row.card.owner) || owner.charAt(0).toUpperCase();
         const recordName = row.card.deal || 'Untitled record';
-        const due = row.overdue ? (activity.date ? 'Overdue · ' + activity.date : 'Overdue') : (activity.date || 'No due date');
-        const dueClass = row.overdue ? ' is-overdue' : (activity.date ? '' : ' is-undated');
+        const due = window.titanActivities.formatDue(activity, row.overdue);
+        const dueClass = row.overdue ? ' is-overdue' : (row.due.undated ? ' is-undated' : '');
         const href = crmPath('/crm/pipeline/' + encodeURIComponent(row.pipelineId) + '/record/' + encodeURIComponent(row.card.id));
         return '<a class="dash-activity-row" href="' + esc(href) + '">' +
           '<span class="dash-activity-main"><span class="dash-activity-icon ' + type + '" aria-hidden="true">' +
@@ -952,16 +954,17 @@
       return '<option value="' + item.value + '"' + (item.value === range ? ' selected' : '') + '>' + esc(item.label) + '</option>';
     }).join('');
     const rows = [
-      { label: 'Emails sent', value: totals.sent.toLocaleString(), detail: 'emails', width: totals.sent ? 100 : 0, color: C_OPEN },
-      { label: 'Open rate', value: dashboardRate(totals.opened, totals.sent), detail: totals.opened.toLocaleString() + ' opened', width: openPercent, color: C_AVG },
-      { label: 'Reply rate', value: dashboardRate(totals.replies, totals.enrollments), detail: totals.replies.toLocaleString() + ' of ' + totals.enrollments.toLocaleString() + ' enrolled', width: replyPercent, color: C_WON },
+      { label: 'Emails sent', count: totals.sent.toLocaleString(), rate: '', width: totals.sent ? 100 : 0, color: C_OPEN, description: totals.sent.toLocaleString() + ' emails sent' },
+      { label: 'Open rate', count: totals.opened.toLocaleString(), rate: dashboardRate(totals.opened, totals.sent), width: openPercent, color: C_AVG, description: totals.opened.toLocaleString() + ' of ' + totals.sent.toLocaleString() + ' emails opened' },
+      { label: 'Reply rate', count: totals.replies.toLocaleString(), rate: dashboardRate(totals.replies, totals.enrollments), width: replyPercent, color: C_WON, description: totals.replies.toLocaleString() + ' of ' + totals.enrollments.toLocaleString() + ' enrolled contacts replied' },
     ];
     const header = '<div class="tile-head tile-head--responsive"><span class="tile-title">Email performance</span>' +
       '<div class="dash-tile-actions"><select class="ds-input dash-email-range" data-dashboard-email-range aria-label="Email performance duration">' + options + '</select></div></div>';
     const body = '<div class="dash-email-infographic" aria-label="Cumulative email performance for the selected pipelines">' + rows.map(function (row) {
       return '<div class="dash-email-row"><span class="dash-email-name"><span class="dash-email-dot" style="background:' + esc(row.color) + '"></span>' + esc(row.label) + '</span>' +
         '<span class="dash-email-track"><span class="dash-email-fill mail-fill" style="width:' + Math.max(0, Math.min(100, row.width)).toFixed(1) + '%;background:' + esc(row.color) + '"></span></span>' +
-        '<span class="dash-email-result"><span class="dash-email-figure">' + esc(row.value) + '</span><span class="dash-email-detail">' + esc(row.detail) + '</span></span></div>';
+        '<span class="dash-email-result" aria-label="' + esc(row.description) + '"><span class="dash-email-figure">' + esc(row.count) + '</span>' +
+          (row.rate ? '<span class="dash-email-rate">(' + esc(row.rate) + ')</span>' : '') + '</span></div>';
     }).join('') + '</div>';
     return '<section class="tile" style="grid-column:span ' + span + ';--accent:' + C_OPEN + '">' + header + body + '</section>';
   }

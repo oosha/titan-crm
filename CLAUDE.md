@@ -216,16 +216,25 @@ link sits at the bottom-right. The preview is deliberately read-only; completion
 Upcoming activities page.
 
 `crm-activities.js` owns activity type labels/icons, conservative parsing of the existing display-
-string dates, and the shared flatten/sort routine used by both `activities.html` and
-`dashboard.html`. Do not copy this logic back into either page. These strings are not canonical
-timestamps; unreadable dates remain last. A future scheduler should add a real `dueAt` value rather
-than making this parser more speculative.
+string dates, and the shared flatten/sort routine used by `activities.html`, `dashboard.html`,
+`opportunity-view.html` and the mail CRM panel. Do not copy this logic back into those pages. These
+strings are not canonical timestamps; unreadable dates remain last. New activities use an ISO `dueAt` timestamp as the
+canonical schedule value and retain `date` only as a temporary compatibility label for older
+surfaces. It also owns the shared Due-label formatter. Upcoming timestamps show their useful
+date/time. Overdue activities from the current calendar day show `Overdue · Today, h:mm AM/PM`;
+only this state exposes the stale scheduled time. One calendar day late shows
+`Overdue · Yesterday`. Older ages use progressive units: days through day six, completed weeks
+through day 29, completed months through day 364, and completed years thereafter. An overdue item
+without a recoverable timestamp shows `Overdue`. The stored timestamp remains exact even when the
+UI intentionally hides its time. Legacy strings remain a display/sorting fallback and should not
+be extended with new formats.
 
 Email performance follows the dashboard's selected pipeline scope and uses a compact three-row
 infographic for Emails sent, Open rate and Reply rate, plus the same
 7-day, 30-day, 90-day and all-time duration vocabulary as sequence Performance. Reply rate remains
-replies divided by enrollments; the row detail states that denominator. The duration is stored as
-`DATA.dashboard.emailRange`. Both this
+replies divided by enrollments. Each bar ends with one compact inline value: the email or reply
+count followed by its percentage in parentheses where applicable; there are no secondary captions
+underneath. The duration is stored as `DATA.dashboard.emailRange`. Both this
 dashboard aggregate and the sequence pages read the shared fixture source and range scaler in
 `titan-sequences.js`; there must not be a separate dashboard mail-stat constant. Both dashboard
 sections are independently hideable through Customize.
@@ -577,6 +586,10 @@ records and is served through the API. Adding one is documented in `api/_github.
                        subject, customFieldDefs[], contactsEnabled, team,
                        intakeForm } } }        // see § Intake forms
 ```
+
+An upcoming activity stores `{ type, text, dueAt }`, where `dueAt` is an ISO timestamp. The legacy
+`date` display string may coexist during migration but must not be used as the source of truth for
+new writes.
 
 `type` is `'sales'` or `'hiring'` (see `PIPELINE_TYPES` in `crm-directory.js`). It decides
 whether records carry money, what the completion rate is called ("win rate" / "hire rate"),

@@ -35,8 +35,9 @@
   .act-icon.followup { background: var(--surface-sunken); color: var(--text-secondary); }
   .act-what { display: flex; align-items: center; gap: var(--space-125); }
   .act-text { font-weight: var(--weight-medium); color: var(--text-heading); }
-  /* Dates here are display strings ("Thu", "Mon, 5pm"), never timestamps — see the
-     grouping note in the script below. Overdue is a stored flag, not a comparison. */
+  /* Persisted dates are display strings ("Thu", "Mon, 5pm"), never timestamps.
+     The shared activity helper normalizes their presentation and derives lateness
+     conservatively when the string can be understood. */
   .act-when { white-space: nowrap; }
   .act-when.overdue { color: var(--status-danger); font-weight: var(--weight-semi); }
   .act-when.undated { color: var(--text-muted); }
@@ -197,7 +198,7 @@
       const contact = (contactsOf(card)[0] || {});
       const owner = window.titanOwner.label(card.owner);
       const href = crmPath('/crm/pipeline/' + encodeURIComponent(r.pipelineId) + '/record/' + encodeURIComponent(card.id));
-      const search = [typeLabel(a.type), a.text, a.date, card.deal, card.company, contact.name, contact.email, owner]
+      const search = [typeLabel(a.type), a.text, a.date, a.dueAt, card.deal, card.company, contact.name, contact.email, owner]
         .filter(Boolean).join(' ').toLowerCase();
       return '<tr tabindex="0" role="button" data-href="' + esc(href) + '"' +
         ' data-pipeline="' + esc(r.pipelineId) + '" data-card="' + esc(card.id) + '"' +
@@ -211,13 +212,10 @@
             '<div class="dir-name-text"><div class="dir-name" style="font-weight:400;">' + esc(contact.name) + '</div></div></div>'
           : '<span class="dir-muted">—</span>') + '</td>' +
         '<td><span class="act-owner">' + esc(owner) + '</span></td>' +
-        // Overdue wins over undated: an activity flagged late says so even when it
-        // carries no date, or the only row that needs attention reads as the quietest.
-        '<td>' + (r.overdue
-          ? '<span class="act-when overdue">' + (a.date ? esc(a.date) : 'Overdue') + '</span>'
-          : (a.date
-            ? '<span class="act-when">' + esc(a.date) + '</span>'
-            : '<span class="act-when undated">No date</span>')) + '</td>' +
+        // The shared formatter keeps dashboard and full-list date language aligned
+        // without rewriting the persisted display string.
+        '<td><span class="act-when' + (r.overdue ? ' overdue' : (r.due.undated ? ' undated' : '')) + '">' +
+          esc(window.titanActivities.formatDue(a, r.overdue)) + '</span></td>' +
       '</tr>';
     }).join('');
     // Clicking a row opens the record the activity belongs to — the only place it can

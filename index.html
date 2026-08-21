@@ -5500,6 +5500,7 @@
   </style>
 
   <script src="/crm-owner.js"></script>
+<script src="/crm-activities.js"></script>
 <script src="/crm-schema.js"></script>
 <script src="/crm-status.js"></script>
   <script>
@@ -6546,9 +6547,10 @@
         : [].concat(card.nextActivity ? [{ type: card.nextActivity.type, text: formatNextActivityText(card.nextActivity), date: card.nextActivity.date }] : [])
             .concat(card.overdue ? [{ type: 'task', text: 'Follow-up overdue', overdue: true }] : []);
       if (up) up.innerHTML = upItems.length ? upItems.map(function (a) {
+        const due = window.titanActivities.dueInfo(a);
         return '<div class="crm-activity-row"><span class="crm-act-ic ' + esc(a.type || 'task') + '"><svg viewBox="0 0 16 16" fill="none">' + (ACT_ICON_SVG[a.type] || ACT_ICON_SVG.task) + '</svg></span>' +
           '<div class="crm-activity-text">' + esc(a.text) + '</div>' +
-          (formatMailPanelActivityDate(a.date) ? '<div class="crm-activity-date' + (a.overdue ? ' overdue' : '') + '">' + esc(formatMailPanelActivityDate(a.date)) + '</div>' : '') + '</div>';
+          (!due.undated ? '<div class="crm-activity-date' + (due.overdue ? ' overdue' : '') + '">' + esc(due.label) + '</div>' : '') + '</div>';
       }).join('') : '<div class="crm-empty-state">No upcoming activity.</div>';
 
       const recent = crmSectionBody('Recent Activity');
