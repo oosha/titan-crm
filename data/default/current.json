@@ -1993,7 +1993,21 @@
       },
       "activeInstances": 0,
       "usedBy": [],
-      "steps": []
+      "steps": [
+        {
+          "id": "group-107",
+          "timing": "immediate",
+          "days": 0,
+          "actions": [
+            {
+              "id": "action-106",
+              "action": "email",
+              "templateId": "initial-outreach",
+              "sendTime": "09:00"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "sequence-mt02jeq6-mvclw",
