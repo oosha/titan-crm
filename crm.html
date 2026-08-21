@@ -2613,53 +2613,55 @@
           <div class="board-title">
             <h1 id="pipeline-name-heading">Neo partnerships</h1>
             <p id="pipeline-total"></p>
-            <!-- The filter control and the filter state, together. They used to sit at
-                 opposite ends of the header — the button on the right, what it had done
-                 on the left — which made them read as two unrelated things. -->
-            <div class="board-filter-bar">
-              <!-- Ad-hoc filtering. The same conditions a saved view is made of, applied
-                   without saving — and "Save as view" is how one becomes the other. -->
-              <div class="ds-menu-anchor">
+          </div>
+          <div class="board-header-actions">
+            <!-- One control, not two. It was a Filter button on the right and a chip
+                 under the title saying what the button had done; together they cost a
+                 whole row of height to say one thing twice. The label carries the
+                 state, and the clear appears only when there is state to clear. -->
+            <span class="ds-menu-anchor">
+              <span class="board-filter-group" id="board-filter-group">
                 <button type="button" id="board-filter-btn" class="ds-btn ds-btn--soft"
                         onclick="toggleFilterPanel(event)" aria-haspopup="dialog" aria-expanded="false"
                         title="Filter this pipeline">
                   <span data-ds-icon="filter" data-size="16"></span>
                   <span id="board-filter-label">Filter</span>
                 </button>
-                <div class="cv-filter-panel" id="board-filter-panel" role="dialog" aria-label="Filter records">
-                  <div class="cv-filter-head">
-                    <span class="cv-filter-title">Filter records</span>
-                    <button type="button" class="cv-filter-x" onclick="closeFilterPanel()" aria-label="Close">
-                      <span data-ds-icon="close" data-size="13"></span>
-                    </button>
-                  </div>
-                  <div class="cv-filter-body"><div id="board-filter-host"></div></div>
-                  <div class="cv-filter-foot" id="cv-filter-foot">
-                    <button type="button" class="cv-filter-clear" onclick="clearBoardFilter()">Clear</button>
-                    <button type="button" class="ds-btn ds-btn--ghost ds-btn--sm"
-                              onclick="startSaveAsView()">Save as view</button>
-                    <button type="button" class="ds-btn ds-btn--primary ds-btn--sm"
-                              onclick="applyBoardFilter()">Apply</button>
-                  </div>
-                  <!-- Inline, not a prompt(): prompt() returns null without a word in a
-                       sandboxed frame, and a Save button that silently does nothing is
-                       worse than no Save button. -->
-                  <div class="cv-filter-foot cv-filter-name" id="cv-filter-name-row">
-                    <input class="cv-text" id="cv-filter-name" type="text" maxlength="40"
-                             placeholder="Name this view"
-                             onkeydown="if(event.key==='Enter'){event.preventDefault();commitSaveAsView();}
-                                          if(event.key==='Escape'){event.preventDefault();cancelSaveAsView();}">
-                    <button type="button" class="ds-btn ds-btn--ghost ds-btn--sm"
-                              onclick="cancelSaveAsView()">Cancel</button>
-                    <button type="button" class="ds-btn ds-btn--primary ds-btn--sm"
-                              onclick="commitSaveAsView()">Save view</button>
-                  </div>
+                <button type="button" id="board-filter-clear" class="board-filter-x"
+                        onclick="clearActiveFilter(event)" aria-label="Clear the filter" hidden>
+                  <span data-ds-icon="close" data-size="12"></span>
+                </button>
+              </span>
+              <div class="cv-filter-panel" id="board-filter-panel" role="dialog" aria-label="Filter records">
+                <div class="cv-filter-head">
+                  <span class="cv-filter-title">Filter records</span>
+                  <button type="button" class="cv-filter-x" onclick="closeFilterPanel()" aria-label="Close">
+                    <span data-ds-icon="close" data-size="13"></span>
+                  </button>
+                </div>
+                <div class="cv-filter-body"><div id="board-filter-host"></div></div>
+                <div class="cv-filter-foot" id="cv-filter-foot">
+                  <button type="button" class="cv-filter-clear" onclick="clearBoardFilter()">Clear</button>
+                  <button type="button" class="ds-btn ds-btn--ghost ds-btn--sm"
+                          id="cv-filter-save" onclick="startSaveAsView()">Save as view</button>
+                  <button type="button" class="ds-btn ds-btn--primary ds-btn--sm"
+                          onclick="applyBoardFilter()">Apply</button>
+                </div>
+                <!-- Inline, not a prompt(): prompt() returns null without a word in a
+                     sandboxed frame, and a Save button that silently does nothing is
+                     worse than no Save button. -->
+                <div class="cv-filter-foot cv-filter-name" id="cv-filter-name-row">
+                  <input class="cv-text" id="cv-filter-name" type="text" maxlength="40"
+                         placeholder="Name this view"
+                         onkeydown="if(event.key==='Enter'){event.preventDefault();commitSaveAsView();}
+                                    if(event.key==='Escape'){event.preventDefault();cancelSaveAsView();}">
+                  <button type="button" class="ds-btn ds-btn--ghost ds-btn--sm"
+                          onclick="cancelSaveAsView()">Cancel</button>
+                  <button type="button" class="ds-btn ds-btn--primary ds-btn--sm"
+                          onclick="commitSaveAsView()">Save view</button>
                 </div>
               </div>
-              <div id="board-view-chip"></div>
-            </div>
-          </div>
-          <div class="board-header-actions">
+            </span>
             <!-- Two settings screens exist and they are easy to confuse: the pipeline's
                  (stages, colour, sources) and the record's (which fields a card carries).
                  A menu names both, so the choice happens before the navigation rather than
@@ -4735,11 +4737,16 @@
     function openFilterPanel() {
       const pl = currentPipelineObj();
       if (!pl) return;
+      // Loads whatever is applied — a loose filter, or the saved view's own conditions,
+      // so opening the control never shows an empty editor over a filtered board.
+      const v = activeView();
+      const seed = boardFilter || (v ? { conditions: v.conditions } : null);
       filterEditor = window.titanViews.mountEditor(document.getElementById('board-filter-host'), {
         pipeline: pl,
-        // Named views are edited from the sidebar; this panel is only ever conditions.
+        // A view is named when it is created or from the sidebar; this panel is
+        // only ever the conditions.
         hideName: true,
-        value: boardFilter ? { conditions: boardFilter.conditions } : null,
+        value: seed,
         countMatching: function (draft) { return window.titanViews.apply(CARDS, draft).length; },
       });
       cancelSaveAsView();
@@ -4781,7 +4788,10 @@
       const input = document.getElementById('cv-filter-name');
       // Pre-filled with what the filter says, because most views are named after what
       // they do and retyping that is busywork.
-      input.value = window.titanViews.describe({ conditions: filled }, pl).slice(0, 40);
+      const editing = activeView();
+      input.value = editing
+        ? editing.name
+        : window.titanViews.describe({ conditions: filled }, pl).slice(0, 40);
       document.getElementById('cv-filter-foot').style.display = 'none';
       document.getElementById('cv-filter-name-row').classList.add('open');
       input.focus();
@@ -4804,8 +4814,14 @@
       const name = String(document.getElementById('cv-filter-name').value || '').trim();
       if (!name) { npToast('Give the view a name.'); return; }
 
-      const view = { id: window.titanViews.newId(), name: name, conditions: filled };
-      pl.views = window.titanViews.list(pl).concat([view]);
+      const editing = activeView();
+      const view = editing
+        ? { id: editing.id, name: name, conditions: filled }
+        : { id: window.titanViews.newId(), name: name, conditions: filled };
+      const all = window.titanViews.list(pl);
+      const at = all.findIndex(function (x) { return x.id === view.id; });
+      if (at === -1) all.push(view); else all[at] = view;
+      pl.views = all;
       schedulePersist();
       // It stops being a filter and becomes the view, applied — so the board does not
       // change under someone who just saved what they were looking at.
@@ -4816,7 +4832,7 @@
       updateCrmUrl(currentPipelineId, null);
       renderBoard();
       if (window.titanSidebar) window.titanSidebar.setPipelines(Object.values(PIPELINES));
-      npToast('Saved “' + view.name + '” to the sidebar.', true);
+      npToast(editing ? 'Updated “' + view.name + '”.' : 'Saved “' + view.name + '” to the sidebar.', true);
     }
 
     // Reflects how many conditions are on, so a filtered board says so from the button
@@ -4844,51 +4860,38 @@
       btn.classList.toggle('is-on', !!n);
     }
 
-    // From the chip there is no mounted editor, so borrow the panel's.
-    function saveFilterAsViewFromChip() {
-      openFilterPanel();
-      startSaveAsView();
+    // One control reports everything: what is applied, and how much it left. There is
+    // no chip any more — the label is the chip.
+    function renderViewChip() {
+      const label = document.getElementById('board-filter-label');
+      const clear = document.getElementById('board-filter-clear');
+      const group = document.getElementById('board-filter-group');
+      const save = document.getElementById('cv-filter-save');
+      if (!label) return;
+
+      const v = activeView();
+      const on = !!(v || boardFilter);
+      const shown = on ? visibleCards().length : 0;
+
+      label.textContent = v
+        // A saved view has a name, which is the one thing the control cannot infer.
+        ? v.name + ' · ' + shown + ' of ' + CARDS.length
+        : boardFilter
+          ? 'Showing ' + shown + ' of ' + CARDS.length
+          : 'Filter';
+      label.title = v ? window.titanViews.describe(v, currentPipelineObj()) : '';
+      clear.hidden = !on;
+      group.classList.toggle('is-on', on);
+      // Editing a saved view writes back to it; a loose filter has nothing to write to.
+      if (save) save.textContent = v ? 'Update view' : 'Save as view';
     }
 
-    function renderViewChip() {
-
-      const host = document.getElementById('board-view-chip');
-      if (!host) return;
-      renderFilterButton();
-      const v = activeView();
-      if (!v && boardFilter) {
-        const fn = visibleCards().length;
-        // No "Filtered" label and no "Edit filter": the button beside this one already
-        // says Filter, already counts the conditions, and already opens the editor.
-        // Sitting next to each other, all this has left to add is the result.
-        host.innerHTML =
-          '<div class="cv-chip-row">' +
-            '<span class="cv-chip">' +
-              '<span class="cv-chip-count">Showing <strong>' + fn + '</strong> of ' + CARDS.length + '</span>' +
-              '<button type="button" class="cv-chip-x" onclick="clearBoardFilter()" ' +
-                'aria-label="Clear this filter"><span data-ds-icon="close" data-size="12"></span></button>' +
-            '</span>' +
-            '<button type="button" class="cv-chip-edit" onclick="saveFilterAsViewFromChip()">Save as view</button>' +
-          '</div>';
-        if (window.dsIcon) window.dsIcon.hydrate(host);
-        return;
-      }
-      if (!v) { host.innerHTML = ''; return; }
-      const n = visibleCards().length;
-      host.innerHTML =
-        '<div class="cv-chip-row">' +
-          '<span class="cv-chip">' +
-            '<span class="cv-chip-name">' + escAttr(v.name) + '</span>' +
-            '<span class="cv-chip-sep" aria-hidden="true"></span>' +
-            '<span class="cv-chip-count">' + n + ' of ' + CARDS.length + '</span>' +
-            '<button type="button" class="cv-chip-x" onclick="clearView()" ' +
-              'aria-label="Clear the ' + escAttr(v.name) + ' view">' +
-              '<span data-ds-icon="close" data-size="12"></span></button>' +
-          '</span>' +
-          '<button type="button" class="cv-chip-edit" onclick="openViewEditor(currentPipelineId, \'' +
-            escAttr(v.id) + '\')">Edit view</button>' +
-        '</div>';
-      if (window.dsIcon) window.dsIcon.hydrate(host);
+    // Clears whichever is applied. One button, because from the outside they are the
+    // same thing: the board is showing less than everything.
+    function clearActiveFilter(evt) {
+      if (evt) evt.stopPropagation();
+      if (boardFilter) { clearBoardFilter(); return; }
+      if (activeViewId) clearView();
     }
 
     // Navigates rather than re-rendering in place: the URL is the source of truth, and
