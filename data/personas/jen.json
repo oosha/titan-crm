@@ -1,6 +1,47 @@
 {
-  "currentPipelineId": null,
-  "pipelineSeq": 1,
+  "currentPipelineId": "p2",
+  "pipelineSeq": 2,
   "contactFields": [],
-  "pipelines": {}
+  "pipelines": {
+    "p2": {
+      "id": "p2",
+      "name": "New site project",
+      "entity": "Project",
+      "plural": "projects",
+      "color": "#3f8a7d",
+      "type": "sales",
+      "subject": "company",
+      "stages": [
+        {
+          "key": "scoping-0",
+          "label": "Scoping"
+        },
+        {
+          "key": "demo-1",
+          "label": "Demo"
+        },
+        {
+          "key": "proposal-2",
+          "label": "Proposal"
+        },
+        {
+          "key": "kickoff-3",
+          "label": "Kickoff"
+        },
+        {
+          "key": "in-progress-4",
+          "label": "In Progress"
+        },
+        {
+          "key": "review-5",
+          "label": "Review"
+        },
+        {
+          "key": "delivered-6",
+          "label": "Delivered"
+        }
+      ],
+      "cards": []
+    }
+  }
 }
