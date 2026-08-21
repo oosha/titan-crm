@@ -56,8 +56,17 @@
     align-items: center; justify-content: center; flex-shrink: 0;
   }
   .fl-main { min-width: 0; }
-  .fl-name { font-size: 14.5px; font-weight: 650; color: var(--dir-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .fl-meta { font-size: 12.5px; color: var(--dir-muted); margin-top: 3px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .fl-name { font-size: 14.5px; font-weight: 650; color: var(--dir-ink); overflow: hidden; white-space: nowrap; }
+  .fl-name-link {
+    display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+    color: inherit; text-decoration: none; vertical-align: middle;
+  }
+  .fl-name-link-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fl-name-link-icon { color: var(--dir-muted); flex: 0 0 auto; position: relative; top: -1px; }
+  .fl-name-link:hover { color: var(--dir-accent); }
+  .fl-name-link:hover .fl-name-link-icon { color: var(--dir-accent); }
+  .fl-name-link:focus-visible { outline: 2px solid var(--dir-accent); outline-offset: 3px; border-radius: 3px; }
+  .fl-meta { font-size: 12.5px; color: var(--dir-muted); margin-top: 6px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
   .fl-meta b { color: var(--dir-body); font-weight: 650; }
   .fl-sep { color: var(--dir-faint); }
   .fl-state { font-weight: 650; }
@@ -156,7 +165,11 @@
       '<div class="fl-card">' +
         '<span class="fl-icon" style="background:' + esc(colour) + '18; color:' + esc(colour) + ';">' + ICON_FORM + '</span>' +
         '<div class="fl-main">' +
-          '<div class="fl-name">' + esc(f.heading || 'Untitled form') + '</div>' +
+          '<div class="fl-name"><a class="fl-name-link" title="Open the form"' +
+            ' href="' + esc(formUrlFor(f.token)) + '" target="_blank" rel="noopener">' +
+            '<span class="fl-name-link-text">' + esc(f.heading || 'Untitled form') + '</span>' +
+            '<span class="fl-name-link-icon" aria-hidden="true">' + ICON_OPEN + '</span>' +
+          '</a></div>' +
           '<div class="fl-meta">' +
             // "Active" is gone with the pause control (see PAUSE_UI in form-builder.js):
             // it is now the only state anyone can set, so labelling it said nothing. A

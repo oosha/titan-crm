@@ -38,7 +38,7 @@ Multi-page app. Routes are rewrites in `vercel.json`; each route is its own docu
 | `/crm/pipeline/:id/record-setting` | `opportunity-settings.html` | |
 | `/crm/contacts`, `/crm/companies` | `contacts.html`, `companies.html` | Directory pages |
 | `/crm/sequences`, `/crm/sequences/:id` | `sequences.html` | Global sequence performance table + full-page linear editor |
-| `/crm/forms` | `forms.html` | One row per pipeline: its intake form, or the offer of one |
+| `/crm/forms` | `forms.html` | One row per pipeline: its intake form, or the offer of one; each form title links to its public form |
 | `/crm/pipeline/:id/form` | `form-settings.html` | Deep link to one form's editor |
 | `/f/:token` | `form.html` | **Public.** The intake form itself — no auth, no sidebar |
 
