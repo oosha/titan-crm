@@ -566,7 +566,7 @@
           "contact": "Sarah Chen",
           "contactEmail": "sarah.chen@outlook.com",
           "value": 0,
-          "stage": "drop-off-scheduled",
+          "stage": "drying",
           "lastActivity": "just now",
           "activityType": "Email received",
           "overdue": false,
