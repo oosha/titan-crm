@@ -1,6 +1,6 @@
 {
-  "currentPipelineId": "p2",
-  "pipelineSeq": 2,
+  "currentPipelineId": "p3",
+  "pipelineSeq": 3,
   "contactFields": [],
   "pipelines": {
     "p2": {
@@ -19,6 +19,46 @@
         {
           "key": "demo-1",
           "label": "Demo"
+        },
+        {
+          "key": "proposal-2",
+          "label": "Proposal"
+        },
+        {
+          "key": "kickoff-3",
+          "label": "Kickoff"
+        },
+        {
+          "key": "in-progress-4",
+          "label": "In Progress"
+        },
+        {
+          "key": "review-5",
+          "label": "Review"
+        },
+        {
+          "key": "delivered-6",
+          "label": "Delivered"
+        }
+      ],
+      "cards": []
+    },
+    "p3": {
+      "id": "p3",
+      "name": "Demo",
+      "entity": "Project",
+      "plural": "projects",
+      "color": "#b5813f",
+      "type": "sales",
+      "subject": "company",
+      "stages": [
+        {
+          "key": "scoping-0",
+          "label": "Scoping"
+        },
+        {
+          "key": "demo-1",
+          "label": "demo"
         },
         {
           "key": "proposal-2",
