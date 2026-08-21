@@ -6703,7 +6703,13 @@
             .concat(card.overdue ? [{ type: 'task', text: 'Follow-up overdue', overdue: true }] : []);
       if (up) up.innerHTML = upItems.length ? upItems.map(function (a) {
         const due = window.titanActivities.dueInfo(a);
-        return '<div class="crm-activity-row"><span class="crm-act-ic ' + esc(a.type || 'task') + '"><svg viewBox="0 0 16 16" fill="none">' + (ACT_ICON_SVG[a.type] || ACT_ICON_SVG.task) + '</svg></span>' +
+        // A task in Upcoming activity is open. The generic checked-square task
+        // glyph reads as completed, so use the same empty checkbox as the record
+        // view until the task is actually moved to Recent activity.
+        const icon = a.type === 'task'
+          ? '<span class="crm-act-check" aria-label="Open task"><span class="box"></span></span>'
+          : '<span class="crm-act-ic ' + esc(a.type || 'task') + '"><svg viewBox="0 0 16 16" fill="none">' + (ACT_ICON_SVG[a.type] || ACT_ICON_SVG.task) + '</svg></span>';
+        return '<div class="crm-activity-row">' + icon +
           '<div class="crm-activity-text">' + esc(a.text) + '</div>' +
           (!due.undated ? '<div class="crm-activity-date' + (due.overdue ? ' overdue' : '') + '">' + esc(due.label) + '</div>' : '') + '</div>';
       }).join('') : '<div class="crm-empty-state">No upcoming activity.</div>';

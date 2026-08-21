@@ -215,36 +215,6 @@
           }
         },
         {
-          "id": "inq-5",
-          "deal": "Sarah Chen wedding bouquet",
-          "company": "Sarah Chen",
-          "contact": "Sarah Chen",
-          "stage": "booked",
-          "source": "Website booking",
-          "contactEmail": "sarah.chen@outlook.com",
-          "contactPhone": "+61 414 228 690",
-          "instagram": "@sarahchen",
-          "weddingDate": "2026-08-07",
-          "value": 460,
-          "deposit": 160,
-          "lastActivity": "1d ago",
-          "activityType": "Payment received",
-          "threadRef": "thread-sarah-booking",
-          "note": "Deposit paid. Sarah booked her flower drop-off through the confirmation email.",
-          "contacts": [
-            {
-              "name": "Sarah Chen",
-              "email": "sarah.chen@outlook.com",
-              "phone": "+61 414 228 690",
-              "instagram": "@sarahchen"
-            }
-          ],
-          "owner": {
-            "name": "Joanna Hiu",
-            "email": "hello@joannahiuartist.com"
-          }
-        },
-        {
           "id": "inq-6",
           "deal": "Hannah Lee wedding bouquet",
           "company": "Hannah Lee",
@@ -397,6 +367,11 @@
             }
           ],
           "upcomingActivities": [
+            {
+              "type": "task",
+              "text": "Prepare Sarah's preservation for pickup",
+              "date": "Today"
+            },
             {
               "type": "meeting",
               "text": "Bouquet pickup with Sarah",
