@@ -88,10 +88,12 @@
      is what gives the mosaic its flush edges. */
   .bento { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-items: stretch; }
   .bento > * { min-width: 0; }
+  .dash-upcoming--tall { grid-row: span 2; }
   @container dash (max-width: 760px) {
     .bento { grid-template-columns: repeat(2, 1fr); }
     .bento > .tile { grid-column: span 2 !important; }
     .bento > .tile.kpi { grid-column: span 1 !important; }
+    .dash-upcoming--tall { grid-row: auto; }
   }
   @container dash (max-width: 520px) {
     .bento { grid-template-columns: 1fr; }
@@ -108,6 +110,7 @@
      read as a different kind of thing from their neighbours. */
 
   .tile-head { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; min-height: 26px; }
+  .tile-head--responsive { flex-wrap: wrap; }
   /* Same treatment as the KPI labels up top — uppercase, tracked out, muted. The
      chart is the thing on these tiles; the title just names it. */
   .tile-title { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dir-muted); }
@@ -185,37 +188,81 @@
   .legend.is-pie .legend-row { padding: 9px 0; }
   .legend.is-pie .legend-dot { width: 11px; height: 11px; border-radius: 50%; }
 
-  /* ── Email engagement funnel ───────────────────────────────────────────────
-     Sent → Opened → Replied is a nested set, not a partition: nothing is opened
-     that wasn't sent, and a reply implies an open. So it's three bars measured
-     against one shared baseline, not the stacked bar the stage tile uses — a
-     stack would claim these three are slices of a whole and that they sum. */
-  /* One grid for all three rows, not a grid per row: the value column is auto-width,
-     so per-row grids sized it to their own content — "1,240" is narrower than
-     "643 (52%)" — and the 1fr track column pocketed the difference, which made the
-     Sent bar's trough visibly longer than the two beneath it. `display: contents`
-     lifts the rows' cells into this grid so all three share one set of columns. */
-  .mail-fun {
-    flex: 1; display: grid; grid-template-columns: 90px 1fr auto;
-    align-content: center; align-items: center; gap: 14px 12px;
+  /* ── Sequence email performance ─────────────────────────────────────────── */
+  .dash-tile-actions { margin-left: auto; display: flex; align-items: center; gap: var(--space-100); min-width: 0; }
+  .dash-tile-link {
+    color: var(--text-accent); font-size: var(--text-xs); font-weight: var(--weight-semi);
+    text-decoration: none; white-space: nowrap;
   }
-  .mail-step { display: contents; }
-  .mail-name { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--dir-body); }
-  /* Square key, same as the bar charts' legend — the round one belongs to the pie. */
-  .mail-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
-  /* Both of these are display:block on purpose. They are spans inside a span, so
-     without it the fill stays inline and width/height are simply ignored — which
-     painted three empty tracks and no data at all. */
-  .mail-track { display: block; height: 24px; border-radius: 6px; background: var(--dir-hair); overflow: hidden; }
-  .mail-fill { display: block; height: 100%; border-radius: 6px; transition: width 620ms cubic-bezier(0.22,0.61,0.36,1); }
-  .mail-val { text-align: left; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  /* The count is the figure on every row, so the three are read against each other
-     on one scale; the rate follows in brackets as what the bar already shows. */
-  .mail-figure { font-size: 16px; font-weight: 740; color: var(--dir-ink); letter-spacing: -0.01em; }
-  .mail-rate { font-size: 12px; color: var(--dir-muted); margin-left: 6px; }
-  /* The figures are invented and not pipeline-scoped, neither of which a reader can
-     tell from three bars. The footnote is the disclosure, so it isn't decoration. */
-  .mail-foot { font-size: 11.5px; color: var(--dir-muted); margin-top: 15px; }
+  .dash-tile-link:hover { text-decoration: underline; }
+  .dash-email-range { width: auto; min-width: 132px; height: var(--btn-height-sm); padding-block: 0; font-size: var(--text-xs); }
+  .dash-email-infographic {
+    flex: 1; display: grid; grid-template-columns: 92px minmax(72px, 1fr) 112px;
+    align-content: center; align-items: center; gap: var(--space-150) var(--space-125);
+    padding: var(--space-100) 0 var(--space-200);
+  }
+  .dash-email-row { display: contents; }
+  .dash-email-name {
+    display: flex; align-items: center; gap: var(--space-075); color: var(--text-secondary);
+    font-size: var(--text-xs); font-weight: var(--weight-semi); white-space: nowrap;
+  }
+  .dash-email-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: var(--radius-full); }
+  .dash-email-track { display: block; height: 22px; overflow: hidden; border-radius: var(--radius-sm); background: var(--surface-sunken); }
+  .dash-email-fill { display: block; width: 0; height: 100%; border-radius: inherit; transition: width 520ms var(--ease-standard); }
+  .dash-email-result { min-width: 0; display: grid; justify-items: end; gap: 1px; text-align: right; }
+  .dash-email-figure { color: var(--text-heading); font-size: var(--text-lg); font-weight: var(--weight-semi); font-variant-numeric: tabular-nums; }
+  .dash-email-detail { overflow: hidden; max-width: 100%; color: var(--text-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+  /* ── Upcoming activity preview ──────────────────────────────────────────── */
+  .dash-activity-columns, .dash-activity-row {
+    display: grid; grid-template-columns: minmax(0, 1fr) 104px 180px;
+    gap: var(--space-100); align-items: center;
+  }
+  .dash-activity-columns {
+    padding: 0 var(--space-100) var(--space-075); color: var(--text-muted);
+    font-size: var(--text-xs); font-weight: var(--weight-semi); text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .dash-activity-row {
+    min-height: 58px; padding: var(--space-125) var(--space-100); border-top: var(--btn-border-width) solid var(--border-subtle);
+    border-radius: var(--radius-sm); color: inherit; text-decoration: none; transition: var(--motion-hover);
+  }
+  .dash-activity-row:hover { background: var(--surface-hover); }
+  .dash-activity-main { min-width: 0; display: flex; align-items: center; gap: var(--space-125); }
+  .dash-activity-icon {
+    width: var(--btn-height-sm); height: var(--btn-height-sm); flex: 0 0 auto; display: inline-flex;
+    align-items: center; justify-content: center; border-radius: var(--radius-full);
+  }
+  .dash-activity-icon.meeting { background: var(--label-purple-bg); color: var(--label-purple-fg); }
+  .dash-activity-icon.call { background: var(--label-teal-bg); color: var(--label-teal-fg); }
+  .dash-activity-icon.email { background: var(--label-blue-bg); color: var(--label-blue-fg); }
+  .dash-activity-icon.task, .dash-activity-icon.followup { background: var(--surface-sunken); color: var(--text-secondary); }
+  .dash-activity-copy { min-width: 0; display: grid; gap: var(--space-025); }
+  .dash-activity-name { overflow: hidden; color: var(--text-heading); font-size: var(--text-sm); font-weight: var(--weight-semi); text-overflow: ellipsis; white-space: nowrap; }
+  .dash-activity-context { overflow: hidden; color: var(--text-muted); font-size: var(--text-xs); text-overflow: ellipsis; white-space: nowrap; }
+  .dash-activity-owner { min-width: 0; display: flex; align-items: center; gap: var(--space-075); color: var(--text-secondary); font-size: var(--text-xs); }
+  .dash-activity-owner-mark {
+    width: var(--space-300); height: var(--space-300); flex: 0 0 auto; display: inline-flex; align-items: center;
+    justify-content: center; border-radius: var(--radius-full); background: var(--surface-sunken);
+    color: var(--text-secondary); font-size: 10px; font-weight: var(--weight-semi);
+  }
+  .dash-activity-owner-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dash-activity-due { color: var(--text-secondary); font-size: var(--text-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .dash-activity-due.is-overdue { color: var(--status-danger); font-weight: var(--weight-semi); }
+  .dash-activity-due.is-undated { color: var(--text-muted); }
+  .dash-activity-empty { padding: var(--space-400) 0; color: var(--text-muted); font-size: var(--text-sm); text-align: center; }
+  .dash-upcoming-card { padding-top: var(--space-300); }
+  .dash-activity-footer { display: flex; justify-content: flex-end; margin-top: auto; padding-top: var(--space-200); }
+
+  @container dash (max-width: 760px) {
+    .dash-tile-actions { width: 100%; margin-left: 0; flex-wrap: wrap; }
+    .dash-activity-columns { display: none; }
+    .dash-activity-row {
+      grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "activity activity" "owner due";
+      gap: var(--space-075) var(--space-150);
+    }
+    .dash-activity-main { grid-area: activity; }
+    .dash-activity-owner { grid-area: owner; }
+    .dash-activity-due { grid-area: due; text-align: right; }
+  }
 
   /* ── Top opportunities ───────────────────────────────────────────────────── */
   .top-row { display: grid; grid-template-columns: 26px 1fr 132px auto; align-items: center; gap: 12px; padding: 9px 8px; margin: 0 -8px; border-radius: 10px; text-decoration: none; color: inherit; }
@@ -302,8 +349,11 @@
 </div>
 
 <script src="/design-system/components/icon.js"></script>
+<script src="/crm-owner.js"></script>
 <script src="/crm-schema.js"></script>
 <script src="/crm-status.js"></script>
+<script src="/crm-activities.js"></script>
+<script src="/titan-sequences.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-directory.js"></script>
 <script src="/crm-views.js"></script>
@@ -386,10 +436,11 @@
   // never appears on a hiring board.
   const WIDGETS = [
     { id: 'kpis',      name: 'Key metrics',        desc: 'The four headline numbers, completion rate included.' },
+    { id: 'upcoming',  name: 'Upcoming activities', desc: 'The next six activities, with owner and due date.' },
+    { id: 'mail',      name: 'Email performance',   desc: 'Cumulative email results for the selected pipelines.' },
     { id: 'breakdown', name: 'Pipeline breakdown', desc: 'Where records sit, stage by stage.' },
     { id: 'distribution', name: 'Amount spread',   desc: 'How open records cluster by amount.', money: true },
     { id: 'sources',   name: 'By source',          desc: 'Where records came from (hidden until sources are set).' },
-    { id: 'mail',      name: 'Email engagement',   desc: 'Sent, open rate and response rate across the mailbox.' },
     { id: 'top',       name: 'Focus list',         desc: 'The records worth opening first.' },
   ];
   function widgetsForType() {
@@ -400,7 +451,10 @@
   // ── Preferences (persisted on DATA.dashboard, like contactFields) ───────────
   function prefs() {
     const d = (window.DATA && window.DATA.dashboard) || {};
-    return { scope: d.scope || 'all', type: d.type || '', hidden: Array.isArray(d.hidden) ? d.hidden.slice() : [] };
+    return {
+      scope: d.scope || 'all', type: d.type || '', hidden: Array.isArray(d.hidden) ? d.hidden.slice() : [],
+      emailRange: window.titanSequenceLibrary.performanceRanges.some(function (item) { return item.value === d.emailRange; }) ? d.emailRange : '30d',
+    };
   }
   async function savePrefs(patch) {
     window.DATA.dashboard = Object.assign({}, window.DATA.dashboard, patch);
@@ -788,56 +842,128 @@
     return tile({ span: span, accent: PIE[0], title: title, body: body });
   }
 
-  // ── Email engagement ─────────────────────────────────────────────────────────
-  // The one tile here whose figures are not computed from the records, because
-  // nothing in this app tracks a send, an open or a reply. `card.activityType` is
-  // the *type of the last touch* rather than a log, and there is no open signal at
-  // all — so these are hand-authored demo figures, the way `card.overdue` already
-  // is. Wiring it to something real means replacing MAIL_STATS with a fetch; the
-  // rest of the tile reads whatever shape this object has.
-  //
-  // They are workspace-wide, which means they deliberately do NOT answer the
-  // pipeline tabs or the scope selector above. That is the cost of a single mock
-  // block, and the tile discloses it in its meta and its footnote rather than
-  // redrawing the same three numbers under a new heading and implying they moved.
-  // Per-pipeline figures would need a counter on each card instead.
-  const MAIL_STATS = { sent: 1240, opened: 643, replied: 221, period: 'last 30 days' };
+  // ── Upcoming activities ──────────────────────────────────────────────────
+  function scopedPipelineMap() {
+    const map = {};
+    scopedPipelines().forEach(function (pipeline) { map[pipeline.id] = pipeline; });
+    return map;
+  }
 
-  // Three distinct hues rather than the ordinal ramp of one, which is the exception
-  // to the note at the top of this section: a 3-step ramp of a single hue came out
-  // too close to read, and these steps aren't just ordered, they carry a direction —
-  // mail goes out (blue), gets attention (amber), comes back (green). The colour is
-  // doing the same work as the label, which is the point.
-  //
-  // Both rates are shares of *sent*: "response rate" measured against opens would
-  // flatter itself, and the two percentages would stop being comparable.
-  function mailTile(span) {
-    const sent = Math.max(0, Number(MAIL_STATS.sent) || 0);
-    if (!sent) return '';
-    // Clamped: a mock claiming more opens than sends would otherwise draw a bar past
-    // the end of its track and report 118%.
-    const steps = [
-      { name: 'Sent', n: sent, color: C_OPEN, base: true },
-      { name: 'Opened', n: Math.min(Math.max(0, Number(MAIL_STATS.opened) || 0), sent), color: C_AVG },
-      { name: 'Replied', n: Math.min(Math.max(0, Number(MAIL_STATS.replied) || 0), sent), color: C_WON },
-    ];
-    const pct = function (st) { return Math.round((st.n / sent) * 100); };
-    const rows = steps.map(function (st) {
-      // Sent gets no bracket: it is the denominator, so "(100%)" of itself is noise.
-      const rate = st.base ? '' : '<span class="mail-rate">(' + pct(st) + '%)</span>';
-      return '<div class="mail-step">' +
-        '<span class="mail-name"><span class="mail-dot" style="background:' + st.color + '"></span>' + esc(st.name) + '</span>' +
-        '<span class="mail-track"><span class="mail-fill" style="width:' + pct(st) + '%;background:' + st.color + '"></span></span>' +
-        '<span class="mail-val"><span class="mail-figure">' + st.n.toLocaleString() + '</span>' + rate + '</span>' +
-      '</div>';
+  function upcomingTile(span, tall) {
+    const rows = window.titanActivities.build(scopedPipelineMap()).slice(0, 6);
+    const allHref = crmPath('/crm/activities');
+    const tileClass = 'tile dash-upcoming-card' + (tall ? ' dash-upcoming--tall' : '');
+    const footer = '<div class="dash-activity-footer"><a class="dash-tile-link" href="' + esc(allHref) + '">See all activities</a></div>';
+    if (!rows.length) {
+      return '<section class="' + tileClass + '" aria-label="Upcoming activities" style="grid-column:span ' + span + ';--accent:' + C_OPEN + '">' +
+        '<div class="dash-activity-empty">Nothing scheduled in this pipeline scope.</div>' + footer + '</section>';
+    }
+    const body = '<div class="dash-activity-columns"><span>Upcoming activity</span><span>Owner</span><span>Due</span></div>' +
+      rows.map(function (row) {
+        const activity = row.act || {};
+        const type = ['meeting', 'call', 'email', 'task', 'followup'].indexOf(activity.type) !== -1 ? activity.type : 'task';
+        const owner = window.titanOwner.label(row.card.owner) || 'Unassigned';
+        const ownerInitial = window.titanOwner.initial(row.card.owner) || owner.charAt(0).toUpperCase();
+        const recordName = row.card.deal || 'Untitled record';
+        const due = row.overdue ? (activity.date ? 'Overdue · ' + activity.date : 'Overdue') : (activity.date || 'No due date');
+        const dueClass = row.overdue ? ' is-overdue' : (activity.date ? '' : ' is-undated');
+        const href = crmPath('/crm/pipeline/' + encodeURIComponent(row.pipelineId) + '/record/' + encodeURIComponent(row.card.id));
+        return '<a class="dash-activity-row" href="' + esc(href) + '">' +
+          '<span class="dash-activity-main"><span class="dash-activity-icon ' + type + '" aria-hidden="true">' +
+            (window.dsIcon ? window.dsIcon(window.titanActivities.iconOf(type), { size: 15 }) : '') + '</span>' +
+            '<span class="dash-activity-copy"><span class="dash-activity-name">' + esc(activity.text || 'Activity') + '</span>' +
+              '<span class="dash-activity-context">' + esc(window.titanActivities.labelOf(type) + ' · ' + recordName) + '</span></span></span>' +
+          '<span class="dash-activity-owner"><span class="dash-activity-owner-mark" aria-hidden="true">' + esc(ownerInitial) + '</span><span class="dash-activity-owner-name">' + esc(owner) + '</span></span>' +
+          '<span class="dash-activity-due' + dueClass + '">' + esc(due) + '</span>' +
+        '</a>';
+      }).join('');
+    return '<section class="' + tileClass + '" aria-label="Upcoming activities" style="grid-column:span ' + span + ';--accent:' + C_OPEN + '">' + body + footer + '</section>';
+  }
+
+  // ── Sequence email performance ───────────────────────────────────────────
+  function configuredSequenceIds(pipelines) {
+    const ids = {};
+    function remember(value) {
+      const id = String(value || '').trim();
+      if (id) ids[id] = true;
+    }
+    pipelines.forEach(function (pipeline) {
+      (pipeline.stages || []).forEach(function (stage) {
+        ['entry', 'exitActions'].forEach(function (key) {
+          (Array.isArray(stage[key]) ? stage[key] : []).forEach(function (action) {
+            if (action.type === 'sequence' || (action.type === 'email' && action.using === 'sequence')) {
+              remember(action.value || action.sequence);
+            }
+          });
+        });
+        if (stage.idle && stage.idle.on) remember(stage.idle.sequence);
+        if (stage.sendUsing === 'sequence') remember(stage.emailSeqName || stage.emailSequence);
+      });
+    });
+    return ids;
+  }
+
+  function sequenceAppliesToScope(sequence, pipelines, configuredIds) {
+    if (configuredIds[sequence.id] || configuredIds[sequence.name]) return true;
+    if (Object.keys(configuredIds).length) return false;
+
+    // Older fixture sequences predate pipeline IDs and describe their assignment
+    // as "Sales pipeline · Stage". Use that type-level reference only when the
+    // selected pipelines do not yet have explicit sequence actions configured.
+    const pipelineNames = pipelines.map(function (pipeline) { return String(pipeline.name || '').toLowerCase(); });
+    const typePrefix = String(activeType().id || '').toLowerCase() + ' pipeline';
+    return (Array.isArray(sequence.usedBy) ? sequence.usedBy : []).some(function (reference) {
+      const ref = String(reference || '').toLowerCase();
+      return pipelineNames.some(function (name) { return ref === name || ref.indexOf(name + ' · ') === 0; }) ||
+        ref === typePrefix || ref.indexOf(typePrefix + ' · ') === 0;
+    });
+  }
+
+  function sequencePerformanceAggregate(rangeValue) {
+    const pipelines = scopedPipelines();
+    const configuredIds = configuredSequenceIds(pipelines);
+    const definitions = Array.isArray(window.DATA.sequences) ? window.DATA.sequences : window.titanSequenceLibrary.sequences;
+    return definitions.reduce(function (totals, sequence) {
+      if (!sequenceAppliesToScope(sequence, pipelines, configuredIds)) return totals;
+      const base = window.titanSequenceLibrary.performance[sequence.id];
+      const performance = window.titanSequenceLibrary.performanceForRange(base, rangeValue);
+      if (!performance) return totals;
+      totals.enrollments += performance.totalEnrollments;
+      totals.replies += performance.replies;
+      performance.activities.forEach(function (activity) {
+        if (activity.type !== 'Email') return;
+        totals.sent += activity.triggered;
+        totals.opened += activity.opened || 0;
+      });
+      return totals;
+    }, { enrollments: 0, sent: 0, opened: 0, replies: 0 });
+  }
+
+  function dashboardRate(value, total) {
+    return total ? ((value / total) * 100).toFixed(1) + '%' : '0.0%';
+  }
+
+  function emailPerformanceTile(span) {
+    const range = prefs().emailRange;
+    const totals = sequencePerformanceAggregate(range);
+    const openPercent = totals.sent ? (totals.opened / totals.sent) * 100 : 0;
+    const replyPercent = totals.enrollments ? (totals.replies / totals.enrollments) * 100 : 0;
+    const options = window.titanSequenceLibrary.performanceRanges.map(function (item) {
+      return '<option value="' + item.value + '"' + (item.value === range ? ' selected' : '') + '>' + esc(item.label) + '</option>';
     }).join('');
-    const spoken = steps.map(function (st) {
-      return st.n.toLocaleString() + ' ' + st.name.toLowerCase() + (st.base ? '' : ' (' + pct(st) + '%)');
-    }).join(', ');
-    const body = '<div class="mail-fun" role="img" aria-label="Email engagement: ' + esc(spoken) + '">' + rows + '</div>' +
-      '<div class="mail-foot">Mock data for now.</div>';
-    return tile({ span: span, accent: C_OPEN, title: 'Email engagement',
-      meta: 'All mail · ' + MAIL_STATS.period, body: body });
+    const rows = [
+      { label: 'Emails sent', value: totals.sent.toLocaleString(), detail: 'emails', width: totals.sent ? 100 : 0, color: C_OPEN },
+      { label: 'Open rate', value: dashboardRate(totals.opened, totals.sent), detail: totals.opened.toLocaleString() + ' opened', width: openPercent, color: C_AVG },
+      { label: 'Reply rate', value: dashboardRate(totals.replies, totals.enrollments), detail: totals.replies.toLocaleString() + ' of ' + totals.enrollments.toLocaleString() + ' enrolled', width: replyPercent, color: C_WON },
+    ];
+    const header = '<div class="tile-head tile-head--responsive"><span class="tile-title">Email performance</span>' +
+      '<div class="dash-tile-actions"><select class="ds-input dash-email-range" data-dashboard-email-range aria-label="Email performance duration">' + options + '</select></div></div>';
+    const body = '<div class="dash-email-infographic" aria-label="Cumulative email performance for the selected pipelines">' + rows.map(function (row) {
+      return '<div class="dash-email-row"><span class="dash-email-name"><span class="dash-email-dot" style="background:' + esc(row.color) + '"></span>' + esc(row.label) + '</span>' +
+        '<span class="dash-email-track"><span class="dash-email-fill mail-fill" style="width:' + Math.max(0, Math.min(100, row.width)).toFixed(1) + '%;background:' + esc(row.color) + '"></span></span>' +
+        '<span class="dash-email-result"><span class="dash-email-figure">' + esc(row.value) + '</span><span class="dash-email-detail">' + esc(row.detail) + '</span></span></div>';
+    }).join('') + '</div>';
+    return '<section class="tile" style="grid-column:span ' + span + ';--accent:' + C_OPEN + '">' + header + body + '</section>';
   }
 
   // ── Focus list ───────────────────────────────────────────────────────────────
@@ -889,24 +1015,26 @@
   // ── Render ────────────────────────────────────────────────────────────────────
   function render() {
     const host = document.getElementById('d-content');
-    if (!scopedCards().length) {
-      host.innerHTML = '<div class="dash-empty">Nothing to chart yet — add records to a pipeline and they’ll show up here.</div>';
-      return;
-    }
+    const hasCards = Boolean(scopedCards().length);
 
     let html = '';
-    if (isShown('kpis')) html += kpiTiles();
+    if (hasCards && isShown('kpis')) html += kpiTiles();
+    const showUpcoming = isShown('upcoming');
+    const showMail = isShown('mail');
+    const showBreakdown = hasCards && isShown('breakdown');
+    const stackBesideActivities = showUpcoming && showMail && showBreakdown;
+    if (showUpcoming) html += upcomingTile(showMail ? 2 : 4, stackBesideActivities);
+    if (showMail) html += emailPerformanceTile(showUpcoming ? 2 : 4);
+    if (stackBesideActivities) html += breakdownTile(2);
 
-    // Chart tiles, paired two-up in this order: the stage/pipeline breakdown, then
-    // the amount histogram (money boards only), then the source split. So a sales
-    // board reads "open amount by pipeline" beside "amount spread", and a hiring
-    // board reads "by stage" beside "by source". A lone tile at the end of an odd
-    // count stretches to the full width rather than leaving half a row empty.
+    // The tall activity preview occupies the left column while email performance
+    // and the pipeline breakdown stack on its right. The remaining analytical
+    // charts then pair Amount spread with By source. If a card in that composition
+    // is hidden, the regular pairing logic prevents a stranded half-row.
     const charts = [];
-    if (isShown('breakdown')) charts.push(breakdownTile);
-    if (isShown('distribution')) charts.push(distributionTile);
-    if (isShown('sources')) charts.push(function (s) { return sourcePieTile('By source', 'source', s, { min: 2 }); });
-    if (isShown('mail')) charts.push(mailTile);
+    if (showBreakdown && !stackBesideActivities) charts.push(breakdownTile);
+    if (hasCards && isShown('distribution')) charts.push(distributionTile);
+    if (hasCards && isShown('sources')) charts.push(function (s) { return sourcePieTile('By source', 'source', s, { min: 2 }); });
     const rendered = charts.map(function (fn) { return { fn: fn, html: fn(2) }; }).filter(function (r) { return r.html; });
     if (rendered.length % 2 === 1) {
       const last = rendered[rendered.length - 1];
@@ -914,7 +1042,7 @@
     }
     html += rendered.map(function (r) { return r.html; }).join('');
 
-    if (isShown('top')) html += topTile(4);
+    if (hasCards && isShown('top')) html += topTile(4);
 
     html = html ? '<div class="bento">' + html + '</div>'
                 : '<div class="dash-empty">Every section is hidden. Use <b>Customize</b> to bring some back.</div>';
@@ -1101,6 +1229,14 @@
     fillScope();
     render();
     wireAssistant();
+    document.getElementById('d-content').addEventListener('change', async function (event) {
+      if (event.target.dataset.dashboardEmailRange === undefined) return;
+      const value = event.target.value;
+      if (!window.titanSequenceLibrary.performanceRanges.some(function (item) { return item.value === value; })) return;
+      const saving = savePrefs({ emailRange: value });
+      render();
+      if (!await saving) document.getElementById('d-note').textContent = 'Duration saved for this session only.';
+    });
     document.getElementById('d-customize').addEventListener('click', openCustomize);
   })();
 </script>

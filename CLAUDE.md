@@ -200,6 +200,42 @@ a three-dot menu) · Upcoming activities · Sequences · Contacts · Companies �
 component in `<head>`, so its later definitions win. That overlap is deliberate but it is
 a contract: rename one of those and the board's sidebar breaks.
 
+## Dashboard activity and email sections
+
+The dashboard keeps its existing pipeline-scoped bento. On wide screens, Upcoming activities is a
+tall left-hand card while Email performance and the pipeline breakdown stack to its right; Amount
+spread and By source then share the following row. If one of the cards needed for that composition
+is hidden through Customize, the remaining cards return to normal two-up pairing without leaving a
+stranded half-row. Everything stacks at narrow dashboard widths. Upcoming activities shows at most
+six persisted `card.upcomingActivities` across the selected pipeline scope, ordered overdue first, then by the
+soonest understood due date, with undated items last. Rows show activity and record context, the
+record owner, and due text, and navigate to the related record. `See all activities` goes to
+`/crm/activities` with persona context preserved. The card does not repeat an Upcoming activities
+title above an Activity column: its first column is labeled `Upcoming activity`, and the navigation
+link sits at the bottom-right. The preview is deliberately read-only; completion stays on the full
+Upcoming activities page.
+
+`crm-activities.js` owns activity type labels/icons, conservative parsing of the existing display-
+string dates, and the shared flatten/sort routine used by both `activities.html` and
+`dashboard.html`. Do not copy this logic back into either page. These strings are not canonical
+timestamps; unreadable dates remain last. A future scheduler should add a real `dueAt` value rather
+than making this parser more speculative.
+
+Email performance follows the dashboard's selected pipeline scope and uses a compact three-row
+infographic for Emails sent, Open rate and Reply rate, plus the same
+7-day, 30-day, 90-day and all-time duration vocabulary as sequence Performance. Reply rate remains
+replies divided by enrollments; the row detail states that denominator. The duration is stored as
+`DATA.dashboard.emailRange`. Both this
+dashboard aggregate and the sequence pages read the shared fixture source and range scaler in
+`titan-sequences.js`; there must not be a separate dashboard mail-stat constant. Both dashboard
+sections are independently hideable through Customize.
+
+The dashboard first resolves sequences explicitly configured in the selected pipelines' stage
+entry, idle or exit actions and cumulatively aggregates each matching sequence once. Older fixture
+sequences only carry labels such as `Sales pipeline · Lead`; when no explicit sequence assignment
+exists, those labels provide a pipeline-type fallback. The Email performance card does not include
+an `Across all sequences` footer or a navigation link.
+
 ## Sequences
 
 `/crm/sequences` is a global prototype library with persona-scoped server persistence. It shows existing
@@ -208,7 +244,7 @@ which follows the Full-page settings pattern and does not mount the global CRM s
 Its page-local rail sits below the full-width header and has four hash-addressable sections:
 Sequence flow, Performance, Details and Sending schedule. Both routes preserve `?u=<persona>`
 and survive a cold load. `titan-sequences.js` owns the small shared set of sales email
-templates plus the migration fallback sequences. `sequences.html` and
+templates, migration fallback sequences, prototype performance fixtures and range scaling. `sequences.html` and
 `pipeline-settings.html` load the live sequence definitions from `/api/sequences`; when an
 older persona document has no `sequences` field, the sequence page seeds it from that fallback.
 The page links the two design-system entry points and composes controls, fields, menus, cards,
@@ -263,9 +299,20 @@ the accessible label `Add to flow`. For every action after the starting action, 
 two-stage wizard with simple `Step 1 of 2` and `Step 2 of 2` progress labels rather than a graphical
 stepper. `Set the condition` exposes wait duration and `After wait, continue`, then `Choose an action`
 offers email, call reminder and task. Both stage headings render as prominent uppercase headings,
-while the `Step N of 2` progress copy remains the smaller supporting label.
-Only one stage is visible at a time, Back returns to condition configuration, and clicking an action on the second stage adds the
-configured delay and action with no further confirmation. The popover has an upward-pointing tail centered on the blue plus.
+while the `Step N of 2` progress copy remains the smaller supporting label. Both strings are stored
+in uppercase in the rendered markup rather than relying on text transformation.
+The stage heading sits at the upper-left of the wizard header and the `STEP N OF 2` label aligns to
+the upper-right on the same row. A subtle divider and bottom padding separate this header region
+from the stage controls below it. The divider spans the full inner width of the popover while the
+heading copy remains aligned with the padded controls.
+Extra space below the divider gives the first control group more separation from the header without
+loosening the spacing within the rest of the stage.
+Only one stage is visible at a time. On the second stage, the action buttons are explicit selectable
+options with a clear selected state. `Back` sits at the bottom-left and `Add action` at the
+bottom-right; the add button remains disabled until an action is selected. Back returns to condition
+configuration without losing the current selection, and Add action commits the configured delay and
+selected action. The second-stage footer has additional top spacing so both controls sit distinctly
+below the action choices. The popover has an upward-pointing tail centered on the blue plus.
 The first activity chosen from a new sequence's starting point runs immediately and does not receive
 an automatic delay. Later additions begin with a visible one-day wait and default the continuation
 condition to `If there is no reply` whenever an earlier email exists, but users review and may change
@@ -523,7 +570,7 @@ records and is served through the API. Adding one is documented in `api/_github.
 ```
 { currentPipelineId, pipelineSeq,
   contactFields[],            // the contact schema (Contacts page "Fields")
-  dashboard: { type, scope, hidden[] },   // dashboard prefs, persisted like the rest
+  dashboard: { type, scope, hidden[], emailRange }, // dashboard prefs, persisted like the rest
   sequences[],                // persona-scoped sequence definitions; /api/sequences owns writes
   pipelines: { <id>: { id, name, entity, plural, color, type,
                        stages[], cards[], hiddenFields[], shownFields[],

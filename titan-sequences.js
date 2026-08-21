@@ -134,6 +134,87 @@
     },
   ];
 
+  // Shared prototype performance source. Both the sequence screens and dashboard
+  // aggregate this same shape so their sent/open/reply figures cannot drift.
+  var performance = {
+    'new-lead-follow-up': {
+      totalEnrollments: 128,
+      replies: 18,
+      trend: [
+        { label: 'Jul 13', value: 18 }, { label: 'Jul 20', value: 21 }, { label: 'Jul 27', value: 24 },
+        { label: 'Aug 3', value: 19 }, { label: 'Aug 10', value: 23 }, { label: 'Aug 17', value: 23 },
+      ],
+      activities: [
+        { name: 'Call the new lead', type: 'Call reminder', triggered: 128 },
+        { name: 'Initial outreach', type: 'Email', triggered: 116, opened: 72, replied: 12 },
+        { name: 'Follow-up', type: 'Email', triggered: 92, opened: 50, replied: 6 },
+      ],
+    },
+    'discovery-follow-up': {
+      totalEnrollments: 74,
+      replies: 9,
+      trend: [
+        { label: 'Jul 13', value: 10 }, { label: 'Jul 20', value: 12 }, { label: 'Jul 27', value: 11 },
+        { label: 'Aug 3', value: 14 }, { label: 'Aug 10', value: 13 }, { label: 'Aug 17', value: 14 },
+      ],
+      activities: [
+        { name: 'Post-call recap', type: 'Email', triggered: 74, opened: 51, replied: 9 },
+        { name: 'Prepare the proposal', type: 'Task', triggered: 61 },
+        { name: 'Call to confirm next steps', type: 'Call reminder', triggered: 53 },
+      ],
+    },
+    'proposal-follow-up': {
+      totalEnrollments: 52,
+      replies: 6,
+      trend: [
+        { label: 'Jul 13', value: 7 }, { label: 'Jul 20', value: 9 }, { label: 'Jul 27', value: 8 },
+        { label: 'Aug 3', value: 10 }, { label: 'Aug 10', value: 9 }, { label: 'Aug 17', value: 9 },
+      ],
+      activities: [
+        { name: 'Proposal', type: 'Email', triggered: 52, opened: 31, replied: 4 },
+        { name: 'Call about the proposal', type: 'Call reminder', triggered: 45 },
+        { name: 'Final check-in', type: 'Email', triggered: 39, opened: 21, replied: 2 },
+      ],
+    },
+  };
+
+  var performanceRanges = [
+    { value: '7d', label: 'Last 7 days', factor: 0.18, trendLabels: ['Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed'] },
+    { value: '30d', label: 'Last 30 days', factor: 0.65, trendLabels: ['Jul 21', 'Jul 28', 'Aug 4', 'Aug 11'] },
+    { value: '90d', label: 'Last 90 days', factor: 1, trendLabels: ['May 25', 'Jun 8', 'Jun 22', 'Jul 6', 'Jul 20', 'Aug 3'] },
+    { value: 'all', label: 'All time', factor: 2.4, trendLabels: ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'] },
+  ];
+
+  function performanceForRange(basePerformance, rangeValue) {
+    if (!basePerformance) return null;
+    var range = performanceRanges.find(function (item) { return item.value === rangeValue; }) || performanceRanges[1];
+    var totalEnrollments = Math.max(1, Math.round(basePerformance.totalEnrollments * range.factor));
+    var activities = basePerformance.activities.map(function (item) {
+      var scaled = {
+        name: item.name,
+        type: item.type,
+        triggered: Math.max(0, Math.round(item.triggered * range.factor)),
+      };
+      if (typeof item.opened === 'number') scaled.opened = Math.max(0, Math.round(item.opened * range.factor));
+      if (typeof item.replied === 'number') scaled.replied = Math.max(0, Math.round(item.replied * range.factor));
+      return scaled;
+    });
+    var replies = activities.reduce(function (sum, item) { return sum + (item.replied || 0); }, 0);
+    var weights = range.trendLabels.map(function (_, index) {
+      return basePerformance.trend[index % basePerformance.trend.length].value;
+    });
+    var weightTotal = weights.reduce(function (sum, value) { return sum + value; }, 0) || 1;
+    var allocated = 0;
+    var trend = range.trendLabels.map(function (label, index) {
+      var value = index === range.trendLabels.length - 1
+        ? totalEnrollments - allocated
+        : Math.floor((totalEnrollments * weights[index]) / weightTotal);
+      allocated += value;
+      return { label: label, value: value };
+    });
+    return { totalEnrollments: totalEnrollments, replies: replies, activities: activities, trend: trend, range: range };
+  }
+
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
   }
@@ -141,6 +222,9 @@
   window.titanSequenceLibrary = {
     templates: templates,
     sequences: sequences,
+    performance: performance,
+    performanceRanges: performanceRanges,
+    performanceForRange: performanceForRange,
     clone: clone,
     getTemplate: function (id) {
       return templates.find(function (item) { return item.id === id; }) || null;
