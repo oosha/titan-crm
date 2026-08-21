@@ -542,6 +542,22 @@
             "name": "Joanna Hiu",
             "email": "hello@joannahiuartist.com"
           }
+        },
+        {
+          "id": 1,
+          "deal": "Sarah - bouquet",
+          "company": "outlook",
+          "contact": "Sarah Chen",
+          "contactEmail": "sarah.chen@outlook.com",
+          "value": 0,
+          "stage": "drop-off-scheduled",
+          "lastActivity": "just now",
+          "activityType": "Email received",
+          "overdue": false,
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
         }
       ],
       "hiddenFields": [
