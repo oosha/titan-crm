@@ -236,6 +236,22 @@
             "name": "Joanna Hiu",
             "email": "hello@joannahiuartist.com"
           }
+        },
+        {
+          "id": 2,
+          "deal": "Square flowers",
+          "company": "squareup",
+          "contact": "Square",
+          "contactEmail": "notifications@squareup.com",
+          "value": 0,
+          "stage": "new-inquiry",
+          "lastActivity": "just now",
+          "activityType": "Email received",
+          "overdue": false,
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
         }
       ],
       "hiddenFields": [
