@@ -2754,67 +2754,93 @@
     }
     .crm-discovery-overlay.open { display: flex; }
     .crm-discovery-modal {
-      width: min(100%, 900px); min-height: 510px; display: grid; grid-template-columns: .93fr 1.07fr;
-      background: #fff; border-radius: 14px; box-shadow: 0 24px 60px rgba(21, 31, 48, 0.26); overflow: hidden;
+      position: relative; width: min(100%, 820px); max-height: calc(100vh - 48px);
+      display: flex; flex-direction: column; background: #fff; border-radius: 14px;
+      box-shadow: 0 24px 60px rgba(21, 31, 48, 0.26); overflow-y: auto;
     }
-    .crm-discovery-left { display: flex; flex-direction: column; min-width: 0; }
-    .crm-discovery-body { padding: 42px 44px 30px; position: relative; display: flex; flex-direction: column; }
+    .crm-discovery-left { order: 2; display: flex; flex-direction: column; min-width: 0; }
+    .crm-discovery-body {
+      display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+      column-gap: 48px; align-items: start;
+      padding: 30px 48px 18px; text-align: left;
+    }
     .crm-discovery-close {
-      position: absolute; top: 16px; right: 16px; width: 30px; height: 30px;
+      position: absolute; z-index: 3; top: 16px; right: 16px; width: 30px; height: 30px;
       display: grid; place-items: center; border: 0; border-radius: 8px;
       background: #f4f5f7; color: #687386; font: 24px/1 Arial, sans-serif; cursor: pointer;
     }
     .crm-discovery-close:hover { background: #e9edf3; color: #303846; }
     .crm-discovery-mark { display: none; }
-    .crm-discovery-kicker { display: inline-flex; width: fit-content; padding: 5px 10px; border-radius: 999px; color: #fff; background: #6542df; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
-    .crm-discovery-title { margin: 24px 26px 8px 0; color: #20242c; font-size: 27px; line-height: 1.18; letter-spacing: -.025em; }
-    .crm-discovery-copy { margin: 0; color: #687386; font-size: 14px; line-height: 1.5; }
-    .crm-discovery-record {
-      display: flex; align-items: center; gap: 12px; margin: 20px 0 20px; padding: 12px;
-      border: 1px solid #e1e6ee; border-radius: 11px; background: #fbfcfe;
-    }
-    .crm-discovery-avatar {
-      width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 auto;
-      border-radius: 10px; background: #e7f0fe; color: #246ff0; font-size: 13px; font-weight: 700;
-    }
-    .crm-discovery-name { color: #262b35; font-size: 14px; font-weight: 700; }
-    .crm-discovery-meta { margin-top: 3px; color: #7d8796; font-size: 12.5px; }
-    .crm-discovery-value { padding: 0; border: 0; background: transparent; }
-    .crm-discovery-value-title { color: #303846; font-size: 13px; font-weight: 700; }
-    .crm-discovery-value-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 14px; }
-    .crm-discovery-value-item { display: flex; align-items: flex-start; gap: 9px; color: #485363; font-size: 13px; line-height: 1.35; }
-    .crm-discovery-value-dot { width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: #367cf1; flex: 0 0 auto; }
-    .crm-discovery-footer { display: flex; flex-direction: column-reverse; align-items: stretch; gap: 10px; margin-top: auto; padding: 22px 0 0; border-top: 0; }
+    .crm-discovery-kicker { display: inline-flex; align-self: center; width: fit-content; margin: 0 0 18px; padding: 5px 10px; border-radius: 999px; color: #fff; background: #6542df; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+    .crm-discovery-intro { min-width: 0; }
+    .crm-discovery-title { margin: 0; color: #20242c; font-size: 25px; font-weight: 700; line-height: 1.2; letter-spacing: -.015em; }
+    .crm-discovery-copy { max-width: 410px; margin: 8px 0 0; color: #7b8492; font-size: 14px; line-height: 1.45; }
+    .crm-discovery-value { width: 100%; max-width: 540px; margin: 0; padding: 0; border: 0; background: transparent; }
+    .crm-discovery-value-grid { display: grid; grid-template-columns: 1fr; gap: 17px; }
+    .crm-discovery-value-item { display: flex; align-items: flex-start; justify-content: flex-start; gap: 11px; color: #4d5665; font-size: 14px; line-height: 1.45; text-align: left; }
+    .crm-discovery-value-item strong { color: #303744; font-weight: 700; }
+    .crm-discovery-value-dot { width: 16px; flex: 0 0 16px; color: #367cf1; font-size: 15px; font-weight: 700; line-height: 1.35; }
+    .crm-discovery-value-dot::before { content: '✓'; }
+    .crm-discovery-footer { display: flex; flex-direction: row; justify-content: flex-end; align-items: center; gap: 10px; padding: 20px 48px 26px; border-top: 0; }
+    .crm-discovery-footer .crm-discovery-primary { min-width: 250px; }
+    .crm-discovery-footer .crm-discovery-later { min-width: 110px; }
     .crm-discovery-later { min-height: 38px; border: 1px solid #b9d2fb; border-radius: 7px; background: #fff; color: #246ff0; font-size: 13px; font-weight: 600; cursor: pointer; }
     .crm-discovery-later:hover { color: #303846; }
     .crm-discovery-primary { min-height: 38px; border: 0; border-radius: 7px; padding: 10px 15px; background: #246ff0; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 1px 2px rgba(27, 86, 185, .28); }
     .crm-discovery-primary:hover { background: #1d62d8; }
-    .crm-discovery-visual { position: relative; display: flex; align-items: center; justify-content: center; padding: 48px 38px 34px; background: #edf4ff; overflow: hidden; }
-    .crm-discovery-orbit { position: absolute; width: 420px; height: 420px; border: 36px solid rgba(111, 155, 233, .08); border-radius: 50%; }
-    .crm-discovery-product { position: relative; width: 100%; max-width: 430px; border: 1px solid #dbe4f2; border-radius: 10px; background: #fff; box-shadow: 0 14px 30px rgba(58, 87, 132, .16); overflow: hidden; }
-    .crm-discovery-product-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #edf0f5; color: #26354d; font-size: 12px; font-weight: 700; }
-    .crm-discovery-product-brand { display: flex; align-items: center; gap: 7px; }
-    .crm-discovery-product-brand::before { content: '✦'; display: grid; place-items: center; width: 19px; height: 19px; border-radius: 6px; color: #246ff0; background: #e8f0ff; font-size: 11px; }
-    .crm-discovery-product-live { color: #3a9a6c; font-size: 10px; font-weight: 700; }
-    .crm-discovery-product-body { padding: 16px 16px 14px; }
-    .crm-discovery-product-contact { display: flex; align-items: center; gap: 9px; }
-    .crm-discovery-product-contact b { display: block; color: #2b3442; font-size: 13px; }
-    .crm-discovery-product-contact span { display: block; margin-top: 2px; color: #8a94a3; font-size: 10.5px; }
-    .crm-discovery-product-avatar { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; background: #e8f0ff; color: #246ff0; font-size: 11px; font-weight: 700; }
-    .crm-discovery-product-stage { margin: 14px 0; padding: 8px 10px; border-radius: 6px; background: #eaf3ff; color: #246ff0; font-size: 11px; font-weight: 700; }
-    .crm-discovery-product-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 10px; }
-    .crm-discovery-product-card { padding: 10px; border: 1px solid #edf0f4; border-radius: 7px; }
-    .crm-discovery-product-label { color: #9aa3b0; font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-    .crm-discovery-product-line { height: 6px; margin-top: 8px; border-radius: 5px; background: #dfe8f6; }
-    .crm-discovery-product-line.short { width: 64%; }
-    .crm-discovery-product-file { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: #536074; font-size: 10px; }
-    .crm-discovery-product-file::before { content: ''; width: 7px; height: 9px; border: 1px solid #90a1ba; border-radius: 1px; }
+    .crm-discovery-visual {
+      order: 1; position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start;
+      box-sizing: border-box; height: 400px; padding: 24px 0 0;
+      background: #edf4ff; overflow: hidden;
+    }
+    .crm-discovery-visual::after {
+      content: ''; position: absolute; z-index: 2; pointer-events: none;
+      left: 0; right: 0; bottom: 0; height: 24px;
+      background: linear-gradient(to bottom, transparent, rgba(39, 61, 95, .13));
+    }
+    .crm-discovery-carousel {
+      position: relative; width: 100%; max-width: none; aspect-ratio: 962 / 607;
+      overflow: hidden;
+    }
+    .crm-discovery-carousel-track {
+      display: flex; width: 300%; height: 100%; transform: translateX(0);
+    }
+    .crm-discovery-overlay.open .crm-discovery-carousel-track {
+      animation: crm-discovery-carousel 11s ease-in-out infinite;
+    }
+    .crm-discovery-carousel-slide {
+      display: flex; align-items: flex-start; justify-content: center;
+      width: 33.333333%; height: 100%; flex: 0 0 33.333333%;
+    }
+    .crm-discovery-carousel-screen {
+      display: block; width: 80%; max-width: 700px; height: auto;
+      object-fit: contain; object-position: center top;
+      filter: drop-shadow(0 14px 22px rgba(38, 55, 82, .22));
+    }
+    @keyframes crm-discovery-carousel {
+      0%, 42%  { transform: translateX(0); }
+      49%, 91% { transform: translateX(-33.333333%); }
+      98%, 100% { transform: translateX(-66.666667%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .crm-discovery-overlay.open .crm-discovery-carousel-track { animation: none; }
+    }
+    @media (max-width: 760px) {
+      .crm-discovery-visual { height: 350px; }
+      .crm-discovery-body { display: flex; flex-direction: column; align-items: center; text-align: center; }
+      .crm-discovery-value { margin-top: 24px; }
+      .crm-discovery-value-grid { gap: 14px; }
+    }
     @media (max-width: 520px) {
       .crm-discovery-overlay { padding: 14px; }
       .crm-discovery-modal { display: block; min-height: 0; }
-      .crm-discovery-visual { display: none; }
+      .crm-discovery-visual { height: auto; padding: 20px 22px 2px; }
+      .crm-discovery-carousel { display: none; }
       .crm-discovery-body { padding: 28px 22px 22px; }
-      .crm-discovery-footer { padding: 18px 0 0; }
+      .crm-discovery-footer { flex-direction: column; align-items: center; padding: 0 22px 22px; }
+      .crm-discovery-footer .crm-discovery-primary,
+      .crm-discovery-footer .crm-discovery-later { width: min(100%, 320px); }
       .crm-discovery-primary { padding: 10px 12px; }
     }
 
@@ -6118,10 +6144,6 @@
     function openCrmDiscovery(thread, trigger) {
       var modal = document.getElementById('crm-discovery-modal');
       if (!modal || !thread || !thread.crmSuggestion) return;
-      var record = thread.crmSuggestion.suggestedRecord || {};
-      document.getElementById('crm-discovery-name').textContent = record.contact || thread.from || 'This contact';
-      document.getElementById('crm-discovery-meta').textContent = (record.name || 'New lead') + ' · ' + (record.source || thread.source || 'Email');
-      document.getElementById('crm-discovery-avatar').textContent = initialsOfName(record.contact || thread.from || '?');
       crmDiscoveryTrigger = trigger || null;
       modal.classList.add('open');
       modal.setAttribute('aria-hidden', 'false');
@@ -7425,46 +7447,33 @@
 
   <div class="crm-discovery-overlay" id="crm-discovery-modal" role="dialog" aria-modal="true" aria-labelledby="crm-discovery-title" aria-hidden="true" onclick="if (event.target === this) closeCrmDiscovery()">
     <div class="crm-discovery-modal">
+      <button class="crm-discovery-close" id="crm-discovery-close" type="button" aria-label="Close" onclick="closeCrmDiscovery()">×</button>
       <div class="crm-discovery-left">
         <div class="crm-discovery-body">
-          <button class="crm-discovery-close" id="crm-discovery-close" type="button" aria-label="Close" onclick="closeCrmDiscovery()">×</button>
-          <div class="crm-discovery-kicker">✦ Introducing Titan CRM ✦</div>
-          <h2 class="crm-discovery-title" id="crm-discovery-title">A home for every customer relationship</h2>
-          <p class="crm-discovery-copy">Keep this contact's related emails, meetings, notes, invoices, and files together in one place.</p>
-          <div class="crm-discovery-record">
-            <div class="crm-discovery-avatar" id="crm-discovery-avatar">D</div>
-            <div>
-              <div class="crm-discovery-name" id="crm-discovery-name">Daniel Harper</div>
-              <div class="crm-discovery-meta" id="crm-discovery-meta">New lead · Contact submission</div>
-            </div>
+          <div class="crm-discovery-intro">
+            <h2 class="crm-discovery-title" id="crm-discovery-title">Your customers, all in one place</h2>
+            <p class="crm-discovery-copy">Organize relationships and keep every opportunity moving forward.</p>
           </div>
           <div class="crm-discovery-value">
-            <div class="crm-discovery-value-title">Everything about this relationship, in context</div>
             <div class="crm-discovery-value-grid">
-              <div class="crm-discovery-value-item"><span class="crm-discovery-value-dot"></span>Related emails</div>
-              <div class="crm-discovery-value-item"><span class="crm-discovery-value-dot"></span>Meetings and notes</div>
-              <div class="crm-discovery-value-item"><span class="crm-discovery-value-dot"></span>Invoices and files</div>
-              <div class="crm-discovery-value-item"><span class="crm-discovery-value-dot"></span>Progress in one pipeline</div>
+              <div class="crm-discovery-value-item"><span class="crm-discovery-value-dot"></span><span><strong>Keep everything connected</strong> across conversations and files</span></div>
+              <div class="crm-discovery-value-item"><span class="crm-discovery-value-dot"></span><span><strong>Track every opportunity</strong> through a clear pipeline</span></div>
+              <div class="crm-discovery-value-item"><span class="crm-discovery-value-dot"></span><span><strong>Never miss a follow-up</strong> with next steps in one place</span></div>
             </div>
           </div>
         </div>
         <div class="crm-discovery-footer">
           <button class="crm-discovery-later" type="button" onclick="closeCrmDiscovery()">Not now</button>
-          <button class="crm-discovery-primary" type="button" onclick="startCrmPipelineSetup()">Create pipeline and add lead</button>
+          <button class="crm-discovery-primary" type="button" onclick="startCrmPipelineSetup()">Create your first pipeline</button>
         </div>
       </div>
       <div class="crm-discovery-visual" aria-hidden="true">
-        <div class="crm-discovery-orbit"></div>
-        <div class="crm-discovery-product">
-          <div class="crm-discovery-product-head"><span class="crm-discovery-product-brand">Titan CRM</span><span class="crm-discovery-product-live">ALL TOGETHER</span></div>
-          <div class="crm-discovery-product-body">
-            <div class="crm-discovery-product-contact"><div class="crm-discovery-product-avatar">DH</div><div><b>Daniel Harper</b><span>Contact submission</span></div></div>
-            <div class="crm-discovery-product-stage">New lead</div>
-            <div class="crm-discovery-product-grid">
-              <div class="crm-discovery-product-card"><div class="crm-discovery-product-label">Recent activity</div><div class="crm-discovery-product-line"></div><div class="crm-discovery-product-line short"></div></div>
-              <div class="crm-discovery-product-card"><div class="crm-discovery-product-label">Next step</div><div class="crm-discovery-product-line short"></div></div>
-            </div>
-            <div class="crm-discovery-product-card" style="margin-top:10px;"><div class="crm-discovery-product-label">Files</div><div class="crm-discovery-product-file">Memorial flowers.pdf</div><div class="crm-discovery-product-file">Invoice.pdf</div></div>
+        <div class="crm-discovery-kicker">✦ Introducing Titan CRM ✦</div>
+        <div class="crm-discovery-carousel">
+          <div class="crm-discovery-carousel-track">
+            <div class="crm-discovery-carousel-slide"><img class="crm-discovery-carousel-screen" src="/introModal/inbox%20screen.svg" alt=""></div>
+            <div class="crm-discovery-carousel-slide"><img class="crm-discovery-carousel-screen" src="/introModal/pipelineScreen.svg" alt=""></div>
+            <div class="crm-discovery-carousel-slide"><img class="crm-discovery-carousel-screen" src="/introModal/inbox%20screen.svg" alt=""></div>
           </div>
         </div>
       </div>
