@@ -546,13 +546,12 @@
   .cam2-item .ic svg { width: 15px; height: 15px; }
 
   /* ── AI summary toggle (matches the mailclient CRM panel's) ── */
-  /* Was an unlabelled sparkle that revealed a bare paragraph — nothing said the
-     text was generated rather than typed by a colleague. The tint, the rule and
-     the "Written from this record" line are all doing that one job. */
+  /* The summary card makes it clear that this is generated context rather than
+     a note written by a colleague. */
   .ov-ai-btn { flex-shrink: 0; }
   .ov-ai-card {
-    display: none; margin-top: var(--space-150);
-    border: 1px solid var(--border-accent, var(--accent-primary));
+    display: none; margin: var(--space-200) 0;
+    border: 1px solid var(--border-subtle);
     border-radius: 10px; overflow: hidden;
     background: linear-gradient(180deg, var(--accent-subtle), var(--surface-primary) 70%);
   }
@@ -564,8 +563,8 @@
   }
   .ov-ai-spark { color: var(--accent-primary); flex-shrink: 0; }
   .ov-ai-title { font-size: var(--text-2xs); font-weight: var(--weight-semi); letter-spacing: .06em; text-transform: uppercase; color: var(--text-accent); }
-  .ov-ai-note { margin-left: auto; font-size: var(--text-2xs); color: var(--text-secondary); }
   .ov-ai-body { padding: var(--space-150) var(--space-200) var(--space-200); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); }
+  .ov-ai-next-action { display: block; margin-top: var(--space-100); }
   .ov-title-row { display: flex; align-items: center; gap: 8px; }
 
   /* App switcher — opens from the top-left tab-switch button (this page reuses the
@@ -638,7 +637,6 @@
             <div class="ov-ai-head">
               <svg class="ov-ai-spark" width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
               <span class="ov-ai-title">AI summary</span>
-              <span class="ov-ai-note">Written from this record</span>
             </div>
             <div class="ov-ai-body" id="ov-ai-summary-text"></div>
           </div>
@@ -1221,7 +1219,22 @@
     let summary = who + ' is at the "' + stageLabel + '" stage' +
       (card.deal ? ' for ' + card.deal : '') + (amount ? ' (' + amount + ')' : '') + '.';
     if (card.note) summary += ' ' + card.note;
-    document.getElementById('ov-ai-summary-text').textContent = summary;
+    const next = card.nextActivity;
+    const queued = !next && Array.isArray(card.upcomingActivities) && card.upcomingActivities[0];
+    const nextAction = next
+      ? formatNextActivity(next)
+      : (queued ? queued.text + (queued.date ? ' · ' + queued.date : '') : '');
+    const summaryEl = document.getElementById('ov-ai-summary-text');
+    summaryEl.textContent = summary;
+    const nextLine = document.createElement('span');
+    nextLine.className = 'ov-ai-next-action';
+    if (nextAction) {
+      const label = document.createElement('strong');
+      label.textContent = 'Next activity:';
+      nextLine.appendChild(label);
+      nextLine.appendChild(document.createTextNode(' ' + nextAction + '.'));
+    } else nextLine.textContent = 'No next action planned.';
+    summaryEl.appendChild(nextLine);
   }
 
   // Same per-stage color gradient the kanban board uses for its stage dots (crm.html's

@@ -2844,10 +2844,19 @@
       background: #eaf1ff; color: #1257c9; border: none; border-radius: 6px;
       padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer;
     }
-    .crm-ai-summary-text {
-      font-size: 13px; color: #333; line-height: 1.5; margin-top: 10px; display: none;
+    .crm-ai-summary-card {
+      display: none; margin: 0 0 16px; border: 1px solid #e6e8ec; border-radius: 10px;
+      overflow: hidden; background: linear-gradient(180deg, #eaf1ff, #fff 70%);
     }
-    .crm-ai-summary-text.show { display: block; }
+    .crm-ai-summary-card.show { display: block; }
+    .crm-ai-summary-head {
+      display: flex; align-items: center; gap: 6px; padding: 10px 14px 8px;
+      border-bottom: 1px solid #e6e8ec;
+    }
+    .crm-ai-summary-spark { color: #2170f4; flex-shrink: 0; }
+    .crm-ai-summary-title { font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #1257c9; }
+    .crm-ai-summary-text { padding: 12px 14px 14px; font-size: 13px; line-height: 1.6; color: #333; }
+    .crm-ai-summary-next-action { display: block; margin-top: 8px; }
     .crm-field-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 12.5px; }
     .crm-field-label { color: #888; }
     .crm-field-value { color: #222; font-weight: 500; }
@@ -4121,7 +4130,7 @@
           <div class="crm-panel-header">
             <span class="crm-record-title" id="crm-record-title">
               <span id="crm-record-name">Dashboard v2 Upgrade</span>
-              <span class="crm-ai-icon-btn" onclick="toggleAiSummary(this)" title="AI summary" aria-expanded="true" aria-controls="crm-ai-summary-text">
+              <span class="crm-ai-icon-btn" onclick="toggleAiSummary(this)" title="AI summary" aria-expanded="true" aria-controls="crm-ai-summary-card">
                 <svg width="13" height="13" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
               </span>
               <a class="crm-record-ext" title="Open in Titan CRM" onclick="openLinkedRecordInCrm()">
@@ -4134,8 +4143,15 @@
 
             <!-- 1. Opportunity info -->
             <div class="crm-section">
-              <div class="crm-ai-summary-text show" id="crm-ai-summary-text">
-                Ryan at Meridian Labs is evaluating the Dashboard v2 upgrade. Proposal was sent Jun 9; main open item is multi-theme support before he'll sign off. Next step: confirm theming scope on Monday's call.
+              <div class="crm-ai-summary-card show" id="crm-ai-summary-card">
+                <div class="crm-ai-summary-head">
+                  <svg class="crm-ai-summary-spark" width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1L8.2 5.2L12 6.5L8.2 7.8L7 12L5.8 7.8L2 6.5L5.8 5.2Z" fill="currentColor"/></svg>
+                  <span class="crm-ai-summary-title">AI summary</span>
+                </div>
+                <div class="crm-ai-summary-text" id="crm-ai-summary-text">
+                  Ryan at Meridian Labs is evaluating the Dashboard v2 upgrade. Proposal was sent Jun 9; main open item is multi-theme support before he'll sign off.
+                  <span class="crm-ai-summary-next-action"><strong>Next activity:</strong> Confirm theming scope on Monday's call.</span>
+                </div>
               </div>
               <div class="crm-opp-meta-row">
                 <span id="crm-company-logo"></span>
@@ -5939,9 +5955,9 @@
     }
 
     function toggleAiSummary(btn) {
-      const text = document.getElementById('crm-ai-summary-text');
-      if (!text) return;
-      const open = text.classList.toggle('show');
+      const card = document.getElementById('crm-ai-summary-card');
+      if (!card) return;
+      const open = card.classList.toggle('show');
       if (btn) btn.setAttribute('aria-expanded', String(open));
     }
 
@@ -6320,6 +6336,33 @@
       const s = pl && pl.stages.find(function (s) { return s.key === stageKey; });
       return s ? s.label : (stageKey || '');
     }
+    function buildAiSummary(card, stageLabel) {
+      const who = card.contact ? (card.contact + (card.company ? ' at ' + card.company : '')) : (card.company || 'This contact');
+      const amount = card.value ? ((card.currency || '$') + Number(card.value).toLocaleString()) : '';
+      let text = who + ' is at the "' + (stageLabel || card.stage || '') + '" stage for ' + (card.deal || '') + (amount ? ' (' + amount + ')' : '') + '.';
+      if (card.note) text += ' ' + card.note;
+      const next = card.nextActivity;
+      const queued = !next && Array.isArray(card.upcomingActivities) && card.upcomingActivities[0];
+      const nextAction = next
+        ? formatNextActivityText(next)
+        : (queued ? queued.text + (queued.date ? ' · ' + queued.date : '') : '');
+      return { overview: text, nextAction: nextAction };
+    }
+    function renderMailAiSummary(card, stageLabel) {
+      const sum = document.getElementById('crm-ai-summary-text');
+      if (!sum) return;
+      const summary = buildAiSummary(card, stageLabel);
+      sum.textContent = summary.overview;
+      const nextLine = document.createElement('span');
+      nextLine.className = 'crm-ai-summary-next-action';
+      if (summary.nextAction) {
+        const label = document.createElement('strong');
+        label.textContent = 'Next activity:';
+        nextLine.appendChild(label);
+        nextLine.appendChild(document.createTextNode(' ' + summary.nextAction + '.'));
+      } else nextLine.textContent = 'No next action planned.';
+      sum.appendChild(nextLine);
+    }
     function stageKeyFor(pipelineId, stageLabel) {
       const pl = REAL_PIPELINES && REAL_PIPELINES[pipelineId];
       const s = pl && pl.stages.find(function (s) { return s.label === stageLabel; });
@@ -6627,16 +6670,13 @@
       }
 
       // AI summary — a real one-line summary composed from this record's own data
-      // (same approach as opportunity-view.html's renderAiSummary), reset collapsed.
+      // (same approach as opportunity-view.html's renderAiSummary), open by default.
       const sum = document.getElementById('crm-ai-summary-text');
       if (sum) {
         const stageLabel = stageLabelFor(pl.id, card.stage);
-        const who = card.contact ? (card.contact + (card.company ? ' at ' + card.company : '')) : (card.company || 'This contact');
-        const amount = card.value ? ((card.currency || '$') + Number(card.value).toLocaleString()) : '';
-        let text = who + ' is at the "' + stageLabel + '" stage for ' + (card.deal || '') + (amount ? ' (' + amount + ')' : '') + '.';
-        if (card.note) text += ' ' + card.note;
-        sum.textContent = text;
-        sum.classList.add('show');
+        renderMailAiSummary(card, stageLabel);
+        const aiCard = document.getElementById('crm-ai-summary-card');
+        if (aiCard) aiCard.classList.add('show');
         const aiBtn = document.querySelector('.crm-ai-icon-btn');
         if (aiBtn) aiBtn.setAttribute('aria-expanded', 'true');
       }
@@ -7140,11 +7180,13 @@
         } else { note.style.display = 'none'; }
       }
 
-      // AI summary — reset
+      // AI summary — keep the record-aware card open by default.
       var sum = document.getElementById('crm-ai-summary-text');
       if (sum) {
-        sum.textContent = '';
-        sum.classList.add('show');
+        if (card) renderMailAiSummary(card, (panelRecord && panelRecord.stage) || card.stage);
+        else sum.textContent = '';
+        var aiCard = document.getElementById('crm-ai-summary-card');
+        if (aiCard) aiCard.classList.add('show');
         var aiBtn = document.querySelector('.crm-ai-icon-btn');
         if (aiBtn) aiBtn.setAttribute('aria-expanded', 'true');
       }
