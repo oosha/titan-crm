@@ -321,11 +321,10 @@
   window.toggleViewNavMenu = function (evt, pipelineId, viewId) {
     var menu = document.getElementById('view-nav-menu');
     if (!menu) { document.body.insertAdjacentHTML('beforeend', viewNavMenuHtml()); menu = document.getElementById('view-nav-menu'); }
-    var pipeMenu = document.getElementById('pipeline-nav-menu');
-    if (pipeMenu) pipeMenu.classList.remove('open');
     var wasFor = menu.dataset.viewId;
     var isOpen = menu.classList.contains('open');
-    if (isOpen && wasFor === viewId) { menu.classList.remove('open'); return; }
+    window.closePipelineNavMenu();
+    if (isOpen && wasFor === viewId) return;
     menu.dataset.pipelineId = pipelineId;
     menu.dataset.viewId = viewId;
     var r = evt.currentTarget.getBoundingClientRect();
@@ -558,9 +557,15 @@
     menu.classList.add('open');
     setTimeout(function () { document.addEventListener('click', window.closePipelineNavMenu); }, 0);
   };
+  // Closes both nav menus, not just this one. Every toggle calls this before it opens
+  // anything, so one owner of "shut whatever is open" is what stops a pipeline menu and
+  // a view menu being on screen together. crm.html overrides this; its copy does the
+  // same, and this comment is why.
   window.closePipelineNavMenu = function () {
     var menu = document.getElementById('pipeline-nav-menu');
     if (menu) menu.classList.remove('open');
+    var view = document.getElementById('view-nav-menu');
+    if (view) view.classList.remove('open');
     document.removeEventListener('click', window.closePipelineNavMenu);
   };
   window.pipelineNavMenuAction = function (kind) {

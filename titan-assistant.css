@@ -164,7 +164,9 @@
 .ai-panel {
   position: fixed; right: var(--space-300); bottom: calc(var(--space-300) + 64px);
   z-index: 70; width: 380px; max-width: calc(100vw - var(--space-400));
-  height: 560px; max-height: calc(100vh - 140px);
+  /* Tall enough that a reply and the message before it are both on screen — at 560
+     an answer of any length pushed the question out of view. */
+  height: 660px; max-height: calc(100vh - 120px);
   display: none; flex-direction: column; overflow: hidden;
   background: var(--dir-surface, var(--surface-primary));
   border: 1px solid var(--dir-hair, var(--border-subtle));

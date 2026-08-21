@@ -3888,8 +3888,13 @@
       menu.classList.add('open');
       setTimeout(function () { document.addEventListener('click', closePipelineNavMenu); }, 0);
     }
+    // Closes both nav menus, not just this one. Every toggle calls this before it
+    // opens anything, so one owner of "shut whatever is open" is what stops a pipeline
+    // menu and a view menu being on screen at the same time.
     function closePipelineNavMenu() {
       document.getElementById('pipeline-nav-menu').classList.remove('open');
+      const vm = document.getElementById('view-nav-menu');
+      if (vm) vm.classList.remove('open');
       document.removeEventListener('click', closePipelineNavMenu);
     }
     // Sub-pages used to be handed a snapshot of this sidebar's rendered HTML through
