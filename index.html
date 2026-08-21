@@ -6037,12 +6037,50 @@
     };
     const PIPELINE_ICON_SVG = '<svg class="pchip-icon" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="currentColor"/></svg>';
 
+    // Default inbox threads without a CRM record still need a usable reading view.
+    // Keep them as ordinary email data, with no pipeline association or suggestion.
+    const DEFAULT_OTHER_THREADS = {
+      t2: { from: 'Jason Miller', to: 'To: me', time: '10:45 am', subject: 'Feedback on grammar and spell check', body: ['Hi Ella,', 'I have been trying the grammar and spell check tools this week. They catch the obvious issues, but I would love a clearer way to review suggestions before applying them to a longer email.', 'Could you share whether there is a setting I may have missed?', 'Thanks,\nJason'] },
+      t4: { from: 'David Jones', to: 'To: me, Ella', time: '12:15 pm', subject: 'Flock Terms and Conditions', body: ['Hi Ella,', 'Could we set up a short meeting to discuss the latest terms and conditions? I have added two comments from our legal team that we should resolve before we sign.', 'Please let me know what time works for you this week.', 'Best,\nDavid'] },
+      t5: { from: 'Chloe', to: 'To: me', time: '1:30 pm', subject: 'Feedback on snooze feature', body: ['Hi Ella,', 'I like the direction of the snooze feature. It would be especially useful if I could choose a time from the inbox without opening each email first.', 'Happy to test another version when it is ready.', 'Chloe'] },
+      t6: { from: 'Jason Miller', to: 'To: me', time: '2:45 pm', subject: 'Feedback on link and file tracking feature', body: ['Hi Ella,', 'I reviewed the latest link and file tracking mocks. The file history is useful, but I am not sure when a link was last opened versus when the email was last viewed.', 'Could we cover that distinction in the next review?', 'Thanks,\nJason'] },
+      t7: { from: 'Ryan Walker', to: 'To: me', time: '3:10 pm', subject: 'Let’s schedule our 1:1 sometime', body: ['Hi Ella,', 'Could we schedule a 1:1 next week? I would like to share a few thoughts about the dashboard priorities and hear what is changing on your side.', 'I am free Tuesday afternoon or Thursday morning.', 'Ryan'] },
+      t8: { from: 'Ryan Walker', to: 'To: me', time: 'Yesterday', subject: 'Let’s schedule our 1:1 sometime', body: ['Hi Ella,', 'Just following up on my note about a 1:1. No rush, but Tuesday afternoon still works well for me if you have time.', 'Thanks,\nRyan'] }
+    };
+
+    function renderDefaultOtherThread(threadId) {
+      const data = DEFAULT_OTHER_THREADS[threadId];
+      const view = document.getElementById('thread-view-other');
+      const template = document.querySelector('#thread-view-unlinked .expanded-tile');
+      if (!data || !view || !template) return;
+      view.innerHTML = '';
+      const header = document.createElement('div');
+      header.className = 'thread-sticky-header';
+      header.dataset.threadId = threadId;
+      const title = document.createElement('div');
+      title.className = 'thread-title';
+      title.textContent = data.subject;
+      header.appendChild(title);
+      const message = template.cloneNode(true);
+      message.style.marginTop = '16px';
+      const sender = message.querySelector('.exp-sender'); if (sender) sender.textContent = data.from;
+      const to = message.querySelector('.exp-to'); if (to) to.textContent = data.to;
+      const time = message.querySelector('.exp-timestamp'); if (time) time.textContent = data.time;
+      const body = message.querySelector('.expanded-body');
+      if (body) body.innerHTML = data.body.map(function (paragraph) {
+        return '<p>' + esc(paragraph).replace(/\n/g, '<br>') + '</p>';
+      }).join('<p>&zwj;</p>');
+      view.appendChild(header);
+      view.appendChild(message);
+    }
+
     function selectEmailTile(el, type) {
       document.querySelectorAll('.email-tile').forEach(function (t) { t.classList.remove('selected'); });
       el.classList.add('selected');
 
       document.querySelectorAll('.thread-view').forEach(function (v) { v.style.display = 'none'; });
       const view = document.getElementById('thread-view-' + type);
+      if (type === 'other') renderDefaultOtherThread(el.dataset.threadId);
       if (view) view.style.display = 'block';
 
       closeCrmPanel();
@@ -7283,9 +7321,9 @@
       closeCrmPanel();   // opening a different thread: the open record is no longer relevant
       content.innerHTML = '';
       var view = document.createElement('div');
-      view.className = 'thread-view'; view.style.display = 'block';
+      view.className = 'thread-view'; view.style.display = 'block'; view.dataset.threadId = t.id;
       var header = document.createElement('div');
-      header.className = 'thread-sticky-header';
+      header.className = 'thread-sticky-header'; header.dataset.threadId = t.id;
       var title = document.createElement('div');
       title.className = 'thread-title'; title.textContent = t.subject;
       header.appendChild(title);
