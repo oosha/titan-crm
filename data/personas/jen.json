@@ -1,47 +1,6 @@
 {
-  "currentPipelineId": "p1",
+  "currentPipelineId": null,
   "pipelineSeq": 1,
   "contactFields": [],
-  "pipelines": {
-    "p1": {
-      "id": "p1",
-      "name": "My Projects",
-      "entity": "Project",
-      "plural": "projects",
-      "color": "#5e8a4e",
-      "type": "sales",
-      "subject": "company",
-      "stages": [
-        {
-          "key": "scoping-0",
-          "label": "Scoping"
-        },
-        {
-          "key": "qualified-1",
-          "label": "Qualified"
-        },
-        {
-          "key": "proposal-2",
-          "label": "Proposal"
-        },
-        {
-          "key": "kickoff-3",
-          "label": "Kickoff"
-        },
-        {
-          "key": "review-4",
-          "label": "Review"
-        },
-        {
-          "key": "in-progress-5",
-          "label": "In Progress"
-        },
-        {
-          "key": "delivered-6",
-          "label": "Delivered"
-        }
-      ],
-      "cards": []
-    }
-  }
+  "pipelines": {}
 }
