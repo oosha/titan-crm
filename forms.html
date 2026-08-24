@@ -23,68 +23,100 @@
 <link rel="stylesheet" href="/titan-assistant.css">
 <link rel="stylesheet" href="/crm-directory.css">
 <style>
-  /* Each pipeline is a folder tab; the card hanging off it is that pipeline's form.
-     The tab carries the pipeline name so "which pipeline?" is answered before you
-     read anything about the form — a form belongs to a pipeline, and the tab says so
-     structurally rather than in a line of sub-text. */
-  .fl-wrap { padding: 20px 22px 60px; max-width: 880px; }
+  /* One row per pipeline, in a table, rather than a tabbed card per pipeline. The
+     tabbed layout repeated the pipeline name twice (tab and heading) and spent a whole
+     group on rows that mostly said "No submissions yet", so it grew with the number of
+     pipelines while telling you very little. The table's Destination column is the
+     point: it names the pipeline a submission lands in, and it is the column that
+     generalises if a form is ever allowed more than one.
 
-  .fl-group { margin-bottom: 18px; }
-  .fl-tab {
-    display: inline-flex; align-items: center; gap: 9px; position: relative;
-    /* Sits flush on the card: the tab's left border continues the card's, and its
-       bottom border is dropped so the two read as one shape rather than a label
-       parked next to a box. `top: 1px` overlaps the card's top hairline. */
-    top: 1px; margin-left: 0; padding: 10px 16px 12px;
-    font-size: 13.5px; font-weight: 650; color: var(--dir-ink);
-    /* Tinted in the pipeline's own colour rather than left white: the tab is the
-       label for everything under it, and a white tab on a white card was a shape you
-       had to look for. --tab-tint is set per group from pl.color. */
-    background: var(--tab-tint, var(--dir-hair)); border: 1px solid var(--tab-line, var(--dir-line));
-    border-bottom: none; border-radius: 11px 11px 0 0; max-width: 100%;
+     Header and body shape follow the CRM's shared table rules — the same values
+     .dir-table and .seq-library-table use. Keep them in step. */
+  .fl-view { padding: var(--space-400); }
+  .fl-frame { width: min(100%, calc(var(--space-400) * 36)); margin-inline: auto; }
+  .fl-toolbar {
+    margin-bottom: var(--space-200); display: flex; align-items: flex-end;
+    justify-content: space-between; gap: var(--space-200); flex-wrap: nowrap;
   }
-  .fl-tab-glyph { flex-shrink: 0; display: block; }
-  .fl-tab-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fl-search {
+    width: calc(var(--input-height) * 8.5); max-width: 100%; min-width: 0;
+    flex: 0 1 calc(var(--input-height) * 8.5);
+  }
+  .fl-table-shell {
+    overflow-x: auto; border: var(--btn-border-width) solid var(--border-subtle);
+    border-radius: var(--radius-container); background: var(--surface-primary);
+  }
+  .fl-table { width: 100%; min-width: calc(var(--input-height) * 26); border-collapse: collapse; table-layout: fixed; }
+  .fl-table th {
+    padding: var(--space-125) var(--space-200); border-bottom: var(--btn-border-width) solid var(--border-default);
+    background: var(--surface-recessed); color: var(--text-muted); font-size: var(--text-2xs);
+    font-weight: var(--weight-semi); letter-spacing: 0.055em; text-transform: uppercase;
+    text-align: left; white-space: nowrap;
+  }
+  .fl-table td {
+    height: calc(var(--space-400) + var(--space-300)); padding: var(--space-150) var(--space-200);
+    border-bottom: var(--btn-border-width) solid var(--border-subtle); color: var(--text-primary);
+    font-size: var(--text-sm); vertical-align: middle;
+  }
+  .fl-table tbody tr:last-child td { border-bottom: 0; }
+  /* Rows are not clickable here, unlike the directory and sequence tables: this row
+     carries a delete control, and a click target wrapping a destructive button is how
+     you delete a form you meant to open. The form name is the link instead. */
+  .fl-table th:nth-child(1) { width: 34%; }
+  .fl-table th:nth-child(2) { width: 24%; }
+  .fl-table th:nth-child(3) { width: 15%; }
+  .fl-table th:nth-child(4) { width: 27%; }
+  /* The identity column carries no avatar the way contacts/companies do, so its name
+     would otherwise sit flush against the shared 16px inset. Header and cell move
+     together so they stay aligned. */
+  .fl-table th:first-child { padding-inline-start: var(--space-300); }
+  .fl-table td:first-child { padding-inline-start: var(--space-300); }
+  .fl-table th:first-child .fl-sort { margin-inline-start: calc(var(--space-100) * -1); }
 
-  .fl-card {
-    background: var(--dir-surface); border: 1px solid var(--dir-line);
-    border-radius: 0 13px 13px 13px; padding: 16px 17px;
-    display: grid; grid-template-columns: 42px minmax(0,1fr) auto; gap: 14px; align-items: center;
+  /* The header label is a sort button, so ds-btn's own type would win over the th.
+     Restate the shared header typography on the control. */
+  .fl-sort {
+    margin-block: calc(var(--space-050) * -1);
+    margin-inline: calc(var(--space-100) * -1);
+    font-size: var(--text-2xs); font-weight: var(--weight-semi);
+    letter-spacing: 0.055em; text-transform: uppercase; color: var(--text-muted);
   }
-  .fl-icon {
-    width: 42px; height: 42px; border-radius: 11px; display: inline-flex;
-    align-items: center; justify-content: center; flex-shrink: 0;
-  }
-  .fl-main { min-width: 0; }
-  .fl-name { font-size: 14.5px; font-weight: 650; color: var(--dir-ink); overflow: hidden; white-space: nowrap; }
+  .fl-sort-indicator { width: var(--space-150); text-align: center; }
+
+  .fl-name { min-width: 0; display: flex; align-items: center; gap: var(--space-100); }
   .fl-name-link {
-    display: inline-flex; align-items: center; max-width: 100%;
-    color: inherit; text-decoration: none; vertical-align: middle;
+    overflow: hidden; color: var(--text-accent); font-weight: var(--weight-semi);
+    font-size: var(--text-md); line-height: 1.35; text-decoration: none;
+    text-overflow: ellipsis; white-space: nowrap;
   }
-  .fl-name-link-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .fl-name-link:hover { color: var(--dir-accent); }
-  .fl-name-link:focus-visible { outline: 2px solid var(--dir-accent); outline-offset: 3px; border-radius: 3px; }
-  .fl-meta { font-size: 12.5px; color: var(--dir-muted); margin-top: 6px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-  .fl-meta b { color: var(--dir-body); font-weight: 650; }
-  .fl-sep { color: var(--dir-faint); }
-  .fl-state { font-weight: 650; }
-  .fl-state.on { color: #1e8e3e; }
-  .fl-state.off { color: var(--dir-muted); }
-
-  .fl-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
-  .fl-btn {
-    height: 36px; padding: 0 14px; border: 1px solid var(--dir-line); border-radius: 10px;
-    background: var(--dir-surface); font: inherit; font-size: 13px; font-weight: 600;
-    color: var(--dir-body); cursor: pointer; text-decoration: none;
-    display: inline-flex; align-items: center; justify-content: center;
+  .fl-name-link:hover { text-decoration: underline; }
+  /* No "Accepting" counterpart on purpose. It is the only state anyone can set, so
+     labelling it said nothing — the same reason the old card dropped it. A form stored
+     as paused still says so, because its link is the one that 404s. */
+  .fl-name-none { color: var(--text-muted); font-weight: var(--weight-semi); font-size: var(--text-md); }
+  /* The Destination tag navigates to its pipeline's board. The anchor wraps the
+     component rather than restyling it: ds-pipeline-tag stays a tag, and this only
+     makes it a link. Hover deepens the tag's own tint through --pipe rather than
+     underlining, which reads badly inside a chip. */
+  .fl-dest-link {
+    display: inline-flex; max-width: 100%; text-decoration: none; border-radius: var(--radius-control);
   }
-  .fl-btn:hover { border-color: var(--dir-accent); color: var(--dir-accent); }
-  .fl-btn.icon { width: 36px; padding: 0; }
-  .fl-btn.icon.is-done { border-color: #1e8e3e; color: #1e8e3e; }
-  /* Quiet until you go for it: delete sits in a row of everyday actions, so it reads as
-     one of them and only turns red on hover. Same tokens as ds-btn--destructive-quiet. */
-  .fl-btn.danger:hover { border-color: var(--border-danger); color: var(--status-danger); background: var(--status-danger-subtle); }
-  .fl-empty { font-size: 13.5px; color: var(--dir-muted); padding: 4px 0 10px; }
+  .fl-dest-link:hover .ds-pipeline-tag {
+    background: color-mix(in srgb, var(--pipe, var(--accent-primary)) 22%, var(--surface-primary));
+    border-color: color-mix(in srgb, var(--pipe, var(--accent-primary)) 45%, var(--border-subtle));
+  }
+  .fl-dest-link:focus-visible { outline: calc(var(--btn-border-width) * 2) solid var(--border-accent); outline-offset: var(--space-025); }
+  .fl-number { color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fl-blank { color: var(--text-muted); }
+  .fl-actions { display: flex; gap: var(--space-100); align-items: center; justify-content: flex-end; }
+  /* Momentary confirmation on the copy button; the icon set has no tick-in-circle that
+     reads at this size, so the affordance is the colour change. */
+  .fl-copied { border-color: var(--status-success) !important; color: var(--status-success) !important; }
+  .fl-empty { padding: calc(var(--space-400) * 2); color: var(--text-secondary); text-align: center; }
+  @media (max-width: 32rem) {
+    .fl-toolbar { align-items: stretch; flex-wrap: wrap; }
+    .fl-search { width: 100%; }
+  }
 </style>
 </head>
 <body class="subpage-body" data-subpage="forms" data-sidebar-data="page">
@@ -101,14 +133,33 @@
       <span class="subpage-title">Forms</span>
     </div>
 
-    <div class="fl-wrap">
-      <div id="fl-live"></div>
-      <div class="dir-note" id="fl-note"></div>
+    <div class="fl-view">
+      <div class="fl-frame">
+        <div class="fl-toolbar">
+          <input class="ds-input fl-search" id="fl-search" type="search" placeholder="Search forms" aria-label="Search forms">
+        </div>
+        <div class="fl-table-shell">
+          <table class="fl-table">
+            <thead>
+              <tr>
+                <th aria-sort="ascending"><button class="ds-btn ds-btn--ghost ds-btn--sm fl-sort" type="button" data-fl-sort="name">Form <span class="fl-sort-indicator" data-sort-indicator aria-hidden="true"></span></button></th>
+                <th>Destination</th>
+                <th><button class="ds-btn ds-btn--ghost ds-btn--sm fl-sort" type="button" data-fl-sort="submissions">Submissions <span class="fl-sort-indicator" data-sort-indicator aria-hidden="true"></span></button></th>
+                <th><span aria-hidden="true"></span></th>
+              </tr>
+            </thead>
+            <tbody id="fl-list"></tbody>
+          </table>
+          <div class="fl-empty" id="fl-empty">Loading forms…</div>
+        </div>
+        <div class="dir-note" id="fl-note"></div>
+      </div>
     </div>
   </div>
 </div>
 
 <script src="/design-system/components/icon.js"></script>
+<script src="/design-system/components/pipeline-tag.js"></script>
 <script src="/titan-sidebar.js"></script>
 <script src="/crm-owner.js"></script>
 <script src="/crm-views.js"></script>
@@ -116,6 +167,10 @@
 <script src="/crm-directory.js"></script>
 <script>
   const esc = window.esc;
+
+  const ICON_OPEN = '<span data-ds-icon="open-external" data-size="15"></span>';
+  const ICON_COPY = '<span data-ds-icon="copy" data-size="15"></span>';
+  const ICON_TRASH = '<span data-ds-icon="trash" data-size="15"></span>';
 
   function formUrlFor(token) { return location.origin + '/f/' + encodeURIComponent(token); }
   function formEditorUrlFor(pipelineId) {
@@ -131,68 +186,65 @@
     }).length;
   }
 
-  // The same mark the sidebar uses for a pipeline row, so a tab and its nav entry are
-  // recognisably the same thing. A generic coloured square said "some category".
-  function pipelineGlyph(colour) {
-    return '<svg class="fl-tab-glyph" width="13" height="13" viewBox="0 0 14 14" fill="none">' +
-      '<path d="M2 3.2H9.6L12.4 7L9.6 10.8H2L4.4 7L2 3.2Z" fill="' + esc(colour || '#2170f4') + '"/></svg>';
+  // One row's facts, gathered once so the sort comparator and the markup read the same
+  // numbers. `form` is null for a pipeline that could have a form and doesn't.
+  function rowFor(pl) {
+    const form = pl.intakeForm && pl.intakeForm.token ? pl.intakeForm : null;
+    return {
+      pipeline: pl,
+      form: form,
+      name: form ? (form.heading || 'Untitled form') : '',
+      submissions: form ? submissionsFor(pl, form) : 0,
+    };
   }
 
-  const ICON_FORM = '<span data-ds-icon="forms" data-size="20"></span>';
-  const ICON_OPEN = '<span data-ds-icon="open-external" data-size="15"></span>';
-  const ICON_COPY = '<span data-ds-icon="copy" data-size="15"></span>';
-  const ICON_TRASH = '<span data-ds-icon="trash" data-size="15"></span>';
+  let flSortKey = 'submissions';
+  let flSortDirection = 'desc';
+  let flSearch = '';
 
-  // A pipeline and its form: the tab names the pipeline, the card is the form.
-  function groupHTML(pl) {
-    const f = pl.intakeForm && pl.intakeForm.token ? pl.intakeForm : null;
-    const colour = pl.color || '#2170f4';
+  function rowHTML(item) {
+    const pl = item.pipeline;
+    const form = item.form;
+    // Destination is the pipeline a submission lands in, and it links to that
+    // pipeline's board. One tag today, because the form is a field on its pipeline
+    // (pipelines[id].intakeForm) and api/_form.js finds that pipeline by scanning for
+    // the token. If a form ever carries pipelineIds[], this cell renders N of these and
+    // nothing else here has to change.
+    const destination =
+      '<a class="fl-dest-link" href="' + esc(window.crmPath('/crm/pipeline/' + encodeURIComponent(pl.id))) + '"' +
+        ' title="Open ' + esc(pl.name || 'this pipeline') + '">' +
+        window.dsPipelineTag({ name: pl.name, color: pl.color, size: 'sm' }) +
+      '</a>';
 
-    // color-mix keeps one source of truth for the tint: the pipeline's colour.
-    const tint = 'style="--tab-tint: color-mix(in srgb, ' + esc(colour) + ' 12%, #fff);' +
-      ' --tab-line: color-mix(in srgb, ' + esc(colour) + ' 26%, var(--dir-line));"';
-    const tab = '<div class="fl-tab" ' + tint + '>' +
-      pipelineGlyph(colour) +
-      '<span class="fl-tab-name">' + esc(pl.name) + '</span></div>';
-
-    if (!f) {
-      return '<div class="fl-group">' + tab +
-        '<div class="fl-card">' +
-          '<span class="fl-icon" style="background:var(--dir-hair); color:var(--dir-faint);">' + ICON_FORM + '</span>' +
-          '<div class="fl-main"><div class="fl-name" style="color:var(--dir-muted); font-weight:600;">No form yet</div></div>' +
-          '<div class="fl-actions"><button class="fl-btn" onclick="editForm(\'' + esc(pl.id) + '\')">Set up a form</button></div>' +
-        '</div></div>';
+    if (!form) {
+      return '<tr>' +
+        '<td><div class="fl-name"><span class="fl-name-none">No form yet</span></div></td>' +
+        '<td>' + destination + '</td>' +
+        '<td class="fl-blank">—</td>' +
+        '<td><div class="fl-actions">' +
+          '<button class="ds-btn ds-btn--primary" type="button" onclick="editForm(\'' + esc(pl.id) + '\')">Set up a form</button>' +
+        '</div></td>' +
+      '</tr>';
     }
 
-    const n = submissionsFor(pl, f);
-    return '<div class="fl-group">' + tab +
-      '<div class="fl-card">' +
-        '<span class="fl-icon" style="background:' + esc(colour) + '18; color:' + esc(colour) + ';">' + ICON_FORM + '</span>' +
-        '<div class="fl-main">' +
-          '<div class="fl-name"><a class="fl-name-link" title="Edit form"' +
-            ' href="' + esc(formEditorUrlFor(pl.id)) + '">' +
-            '<span class="fl-name-link-text">' + esc(f.heading || 'Untitled form') + '</span>' +
-          '</a></div>' +
-          '<div class="fl-meta">' +
-            // "Active" is gone with the pause control (see PAUSE_UI in form-builder.js):
-            // it is now the only state anyone can set, so labelling it said nothing. A
-            // form stored as paused still says so — otherwise the one form whose link
-            // 404s would be the one row that looked like all the others. Opening it in
-            // the editor and saving is what clears it.
-            (f.enabled ? '' : '<span class="fl-state off">Paused</span><span class="fl-sep">·</span>') +
-            (n ? '<span><b>' + n + '</b> ' + (n === 1 ? 'submission' : 'submissions') + '</span>'
-               : '<span>No submissions yet</span>') +
-          '</div>' +
-        '</div>' +
-        '<div class="fl-actions">' +
-          '<button class="fl-btn icon" title="Copy link" onclick="copyLink(this, \'' + esc(f.token) + '\')">' + ICON_COPY + '</button>' +
-          '<a class="fl-btn icon" title="Open the form" href="' + esc(formUrlFor(f.token)) + '" target="_blank" rel="noopener">' + ICON_OPEN + '</a>' +
-          '<button class="fl-btn primary" onclick="editForm(\'' + esc(pl.id) + '\')">Edit</button>' +
-          // Last, and set apart, because it is the one action here that can't be undone.
-          '<button class="fl-btn icon danger" title="Delete this form" aria-label="Delete this form"' +
-            ' onclick="deleteFormFromRow(\'' + esc(pl.id) + '\')">' + ICON_TRASH + '</button>' +
-        '</div>' +
-      '</div></div>';
+    return '<tr>' +
+      '<td><div class="fl-name">' +
+        '<a class="fl-name-link" title="Edit form" href="' + esc(formEditorUrlFor(pl.id)) + '">' + esc(item.name) + '</a>' +
+        (form.enabled ? '' : '<span class="ds-badge">Paused</span>') +
+      '</div></td>' +
+      '<td>' + destination + '</td>' +
+      '<td class="fl-number">' + item.submissions + '</td>' +
+      '<td><div class="fl-actions">' +
+        '<button class="ds-btn ds-btn--secondary ds-btn--icon" type="button" title="Copy link" aria-label="Copy link"' +
+          ' onclick="copyLink(this, \'' + esc(form.token) + '\')">' + ICON_COPY + '</button>' +
+        '<a class="ds-btn ds-btn--secondary ds-btn--icon" title="Open the form" aria-label="Open the form"' +
+          ' href="' + esc(formUrlFor(form.token)) + '" target="_blank" rel="noopener">' + ICON_OPEN + '</a>' +
+        '<button class="ds-btn ds-btn--secondary" type="button" onclick="editForm(\'' + esc(pl.id) + '\')">Edit</button>' +
+        // Last, and set apart, because it is the one action here that can't be undone.
+        '<button class="ds-btn ds-btn--destructive-quiet ds-btn--icon" type="button" title="Delete this form"' +
+          ' aria-label="Delete this form" onclick="deleteFormFromRow(\'' + esc(pl.id) + '\')">' + ICON_TRASH + '</button>' +
+      '</div></td>' +
+    '</tr>';
   }
 
   // Form creation/editing is a full-page settings task. The editor route owns the
@@ -243,16 +295,34 @@
 
   function copyLink(btn, token) {
     navigator.clipboard.writeText(formUrlFor(token)).then(function () {
-      btn.classList.add('is-done');
+      btn.classList.add('fl-copied');
       btn.title = 'Copied';
-      setTimeout(function () { btn.classList.remove('is-done'); btn.title = 'Copy link'; }, 1400);
+      setTimeout(function () { btn.classList.remove('fl-copied'); btn.title = 'Copy link'; }, 1400);
     }).catch(function () { btn.title = 'Copy failed'; });
   }
+
+  document.getElementById('fl-search').addEventListener('input', function (event) {
+    flSearch = event.target.value;
+    render(PIPELINES);
+  });
+
+  document.addEventListener('click', function (event) {
+    const button = event.target.closest('[data-fl-sort]');
+    if (!button) return;
+    const key = button.dataset.flSort;
+    if (flSortKey === key) flSortDirection = flSortDirection === 'asc' ? 'desc' : 'asc';
+    else {
+      flSortKey = key;
+      flSortDirection = key === 'name' ? 'asc' : 'desc';
+    }
+    render(PIPELINES);
+  });
 
   (async function init() {
     let data;
     try { data = await fetchPipelineData(); }
     catch (e) {
+      document.getElementById('fl-empty').hidden = true;
       document.getElementById('fl-note').innerHTML =
         'Couldn’t reach the CRM data API. <a href="' + crmPath('/crm') + '">Open Titan CRM</a>';
       return;
@@ -264,20 +334,49 @@
     render(pipelines);
   })();
 
-  // Forms first, then the pipelines that could have one — one list, so a pipeline
-  // reads the same whether or not it has a form yet. Called again after a save so
+  // Forms first, then the pipelines that could have one — one list, so a pipeline reads
+  // the same whether or not it has a form yet, and the formless rows stay out of the way
+  // of the sort rather than interleaving with real numbers. Called again after a save so
   // the row reflects the edit without a reload.
   function render(pipelines) {
     PIPELINES = pipelines;
-    const list = Object.keys(pipelines).map(function (id) { return pipelines[id]; });
-    const withForm = list.filter(function (pl) { return pl.intakeForm && pl.intakeForm.token; });
-    const without = list.filter(function (pl) { return !(pl.intakeForm && pl.intakeForm.token); });
-    document.getElementById('fl-live').innerHTML =
-      withForm.concat(without).map(groupHTML).join('') ||
-      '<div class="fl-empty">No pipelines yet.</div>';
+    const query = flSearch.trim().toLowerCase();
+    const rows = Object.keys(pipelines).map(function (id) { return rowFor(pipelines[id]); })
+      .filter(function (item) {
+        if (!query) return true;
+        return [item.name, item.pipeline.name].join(' ').toLowerCase().includes(query);
+      })
+      .sort(function (left, right) {
+        // A pipeline without a form has no numbers to rank, so it sits below the ones
+        // that do regardless of which column is sorted.
+        if (!!left.form !== !!right.form) return left.form ? -1 : 1;
+        let comparison;
+        if (flSortKey === 'name') {
+          comparison = String(left.name || left.pipeline.name || '')
+            .localeCompare(String(right.name || right.pipeline.name || ''));
+        } else {
+          comparison = Number(left[flSortKey]) - Number(right[flSortKey]);
+        }
+        return flSortDirection === 'asc' ? comparison : comparison * -1;
+      });
+
+    document.getElementById('fl-list').innerHTML = rows.map(rowHTML).join('');
+
+    const empty = document.getElementById('fl-empty');
+    empty.textContent = Object.keys(pipelines).length
+      ? 'No forms match this search.'
+      : 'No pipelines yet.';
+    empty.hidden = rows.length > 0;
+
+    document.querySelectorAll('[data-fl-sort]').forEach(function (button) {
+      const active = button.dataset.flSort === flSortKey;
+      const heading = button.closest('th');
+      heading.setAttribute('aria-sort', active ? (flSortDirection === 'asc' ? 'ascending' : 'descending') : 'none');
+      button.querySelector('[data-sort-indicator]').textContent = active ? (flSortDirection === 'asc' ? '↑' : '↓') : '';
+    });
+
+    if (window.dsIcon && window.dsIcon.hydrate) window.dsIcon.hydrate();
   }
-  (function noop() {
-  })();
 </script>
 </body>
 </html>
