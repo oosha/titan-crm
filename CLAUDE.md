@@ -73,8 +73,13 @@ Full-page settings (sustained or multi-section configuration with a cold-loadabl
 and Two-pane workspace (two related surfaces that must remain visible together). The
 two-pane contract covers only the adjacent full-bleed pane surfaces, their horizontally
 centred and width-bounded shared content frame, separator, independent scroll regions and
-responsive fallback; it does not carry feature styling between adopters. Using
-design-system components inside the wrong interaction pattern does not make the surface compliant.
+responsive fallback; it does not carry feature styling between adopters. It has fixed and
+bounded-resizable variations. In the resizable variation the adopting page owns a
+content-driven default and usable min/max proportions; dragging changes only the split inside
+the same bounded frame, never collapses a pane, and disappears when the panes stack. Its
+separator must expose its value and limits accessibly and support Left/Right plus Home/End.
+Using design-system components inside the wrong interaction pattern does not make the
+surface compliant.
 
 **Scope is the CRM and its modules — `index.html` is deliberately out.** The mailbox is the
 mocked half; it keeps its own chrome and is excluded from both measurement scripts (and from
@@ -426,8 +431,10 @@ pipelines[<id>].intakeForm = {
 `target` says where a value lands on the card (`name`, `email`, `phone`, `designation`,
 `company`, `location`, `linkedin`, `note`, or `custom` — for `custom`, `key` must match a
 `customFieldDefs` key or the record page can't render it). **`name` and `email` are locked
-and cannot be removed**: email is what `contactKey()` deduplicates contacts on, and name is
-what every list renders. The token is `<persona>.<random>` — the prefix tells the server
+and cannot be removed or retargeted**: email is what `contactKey()` deduplicates contacts on,
+and name is what every list renders. Their `required` flags are nevertheless user-controlled;
+the public form and server validation require either value only when its stored flag is true.
+The token is `<persona>.<random>` — the prefix tells the server
 which data file to write without trusting a query param, and rotating it revokes a shared
 link.
 
@@ -459,6 +466,9 @@ and 404s locally until it's added there too.
 point navigates in place to `/crm/pipeline/:id/form`, following the Full-page settings
 pattern; its body composes the Two-pane workspace pattern with the editor on the left and
 the live preview on the right. `titanFormBuilder.mount(host, {…})` renders it inline there.
+This adopter uses the bounded-resizable variation: 60/40 by default, with the editor clamped
+to 50–68% on wide screens. The full-height separator supports pointer dragging, Left/Right
+steps and Home/End limits, updates its ARIA value, and is removed when the panes stack.
 After a successful publish, the editor leaves, the preview slides into the left pane, and a
 right-hand handoff pane confirms publication and offers link copying, native social sharing,
 and embed-code copying. The route header does not duplicate that success result.
@@ -466,6 +476,12 @@ The route fetches its own data on a cold load, replaces the global sidebar, pres
 `?u=<persona>`, and saves via `saveData()`. A safe
 `?from=forms|board|pipeline-settings` enum controls Back without accepting an arbitrary
 return URL.
+
+The form title is the registered `.ds-floating-field` composition, not a page-local floating
+label: it keeps a real associated label, uses the counted variation, and enforces the shared
+80-character limit in both the input and builder validation. Destination menus are fixed,
+viewport-clamped scroll regions. Wheel or trackpad scrolling inside one must scroll its list
+without triggering the shared menu system's page-scroll close behavior.
 
 The board's New Pipeline flow creates and persists the pipeline before navigating to the
 form route, because a full-page editor cannot fetch a pipeline that still exists only in
