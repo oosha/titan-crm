@@ -201,6 +201,10 @@ function buildCard(doc, pipeline, form, values) {
     note: byTarget.note || '',
     noteAuthor: name || 'Form',
     noteDate: '',
+    // A real timestamp, unlike lastActivity, which is a frozen display string: every
+    // form card said 'just now' forever, so nothing downstream could order or age them.
+    // Nothing reads this yet — it is here so the data accrues before a surface needs it.
+    createdAt: new Date().toISOString(),
     lastActivity: 'just now',
     activityType: 'Form submission',
     overdue: false,
