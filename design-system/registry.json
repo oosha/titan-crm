@@ -1,7 +1,7 @@
 {
   "$schema": "./registry.schema.json",
   "name": "Titan Design System Registry",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Machine-readable index of the design system's components, patterns and directions. An agent should read this before writing any UI and update it in the same change that adds a system primitive. Extracted from App Redesign/index_prodRedesign_interactions.html.",
   "conventions": {
     "idiom": "Plain CSS classes plus optional JS render modules — no build step, no framework, no TypeScript. A component is a stylesheet, and a function returning an HTML string where composition earns one. This is the same pattern titan-sidebar.js and form-render.js already use in production.",
@@ -114,9 +114,14 @@
         "A single separator spans the full shared height between the panes.",
         "Each pane owns its surface, internal padding, heading when needed, and scroll region."
       ],
+      "variations": [
+        "Fixed split — use page-owned proportions when resizing would add no practical value.",
+        "Bounded resizable split — make the separator draggable when either pane benefits from temporary emphasis. Keep a content-driven default, clamp both panes to page-owned usable limits, expose the separator and its current value accessibly, support keyboard adjustment, and disable resizing when panes stack."
+      ],
       "requirements": [
         "Use semantic surface and border tokens; the separator is the boundary, so do not wrap both panes in another card.",
         "Treat both content rails as one centred unit: choose one page-owned maximum width for their complete frame, preserve the pane proportions within it, then let it remain fluid below that cap.",
+        "When using the bounded resizable variation, resize only the proportions inside the same centred frame; never let dragging expand the frame or collapse either pane.",
         "Size panes for their content rather than defaulting to equal halves; neither pane may force horizontal page scrolling.",
         "Keep edits and selections reflected in the companion pane without navigation or manual refresh.",
         "Give both panes an accessible name or heading and keep their scrolling independent on wide screens.",
@@ -130,7 +135,7 @@
         "Do not use when the second surface is incidental enough for a modal, drawer, or inline disclosure."
       ],
       "examples": [
-        "form-settings.html — form editor and live form preview"
+        "form-settings.html — form editor and live form preview; bounded resizable split with a 50–68% editor share"
       ]
     }
   ],
@@ -218,12 +223,13 @@
       "css": "components/primitives.css",
       "class": "ds-input",
       "props": {
-        "variant": "'default' | 'invalid' (class .ds-input--invalid)",
+        "variant": "'default' | 'large' (class .ds-input--lg) | 'inline' (class .ds-input--inline) | 'invalid' (class .ds-input--invalid)",
         "element": "input | textarea | select — the same class styles all three"
       },
       "shapeTokens": [
         "--input-radius",
         "--input-height",
+        "--input-height-lg",
         "--input-pad-x",
         "--input-bg",
         "--input-border"
@@ -238,8 +244,42 @@
       ],
       "usage": "Any single-line or multi-line text entry, and selects. Wrap in .ds-field with .ds-field-label plus .ds-field-hint or .ds-field-error to get the labelled layout.",
       "variantNotes": {
+        "large": ".ds-input--lg — 40px boxed input for editable rows and configuration surfaces where the default 34px control is too dense. It changes height and font size only; all interaction states remain Input's.",
         "inline": ".ds-input--inline — edit-in-place. A boxed field would draw a border around what reads as body text; the record screen edits 25 values this way. Shorter than a boxed field (--input-inline-height), transparent until hover, same focus ring."
       }
+    },
+    {
+      "name": "Floating field",
+      "category": "composites",
+      "css": "components/floating-field.css",
+      "render": "declarative — .ds-floating-field wrapping .ds-input, then .ds-floating-field__label, with an optional .ds-floating-field__counter",
+      "class": "ds-floating-field",
+      "props": {
+        "label": ".ds-floating-field__label — a real <label> immediately after the input; placeholder=\" \" lets CSS distinguish empty from filled without duplicating value state",
+        "counter": "optional .ds-floating-field__counter; add .ds-floating-field--counted to reserve its width. The consumer updates the count and owns maxlength.",
+        "input": "a real .ds-input; .ds-input--invalid and disabled states carry through"
+      },
+      "shapeTokens": [
+        "--floating-field-height",
+        "--floating-field-bg",
+        "--floating-field-label-color",
+        "--floating-field-placeholder-color",
+        "--floating-field-label-font",
+        "--floating-field-value-font",
+        "--floating-field-counter-color",
+        "--floating-field-counter-font",
+        "--floating-field-counter-space"
+      ],
+      "states": [
+        "empty",
+        "focus",
+        "filled",
+        "invalid",
+        "disabled",
+        "counted"
+      ],
+      "usage": "A prominent single-line field where keeping the label visible after entry is useful and a separate label row would spend unnecessary vertical space. The label rests inside when empty and straddles the top border on focus or when filled.",
+      "avoid": "Do not use for ordinary dense forms, textarea/select controls, or as a decorative placeholder. The label must remain a real <label> associated to the input, and the input must carry placeholder=\" \"."
     },
     {
       "name": "Badge",

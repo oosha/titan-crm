@@ -1,0 +1,50 @@
+/* Floating field — an outlined input whose real label begins in the value position and
+   moves onto the top edge on focus or once a value exists. The optional counter remains
+   inside the right edge; the consumer owns updating its text because value state belongs
+   to the form model, not to a presentational component. */
+.ds-floating-field {
+  position: relative; display: block; width: 100%;
+}
+.ds-floating-field > .ds-input {
+  height: var(--floating-field-height); padding-inline: var(--input-pad-x);
+  font-size: var(--floating-field-value-font);
+}
+.ds-floating-field--counted > .ds-input {
+  padding-right: calc(var(--input-pad-x) + var(--floating-field-counter-space));
+}
+.ds-floating-field__label {
+  position: absolute; top: 50%; left: calc(var(--input-pad-x) - var(--space-050));
+  padding-inline: var(--space-050); background: var(--floating-field-bg);
+  transform: translateY(-50%); transform-origin: left top;
+  color: var(--floating-field-placeholder-color); font-size: var(--text-md);
+  font-weight: var(--weight-normal); line-height: 1; pointer-events: none;
+  transition: top var(--dur-base) var(--ease-standard),
+              transform var(--dur-base) var(--ease-standard),
+              color var(--dur-base) var(--ease-standard),
+              font-size var(--dur-base) var(--ease-standard);
+}
+.ds-floating-field > .ds-input:focus + .ds-floating-field__label,
+.ds-floating-field > .ds-input:not(:placeholder-shown) + .ds-floating-field__label {
+  top: 0; transform: translateY(-50%);
+  color: var(--floating-field-label-color);
+  font-size: var(--floating-field-label-font); font-weight: var(--weight-medium);
+}
+.ds-floating-field > .ds-input:disabled + .ds-floating-field__label {
+  background: var(--surface-disabled); color: var(--text-disabled);
+}
+.ds-floating-field > .ds-input--invalid + .ds-floating-field__label {
+  color: var(--status-danger);
+}
+.ds-floating-field__counter {
+  position: absolute; top: 50%; right: var(--input-pad-x);
+  transform: translateY(-50%); pointer-events: none;
+  color: var(--floating-field-counter-color);
+  font-size: var(--floating-field-counter-font); font-variant-numeric: tabular-nums;
+}
+.ds-floating-field > .ds-input:disabled ~ .ds-floating-field__counter {
+  color: var(--text-disabled);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-floating-field__label { transition: none; }
+}

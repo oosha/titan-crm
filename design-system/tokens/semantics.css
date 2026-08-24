@@ -116,11 +116,22 @@
 
   --input-radius: var(--radius-control);
   --input-height: 34px;
+  --input-height-lg: var(--btn-height-lg);
   /* Edit-in-place fields sit in a text flow, so they are shorter than a boxed field. */
   --input-inline-height: 26px;
   --input-pad-x:  11px;
   --input-bg:     var(--surface-primary);
   --input-border: var(--border-subtle);
+
+  --floating-field-height: calc(var(--input-height-lg) + var(--space-100));
+  --floating-field-bg: var(--input-bg);
+  --floating-field-label-color: var(--text-muted);
+  --floating-field-placeholder-color: var(--text-placeholder);
+  --floating-field-label-font: var(--text-xs);
+  --floating-field-value-font: var(--text-lg);
+  --floating-field-counter-color: var(--text-muted);
+  --floating-field-counter-font: var(--text-xs);
+  --floating-field-counter-space: var(--space-400);
 
   --card-radius:  var(--radius-container);
   --card-pad:     var(--space-200);

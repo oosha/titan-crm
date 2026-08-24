@@ -91,7 +91,8 @@
             "type": "string",
             "enum": [
               "modal-overlay",
-              "sidebar-workspace"
+              "sidebar-workspace",
+              "two-pane-workspace"
             ]
           },
           "summary": {
@@ -105,6 +106,12 @@
           },
           "structure": {
             "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "variations": {
+            "type": "array",
+            "description": "Optional registered forms of the same pattern contract.",
             "items": { "type": "string" },
             "minItems": 1
           },
