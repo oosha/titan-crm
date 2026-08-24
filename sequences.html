@@ -48,17 +48,20 @@
   .seq-library-filter .ds-input { width: auto; min-width: calc(var(--input-height) * 3.5); }
   .seq-library-table-shell {
     overflow-x: auto; border: var(--btn-border-width) solid var(--border-subtle);
-    border-radius: var(--radius-control); background: var(--surface-primary);
+    border-radius: var(--radius-container); background: var(--surface-primary);
   }
   .seq-library-table { width: 100%; min-width: calc(var(--input-height) * 24); border-collapse: collapse; table-layout: fixed; }
+  /* Header and body shape follow the CRM's shared table rules — the same values
+     .dir-table uses on contacts/companies/activities. Keep them in step. */
   .seq-library-table th {
-    padding: var(--space-125) var(--space-150); border-bottom: var(--btn-border-width) solid var(--border-default);
+    padding: var(--space-125) var(--space-200); border-bottom: var(--btn-border-width) solid var(--border-default);
     background: var(--surface-recessed); color: var(--text-muted); font-size: var(--text-2xs);
-    font-weight: var(--weight-semi); text-align: left; white-space: nowrap;
+    font-weight: var(--weight-semi); letter-spacing: 0.055em; text-transform: uppercase;
+    text-align: left; white-space: nowrap;
   }
   .seq-library-table td {
-    height: calc(var(--input-height) * 1.65); padding: var(--space-150);
-    border-bottom: var(--btn-border-width) solid var(--border-subtle); color: var(--text-secondary);
+    height: calc(var(--space-400) + var(--space-300)); padding: var(--space-150) var(--space-200);
+    border-bottom: var(--btn-border-width) solid var(--border-subtle); color: var(--text-primary);
     font-size: var(--text-sm); vertical-align: middle;
   }
   .seq-library-table tbody tr:last-child td { border-bottom: 0; }
@@ -71,8 +74,21 @@
   .seq-library-table th:nth-child(4) { width: 15%; }
   .seq-library-table th:nth-child(5) { width: 13%; }
   .seq-library-table th:nth-child(6) { width: 4%; }
+  /* The identity column carries no avatar the way contacts/companies do, so its
+     name block would otherwise sit flush against the shared 16px inset. The
+     directory pages get the same optical inset for free from their 28px logo;
+     this buys it explicitly. Header and cell move together so they stay aligned. */
+  .seq-library-table th:first-child { padding-inline-start: var(--space-300); }
+  .seq-library-table td:first-child { padding-inline-start: var(--space-300); }
+  .seq-library-table th:first-child .seq-library-sort { margin-inline-start: calc(var(--space-100) * -1); }
+  /* The header label is a sort button, so ds-btn's own type would win over the
+     th. Restate the shared header typography on the control and pull its inline
+     padding back out, so the label sits on the same 16px inset as the cells. */
   .seq-library-sort {
-    margin: calc(var(--space-050) * -1);
+    margin-block: calc(var(--space-050) * -1);
+    margin-inline: calc(var(--space-100) * -1);
+    font-size: var(--text-2xs); font-weight: var(--weight-semi);
+    letter-spacing: 0.055em; text-transform: uppercase; color: var(--text-muted);
   }
   .seq-library-sort-indicator { width: var(--space-150); text-align: center; }
   .seq-library-name { min-width: 0; display: grid; gap: var(--space-050); }
@@ -182,9 +198,14 @@
   .seq-performance-section { margin-top: var(--space-150); }
   .seq-performance-table-wrap { margin-top: var(--space-200); overflow-x: auto; }
   .seq-performance-table { width: 100%; border-collapse: collapse; font-size: var(--text-xs); }
-  .seq-performance-table th { padding: var(--space-100) var(--space-150); color: var(--text-muted); font-weight: var(--weight-semi); text-align: left; border-bottom: var(--btn-border-width) solid var(--border-default); white-space: nowrap; }
-  .seq-performance-table td { padding: var(--space-150); color: var(--text-secondary); border-bottom: var(--btn-border-width) solid var(--border-subtle); vertical-align: middle; }
+  /* Same shared table rules, compact: it is a sub-table already inside a card,
+     so it keeps --text-xs and takes no container of its own. */
+  .seq-performance-table th { padding: var(--space-125) var(--space-200); color: var(--text-muted); font-size: var(--text-2xs); font-weight: var(--weight-semi); letter-spacing: 0.055em; text-transform: uppercase; text-align: left; border-bottom: var(--btn-border-width) solid var(--border-default); white-space: nowrap; }
+  .seq-performance-table td { padding: var(--space-150) var(--space-200); color: var(--text-primary); border-bottom: var(--btn-border-width) solid var(--border-subtle); vertical-align: middle; }
   .seq-performance-table tbody tr:last-child td { border-bottom: 0; }
+  /* Same reason as the library table's identity column. */
+  .seq-performance-table th:first-child,
+  .seq-performance-table td:first-child { padding-inline-start: var(--space-300); }
   .seq-performance-activity { display: grid; gap: var(--space-050); }
   .seq-performance-activity strong { color: var(--text-heading); font-weight: var(--weight-semi); }
   .seq-performance-empty { padding: calc(var(--space-400) * 2); text-align: center; color: var(--text-secondary); }

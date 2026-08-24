@@ -34,10 +34,9 @@ const TARGETS = {
   custom:      { label: 'Custom field', type: 'text' },
 };
 
-// name and email are the two a record cannot exist without: email is the key the
-// whole Contacts/Companies layer deduplicates on (contactKey() → "e:<email>"), and
-// name is what every surface renders. A submission missing either is a record you
-// can neither act on nor merge.
+// Name and email are locked into every form because they are the record's core identity
+// destinations: they cannot be removed or redirected. Locked does not mean required,
+// though—the stored field's `required` flag controls whether a submission may omit one.
 const LOCKED_TARGETS = ['name', 'email'];
 
 // The input types a form field may declare. `date` and `time` were missing, which made
@@ -97,7 +96,7 @@ function publicForm(form, pipeline) {
     fields: (form.fields || []).map(function (f) {
       return {
         key: f.key, label: f.label, type: f.type || 'text',
-        required: !!f.required || LOCKED_TARGETS.indexOf(f.target) !== -1,
+        required: !!f.required,
         placeholder: f.placeholder || '',
         options: Array.isArray(f.options) ? f.options.slice(0, LIMITS.options) : undefined,
       };
@@ -115,7 +114,7 @@ function validateSubmission(form, body) {
   const values = {};
   for (let i = 0; i < fields.length; i++) {
     const f = fields[i];
-    const required = !!f.required || LOCKED_TARGETS.indexOf(f.target) !== -1;
+    const required = !!f.required;
     const raw = submitted[f.key];
     const v = (raw == null ? '' : String(raw)).trim().slice(0, f.target === 'note' ? LIMITS.note : LIMITS.value);
     if (!v) {
@@ -201,6 +200,10 @@ function buildCard(doc, pipeline, form, values) {
     note: byTarget.note || '',
     noteAuthor: name || 'Form',
     noteDate: '',
+    // A real timestamp, unlike lastActivity, which is a frozen display string: every
+    // form card said 'just now' forever, so nothing downstream could order or age them.
+    // Nothing reads this yet — it is here so the data accrues before a surface needs it.
+    createdAt: new Date().toISOString(),
     lastActivity: 'just now',
     activityType: 'Form submission',
     overdue: false,

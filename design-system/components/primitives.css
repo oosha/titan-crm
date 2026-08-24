@@ -22,6 +22,10 @@
 .ds-input--invalid { border-color: var(--status-danger); }
 .ds-input--invalid:focus { box-shadow: var(--focus-ring-danger); }
 
+/* Large: the same boxed control with a little more vertical room. Form editors use it
+   where a compact 34px field makes editable rows read denser than the content around them. */
+.ds-input--lg { height: var(--input-height-lg); font-size: var(--text-lg); }
+
 /* Inline: edit-in-place, where a boxed field would put a border around what reads as body
    text. Found on the record screen, which edits 25 values this way — mapping those onto the
    boxed .ds-input would have drawn 25 boxes into a reading layout. It is still a real input:

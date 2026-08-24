@@ -192,19 +192,21 @@ body.fb-locked { overflow: hidden; }
   --fb-workspace-max: calc(var(--space-400) * 45);
   --fb-editor-max: calc(var(--space-400) * 27);
   --fb-preview-max: calc(var(--space-400) * 18);
+  --fb-editor-share: 60%;
+  --fb-preview-share: 40%;
   --fb-publish-motion: calc(var(--dur-slow) + var(--dur-slow));
   display: grid;
   grid-template-columns:
     minmax(0, 1fr)
-    minmax(0, min(60%, var(--fb-editor-max)))
-    minmax(0, min(40%, var(--fb-preview-max)))
+    minmax(0, min(var(--fb-editor-share), var(--fb-editor-max)))
+    minmax(0, min(var(--fb-preview-share), var(--fb-preview-max)))
     minmax(0, 1fr);
   align-items: stretch; justify-content: stretch; gap: 0;
 }
 .fb-inline .fb-edit,
-.fb-inline .fb-preview {
-  min-width: 0; min-height: 0; overflow-y: auto;
-}
+.fb-inline .fb-preview { min-width: 0; min-height: 0; }
+.fb-inline .fb-edit { overflow-y: auto; }
+.fb-inline .fb-preview { overflow: hidden; }
 .fb-inline .fb-edit,
 .fb-inline .fb-preview { transition-duration: var(--fb-publish-motion); }
 .fb-inline .fb-edit { grid-column: 1 / 3; background: var(--surface-page); }
@@ -217,7 +219,7 @@ body.fb-locked { overflow: hidden; }
   padding-right: calc(var(--space-400) + var(--space-200));
 }
 .fb-inline .fb-preview-content {
-  position: relative; max-width: none;
+  position: relative; max-width: none; height: 100%; overflow-y: auto;
 }
 .fb-inline .fb-preview {
   grid-column: 3 / 5;
@@ -231,6 +233,31 @@ body.fb-locked { overflow: hidden; }
   );
   background-size: var(--space-200) var(--space-200);
 }
+.fb-workspace-measure {
+  position: absolute; width: var(--fb-workspace-max); height: 0;
+  visibility: hidden; pointer-events: none;
+}
+.fb-pane-resizer { display: none; }
+.fb-inline .fb-pane-resizer {
+  display: block;
+  position: absolute; z-index: 3; top: 0; bottom: 0; left: 0;
+  width: var(--space-200); transform: translateX(-50%);
+  cursor: col-resize; touch-action: none; outline: none;
+}
+.fb-inline .fb-pane-resizer::after {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: var(--space-050); height: var(--space-400);
+  border-radius: var(--radius-full); background: var(--border-default);
+  transform: translate(-50%, -50%);
+  transition: var(--motion-hover);
+}
+.fb-inline .fb-pane-resizer:hover::after,
+.fb-inline .fb-pane-resizer:focus-visible::after,
+.fb-cols.is-resizing .fb-pane-resizer::after {
+  height: calc(var(--space-400) + var(--space-200));
+  background: var(--accent-primary);
+}
+.fb-cols.is-resizing { cursor: col-resize; user-select: none; }
 .fb-share { display: none; }
 .fb-inline .fb-preview-title {
   position: absolute; z-index: 1; top: var(--space-150); left: var(--space-150);
@@ -247,6 +274,7 @@ body.fb-locked { overflow: hidden; }
   max-width: none; margin-inline: 0;
 }
 .fb-inline .fb-cols.is-published .fb-preview-title { opacity: 0; }
+.fb-inline .fb-cols.is-published .fb-pane-resizer { display: none; }
 .fb-inline .fb-cols.is-published .fb-share {
   display: block; grid-column: 3 / 5; min-width: 0; min-height: 0; overflow-y: auto;
   border-left: var(--btn-border-width) solid var(--border-default);
@@ -323,8 +351,10 @@ body.fb-locked { overflow: hidden; }
   .fb-inline .fb-share { flex: 0 0 auto; overflow: visible; }
   .fb-inline .fb-edit-content,
   .fb-inline .fb-preview-content {
-    max-width: none; margin-inline: 0; padding: var(--space-300);
+    max-width: none; height: auto; overflow: visible;
+    margin-inline: 0; padding: var(--space-300);
   }
+  .fb-inline .fb-pane-resizer { display: none; }
   .fb-inline .fb-preview {
     border-left: 0; border-top: var(--btn-border-width) solid var(--border-default);
   }
@@ -337,16 +367,9 @@ body.fb-locked { overflow: hidden; }
 
 .fb-card { margin-bottom: var(--space-200); }
 .fb-card:last-child { margin-bottom: 0; }
-.fb-card-title {
-  font-size: var(--text-2xs); font-weight: var(--weight-bold);
-  letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--text-muted); margin-bottom: var(--space-200);
-}
 .fb-row { display: grid; gap: var(--space-150); margin-bottom: var(--space-200); }
 .fb-row:last-child { margin-bottom: 0; }
-/* Same treatment as a card's own title ("FIELDS" in the box below): these label a section of
-   the editor, not a value, and two different label styles in adjacent boxes read as two
-   different kinds of thing. */
+/* Meta fields elsewhere in the editor retain their compact section-label treatment. */
 .fb-row label {
   font-size: var(--text-2xs); font-weight: var(--weight-bold);
   letter-spacing: 0.05em; text-transform: uppercase;
@@ -360,13 +383,26 @@ body.fb-locked { overflow: hidden; }
    destination carries the type, so a line restating both was the two-control confusion
    returning as prose.
    Only "Choose from a list" still adds a second grid row, for its options input. */
+.fb-field-head,
 .fb-field {
   display: grid;
   /* The destination column is wider than the type picker it replaced: it carries record
      field names, which are the record's own wording ("Delivery address", "Current title")
      rather than eight fixed words. */
-  grid-template-columns: 18px minmax(0, 1fr) 208px auto auto;
-  column-gap: var(--space-150); row-gap: var(--space-125);
+  grid-template-columns:
+    18px minmax(0, 1fr) 208px calc(var(--space-400) * 3) var(--btn-height-sm);
+  column-gap: var(--space-150);
+}
+.fb-field-head {
+  padding-bottom: var(--space-075);
+  color: var(--text-muted); font-size: var(--text-2xs);
+  font-weight: var(--weight-bold); letter-spacing: 0.05em;
+  text-align: left; text-transform: uppercase;
+}
+.fb-field-head-name { grid-column: 2; }
+.fb-field-head-dest { grid-column: 3; }
+.fb-field {
+  row-gap: var(--space-125);
   align-items: center;
   /* Roomier than the controls strictly need: this is a list you read down to check what a
      form asks, and at --space-125 the rows ran together into a block of inputs. */
@@ -395,6 +431,9 @@ body.fb-locked { overflow: hidden; }
   flex: 0 0 auto; color: var(--text-muted); font-size: var(--text-2xs);
   font-weight: var(--weight-bold); letter-spacing: 0.05em; line-height: 1;
   text-transform: uppercase;
+  /* Uppercase ink sits high inside its compact line box; this derived half-step centres
+     the visible letters against the selected value without changing either baseline. */
+  transform: translateY(calc(var(--space-025) / 2));
 }
 .fb-dest-trigger .ds-menu-caret { flex-shrink: 0; color: var(--text-muted); display: flex; }
 /* It is shaped like a field but behaves like a button, so it answers like one: a tint, not
@@ -415,8 +454,11 @@ body.fb-locked { overflow: hidden; }
 
 /* Long field lists shouldn't run off the screen; the header stays put while they scroll.
    Tall enough that "Add custom field" is in view on a pipeline with a few custom fields of
-   its own — at 340px the group you were looking for was the one below the fold. */
-.fb-dest-menu { max-height: 440px; overflow-y: auto; }
+   its own — at 340px the group you were looking for was the one below the fold.
+   This is the ceiling only. placeMenu() lowers it to the room actually left above or below
+   the trigger, because a fixed panel taller than that space has no page scroll to reach
+   the part hanging off the viewport. */
+.fb-dest-menu { max-height: 440px; overflow-y: auto; overscroll-behavior: contain; }
 
 /* Which record every name below belongs to, and nothing else — the two groups name
    themselves. `align-items: start` keeps the tag its own width; stretched, a tag spanning
@@ -436,6 +478,17 @@ body.fb-locked { overflow: hidden; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
 }
 
+/* The pipeline's own mark on each row that is one of the record's fields. Its colour comes
+   in as --pipe, the same custom property ds-pipeline-tag takes, so the glyph is the
+   pipeline's hue at full strength rather than a palette pick. Sized to the row's text and
+   held to its line so a wrapping label doesn't drag it out of alignment. */
+.fb-dest-mark {
+  flex: none; display: flex; align-items: center; line-height: 0;
+  color: var(--pipe, var(--accent-primary));
+}
+/* A ticked row is unpickable, so its mark dims with the rest of it rather than staying the
+   one saturated thing in a row that reads as unavailable. */
+.ds-menu__item[aria-disabled="true"] .fb-dest-mark { opacity: 0.4; }
 .fb-dest-label { overflow: hidden; text-overflow: ellipsis; }
 /* The current destination, marked by weight and fill rather than by a second tick — the
    tick on the right already means "another question has this one". */
@@ -478,28 +531,34 @@ body.fb-locked { overflow: hidden; }
    The tile IS the upload control. It used to be a dead preview with an "Upload logo"
    button beside it, which made branding read as a second task rather than one field with
    a picture in it. */
+/* The tile stacks above the title, left-aligned, rather than sitting in a second column
+   beside it. Beside the field it competed with the one control on this panel worth
+   reading at a glance, and it had to stretch to whatever height the label happened to
+   wrap to. On its own line it is a fixed tile and the title field gets the full width. */
 .fb-title-row {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-150); align-items: stretch;
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: var(--space-300);
 }
-/* .fb-row carries a bottom margin for stacking, and it is not :last-child here — the file
-   input and the logo slot follow it — so that margin stayed, and aligning the tile to the
-   row's end put it 12px below the field it sits beside. */
-.fb-title-row .fb-row { margin-bottom: 0; }
 
 /* Its own positioning context, so the remove button pins to the tile rather than to the
    row — the row's width changes with the panel, the tile's does not. */
-.fb-logo-slot { position: relative; display: flex; }
+.fb-logo-slot { position: relative; display: inline-flex; flex: none; }
 .fb-logo-drop {
-  /* Fills the label + field column beside it, top to bottom, rather than picking a height
-     of its own — so the two line up whatever the label wraps to.
+  /* A square tile with a squircle corner, not a wide field-shaped box: what goes in it is
+     a logo, and a logo is squarer than it is wide. The old --input-radius made it read as
+     another input on a panel full of them.
      Blue and dashed, matching .ds-btn--add: this is an empty slot inviting a file, which
      is the same thing that component says, and the product should only have one way of
      saying it. */
   box-sizing: border-box;
-  flex: 1; min-width: 96px; max-width: 132px;
-  padding: 0 var(--space-125);
-  border: 1px dashed var(--blue-200); border-radius: var(--input-radius);
+  flex: none;
+  width: calc(var(--space-400) * 2 + var(--space-200));
+  height: calc(var(--space-400) * 2 + var(--space-200));
+  padding: var(--space-100);
+  /* ~22% of the side, which is the proportion that reads as a squircle rather than as a
+     rounded rectangle. Derived from --radius-xl so it still moves with the scale; no
+     token is this large because nothing else in the system is this shape. */
+  border: 1px dashed var(--blue-200); border-radius: calc(var(--radius-xl) * 1.5);
   background: var(--accent-subtle); cursor: pointer;
   display: flex; align-items: center; justify-content: center; overflow: hidden;
   color: var(--text-accent); font: inherit;
@@ -509,8 +568,10 @@ body.fb-locked { overflow: hidden; }
   background: var(--accent-muted); border-color: var(--accent-primary);
 }
 .fb-logo-drop:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+/* Stacked, not side by side: in a square the icon-over-label pair centres properly,
+   where a horizontal pair left thin margins and a wide gap under it. */
 .fb-logo-empty {
-  display: flex; align-items: center; gap: var(--space-075);
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-050);
   font-size: var(--text-xs); font-weight: var(--weight-medium); white-space: nowrap;
 }
 /* Filled, the tile is a preview rather than an invitation, so it drops both the dashed
@@ -534,9 +595,6 @@ body.fb-locked { overflow: hidden; }
   box-shadow: var(--elevation-raise);
 }
 .fb-logo-clear:hover { color: var(--status-danger); border-color: var(--border-danger); }
-
-/* The form's title is the one field on this panel worth reading at a glance. */
-.fb-big { font-size: var(--text-lg); height: var(--btn-height-lg); }
 
 .fb-toggle {
   display: flex; align-items: center; gap: var(--space-125); font-size: var(--text-sm);

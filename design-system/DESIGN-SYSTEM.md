@@ -72,6 +72,10 @@ design-system component. Two-pane workspace is likewise a composition contract r
 a `ds-*` class: each adopting page owns its pane proportions and shared content maximum
 width while preserving full-bleed pane surfaces, one horizontally centred content frame,
 the full-height separator, independent scrolling, semantic surfaces and responsive fallback.
+It supports fixed and bounded-resizable variations. A resizable split keeps a content-driven
+default, clamps both panes to page-owned usable limits, exposes an accessible keyboard-operable
+separator, and disappears when the panes stack; dragging never expands the shared frame or
+allows either pane to collapse.
 
 Adding a direction is therefore one file in `themes/` plus one entry in the registry's
 `themes` array — the workbench picks up both the header control and the side-by-side
@@ -273,6 +277,11 @@ absorb, which is also its priority:
 | Nav item, Side panel, Stat tile, Search bar | planned | page-specific today |
 | Chart marks, Brand marks | **excluded** | not components — data geometry and brand art |
 
+Floating field is a registered composite built on the Input role rather than a new
+inventory block: it composes a real `.ds-input`, persistent label and optional counter.
+The inventory remains a census of recurring product roles, while the component registry
+may contain compositions that make one of those roles usable in a distinct interaction.
+
 Read that inventory before adding anything. Two rules follow from it:
 
 1. **If a block is `planned`, you are the one who builds it** — as a component, not as
@@ -327,9 +336,9 @@ Two rules this measurement enforces:
 
 ## Known gaps
 
-- **21 of the 28 blocks are still `planned`** — see the inventory above. The system
-  currently governs tokens everywhere they are linked, icons in the sidebar, five
-  primitives and two composites; everything else is per-page.
+- **21 of the 28 inventory blocks are still `planned`** — see the inventory above. The
+  system currently governs tokens everywhere they are linked and includes registered
+  primitives and composites such as Floating field; everything else is per-page.
 - **Menu is built but not yet adopted.** `pipeline-nav-menu`, `card-action-menu` and
   `account-menu` are still hand-rolled; only the board's split button goes through
   `ds-menu`. Built is not adopted — that is the whole point of the two scripts.

@@ -23,6 +23,11 @@
   // form stored as paused would otherwise have no way back — its link would 404 for
   // good with no control on any screen to explain it or undo it.
   const PAUSE_UI = false;
+  const TITLE_MAX = 80;
+  const PANE_EDITOR_MIN = 50;
+  const PANE_EDITOR_MAX = 68;
+  const PANE_EDITOR_DEFAULT = 60;
+  const PANE_KEY_STEP = 2;
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
@@ -177,7 +182,22 @@
   // uses — the state, said once, in the place a list says states, instead of repeating
   // "already asked" in every label. Ticked rows are unpickable: one record field holds one
   // answer, and disabling it in place shows why rather than making it vanish.
-  function destItemHTML(d) {
+  // `pipeline` marks the rows that are fields the record already has, so each one carries
+  // the pipeline's own mark in the pipeline's own colour — the same glyph the sticky header
+  // above them and the sidebar row use. It says "this answer lands on a field of that
+  // record" at the row level, where the choice is actually made, rather than only once at
+  // the top of the panel. The "Create a new field" kinds deliberately go without: those
+  // are not fields of the pipeline yet, and marking them would erase the one distinction
+  // the two groups exist to draw. dsPipelineTag.mark() is the registered way to take that
+  // glyph on its own; the fallback is no mark rather than a hand-drawn path.
+  function pipelineMark(pipeline) {
+    return (pipeline && window.dsPipelineTag && window.dsPipelineTag.mark)
+      ? '<span class="fb-dest-mark" style="--pipe: ' + esc(pipeline.color || '#2170f4') + '"' +
+          ' aria-hidden="true">' + window.dsPipelineTag.mark(12) + '</span>'
+      : '';
+  }
+  function destItemHTML(d, pipeline) {
+    const mark = pipelineMark(pipeline);
     const meta = d.used
       ? '<span class="ds-menu__meta fb-dest-tick">' +
           (window.dsIcon ? window.dsIcon('check', { size: 13 }) : '✓') + '</span>'
@@ -188,28 +208,44 @@
       ' data-pick="' + esc(d.value) + '"' +
       (d.used ? ' aria-disabled="true"' : '') +
       (d.selected ? ' aria-current="true"' : '') + '>' +
-      '<span class="fb-dest-label">' + esc(d.label) + '</span>' + meta +
+      mark + '<span class="fb-dest-label">' + esc(d.label) + '</span>' + meta +
     '</button>';
   }
 
   // Viewport coordinates for a `--fixed` panel: under its trigger, aligned to its left
   // edge, and flipped above when there isn't room below — a field near the bottom of a
   // long form would otherwise open a list you can't see.
+  //
+  // The height cap has to come from the space actually available, not from a constant.
+  // The panel's CSS caps it at 440px, and flipping alone doesn't help when neither side
+  // has 440px: the list then ran past the top or bottom of the viewport, and because it
+  // is `position: fixed` there was no page scroll that could reach the part cut off —
+  // its own overflow only scrolls within whatever box it was given. Clamping to the
+  // chosen side's room is what makes that overflow usable.
   function placeMenu(trigger, panel) {
     if (!trigger || !panel) return;
     const r = trigger.getBoundingClientRect();
     const gap = 6;
+    const edge = 8;                       // never sit flush against the viewport edge
+    const floor = 160;                    // below this a list is worse than a cramped one
     panel.style.minWidth = Math.max(r.width, 240) + 'px';
     panel.style.left = Math.round(r.left) + 'px';
-    // Measured with the panel laid out but not shown, so `display: none` doesn't report 0.
+    // Measured with the panel laid out but not shown, so `display: none` doesn't report 0,
+    // and with any previous clamp cleared so this reads the natural height.
+    panel.style.maxHeight = '';
     panel.style.visibility = 'hidden';
     panel.style.display = 'block';
     const h = panel.offsetHeight;
     panel.style.display = '';
     panel.style.visibility = '';
-    const below = window.innerHeight - r.bottom;
-    if (below < h + gap && r.top > below) panel.style.top = Math.round(r.top - h - gap) + 'px';
-    else panel.style.top = Math.round(r.bottom + gap) + 'px';
+    const below = window.innerHeight - r.bottom - gap - edge;
+    const above = r.top - gap - edge;
+    // Flip up only when below cannot hold the list and above genuinely has more room.
+    const flipUp = below < h && above > below;
+    const room = Math.max(flipUp ? above : below, floor);
+    const height = Math.min(h, room);
+    panel.style.maxHeight = height + 'px';
+    panel.style.top = Math.round(flipUp ? r.top - height - gap : r.bottom + gap) + 'px';
   }
 
   // The pipeline the panel's fields belong to, as the design system's Pipeline tag — the
@@ -229,9 +265,10 @@
   }
 
   // What a new form starts with, by the kind of pipeline it feeds. Name and email are
-  // always there because a record needs them; the rest is the shortest set that makes
-  // the form useful without editing — a candidate is asked for a CV link and why the
-  // role, an enquiry for its company and what it needs. Everything is removable.
+  // always present as the record's identity fields and default to required, but the user
+  // may make either optional. The rest is the shortest set that makes the form useful
+  // without editing — a candidate is asked for a CV link and why the role, an enquiry for
+  // its company and what it needs. Everything except the identity fields is removable.
   const PRESETS = {
     hiring: [
       { key: 'phone',    label: 'Phone',        type: 'tel',      target: 'phone' },
@@ -286,12 +323,11 @@
         '<div class="fb-edit-content">' +
         // The logo tile is the upload control, not a preview beside one. A separate
         // "Upload logo" button made branding look like a second task; here the thing you
-        // click is the thing you get, and it sits where it sits on the form itself —
-        // to the left of the title.
+        // click is the thing you get. It leads the card, above the title and flush left,
+        // which is also the order they appear in on the form itself. DOM order is the
+        // visual order, so tabbing goes logo then title.
         '<div class="ds-card ds-card--section fb-card">' +
           '<div class="fb-title-row">' +
-            '<div class="fb-row"><label for="fb-heading">Form title</label>' +
-              '<input class="ds-input fb-big" id="fb-heading" data-meta="heading" placeholder="e.g. Apply — Senior Frontend Engineer"></div>' +
             '<div class="fb-logo-slot">' +
               '<button type="button" class="fb-logo-drop" title="Add a logo">' +
                 '<span class="fb-logo-empty">' +
@@ -303,12 +339,22 @@
                 (window.dsIcon ? window.dsIcon('close', { size: 11 }) : '&times;') +
               '</button>' +
             '</div>' +
+            '<div class="ds-floating-field ds-floating-field--counted">' +
+              '<input class="ds-input" id="fb-heading" data-meta="heading" placeholder=" "' +
+                ' maxlength="' + TITLE_MAX + '">' +
+              '<label class="ds-floating-field__label" for="fb-heading">Form title</label>' +
+              '<span class="ds-floating-field__counter" aria-hidden="true"><span data-title-count>0</span>/' +
+                TITLE_MAX + '</span>' +
+            '</div>' +
             '<input type="file" class="fb-logo-file" accept="image/*" hidden>' +
           '</div>' +
         '</div>' +
 
         '<div class="ds-card ds-card--section fb-card">' +
-          '<div class="fb-card-title">Fields</div>' +
+          '<div class="fb-field-head">' +
+            '<span class="fb-field-head-name">Field name</span>' +
+            '<span class="fb-field-head-dest">Save to</span>' +
+          '</div>' +
           '<div class="fb-fields"></div>' +
           '<button type="button" class="ds-btn ds-btn--add fb-add-btn">Add a new field</button>' +
         '</div>' +
@@ -319,6 +365,10 @@
       '</section>' +
 
       '<section class="fb-preview" aria-label="Form preview">' +
+        '<div class="fb-pane-resizer" role="separator" tabindex="0"' +
+          ' aria-label="Resize editor and preview panes" aria-orientation="vertical"' +
+          ' aria-valuemin="' + PANE_EDITOR_MIN + '" aria-valuemax="' + PANE_EDITOR_MAX + '"' +
+          ' aria-valuenow="' + PANE_EDITOR_DEFAULT + '"></div>' +
         '<div class="fb-preview-content">' +
         '<h2 class="fb-preview-title">Preview</h2>' +
         '<div class="fb-preview-stage">' +
@@ -362,8 +412,15 @@
     // Meta inputs bound straight onto the form object.
     host.querySelectorAll('[data-meta]').forEach(function (el) {
       const key = el.dataset.meta;
+      const count = key === 'heading' ? self.$('[data-title-count]') : null;
+      const syncCount = function () { if (count) count.textContent = el.value.length; };
       el.value = self.form[key] || '';
-      el.addEventListener('input', function () { self.form[key] = el.value; self.renderPreview(); });
+      syncCount();
+      el.addEventListener('input', function () {
+        self.form[key] = el.value;
+        syncCount();
+        self.renderPreview();
+      });
     });
     if (PAUSE_UI) {
       this.$('.fb-enabled').checked = !!this.form.enabled;
@@ -374,12 +431,104 @@
     }
     this.$('.fb-add-btn').addEventListener('click', function () { self.addField(); });
     this.wireLogo();
+    this.wirePaneResize();
 
     this.healCustomDefs();
     this.renderFields();
     this.renderPreview();
     this.renderLogo();
   }
+
+  // The full-page form route owns a resizable two-pane workspace. The separator changes
+  // the editor's share of one centred, width-bounded frame; the preview receives the
+  // remainder, so dragging never makes the combined content rails wider than the pattern's
+  // shared maximum. The stacked responsive layout hides the separator and ignores input.
+  Builder.prototype.wirePaneResize = function () {
+    if (!this.inline) return;
+    const cols = this.$('.fb-cols');
+    const handle = this.$('.fb-pane-resizer');
+    if (!cols || !handle) return;
+
+    let ratio = PANE_EDITOR_DEFAULT;
+    let workspaceMax = 0;
+    let dragging = false;
+
+    function clamp(next) {
+      return Math.min(PANE_EDITOR_MAX, Math.max(PANE_EDITOR_MIN, next));
+    }
+    function measureWorkspaceMax() {
+      const probe = document.createElement('span');
+      probe.className = 'fb-workspace-measure';
+      cols.appendChild(probe);
+      const width = probe.getBoundingClientRect().width;
+      probe.remove();
+      return width || cols.clientWidth;
+    }
+    function apply(next) {
+      ratio = clamp(next);
+      const boundedWidth = Math.min(cols.clientWidth, workspaceMax || cols.clientWidth);
+      const editorWidth = boundedWidth * ratio / 100;
+      const previewWidth = boundedWidth - editorWidth;
+      cols.style.setProperty('--fb-editor-share', ratio + '%');
+      cols.style.setProperty('--fb-preview-share', (100 - ratio) + '%');
+      cols.style.setProperty('--fb-editor-max', editorWidth + 'px');
+      cols.style.setProperty('--fb-preview-max', previewWidth + 'px');
+      handle.setAttribute('aria-valuenow', String(Math.round(ratio)));
+      handle.setAttribute('aria-valuetext',
+        'Editor ' + Math.round(ratio) + '%, preview ' + Math.round(100 - ratio) + '%');
+    }
+    function frame() {
+      const rect = cols.getBoundingClientRect();
+      const width = Math.min(rect.width, workspaceMax || rect.width);
+      return { left: rect.left + (rect.width - width) / 2, width: width };
+    }
+    function ratioAt(clientX) {
+      const bounds = frame();
+      return bounds.width ? (clientX - bounds.left) / bounds.width * 100 : ratio;
+    }
+    function finish(event) {
+      if (!dragging) return;
+      dragging = false;
+      cols.classList.remove('is-resizing');
+      if (event && handle.hasPointerCapture && handle.hasPointerCapture(event.pointerId)) {
+        handle.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    workspaceMax = measureWorkspaceMax();
+    apply(ratio);
+
+    handle.addEventListener('pointerdown', function (event) {
+      if (event.button !== 0 || window.matchMedia('(max-width: 1000px)').matches) return;
+      event.preventDefault();
+      dragging = true;
+      cols.classList.add('is-resizing');
+      handle.setPointerCapture(event.pointerId);
+      apply(ratioAt(event.clientX));
+    });
+    handle.addEventListener('pointermove', function (event) {
+      if (!dragging) return;
+      event.preventDefault();
+      apply(ratioAt(event.clientX));
+    });
+    handle.addEventListener('pointerup', finish);
+    handle.addEventListener('pointercancel', finish);
+    handle.addEventListener('lostpointercapture', finish);
+    handle.addEventListener('keydown', function (event) {
+      let next = ratio;
+      if (event.key === 'ArrowLeft') next -= PANE_KEY_STEP;
+      else if (event.key === 'ArrowRight') next += PANE_KEY_STEP;
+      else if (event.key === 'Home') next = PANE_EDITOR_MIN;
+      else if (event.key === 'End') next = PANE_EDITOR_MAX;
+      else return;
+      event.preventDefault();
+      apply(next);
+    });
+    window.addEventListener('resize', function () {
+      workspaceMax = measureWorkspaceMax();
+      apply(ratio);
+    });
+  };
 
   // The mounted full-page route and legacy modal share the preview's FLIP movement. The
   // inline route adds a right-hand sharing pane; the compatibility modal keeps its compact
@@ -628,7 +777,7 @@
 
       return '<div class="fb-field' + (locked ? ' is-locked' : '') + '" data-i="' + i + '"' + (locked ? '' : ' draggable="true"') + '>' +
         '<span class="fb-grip">⋮⋮</span>' +
-        '<input class="ds-input" value="' + esc(f.label || '') + '" data-act="label" placeholder="Field label">' +
+        '<input class="ds-input ds-input--lg" value="' + esc(f.label || '') + '" data-act="label" placeholder="Field label">' +
         // One control, not two. "Saves to" is the whole decision: a record field carries
         // its own type, and the kinds under "Add custom field" are the only case where a
         // type is picked at all — so they belong in this list rather than in a second
@@ -642,20 +791,22 @@
         // disabled. A chip in this column said "this row is a different kind of thing", when
         // the truth is narrower: it is the same choice, already made and not yours to change.
         (locked
-          ? '<button type="button" class="ds-input fb-dest-trigger" disabled' +
+          ? '<button type="button" class="ds-input ds-input--lg fb-dest-trigger" disabled' +
               ' title="' + esc(f.target === 'name'
-                  ? 'Always asked — every record is listed by name'
-                  : 'Always asked — email is how contacts are matched') + '">' +
-              '<span class="fb-dest-value"><span class="fb-dest-current">' +
+                  ? 'Always included — every record can carry a name'
+                  : 'Always included — email is used to match contacts') + '">' +
+              '<span class="fb-dest-value">' + pipelineMark(self.pipeline) +
+                '<span class="fb-dest-current">' +
                 esc(fieldLabel(schema, TARGET_BY[f.target])) + '</span></span>' +
               '<span class="ds-menu-caret">' +
                 (window.dsIcon ? window.dsIcon('caret-down', { size: 12 }) : '▾') + '</span>' +
             '</button>'
           : '<div class="fb-dest-pick">' +
-              '<button type="button" class="ds-input fb-dest-trigger' +
+              '<button type="button" class="ds-input ds-input--lg fb-dest-trigger' +
                 (chosen ? '' : ' is-empty') + '" data-act="dest"' +
                 ' data-ds-menu="' + esc(menuId) + '" aria-haspopup="menu" aria-expanded="false">' +
                 '<span class="fb-dest-value">' +
+                  (selectedAbove ? pipelineMark(self.pipeline) : '') +
                   '<span class="fb-dest-current">' + esc(triggerLabel) + '</span>' +
                   (isNewCustom ? '<span class="fb-new-field-label">New field</span>' : '') +
                 '</span>' +
@@ -671,7 +822,7 @@
                 // Both groups are named, and named for what choosing from them does: point
                 // the question at a field the record has, or make one it doesn't.
                 '<div class="ds-menu__label">Existing fields</div>' +
-                dests.map(function (d) { return destItemHTML(d); }).join('') +
+                dests.map(function (d) { return destItemHTML(d, self.pipeline); }).join('') +
                 // No rule between the groups — the label carries --menu-group-gap above it,
                 // which is the Menu component's way of separating them. See DESIGN-SYSTEM.md,
                 // "separate with space before you separate with a line".
@@ -690,12 +841,12 @@
                 // itself so the row can't claim a destination the field doesn't have.
                 (staleValue
                   ? '<div class="ds-menu__label">As saved</div>' +
-                    destItemHTML({ value: staleValue, label: staleLabel, selected: true })
+                    destItemHTML({ value: staleValue, label: staleLabel, selected: true }, self.pipeline)
                   : '') +
               '</div>' +
             '</div>') +
-        '<label class="fb-req"><input type="checkbox" data-act="req"' + (f.required || locked ? ' checked' : '') +
-          (locked ? ' disabled' : '') + '> Required</label>' +
+        '<label class="fb-req"><input type="checkbox" data-act="req"' + (f.required ? ' checked' : '') +
+          '> Required</label>' +
         '<button type="button" class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm fb-del" data-act="del" title="Remove this field">' +
           (window.dsIcon ? window.dsIcon('close', { size: 13 }) : '×') + '</button>' +
         // No caption under the row. The destination names itself in the control, and the
@@ -710,7 +861,7 @@
         // containing only "Choose…" — a type that could not work.
         (isSelect
           ? '<div class="fb-options">' +
-              '<input class="ds-input" data-act="options" placeholder="Options, separated by commas" ' +
+              '<input class="ds-input ds-input--lg" data-act="options" placeholder="Options, separated by commas" ' +
                 'value="' + esc((f.options || []).join(', ')) + '">' +
             '</div>'
           : '') +
@@ -909,6 +1060,9 @@
 
   Builder.prototype.collect = function () {
     if (!String(this.form.heading || '').trim()) return { error: 'Give the form a title — it’s the first thing a reader sees.' };
+    if (String(this.form.heading || '').length > TITLE_MAX) {
+      return { error: 'Keep the form title to ' + TITLE_MAX + ' characters or fewer.' };
+    }
 
     // A row is blank when it is added, so saving has to be the thing that insists on both
     // halves. Neither can be guessed: an unnamed field renders as its key on the public

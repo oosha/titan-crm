@@ -193,8 +193,12 @@
   function emailCellHTML(email) {
     return email ? '<a class="dir-link" href="mailto:' + esc(email) + '">' + esc(email) + '</a>' : '<span class="dir-muted">—</span>';
   }
+  // Plain text, not a tel: link. A desktop click on one of these opens whatever
+  // handler the OS has registered rather than placing a call, and the row itself
+  // is the control here — it opens the panel. The panel shows the number as a
+  // details row for the same reason.
   function phoneCellHTML(phone) {
-    return phone ? '<a class="dir-link" href="tel:' + esc(phone.replace(/\s+/g, '')) + '">' + esc(phone) + '</a>' : '<span class="dir-muted">—</span>';
+    return phone ? esc(phone) : '<span class="dir-muted">—</span>';
   }
 
   // Patches just the cells an edit can change, so the row you're editing keeps

@@ -85,10 +85,15 @@
   <!-- Full-page settings deliberately replaces the global CRM sidebar. -->
   <div class="main-area">
     <div class="subpage-top">
-      <span class="subpage-back" id="fp-back">
+      <!-- Icon only, matching the sequences editor's header: the arrow in a page's top-left
+           already says Back, and the word competed with the title beside it. The label it
+           used to show lives on aria-label, which is also where the published state's
+           "Back to editing" wording goes. A real button, so it is focusable and keyboard
+           operable — this was a span with a click handler. -->
+      <button class="ds-btn ds-btn--ghost ds-btn--icon ds-btn--sm subpage-back" type="button"
+              id="fp-back" aria-label="Back" title="Back">
         <span data-ds-icon="back" data-size="13"></span>
-        <span id="fp-back-label">Back</span>
-      </span>
+      </button>
       <span class="subpage-title" id="fp-title">Form setup</span>
       <!-- The form's link, once there is one to show. Filled by the builder's shared
            link-row renderer so the editor has one definition of this output. -->
@@ -109,6 +114,18 @@
 <script src="/crm-schema.js"></script>
 <!-- dsMenu drives the field-destination picker inside form-builder.js: one open at a
      time, outside click, Escape, arrow keys. -->
+<script>
+  // dsMenu closes fixed menus when their anchor moves under a page/pane scroll. The
+  // destination picker is itself scrollable, though, and that scroll does not move its
+  // anchor. Register this guard before menu.js so a trackpad gesture over the list can
+  // scroll the list without being mistaken for an outside scroll and closing it.
+  window.addEventListener('scroll', function (event) {
+    var target = event.target;
+    if (target && target.nodeType === 1 && target.closest('.fb-dest-menu')) {
+      event.stopImmediatePropagation();
+    }
+  }, true);
+</script>
 <script src="/design-system/components/menu.js"></script>
 <!-- Pipeline tag names the pipeline in the builder's destination picker. -->
 <script src="/design-system/components/pipeline-tag.js"></script>
@@ -150,7 +167,10 @@
     publishedView = published;
     builder.setPublished(published);
     document.querySelector('.subpage-top').classList.toggle('is-published', published);
-    document.getElementById('fp-back-label').textContent = published ? 'Back to editing' : 'Back';
+    const back = document.getElementById('fp-back');
+    const backLabel = published ? 'Back to editing' : 'Back';
+    back.setAttribute('aria-label', backLabel);
+    back.title = backLabel;
     const title = document.getElementById('fp-title');
     title.textContent = editorTitle;
     title.style.display = published ? 'none' : '';

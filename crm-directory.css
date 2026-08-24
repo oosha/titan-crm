@@ -54,29 +54,41 @@
 .dir-count { font-size: 12.5px; color: var(--dir-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
 /* ── Table ───────────────────────────────────────────────────────────────── */
-.dir-card { background: var(--dir-surface); border: 1px solid var(--dir-line); border-radius: 12px; overflow: hidden; }
+.dir-card {
+  background: var(--surface-primary); border: var(--btn-border-width) solid var(--border-subtle);
+  border-radius: var(--radius-container); overflow: hidden;
+}
 /* Fixed layout so the column widths below are honoured exactly. With auto
    layout a long phone number wins space from the email column and truncates it
    to nothing. */
 .dir-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+/* Header and body shape are the CRM's shared table rules — the same values the
+   sequences tables use. Every number here is a token so the two stay in step;
+   they drifted once already (56px against 56.1px, 16px inset against 12px). */
 .dir-table th {
-  text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.055em;
-  text-transform: uppercase; color: var(--dir-muted); padding: 10px 16px;
-  border-bottom: 1px solid var(--dir-hair); white-space: nowrap; background: var(--dir-tint);
+  text-align: left; font-size: var(--text-2xs); font-weight: var(--weight-semi);
+  letter-spacing: 0.055em; text-transform: uppercase; color: var(--text-muted);
+  padding: var(--space-125) var(--space-200);
+  border-bottom: var(--btn-border-width) solid var(--border-default);
+  white-space: nowrap; background: var(--surface-recessed);
 }
 .dir-table td {
-  padding: 11px 16px; border-bottom: 1px solid var(--dir-hair);
-  font-size: 13.5px; color: var(--dir-body); vertical-align: middle;
+  padding: var(--space-150) var(--space-200);
+  border-bottom: var(--btn-border-width) solid var(--border-subtle);
+  font-size: var(--text-sm); color: var(--text-primary); vertical-align: middle;
   /* A fixed row height so rows with a job title and rows without still scan as
      one rhythm rather than jittering by a few pixels. */
-  height: 56px;
+  height: calc(var(--space-400) + var(--space-300));
 }
-.dir-table tbody tr:last-child td { border-bottom: none; }
+.dir-table tbody tr:last-child td { border-bottom: 0; }
 
 /* Rows are the primary control on this page: they open the panel. */
 .dir-table tbody tr { cursor: pointer; outline: none; }
-.dir-table tbody tr:hover { background: var(--dir-tint); }
-.dir-table tbody tr:focus-visible { background: var(--dir-accent-soft); box-shadow: inset 0 0 0 2px var(--dir-accent); }
+.dir-table tbody tr:hover { background: var(--surface-hover); }
+.dir-table tbody tr:focus-visible {
+  background: var(--dir-accent-soft);
+  box-shadow: inset 0 0 0 calc(var(--btn-border-width) * 2) var(--border-accent);
+}
 /* Selected row keeps a marker in the accent colour so the list still tells you
    what the panel is showing after you scroll away from it. */
 .dir-table tbody tr.is-selected { background: var(--dir-accent-soft); }
