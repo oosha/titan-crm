@@ -1,0 +1,83 @@
+{
+  "currentPipelineId": "technology-opportunities",
+  "pipelineSeq": 1,
+  "pipelines": {
+    "technology-opportunities": {
+      "id": "technology-opportunities",
+      "name": "Technology opportunities",
+      "entity": "Opportunity",
+      "plural": "opportunities",
+      "color": "#376f8b",
+      "type": "sales",
+      "subject": "company",
+      "defaultOwner": { "name": "Brett Telfer", "email": "brett@ingeniumconsulting.com" },
+      "stages": [
+        { "key": "signal-identified", "label": "Signal identified", "description": "A sector signal or account opportunity is being researched." },
+        { "key": "qualified", "label": "Qualified", "description": "The opportunity and the right stakeholders are confirmed." },
+        { "key": "solution-design", "label": "Solution design", "description": "A tailored technology, partner and delivery approach is being prepared." },
+        { "key": "demonstration-or-pilot", "label": "Demonstration or pilot", "description": "The solution is being demonstrated or validated in a limited pilot." },
+        { "key": "commercial-review", "label": "Commercial review", "description": "Commercial terms, delivery roles and contracts are under review." },
+        { "key": "closed", "label": "Closed", "description": "The opportunity is won or lost." }
+      ],
+      "cards": [
+        {
+          "id": "brett-1", "deal": "Banco BPI mobile wallet KYC programme", "company": "Banco BPI", "website": "https://www.bancobpi.pt", "location": "Lisbon, Portugal", "geoLocation": "https://www.google.com/maps/search/?api=1&query=Lisbon%2C%20Portugal",
+          "contact": "Marta Silva", "contactEmail": "marta.silva@bancobpi.pt", "contactPhone": "+351 21 000 0134", "contactDesignation": "Director, Digital Identity", "value": 185000, "stage": "signal-identified", "source": "Partner network", "lastActivity": "4d ago", "activityType": "Account researched",
+          "note": "A partner identified a mobile-wallet and KYC programme that may need a more flexible identity-validation option. Confirm the account priorities before outreach.",
+          "upcomingActivities": [{ "type": "task", "text": "Confirm digital identity priorities", "date": "Tomorrow" }],
+          "contacts": [{ "name": "Marta Silva", "email": "marta.silva@bancobpi.pt", "phone": "+351 21 000 0134", "designation": "Director, Digital Identity", "department": "Digital banking", "location": "Lisbon, Portugal", "linkedin": "https://www.linkedin.com/in/marta-silva-demo" }],
+          "owner": { "name": "Brett Telfer", "email": "brett@ingeniumconsulting.com" }
+        },
+        {
+          "id": "brett-2", "deal": "SITA traveller identity pilot", "company": "SITA", "website": "https://www.sita.aero", "location": "Singapore", "geoLocation": "https://www.google.com/maps/search/?api=1&query=Singapore",
+          "contact": "Daniel Wong", "contactEmail": "daniel.wong@sita.aero", "contactPhone": "+65 5550 0192", "contactDesignation": "Regional Partnerships Director", "value": 420000, "stage": "qualified", "source": "Warm introduction", "threadRef": "thread-sita-pilot", "lastActivity": "Today", "activityType": "Email received",
+          "note": "The team wants a limited traveller-identity pilot with clear success measures. Mei, the solution architect, will join the technical discovery.",
+          "noteHistory": [{ "text": "Brett and the partners agreed to keep the first conversation focused on the target airport, pilot constraints and local integration capability.", "author": "Brett", "date": "20 Aug" }, { "text": "Daniel confirmed that a limited pilot is the right first step before discussing a broader rollout.", "author": "Brett", "date": "Today" }],
+          "recentActivities": [{ "type": "email", "text": "Traveller identity pilot: technical discovery", "snippet": "Daniel confirmed the team wants a limited pilot and added the solution architect.", "date": "Today" }, { "type": "call", "text": "Partner introduction call", "snippet": "Discussed airport passenger flow, identity checks and a likely local delivery model.", "date": "20 Aug" }, { "type": "note", "text": "Pilot needs a local integration partner", "author": "Brett", "date": "19 Aug" }],
+          "upcomingActivities": [{ "type": "meeting", "text": "Technical discovery with Daniel and Mei", "date": "Tuesday, 10:00am" }, { "type": "task", "text": "Share pilot success-measure outline", "date": "Monday" }],
+          "files": [{ "name": "SITA traveller identity discovery brief.pdf", "type": "pdf", "date": "20 Aug" }, { "name": "Airport identity pilot case study.pdf", "type": "pdf", "date": "19 Aug" }, { "name": "Pilot stakeholder map.xlsx", "type": "spreadsheet", "date": "Today" }],
+          "contacts": [{ "name": "Daniel Wong", "email": "daniel.wong@sita.aero", "phone": "+65 5550 0192", "designation": "Regional Partnerships Director", "department": "Partnerships", "location": "Singapore", "linkedin": "https://www.linkedin.com/in/daniel-wong-demo" }, { "name": "Mei Tan", "email": "mei.tan@sita.aero", "phone": "+65 5550 0193", "designation": "Solution Architect", "department": "Technology", "location": "Singapore", "linkedin": "https://www.linkedin.com/in/mei-tan-demo" }],
+          "owner": { "name": "Brett Telfer", "email": "brett@ingeniumconsulting.com" }
+        },
+        {
+          "id": "brett-3", "deal": "Aena border-flow assessment", "company": "Aena", "website": "https://www.aena.es", "location": "Madrid, Spain", "geoLocation": "https://www.google.com/maps/search/?api=1&query=Madrid%2C%20Spain",
+          "contact": "Lucia Romero", "contactEmail": "lucia.romero@aena.es", "contactPhone": "+34 91 000 0178", "contactDesignation": "Innovation Programme Lead", "value": 260000, "stage": "solution-design", "source": "Industry research", "threadRef": "thread-aena-scope", "lastActivity": "2d ago", "activityType": "Discovery call",
+          "note": "Lucia requested a concise assessment scope covering passenger-flow friction, required inputs and relevant examples.",
+          "upcomingActivities": [{ "type": "task", "text": "Send border-flow assessment outline", "date": "Friday" }],
+          "contacts": [{ "name": "Lucia Romero", "email": "lucia.romero@aena.es", "phone": "+34 91 000 0178", "designation": "Innovation Programme Lead", "department": "Innovation", "location": "Madrid, Spain", "linkedin": "https://www.linkedin.com/in/lucia-romero-demo" }],
+          "owner": { "name": "Brett Telfer", "email": "brett@ingeniumconsulting.com" }
+        },
+        {
+          "id": "brett-4", "deal": "IDEMIA regional partner agreement", "company": "IDEMIA", "website": "https://www.idemia.com", "location": "Sydney, Australia", "geoLocation": "https://www.google.com/maps/search/?api=1&query=Sydney%2C%20Australia",
+          "contact": "Priya Nanduri", "contactEmail": "priya.nanduri@idemia.com", "contactPhone": "+61 2 5550 0189", "contactDesignation": "APAC Partnerships Lead", "value": 150000, "stage": "demonstration-or-pilot", "source": "Technology partner", "lastActivity": "1d ago", "activityType": "Pilot scope shared",
+          "note": "The partner has shared a draft pilot scope. Brett needs agreement on the local delivery and support roles before the readiness review.",
+          "upcomingActivities": [{ "type": "meeting", "text": "Pilot readiness review", "date": "Thursday, 2:00pm" }],
+          "contacts": [{ "name": "Priya Nanduri", "email": "priya.nanduri@idemia.com", "phone": "+61 2 5550 0189", "designation": "APAC Partnerships Lead", "department": "Partnerships", "location": "Sydney, Australia", "linkedin": "https://www.linkedin.com/in/priya-nanduri-demo" }],
+          "owner": { "name": "Brett Telfer", "email": "brett@ingeniumconsulting.com" }
+        },
+        {
+          "id": "brett-5", "deal": "Entrust bank voice-validation rollout", "company": "Entrust", "website": "https://www.entrust.com", "location": "Melbourne, Australia", "geoLocation": "https://www.google.com/maps/search/?api=1&query=Melbourne%2C%20Australia",
+          "contact": "Owen Carter", "contactEmail": "owen.carter@entrust.com", "contactPhone": "+61 3 5550 0107", "contactDesignation": "Commercial Director", "value": 310000, "stage": "commercial-review", "source": "Partner referral", "threadRef": "thread-entrust-proposal", "lastActivity": "3h ago", "activityType": "Proposal sent",
+          "note": "Entrust is reviewing revenue share and support boundaries for an initial bank voice-validation rollout.",
+          "upcomingActivities": [{ "type": "task", "text": "Review Entrust commercial response", "date": "Monday" }],
+          "contacts": [{ "name": "Owen Carter", "email": "owen.carter@entrust.com", "phone": "+61 3 5550 0107", "designation": "Commercial Director", "department": "Commercial", "location": "Melbourne, Australia", "linkedin": "https://www.linkedin.com/in/owen-carter-demo" }],
+          "owner": { "name": "Brett Telfer", "email": "brett@ingeniumconsulting.com" }
+        },
+        {
+          "id": "brett-6", "deal": "Thales regional screening introduction", "company": "Thales", "website": "https://www.thalesgroup.com", "location": "Brisbane, Australia", "geoLocation": "https://www.google.com/maps/search/?api=1&query=Brisbane%2C%20Australia",
+          "contact": "Amina Rahman", "contactEmail": "amina.rahman@thalesgroup.com", "contactPhone": "+61 7 5550 0161", "contactDesignation": "Regional Alliances Lead", "value": 275000, "stage": "closed", "won": true, "source": "Partner network", "threadRef": "thread-thales-agreement", "lastActivity": "8d ago", "activityType": "Agreement signed",
+          "note": "The regional collaboration agreement is signed. The partners will bring the first relevant opportunities to the joint team.",
+          "contacts": [{ "name": "Amina Rahman", "email": "amina.rahman@thalesgroup.com", "phone": "+61 7 5550 0161", "designation": "Regional Alliances Lead", "department": "Alliances", "location": "Brisbane, Australia", "linkedin": "https://www.linkedin.com/in/amina-rahman-demo" }],
+          "owner": { "name": "Brett Telfer", "email": "brett@ingeniumconsulting.com" }
+        },
+        {
+          "id": "brett-7", "deal": "Worldline fraud-prevention evaluation", "company": "Worldline", "website": "https://worldline.com", "location": "Paris, France", "geoLocation": "https://www.google.com/maps/search/?api=1&query=Paris%2C%20France",
+          "contact": "Felix Hart", "contactEmail": "felix.hart@worldline.com", "contactDesignation": "Fraud Solutions Lead", "value": 120000, "stage": "closed", "won": false, "source": "Outbound", "lastActivity": "3w ago", "activityType": "Opportunity closed lost",
+          "note": "The team paused new fraud-prevention evaluations this quarter.",
+          "contacts": [{ "name": "Felix Hart", "email": "felix.hart@worldline.com", "designation": "Fraud Solutions Lead", "department": "Risk", "location": "Paris, France", "linkedin": "https://www.linkedin.com/in/felix-hart-demo" }],
+          "owner": { "name": "Brett Telfer", "email": "brett@ingeniumconsulting.com" }
+        }
+      ]
+    }
+  }
+}
