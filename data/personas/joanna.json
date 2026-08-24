@@ -236,6 +236,22 @@
             "name": "Joanna Hiu",
             "email": "hello@joannahiuartist.com"
           }
+        },
+        {
+          "id": 2,
+          "deal": "Square flowers",
+          "company": "squareup",
+          "contact": "Square",
+          "contactEmail": "notifications@squareup.com",
+          "value": 0,
+          "stage": "new-inquiry",
+          "lastActivity": "just now",
+          "activityType": "Email received",
+          "overdue": false,
+          "owner": {
+            "name": "Joanna Hiu",
+            "email": "hello@joannahiuartist.com"
+          }
         }
       ],
       "hiddenFields": [
@@ -490,14 +506,14 @@
           "deal": "Grace Miller wedding bouquet",
           "company": "Grace Miller",
           "contact": "Grace Miller",
-          "stage": "design-choice",
+          "stage": "design-preparation",
           "source": "Instagram",
           "contactEmail": "grace.miller@gmail.com",
           "contactPhone": "+61 405 269 770",
           "instagram": "@graceandjack",
           "value": 390,
-          "lastActivity": "3d ago",
-          "activityType": "Email sent",
+          "lastActivity": "just now",
+          "activityType": "Updated",
           "note": "Three design options were shared. Grace has not selected one yet.",
           "upcomingActivities": [
             {
@@ -550,7 +566,7 @@
           "contact": "Sarah Chen",
           "contactEmail": "sarah.chen@outlook.com",
           "value": 0,
-          "stage": "drop-off-scheduled",
+          "stage": "drying",
           "lastActivity": "just now",
           "activityType": "Email received",
           "overdue": false,
