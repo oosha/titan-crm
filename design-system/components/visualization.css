@@ -1,0 +1,150 @@
+/* Responsive visualization components shared by workbench and product pages.
+   Type stays in CSS pixels while flexible tracks and tables consume available width. */
+.ds-viz {
+  width: 100%; min-width: 0; container-type: inline-size;
+  --ds-viz-gap: var(--viz-layout-gap-md);
+  --ds-viz-row-gap: var(--viz-row-gap-md);
+  --ds-viz-donut-size: var(--viz-donut-size-md);
+  --ds-viz-plot-height: var(--viz-plot-height-md);
+  --ds-viz-bar-size: var(--viz-bar-thickness);
+  --ds-viz-column-width: var(--viz-column-width-md);
+  --ds-viz-axis-font: var(--viz-axis-font-md);
+  --ds-viz-label-font: var(--viz-label-font-md);
+  --ds-viz-value-font: var(--viz-value-font-md);
+  --ds-viz-legend-font: var(--viz-legend-font-md);
+  --ds-viz-donut-value-font: var(--viz-donut-value-font-md);
+  --ds-viz-donut-label-font: var(--viz-donut-label-font-md);
+  --ds-viz-line-width: var(--viz-line-width-md);
+}
+.ds-viz--sm {
+  --ds-viz-gap: var(--viz-layout-gap-sm); --ds-viz-row-gap: var(--viz-row-gap-sm);
+  --ds-viz-donut-size: var(--viz-donut-size-sm); --ds-viz-plot-height: var(--viz-plot-height-sm);
+  --ds-viz-bar-size: var(--viz-bar-thickness-compact);
+  --ds-viz-column-width: var(--viz-column-width-sm);
+  --ds-viz-axis-font: var(--viz-axis-font-sm); --ds-viz-label-font: var(--viz-label-font-sm);
+  --ds-viz-value-font: var(--viz-value-font-sm); --ds-viz-legend-font: var(--viz-legend-font-sm);
+  --ds-viz-donut-value-font: var(--viz-donut-value-font-sm); --ds-viz-donut-label-font: var(--viz-donut-label-font-sm);
+  --ds-viz-line-width: var(--viz-line-width-sm);
+}
+.ds-viz--lg {
+  --ds-viz-gap: var(--viz-layout-gap-lg); --ds-viz-row-gap: var(--viz-row-gap-lg);
+  --ds-viz-donut-size: var(--viz-donut-size-lg); --ds-viz-plot-height: var(--viz-plot-height-lg);
+  --ds-viz-bar-size: var(--viz-bar-thickness-ranked);
+  --ds-viz-column-width: var(--viz-column-width-lg);
+  --ds-viz-axis-font: var(--viz-axis-font-lg); --ds-viz-label-font: var(--viz-label-font-lg);
+  --ds-viz-value-font: var(--viz-value-font-lg); --ds-viz-legend-font: var(--viz-legend-font-lg);
+  --ds-viz-donut-value-font: var(--viz-donut-value-font-lg); --ds-viz-donut-label-font: var(--viz-donut-label-font-lg);
+  --ds-viz-line-width: var(--viz-line-width-lg);
+}
+.ds-viz--fill { display: flex; flex: 1 1 auto; flex-direction: column; justify-content: center; min-height: 0; }
+.ds-viz--fill > * { width: 100%; }
+
+/* SVG remains useful for true coordinate plots and the donut mark itself. It is
+   no longer used to position responsive legends, labels or dashboard bar rows. */
+.ds-viz-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.ds-viz-svg text { font-family: var(--font-sans); }
+.ds-viz-gridline { stroke: var(--viz-gridline); stroke-width: var(--ds-viz-line-width); }
+.ds-viz-axis { fill: var(--viz-axis-label); font-size: var(--ds-viz-axis-font); }
+.ds-viz-label { fill: var(--text-secondary); font-size: var(--ds-viz-label-font); font-weight: var(--weight-medium); }
+.ds-viz-value { fill: var(--text-heading); font-size: var(--ds-viz-value-font); font-weight: var(--weight-semi); font-variant-numeric: tabular-nums; }
+
+/* Part to whole */
+.ds-viz-part-to-whole { display: grid; grid-template-columns: minmax(0, .8fr) minmax(calc(var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-300) + var(--space-050)), 1.2fr); align-items: center; gap: var(--ds-viz-gap); min-width: 0; }
+.ds-viz-donut-wrap { display: grid; place-items: center; min-width: 0; }
+.ds-viz-donut { position: relative; width: min(100%, var(--ds-viz-donut-size)); aspect-ratio: 1; }
+.ds-viz-donut-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.ds-viz-donut-center { position: absolute; inset: 17%; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; text-align: center; pointer-events: none; }
+.ds-viz-donut-center strong { max-width: 100%; overflow: hidden; color: var(--text-heading); font-size: var(--ds-viz-donut-value-font); font-weight: var(--weight-semi); font-variant-numeric: tabular-nums; line-height: 1.05; text-overflow: ellipsis; white-space: nowrap; }
+.ds-viz-donut-center span { max-width: 100%; margin-top: var(--space-025); overflow: hidden; color: var(--viz-axis-label); font-size: var(--ds-viz-donut-label-font); letter-spacing: .02em; line-height: 1.2; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.ds-viz-ring-segment { transition: opacity var(--dur-base) var(--ease-standard); }
+.ds-viz-part-to-whole:hover .ds-viz-ring-segment { opacity: .38; }
+.ds-viz-part-to-whole .ds-viz-ring-segment:hover { opacity: 1; }
+.ds-viz-segment-tooltip { position: absolute; z-index: 1; width: max-content; max-width: var(--viz-tooltip-max-width); padding: var(--space-075) var(--space-100); border-radius: var(--radius-sm); background: var(--viz-tooltip-bg); box-shadow: var(--elevation-menu); color: var(--viz-tooltip-text); font-size: var(--ds-viz-axis-font); font-variant-numeric: tabular-nums; line-height: 1.25; opacity: 0; overflow-wrap: anywhere; pointer-events: none; text-align: center; transform: translate(-50%, calc(-100% - var(--space-100))); transition: opacity var(--dur-fast) var(--ease-standard); }
+.ds-viz-segment-tooltip.is-visible { opacity: 1; }
+.ds-viz-table { min-width: 0; margin-inline: var(--viz-legend-table-margin-x); padding: var(--viz-legend-table-pad-y) var(--viz-legend-table-pad-x); border: var(--viz-divider-width) solid var(--viz-gridline); border-radius: var(--viz-legend-table-radius); background: var(--surface-primary); }
+.ds-viz-table-head, .ds-viz-table-row { display: grid; grid-template-columns: var(--space-150) minmax(0, 1fr) max-content minmax(var(--space-400), max-content); align-items: center; column-gap: var(--space-100); min-width: 0; }
+.ds-viz-table-head { padding-bottom: var(--space-075); color: var(--viz-axis-label); font-size: var(--ds-viz-axis-font); letter-spacing: .04em; text-transform: uppercase; }
+.ds-viz-table-head span:nth-child(n + 3) { text-align: right; }
+.ds-viz-table-row { min-height: var(--space-400); color: var(--text-secondary); font-size: var(--ds-viz-label-font); }
+.ds-viz-table-row + .ds-viz-table-row { border-top: var(--viz-divider-width) solid var(--viz-gridline); }
+.ds-viz-table-row i { width: var(--space-125); height: var(--space-125); border-radius: var(--radius-full); }
+.ds-viz-table-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-viz-table-row strong { color: var(--text-heading); font-size: var(--ds-viz-value-font); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.ds-viz-table-row > span:last-child { color: var(--viz-axis-label); font-size: var(--ds-viz-axis-font); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.ds-viz-part-to-whole--compact .ds-viz-table { display: grid; grid-template-columns: 1fr; gap: 0; align-self: center; }
+.ds-viz-part-to-whole--compact .ds-viz-table-row { grid-template-columns: var(--space-150) minmax(0, 1fr) max-content max-content; min-height: 0; padding-block: var(--viz-legend-row-pad-y); border-top: 0; column-gap: var(--viz-legend-column-gap); }
+.ds-viz-part-to-whole--compact .ds-viz-table-row + .ds-viz-table-row { border-top: var(--viz-divider-width) solid var(--viz-gridline); }
+.ds-viz-part-to-whole--compact .ds-viz-table-row strong { font-size: var(--ds-viz-label-font); }
+.ds-viz-part-to-whole--compact .ds-viz-table-share { color: var(--viz-axis-label); font-size: var(--ds-viz-axis-font); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+/* Binned distribution */
+.ds-viz-distribution { min-width: 0; }
+.ds-viz-chart-meta { min-height: var(--space-200); margin-bottom: var(--space-075); color: var(--viz-axis-label); font-size: var(--ds-viz-axis-font); font-variant-numeric: tabular-nums; text-align: right; }
+.ds-viz-distribution-grid { display: grid; grid-template-columns: repeat(var(--ds-viz-bin-count), minmax(0, 1fr)); gap: var(--ds-viz-row-gap); min-width: 0; }
+.ds-viz-bin { display: grid; grid-template-rows: var(--ds-viz-plot-height) auto; min-width: 0; text-align: center; }
+.ds-viz-bin-mark { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: var(--space-075); min-width: 0; border-bottom: var(--viz-divider-width) solid var(--viz-gridline); }
+.ds-viz-bin-value { flex: 0 0 auto; color: var(--text-heading); font-size: var(--ds-viz-value-font); font-weight: var(--weight-semi); font-variant-numeric: tabular-nums; line-height: 1; }
+.ds-viz-bin-value.is-zero { color: var(--viz-axis-label); font-weight: var(--weight-normal); }
+.ds-viz-bin-mark i { display: block; width: min(var(--ds-viz-column-width), 72%); height: var(--ds-viz-height); min-height: var(--space-025); border-radius: var(--radius-lg) var(--radius-lg) 0 0; background: linear-gradient(180deg, var(--viz-primary-highlight), var(--viz-primary)); }
+.ds-viz-bin-label { min-width: 0; padding-top: var(--space-100); overflow: hidden; color: var(--viz-axis-label); font-size: var(--ds-viz-axis-font); font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+.ds-viz-axis-label { padding-top: var(--space-100); color: var(--viz-axis-label); font-size: var(--ds-viz-axis-font); }
+
+/* Conversion steps */
+.ds-viz-conversion { display: grid; gap: var(--ds-viz-row-gap); min-width: 0; }
+.ds-viz-conversion--comfortable { gap: var(--viz-conversion-row-gap-comfortable); padding-block: var(--viz-conversion-pad-y-comfortable); }
+.ds-viz-conversion-row { display: grid; gap: var(--space-075); min-width: 0; }
+.ds-viz-row-head { display: grid; grid-template-columns: minmax(0, 1fr) max-content; align-items: baseline; gap: var(--space-100); min-width: 0; }
+.ds-viz-row-head > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-viz-row-head b { color: var(--text-secondary); font-size: var(--ds-viz-label-font); font-weight: var(--weight-medium); }
+.ds-viz-row-head small { margin-left: var(--space-100); color: var(--viz-axis-label); font-size: var(--ds-viz-axis-font); }
+.ds-viz-row-head strong { color: var(--text-heading); font-size: var(--ds-viz-value-font); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ds-viz-inline-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-viz-inline-label b { color: var(--text-secondary); font-size: var(--ds-viz-label-font); font-weight: var(--weight-medium); }
+.ds-viz-conversion--inline .ds-viz-conversion-row { display: grid; grid-template-columns: minmax(var(--viz-inline-label-min-width), var(--viz-inline-label-column)) minmax(0, 1fr) minmax(var(--viz-inline-value-min-width), max-content); align-items: center; column-gap: var(--viz-inline-column-gap); min-width: 0; }
+.ds-viz-conversion--inline .ds-viz-track { min-width: 0; }
+.ds-viz-inline-value { display: inline-flex; align-items: baseline; justify-content: flex-start; gap: var(--viz-inline-value-gap); min-width: 0; padding-left: var(--viz-inline-value-pad-left); white-space: nowrap; }
+.ds-viz-inline-value strong { color: var(--text-heading); font-size: var(--ds-viz-value-font); font-variant-numeric: tabular-nums; }
+.ds-viz-inline-value small { color: var(--viz-axis-label); font-size: var(--ds-viz-axis-font); font-variant-numeric: tabular-nums; }
+.ds-viz-track, .ds-viz-ranked-track { display: block; width: 100%; height: var(--ds-viz-bar-size); overflow: hidden; border-radius: var(--radius-full); background: var(--surface-sunken); }
+.ds-viz-track i, .ds-viz-ranked-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--viz-primary-highlight), var(--viz-primary)); }
+
+/* Ranked bars */
+.ds-viz-ranked { display: grid; gap: var(--ds-viz-row-gap); min-width: 0; }
+.ds-viz-ranked-row { display: grid; grid-template-columns: minmax(calc(var(--space-400) + var(--space-400) + var(--space-200) + var(--space-050)), 22%) minmax(calc(var(--space-400) + var(--space-400) + var(--space-200)), 1fr) max-content; align-items: center; gap: var(--space-125); min-width: 0; color: inherit; text-decoration: none; }
+.ds-viz-ranked-label { min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: var(--ds-viz-label-font); text-overflow: ellipsis; white-space: nowrap; }
+.ds-viz-ranked-row strong { color: var(--text-heading); font-size: var(--ds-viz-value-font); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ds-viz-ranked-row:focus-visible { border-radius: var(--radius-sm); outline: var(--space-025) solid var(--accent-primary); outline-offset: var(--space-025); }
+
+/* Stacked composition */
+.ds-viz-stacked { display: grid; gap: var(--ds-viz-row-gap); min-width: 0; }
+.ds-viz-stacked-row { display: grid; grid-template-columns: minmax(calc(var(--space-400) + var(--space-300)), 15%) minmax(calc(var(--space-400) + var(--space-400) + var(--space-400) + var(--space-050)), 1fr) max-content; align-items: center; gap: var(--space-125); min-width: 0; }
+.ds-viz-stacked-row > span { min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: var(--ds-viz-label-font); text-overflow: ellipsis; white-space: nowrap; }
+.ds-viz-stacked-row > div { display: flex; gap: var(--space-025); min-width: 0; height: var(--ds-viz-bar-size); }
+.ds-viz-stacked-row > div i { display: block; min-width: var(--space-025); height: 100%; border-radius: var(--radius-md); }
+.ds-viz-stacked-row strong { color: var(--text-heading); font-size: var(--ds-viz-value-font); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ds-viz-legend { display: flex; flex-wrap: wrap; gap: var(--space-100) var(--space-200); padding-top: var(--space-100); color: var(--text-secondary); font-size: var(--ds-viz-legend-font); }
+.ds-viz-legend span { display: inline-flex; align-items: center; gap: var(--space-075); }
+.ds-viz-legend i { width: var(--space-100); height: var(--space-100); border-radius: var(--radius-xs); }
+
+@container (max-width: 32.5rem) {
+  .ds-viz-part-to-whole { grid-template-columns: 1fr; }
+  .ds-viz-donut { width: min(100%, var(--ds-viz-donut-size)); }
+}
+@container (max-width: 23.75rem) {
+  .ds-viz-table:not(.ds-viz-table--compact) .ds-viz-table-head,
+  .ds-viz-table:not(.ds-viz-table--compact) .ds-viz-table-row { grid-template-columns: var(--space-150) minmax(0, 1fr) max-content; }
+  .ds-viz-table:not(.ds-viz-table--compact) .ds-viz-table-head span:last-child,
+  .ds-viz-table:not(.ds-viz-table--compact) .ds-viz-table-row > span:last-child { display: none; }
+  .ds-viz-part-to-whole--compact .ds-viz-table { grid-template-columns: 1fr; }
+  .ds-viz-part-to-whole--compact .ds-viz-table-row { grid-template-columns: var(--space-150) minmax(0, 1fr) max-content; }
+  .ds-viz-part-to-whole--compact .ds-viz-table-share { display: none; }
+  .ds-viz-ranked-row { grid-template-columns: minmax(0, 1fr) max-content; }
+  .ds-viz-ranked-track { grid-column: 1 / -1; }
+  .ds-viz-stacked-row { grid-template-columns: minmax(calc(var(--space-400) + var(--space-200)), 20%) minmax(calc(var(--space-400) + var(--space-400) + var(--space-200)), 1fr) max-content; gap: var(--space-075); }
+  .ds-viz-conversion--inline .ds-viz-conversion-row { grid-template-columns: minmax(0, 1fr) minmax(var(--viz-inline-value-min-width), max-content); gap: var(--space-100); }
+  .ds-viz-conversion--inline .ds-viz-track { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-viz-ring-segment, .ds-viz-segment-tooltip { transition: none; }
+}

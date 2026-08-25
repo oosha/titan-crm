@@ -1,15 +1,16 @@
 {
   "$schema": "./registry.schema.json",
   "name": "Titan Design System Registry",
-  "version": "0.4.0",
-  "description": "Machine-readable index of the design system's components, patterns and directions. An agent should read this before writing any UI and update it in the same change that adds a system primitive. Extracted from App Redesign/index_prodRedesign_interactions.html.",
+  "version": "0.8.0",
+  "description": "Machine-readable index of the design system's components, patterns, data-visualization contracts and directions. An agent should read this before writing any UI and update it in the same change that adds a system primitive. Extracted from App Redesign/index_prodRedesign_interactions.html.",
   "conventions": {
     "idiom": "Plain CSS classes plus optional JS render modules — no build step, no framework, no TypeScript. A component is a stylesheet, and a function returning an HTML string where composition earns one. This is the same pattern titan-sidebar.js and form-render.js already use in production.",
     "consume": "<link> the two token files, then the component stylesheet, then <script> the module if there is one. Order matters: primitives, semantics, theme, components.",
     "classPrefix": "ds-",
     "variantClass": ".ds-<component>--<variant>",
     "tokensOnly": "A component stylesheet may not contain a raw hex or a raw px for anything themeable. If a value is missing, add a token to tokens/semantics.css rather than hardcoding it here.",
-    "workbench": "/design-system/index.html renders every component in every state, every registered pattern, and a live direction switcher. Screenshot the relevant view after any change."
+    "visualizationModule": "components/visualization.js owns fluid shared chart layouts, sm/md/lg internal sizing, the optional fill-card layout and categorical colour order used by both workbench specimens and product renderers.",
+    "workbench": "/design-system/index.html renders every component in every state, every registered pattern, canonical data-visualization components, and a live direction switcher. Screenshot the relevant view after any change."
   },
   "tokens": {
     "primitives": "tokens/primitives.css",
@@ -137,6 +138,96 @@
       "examples": [
         "form-settings.html — form editor and live form preview; bounded resizable split with a 50–68% editor share"
       ]
+    }
+  ],
+  "visualizations": [
+    {
+      "id": "trend-line",
+      "name": "Trend line",
+      "family": "Change over time",
+      "visual": "trend-line",
+      "sizes": ["sm", "md", "lg"],
+      "useWhen": "Show how one primary measure changes across a continuous time period; add a comparison series only when the comparison is the question.",
+      "reading": "Direction first, latest value second, exact historical values on demand.",
+      "avoid": "Do not smooth a volatile series so heavily that real changes disappear, and do not begin a quantitative axis away from a defensible baseline without saying so.",
+      "accessibility": "Provide a concise trend summary, the period and latest value; expose the underlying values as a table or equivalent text and never rely on line colour alone."
+    },
+    {
+      "id": "ranked-bars",
+      "name": "Ranked bars",
+      "family": "Category comparison",
+      "visual": "ranked-bars",
+      "sizes": ["sm", "md", "lg"],
+      "useWhen": "Compare one measure across named categories, especially when labels are long or ranking matters.",
+      "reading": "Order and magnitude should be visible without reading an axis or opening a tooltip.",
+      "avoid": "Do not use vertical columns for long names, random category order, or a different decorative colour for every bar.",
+      "accessibility": "Keep labels and values visible in the same reading order as the bars and provide a text or table equivalent."
+    },
+    {
+      "id": "binned-distribution",
+      "name": "Binned distribution",
+      "family": "Distribution across ranges",
+      "visual": "binned-distribution",
+      "sizes": ["sm", "md", "lg"],
+      "useWhen": "Show how records are distributed across ordered numeric ranges such as deal amount, age or response time.",
+      "reading": "The modal range and the shape of the distribution come first; every bin count remains directly labelled.",
+      "avoid": "Do not treat ranges as unrelated categories, vary bar colour without meaning, or hide unequal and open-ended bin definitions.",
+      "accessibility": "State every range and count in order, including empty bins, and provide a text or table equivalent that preserves the same range boundaries."
+    },
+    {
+      "id": "stacked-composition",
+      "name": "Stacked composition",
+      "family": "Composition over categories",
+      "visual": "stacked-composition",
+      "sizes": ["sm", "md", "lg"],
+      "useWhen": "Compare totals and a small, stable set of constituent parts across periods or groups.",
+      "reading": "Total length first; segment mix second. Keep the same stack order everywhere.",
+      "avoid": "Do not use when precise comparison of middle segments is the primary task or when the category set changes between bars.",
+      "accessibility": "Name the total and each segment in source order; pair colours with persistent labels and a tabular equivalent."
+    },
+    {
+      "id": "conversion-funnel",
+      "name": "Conversion steps",
+      "family": "Sequential progression",
+      "visual": "conversion-funnel",
+      "sizes": ["sm", "md", "lg"],
+      "variants": [
+        "Stacked rows (default): label and percentage above a full-width track, with the value aligned at the right.",
+        "Inline rows: set layout:'inline' for a compact label and track followed by one stable-width ending column. Values are left-aligned in that column, percentages follow in parentheses, and all track endings align; the track moves below at narrow widths.",
+        "Comfortable density: set density:'comfortable' when a short conversion sequence has room for more vertical separation."
+      ],
+      "useWhen": "Show attrition through an ordered sequence where every later stage is a subset of the previous one.",
+      "reading": "Stage count and step-to-step conversion are equal citizens; the narrowing bars support rather than replace those numbers.",
+      "avoid": "Do not use a decorative funnel silhouette or for independent statuses that do not form a real sequence.",
+      "accessibility": "Read stages in process order and state both count and conversion percentage for every transition."
+    },
+    {
+      "id": "part-to-whole",
+      "name": "Part to whole",
+      "family": "Share of a total",
+      "visual": "part-to-whole",
+      "sizes": ["sm", "md", "lg"],
+      "variants": [
+        "Centered total (default): the ring contains the supplied centerValue and centerLabel, or the computed total and TOTAL label.",
+        "Centerless donut: set center:false when surrounding context or the legend already carries the total.",
+        "Compact legend: set legendLayout:'compact' to remove the header and align each category, value and share in a single-column list.",
+        "Legend table: all layouts use a subtle bordered surface and row dividers. External inline margin separates the table from its surroundings while internal padding remains restrained."
+      ],
+      "useWhen": "Show the broad composition of one total with no more than five meaningful categories.",
+      "reading": "The ring shows composition; hover tooltips identify each segment with its label, displayed value and share, while the adjacent legend keeps every category, count and share persistent. The total may sit in the ring or in the surrounding context when center:false is used.",
+      "avoid": "Do not add leader captions, explode slices, use 3D, or ask people to compare many similarly sized wedges.",
+      "accessibility": "Expose the total plus every category count and percentage in legend order, including when the visual center is omitted; colour is never the only label."
+    },
+    {
+      "id": "activity-heatmap",
+      "name": "Activity heatmap",
+      "family": "Density across two dimensions",
+      "visual": "activity-heatmap",
+      "sizes": ["sm", "md", "lg"],
+      "useWhen": "Reveal recurring concentration across two ordered dimensions such as weekday and hour or week and day.",
+      "reading": "Clusters and quiet gaps first; exact cell values on demand.",
+      "avoid": "Do not use for sparse unrelated categories, and never imply more precision than the colour scale can communicate.",
+      "accessibility": "Describe the strongest clusters and expose every cell through keyboard focus or an equivalent table; include a labelled intensity scale."
     }
   ],
   "components": [
@@ -326,6 +417,34 @@
       "variantNotes": {
         "section": ".ds-card--section — a page content panel rather than a tile: --card-section-radius (12px) and --card-section-pad (24px). The record screen stacks seven. Forking a second card class for this is what produced .ov-card."
       }
+    },
+    {
+      "name": "Stat tile",
+      "category": "composite",
+      "css": "components/stat.css",
+      "class": "ds-stat",
+      "props": {
+        "accent": "CSS custom property --ds-stat-accent; defaults to --accent-primary",
+        "label": ".ds-stat__label — short uppercase metric name",
+        "value": ".ds-stat__value — primary tabular number",
+        "context": ".ds-stat__context — one short supporting line"
+      },
+      "shapeTokens": [
+        "--stat-pad-block",
+        "--stat-dot-size",
+        "--stat-head-gap",
+        "--stat-label-value-gap",
+        "--stat-value-context-gap",
+        "--stat-label-font",
+        "--stat-value-font",
+        "--stat-value-weight",
+        "--stat-context-font"
+      ],
+      "states": [
+        "default"
+      ],
+      "usage": "Headline metrics with a label, one primary value and one concise context line. Compose with .ds-card; use --ds-stat-accent only to distinguish adjacent metrics, not to encode status.",
+      "avoid": "Do not use for trends, ratios that need a scale, or multi-value summaries; choose a visualization or table instead."
     },
     {
       "name": "Stage chevron",
@@ -742,13 +861,14 @@
       {
         "name": "Stat tile",
         "category": "composites",
-        "status": "planned",
-        "component": "—",
+        "status": "built",
+        "component": "ds-stat",
         "evidence": "25 CRM rules across 1 prefix",
-        "whereToday": "dashboard.html .tile / .kpi",
-        "note": "Label + value + context line. Deliberately not a chart.",
+        "whereToday": "dashboard.html .ds-stat",
+        "note": "Label + value + context line. Deliberately not a chart; dashboard spacing, typography and accent treatment now come from the shared component.",
         "variants": 25,
-        "prefixes": 1
+        "prefixes": 1,
+        "css": "components/stat.css"
       },
       {
         "name": "Search bar",
@@ -775,14 +895,15 @@
       },
       {
         "name": "Chart marks",
-        "category": "patterns",
-        "status": "excluded",
-        "component": "—",
-        "evidence": "donut ring, pie wedges, stacked bar, dot plot, histogram",
-        "whereToday": "dashboard.html",
-        "note": "Not icons and not components — data geometry. Owned by the dataviz rules, not this registry.",
-        "variants": 0,
-        "prefixes": null
+        "category": "data visualization",
+        "status": "built",
+        "component": "dsVisualization",
+        "evidence": "responsive donut/table, conversion tracks, ranked bars, stacked composition and binned distribution",
+        "whereToday": "design-system/index.html and dashboard.html",
+        "note": "Shared fluid renderers own marks, responsive labels/tables, legends and overflow behavior. SVG is reserved for coordinate plots and the donut mark; product pages supply data and accessible summaries.",
+        "variants": 5,
+        "prefixes": 1,
+        "css": "components/visualization.css"
       },
       {
         "name": "Brand marks",

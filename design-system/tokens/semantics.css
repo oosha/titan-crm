@@ -74,6 +74,85 @@
   --status-danger:  var(--red-600);
   --status-danger-subtle: var(--red-050);
 
+  /* ── Data visualization ──────────────────────────────────────────────────
+     Chart geometry is data rather than a component, but its visual vocabulary is
+     shared. Categorical colours come from the label palette rather than borrowing
+     status colours, so a series never accidentally reads as success or danger. */
+  --viz-gridline: var(--border-hairline);
+  --viz-divider-width: var(--stroke-hairline);
+  --viz-axis-label: var(--text-muted);
+  --viz-primary: var(--accent-primary);
+  --viz-primary-soft: var(--accent-muted);
+  --viz-primary-highlight: color-mix(in srgb, var(--viz-primary) 72%, var(--surface-primary));
+  --viz-categorical-2: var(--teal-500);
+  --viz-categorical-3: var(--orange-500);
+  --viz-categorical-4: var(--violet-500);
+  --viz-categorical-5: var(--rose-500);
+  --viz-categorical-6: var(--lime-500);
+  --viz-categorical-2-highlight: color-mix(in srgb, var(--viz-categorical-2) 72%, var(--surface-primary));
+  --viz-categorical-3-highlight: color-mix(in srgb, var(--viz-categorical-3) 72%, var(--surface-primary));
+  --viz-categorical-4-highlight: color-mix(in srgb, var(--viz-categorical-4) 72%, var(--surface-primary));
+  --viz-categorical-5-highlight: color-mix(in srgb, var(--viz-categorical-5) 72%, var(--surface-primary));
+  --viz-categorical-6-highlight: color-mix(in srgb, var(--viz-categorical-6) 72%, var(--surface-primary));
+  --viz-tooltip-bg: var(--surface-inverse);
+  --viz-tooltip-text: var(--text-on-inverse);
+  --viz-tooltip-max-width: 256px;
+  --viz-axis-font-sm: var(--text-2xs);
+  --viz-axis-font-md: var(--text-xs);
+  --viz-axis-font-lg: var(--text-sm);
+  --viz-label-font-sm: var(--text-2xs);
+  --viz-label-font-md: var(--text-md);
+  --viz-label-font-lg: var(--text-lg);
+  --viz-value-font-sm: var(--text-2xs);
+  --viz-value-font-md: var(--text-md);
+  --viz-value-font-lg: var(--text-lg);
+  --viz-legend-font-sm: var(--text-xs);
+  --viz-legend-font-md: var(--text-md);
+  --viz-legend-font-lg: var(--text-lg);
+  --viz-legend-table-pad-x: var(--space-125);
+  --viz-legend-table-pad-y: var(--space-075);
+  --viz-legend-table-margin-x: var(--space-100);
+  --viz-legend-table-radius: var(--radius-md);
+  --viz-legend-row-pad-y: var(--space-075);
+  --viz-legend-column-gap: var(--space-050);
+  --viz-inline-label-column: 18%;
+  --viz-inline-label-min-width: calc(var(--space-400) + var(--space-400) + var(--space-200));
+  --viz-inline-value-min-width: calc(var(--space-400) + var(--space-400) + var(--space-200));
+  --viz-inline-column-gap: var(--space-075);
+  --viz-inline-value-gap: var(--space-050);
+  --viz-inline-value-pad-left: var(--space-150);
+  --viz-conversion-row-gap-comfortable: var(--space-200);
+  --viz-conversion-pad-y-comfortable: var(--space-075);
+  /* Mark dimensions are part of the chart contract, not page-local decoration. */
+  --viz-bar-thickness-compact: var(--space-075);
+  --viz-bar-thickness: var(--space-150);
+  --viz-bar-thickness-ranked: calc(var(--space-300) - var(--space-025));
+  --viz-bar-thickness-stacked: var(--space-300);
+  --viz-column-width-sm: calc(var(--space-400) + var(--space-300));
+  --viz-column-width-md: calc(var(--space-400) + var(--space-400) + var(--space-100));
+  --viz-column-width-lg: calc(var(--space-400) + var(--space-400) + var(--space-300));
+  --viz-layout-gap-sm: var(--space-150);
+  --viz-layout-gap-md: var(--space-300);
+  --viz-layout-gap-lg: var(--space-400);
+  --viz-row-gap-sm: var(--space-100);
+  --viz-row-gap-md: var(--space-150);
+  --viz-row-gap-lg: var(--space-200);
+  --viz-donut-size-sm: calc(var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-100));
+  --viz-donut-size-md: calc(var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-100));
+  --viz-donut-size-lg: calc(var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-100));
+  --viz-plot-height-sm: calc(var(--space-400) + var(--space-400) + var(--space-400) + var(--space-300));
+  --viz-plot-height-md: calc(var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-200));
+  --viz-plot-height-lg: calc(var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-400) + var(--space-200));
+  --viz-donut-value-font-sm: var(--text-2xl);
+  --viz-donut-value-font-md: var(--text-3xl);
+  --viz-donut-value-font-lg: calc(var(--text-3xl) + var(--space-050));
+  --viz-donut-label-font-sm: var(--text-3xs);
+  --viz-donut-label-font-md: var(--text-2xs);
+  --viz-donut-label-font-lg: var(--text-xs);
+  --viz-line-width-sm: 1;
+  --viz-line-width-md: 2;
+  --viz-line-width-lg: 3;
+
   /* ── Elevation & focus ──────────────────────────────────────────────────── */
   --elevation-raise: var(--shadow-raise);  /* draggable tiles */
   --elevation-card:  var(--shadow-card);
@@ -140,6 +219,17 @@
   --card-section-pad:    var(--space-300);
   --card-border:  var(--border-subtle);
   --card-shadow:  var(--elevation-card);
+
+  /* ── Stat tile ─────────────────────────────────────────────────────────── */
+  --stat-pad-block: calc(var(--card-pad) + var(--space-050));
+  --stat-dot-size: var(--space-100);
+  --stat-head-gap: var(--space-100);
+  --stat-label-value-gap: var(--space-100);
+  --stat-value-context-gap: var(--space-075);
+  --stat-label-font: var(--text-2xs);
+  --stat-value-font: 27px;
+  --stat-value-weight: 760;
+  --stat-context-font: var(--text-xs);
 
   /* The kanban card is not a --card-*: it is tighter (4px, not 8px), lifts 1px rather
      than 4px, and sits in a lane rather than on the page. It gets its own shape tokens

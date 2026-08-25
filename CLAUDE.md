@@ -60,10 +60,16 @@ and [`design-system/registry.json`](design-system/registry.json).** The registry
 every component, its props and states, and every screen-level pattern; the doc has the rules.
 
 `design-system/index.html` is the workbench: **http://localhost:8000/design-system/**,
-six hash-routed views — `#overview` (the coverage ledger), `#foundations`, `#icons`,
-`#components`, `#patterns`, `#directions`. Screenshot the relevant one after any visual change. It
+seven hash-routed views — `#overview` (the coverage ledger), `#foundations`, `#icons`,
+`#components`, `#patterns`, `#visualizations`, `#directions`. Screenshot the relevant one
+after any visual change. It
 renders straight from the registry and `dsIcon` rather than restating them, so it is the
 fastest way to see what exists before you build — and the place a visual regression shows up.
+
+`#visualizations` is the design-system catalog for chart language. Its registry-backed,
+engine-neutral components define chart choice, reading priority, palette and accessibility;
+every registered visualization is ready to be implemented in ECharts or another product
+renderer. Do not treat a library's defaults or website examples as Titan design decisions.
 
 **Patterns are requirements, not inspiration.** Before choosing whether a task opens in
 a modal, drawer or full page, check `registry.json.patterns` / `#patterns`. If the task
@@ -237,12 +243,41 @@ be extended with new formats.
 Email performance follows the dashboard's selected pipeline scope and uses a compact three-row
 infographic for Emails sent, Open rate and Reply rate, plus the same
 7-day, 30-day, 90-day and all-time duration vocabulary as sequence Performance. Reply rate remains
-replies divided by enrollments. Each bar ends with one compact inline value: the email or reply
-count followed by its percentage in parentheses where applicable; there are no secondary captions
-underneath. The duration is stored as `DATA.dashboard.emailRange`. Both this
+replies divided by enrollments. It follows the conversion visualization component: each percentage
+sits beside its stage label, each count stays in the value column, and every bar uses the primary
+series colour with decreasing emphasis rather than unrelated categorical hues. There are no
+secondary captions underneath. The duration is stored as `DATA.dashboard.emailRange`. Both this
 dashboard aggregate and the sequence pages read the shared fixture source and range scaler in
 `titan-sequences.js`; there must not be a separate dashboard mail-stat constant. Both dashboard
 sections are independently hideable through Customize.
+
+Dashboard card shells, selects and buttons use the registered `ds-card`, `ds-input` and `ds-btn`
+components; page-local dashboard classes own layout only. Its adopted chart contracts are
+`ranked-bars`, `binned-distribution`, `stacked-composition`, `conversion-funnel` and
+`part-to-whole`, all registered in `design-system/registry.json`. Chart UI colours come from the
+semantic `--viz-*` tokens and the renderer-owned categorical order; multiseries product charts do
+not substitute pipeline record colours for those slots. A pipeline colour may still identify that
+pipeline in non-chart UI such as a tag or card accent. Empty distribution bins show their zero
+label and reserve their mark slot without drawing a false minimum bar. Bar and column dimensions
+come from `--viz-bar-thickness-*` and `--viz-column-width-*`, never dashboard-local measurements.
+Every visualization supports `size: 'sm' | 'md' | 'lg'` and defaults to `md`. Size changes internal
+mark dimensions and spacing, not the component's outer width. Dashboard-adopted visualizations
+must be fluid: flexible tracks and tables consume the card width while typography remains in CSS
+pixels. Do not position responsive labels or legends at fixed SVG coordinates.
+Use `fill: true` when a chart should center itself within the remaining height of a flex card; the
+component owns that behavior and product pages must not recreate it with chart-specific wrappers.
+Chart typography uses the size-specific `--viz-axis-font-*`, `--viz-label-font-*`,
+`--viz-value-font-*`, `--viz-legend-font-*` and donut font tokens; do not add page-local chart
+font sizes.
+Dashboard part-to-whole charts call the same complete renderer as the workbench. The ring,
+center value and label, responsive table columns, row spacing and share labels all come from
+`design-system/components/visualization.js`; dashboard code must not own a second donut layout.
+Amount spread and Email performance likewise call that module's shared binned-distribution and
+conversion-step renderers. Value-label placement is part of the renderer contract; do not recreate
+those charts with dashboard-local flex or grid markup.
+The money Focus list and single-pipeline stage breakdown use the module's ranked-bar and stacked-
+composition renderers as well. Dashboard chart functions are data adapters only; plotted geometry
+and chart legends belong in the design-system module.
 
 The dashboard first resolves sequences explicitly configured in the selected pipelines' stage
 entry, idle or exit actions and cumulatively aggregates each matching sequence once. Older fixture

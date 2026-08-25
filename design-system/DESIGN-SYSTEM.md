@@ -18,7 +18,7 @@ you can see the whole system at once.
 
 ## The workbench
 
-`node dev-server.js`, then **http://localhost:8000/design-system/**. Six views, each on
+`node dev-server.js`, then **http://localhost:8000/design-system/**. Seven views, each on
 its own hash so it can be linked and screenshotted:
 
 | `#overview` | The coverage ledger — one row per block in the inventory, bar = duplication absorbed, sorted by it. Click a row for the evidence. |
@@ -26,6 +26,7 @@ its own hash so it can be linked and screenshotted:
 | `#icons` | The whole set, filterable by name *or* alias; click to copy the call. |
 | `#components` | Every variant in every state. A registered component with no demo is called out by name. |
 | `#patterns` | Cross-page interaction and layout conventions composed from application structure and components. |
+| `#visualizations` | Canonical, engine-neutral chart components with their reading priorities and usage contracts. Product renderers reproduce these specimens. |
 | `#directions` | Each theme rendered live, side by side. |
 
 It is rendered **in its own system** — the dark rail is the product's real sidebar colour,
@@ -49,6 +50,10 @@ Three things it reads rather than restates, so it can't drift from the truth:
   required structure, constraints and current examples. A pattern is not a component:
   it coordinates routes, page ownership and component composition, and therefore does
   not introduce a `ds-*` class.
+- **`#visualizations` renders from `registry.json`**. Its specimens use workbench-owned
+  SVG geometry to define chart purpose, reading order, palette and accessibility before
+  choosing or configuring a rendering library. Every visualization listed there is a
+  canonical design-system component; there is no separate exploration or approval state.
 
 ### Patterns are contracts
 
@@ -76,6 +81,57 @@ It supports fixed and bounded-resizable variations. A resizable split keeps a co
 default, clamps both panes to page-owned usable limits, exposes an accessible keyboard-operable
 separator, and disappears when the panes stack; dragging never expands the shared frame or
 allows either pane to collapse.
+
+### Stat tiles are metric summaries, not charts
+
+Use `.ds-card.ds-stat` for a short label, one primary number and one context line. The component
+owns vertical padding, label-to-value spacing, value-to-context spacing, truncation and tabular
+number treatment. Product pages supply only content and, when adjacent metrics need distinction,
+`--ds-stat-accent`; accent is categorical decoration rather than success or danger status.
+Do not rebuild this hierarchy with page-local KPI classes, and do not use a stat tile where a
+scale, trend or composition is the question.
+
+### Data visualization is a design-system component
+
+Visualization components generate geometry from data instead of wrapping fixed control markup.
+Their shared renderers and visual language are still design-system-owned: use the registry's
+`visualizations` contracts and the `#visualizations` workbench view for chart choice,
+reading priority, palette, labels and accessible alternatives. Every registered specimen is
+ready for product use and may be translated into ECharts or another renderer. Renderer
+defaults and showcase examples are never the source of truth; the workbench specimen is.
+Product renderers also consume the semantic `--viz-bar-thickness-*` and `--viz-column-width-*`
+tokens; mark dimensions must not be recreated with page-local values.
+Every renderer supports `size: 'sm' | 'md' | 'lg'` and defaults to `md`. The matching
+size tokens change internal mark dimensions and spacing while the complete component remains fluid.
+Flexible tracks and grid/table regions consume the host width; text remains at semantic CSS font
+sizes, and narrow part-to-whole components stack automatically. Do not use fixed SVG coordinates
+for responsive legends or bar labels. The Data Visualization tab exposes all three sizes.
+Renderers also accept `fill: true` for dashboard cards that should center the chart in their
+remaining flex height without adding a page-specific wrapper.
+Axis, label, value, legend and donut typography each have semantic `--viz-*-font-{sm,md,lg}` tokens.
+Categorical series order is renderer-owned; omit per-series colours unless the data has a distinct,
+documented colour meaning.
+Part-to-whole charts must call `dsVisualization.partToWhole()` from
+`components/visualization.js`; the workbench and dashboard intentionally share that renderer so
+ring width, gaps, corner treatment, gradients, optional center labels, legend columns and row
+spacing cannot drift between two copies. Each segment tooltip reports its label, displayed value
+and share on hover; the persistent legend remains the accessible equivalent. The center is optional
+with `center: false`. All legends use the shared subtle table surface and row separators. External
+inline margin creates breathing room around the table while internal padding stays restrained. When a card needs to
+conserve height, `legendLayout: 'compact'` keeps each category's label, share and value on one line
+without a separate table header. Product copy supplies `centerLabel`; labels such as `SOURCES`
+remain domain content rather than component defaults.
+Conversion steps likewise support `layout: 'inline'` for a one-row label/track/value treatment with
+the percentage beside the ending value. The renderer owns the compact label column, aligned track
+endings, stable-width left-aligned value column and spacing on both sides of the track; it returns
+to a stacked track at narrow widths. Set `density: 'comfortable'` for short sequences that need
+more vertical breathing room without page-local spacing overrides.
+The same rule applies to binned distributions and conversion steps through
+`dsVisualization.binnedDistribution()` and `dsVisualization.conversionSteps()`: labels and values
+are chart geometry too, so product pages must not rebuild their placement in HTML.
+Ranked bars and stacked composition likewise use `dsVisualization.rankedBars()` and
+`dsVisualization.stackedComposition()`. Dashboard pages supply data, labels, links and accessible
+summaries; the shared module owns every plotted coordinate and legend.
 
 Adding a direction is therefore one file in `themes/` plus one entry in the registry's
 `themes` array — the workbench picks up both the header control and the side-by-side
@@ -275,7 +331,8 @@ absorb, which is also its priority:
 | Avatar, Divider, Checkbox, Empty state, Toast, Meter, Link, Tabs, Table | planned | 11–20 each |
 | **Kanban card / column** | planned, **tokenised** | 26 rules, 0 hex, 23 tokens. `--kanban-card-*` / `--kanban-lane-*` mean a direction restyles the board; a component still needs `dsKanbanCard()`, because `renderCard()` builds each card as an innerHTML string |
 | Nav item, Side panel, Stat tile, Search bar | planned | page-specific today |
-| Chart marks, Brand marks | **excluded** | not components — data geometry and brand art |
+| **Chart marks** | **built** | five shared `dsVisualization` renderers used by both the workbench and dashboard |
+| Brand marks | **excluded** | external brand art, not a component |
 
 Floating field is a registered composite built on the Input role rather than a new
 inventory block: it composes a real `.ds-input`, persistent label and optional counter.

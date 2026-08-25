@@ -6,6 +6,7 @@
   "required": [
     "name",
     "version",
+    "visualizations",
     "components"
   ],
   "properties": {
@@ -130,6 +131,63 @@
             "items": { "type": "string" },
             "minItems": 1
           }
+        }
+      }
+    },
+    "visualizations": {
+      "type": "array",
+      "description": "Canonical data-visualization components and usage contracts rendered in the workbench.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "family",
+          "visual",
+          "sizes",
+          "useWhen",
+          "reading",
+          "avoid",
+          "accessibility"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "name": { "type": "string" },
+          "family": { "type": "string" },
+          "visual": {
+            "type": "string",
+            "enum": [
+              "trend-line",
+              "ranked-bars",
+              "binned-distribution",
+              "stacked-composition",
+              "conversion-funnel",
+              "part-to-whole",
+              "activity-heatmap"
+            ]
+          },
+          "sizes": {
+            "type": "array",
+            "description": "Supported internal typography, mark and spacing sizes; md is the default and outer width remains fluid.",
+            "items": { "type": "string", "enum": ["sm", "md", "lg"] },
+            "minItems": 3,
+            "maxItems": 3,
+            "uniqueItems": true
+          },
+          "variants": {
+            "type": "array",
+            "description": "Optional registered renderer variations and the props that select them.",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "useWhen": { "type": "string" },
+          "reading": { "type": "string" },
+          "avoid": { "type": "string" },
+          "accessibility": { "type": "string" }
         }
       }
     },

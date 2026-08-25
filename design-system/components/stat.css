@@ -1,0 +1,60 @@
+/* Headline metric tile: label, primary value and one short context line.
+   The caller supplies meaning and an optional accent; spacing and hierarchy belong here. */
+.ds-stat {
+  --ds-stat-accent: var(--accent-primary);
+  min-width: 0;
+  padding-block: var(--stat-pad-block);
+}
+
+.ds-stat__head {
+  display: flex;
+  align-items: center;
+  min-height: 0;
+  gap: var(--stat-head-gap);
+  margin-bottom: var(--stat-label-value-gap);
+}
+
+.ds-stat__dot {
+  width: var(--stat-dot-size);
+  height: var(--stat-dot-size);
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  background: var(--ds-stat-accent);
+}
+
+.ds-stat__label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--stat-label-font);
+  font-weight: var(--weight-bold);
+  letter-spacing: .05em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ds-stat__value {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-heading);
+  font-size: var(--stat-value-font);
+  font-weight: var(--stat-value-weight);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.015em;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-stat__context {
+  display: block;
+  min-width: 0;
+  margin-top: var(--stat-value-context-gap);
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--stat-context-font);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

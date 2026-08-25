@@ -62,6 +62,15 @@
   --label-pink-bg:   #ffccd2;  --label-pink-fg:   #7c3e44;
   --label-purple-bg: #e1bee7;  --label-purple-fg: #5e3e66;
 
+  /* ── Data visualization palette ─────────────────────────────────────────
+     Categorical series need brighter mid-tones than label ink, without borrowing
+     success, warning or danger colours and accidentally giving a series status. */
+  --teal-500:   #25a9a1;
+  --orange-500: #ee9851;
+  --violet-500: #8874e8;
+  --rose-500:   #df6f9b;
+  --lime-500:   #73b85c;
+
   /* ── Radius ──────────────────────────────────────────────────────────────
      6px is the reference's "unified squircle" for every active highlight and
      hover fill; 4px dominates by count (25 uses) on smaller inner elements. */
@@ -71,10 +80,12 @@
   --radius-lg: 8px;
   --radius-xl: 12px;      /* no shipped surface uses this yet; the "soft" direction does */
   --radius-full: 999px;
+  --stroke-hairline: 1px;
 
   /* ── Type ────────────────────────────────────────────────────────────────
      Nine sizes in the reference, 14px carrying 35 of 70 uses. */
   --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --text-3xs: 10px;
   --text-2xs: 11px;
   --text-xs:  12px;
   --text-sm:  13px;

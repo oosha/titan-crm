@@ -393,6 +393,53 @@
   .wb-pattern-modalfoot i { display: block; width: var(--space-400); height: var(--space-200); border-radius: var(--radius-control); background: var(--surface-hover); }
   .wb-pattern-modalfoot i:last-child { background: var(--accent-primary); }
 
+  /* ── Data visualization view ───────────────────────────────────────────────
+     These are the engine-neutral design-system components for chart language;
+     product renderers reproduce these contracts without inheriting library defaults. */
+  .wb-viz-principles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-100); margin-bottom: var(--space-200); }
+  .wb-viz-principle { padding: var(--space-150); border-radius: var(--radius-md); background: var(--surface-recessed); }
+  .wb-viz-principle b { display: block; margin-bottom: var(--space-050); color: var(--text-heading); font-size: var(--text-sm); }
+  .wb-viz-principle span { color: var(--text-secondary); font-size: var(--text-xs); line-height: 1.5; }
+  .wb-viz-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-200); align-items: start; }
+  .wb-viz-card { overflow: hidden; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--surface-primary); }
+  .wb-viz-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-150); padding: var(--space-200) var(--space-200) var(--space-150); }
+  .wb-viz-family { display: block; margin-bottom: var(--space-050); color: var(--text-muted); font-family: var(--wb-mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .wb-viz-head h2 { margin: 0; color: var(--text-heading); font-size: var(--text-xl); }
+  .wb-viz-size-control { display: flex; align-items: center; gap: var(--space-075); color: var(--text-muted); font-size: var(--text-2xs); }
+  .wb-viz-size { width: auto; min-width: 92px; height: var(--btn-height-sm); padding-block: 0; font-size: var(--text-xs); }
+  .wb-viz-plot { min-height: 252px; padding: var(--space-100) var(--space-200) var(--space-150); background: var(--surface-primary); }
+  .wb-viz-svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .wb-viz-svg text { font-family: var(--font-sans); }
+  .wb-viz-gridline { stroke: var(--viz-gridline); stroke-width: var(--ds-viz-line-width); }
+  .wb-viz-axis { fill: var(--viz-axis-label); font-size: var(--ds-viz-axis-font); }
+  .wb-viz-label { fill: var(--text-secondary); font-size: var(--ds-viz-label-font); font-weight: var(--weight-medium); }
+  .wb-viz-value { fill: var(--text-heading); font-size: var(--ds-viz-value-font); font-weight: var(--weight-semi); font-variant-numeric: tabular-nums; }
+  .wb-viz-primary { fill: var(--viz-primary); }
+  .wb-viz-primary-stroke { fill: none; stroke: var(--viz-primary); stroke-width: var(--ds-viz-line-width); stroke-linecap: round; stroke-linejoin: round; }
+  .wb-viz-primary-soft { fill: var(--viz-primary-soft); }
+  .wb-viz-track { fill: var(--surface-sunken); }
+  .wb-viz-series-2 { fill: var(--viz-categorical-2); stroke: var(--viz-categorical-2); }
+  .wb-viz-series-3 { fill: var(--viz-categorical-3); stroke: var(--viz-categorical-3); }
+  .wb-viz-series-4 { fill: var(--viz-categorical-4); stroke: var(--viz-categorical-4); }
+  .wb-viz-series-5 { fill: var(--viz-categorical-5); stroke: var(--viz-categorical-5); }
+  .wb-viz-tooltip rect { fill: var(--viz-tooltip-bg); }
+  .wb-viz-tooltip text { fill: var(--viz-tooltip-text); font-size: var(--ds-viz-axis-font); }
+  .wb-viz-tooltip text:last-child { font-weight: var(--weight-semi); }
+  .wb-viz-tooltip { pointer-events: none; }
+  .wb-viz-trend-guide { stroke: var(--viz-gridline); stroke-width: var(--ds-viz-line-width); stroke-dasharray: 3 4; }
+  .wb-viz-trend-active { fill: var(--surface-primary); stroke: var(--viz-primary); stroke-width: var(--ds-viz-line-width); pointer-events: none; }
+  .wb-viz-trend-hit { fill: transparent; cursor: crosshair; }
+  .wb-viz-trend-hit:focus { outline: none; }
+  .wb-viz-legend { display: flex; flex-wrap: wrap; gap: var(--space-100) var(--space-150); margin: var(--space-050) 0 0; color: var(--text-secondary); font-size: var(--viz-legend-font-md); }
+  .wb-viz-legend span { display: inline-flex; align-items: center; gap: var(--space-050); }
+  .wb-viz-legend i { width: var(--space-100); height: var(--space-100); border-radius: var(--radius-xs); }
+  .wb-viz-meta { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-150) var(--space-200); padding: var(--space-200); border-top: 1px solid var(--border-hairline); background: var(--surface-recessed); }
+  .wb-viz-meta div:last-child { grid-column: 1 / -1; }
+  .wb-viz-meta h3 { margin: 0 0 var(--space-050); color: var(--text-muted); font-family: var(--wb-mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .wb-viz-meta p { margin: 0; color: var(--text-secondary); font-size: var(--text-xs); line-height: 1.55; }
+  .wb-viz-variant-list { display: grid; gap: var(--space-200); }
+  .wb-viz-variant-label { margin-bottom: var(--space-075); color: var(--text-muted); font-family: var(--wb-mono); font-size: var(--text-2xs); letter-spacing: 0.05em; text-transform: uppercase; }
+
   /* ── Directions view ──────────────────────────────────────────────────────── */
   .wb-dirs { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-200); align-items: start; }
   .wb-dir { border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--surface-primary); padding: var(--space-200); }
@@ -434,6 +481,7 @@
     .wb-pattern-body { grid-template-columns: 1fr; }
     .wb-pattern-grid { grid-template-columns: 1fr; }
     .wb-pattern-grid > div:last-child { grid-column: auto; }
+    .wb-viz-principles, .wb-viz-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -545,6 +593,22 @@
     <div class="wb-patterns" id="wb-patterns"></div>
   </section>
 
+  <!-- ── Data visualization ──────────────────────────────────────────────── -->
+  <section class="wb-view" id="view-visualizations">
+    <div class="wb-lede">
+      <h1>Data visualization</h1>
+      <p>The design-system catalog for charts. These components define reading order,
+         colour, density and accessibility independently of the rendering library and
+         are the source of truth for implementations in ECharts or another renderer.</p>
+    </div>
+    <div class="wb-viz-principles" aria-label="Data visualization principles">
+      <div class="wb-viz-principle"><b>Answer one question</b><span>Each chart earns its space by making one comparison or pattern faster to understand.</span></div>
+      <div class="wb-viz-principle"><b>Label the evidence</b><span>Keep decisive values visible; tooltips provide detail rather than rescuing an unreadable chart.</span></div>
+      <div class="wb-viz-principle"><b>Meaning before decoration</b><span>Motion, colour and geometry clarify data. They never add spectacle without information.</span></div>
+    </div>
+    <div class="wb-viz-grid" id="wb-visualizations"></div>
+  </section>
+
   <!-- ── Directions ───────────────────────────────────────────────────────── -->
   <section class="wb-view" id="view-directions">
     <div class="wb-lede">
@@ -568,6 +632,7 @@
 <script src="./components/button.js"></script>
 <script src="./components/menu.js"></script>
 <script src="./components/pipeline-tag.js"></script>
+<script src="./components/visualization.js"></script>
 <script>
   const css = getComputedStyle(document.documentElement);
   const val = (t) => css.getPropertyValue(t).trim();
@@ -590,6 +655,7 @@
     { id: 'icons', label: 'Icons', icon: 'squares-four' },
     { id: 'components', label: 'Components', icon: 'archive-box' },
     { id: 'patterns', label: 'Patterns', icon: 'gear' },
+    { id: 'visualizations', label: 'Data viz', icon: 'chart-line' },
     { id: 'directions', label: 'Directions', icon: 'flask' },
   ];
   const counts = {};
@@ -745,12 +811,14 @@
       counts.overview = built.length + '/' + BLOCKS.length;
       counts.components = String((reg.components || []).length);
       counts.patterns = String((reg.patterns || []).length);
+      counts.visualizations = String((reg.visualizations || []).length);
       counts.directions = String((reg.themes || []).length);
       renderNav();
       renderLedger();
       renderLegend();
       renderComponents(reg.components || []);
       renderPatterns(reg.patterns || []);
+      renderVisualizations(reg.visualizations || []);
       renderDirections(reg.themes || []);
       document.getElementById('wb-foot').innerHTML =
         '<b>' + built.length + '/' + BLOCKS.length + '</b> blocks built<br>' +
@@ -1067,6 +1135,18 @@
           '<div class="ds-card-sub">A page content panel, not a tile — rounder and roomier. ' +
           'The record screen stacks seven of these.</div></div></div>');
 
+    out += spec('Stat tile', 'ds-stat', 'label · value · context · accent',
+      '<div class="wb-row" style="align-items:stretch">' +
+        '<div class="ds-card ds-stat" style="width:220px;--ds-stat-accent:var(--viz-primary)">' +
+          '<div class="ds-stat__head"><span class="ds-stat__dot" aria-hidden="true"></span><span class="ds-stat__label">Open amount</span></div>' +
+          '<strong class="ds-stat__value">$89,070</strong><span class="ds-stat__context">18 open</span></div>' +
+        '<div class="ds-card ds-stat" style="width:220px;--ds-stat-accent:var(--viz-categorical-2)">' +
+          '<div class="ds-stat__head"><span class="ds-stat__dot" aria-hidden="true"></span><span class="ds-stat__label">Won amount</span></div>' +
+          '<strong class="ds-stat__value">$9,800</strong><span class="ds-stat__context">1 won</span></div>' +
+        '<div class="ds-card ds-stat" style="width:220px;--ds-stat-accent:var(--viz-categorical-4)">' +
+          '<div class="ds-stat__head"><span class="ds-stat__dot" aria-hidden="true"></span><span class="ds-stat__label">Win rate</span></div>' +
+          '<strong class="ds-stat__value">100%</strong><span class="ds-stat__context">1 of 1 settled</span></div></div>');
+
     out += spec('Icon', 'ds-icon', dsIcon.builtins().length + ' icons · 3 weights',
       '<div class="wb-row"><span class="wb-key">in context</span>' +
         dsButton({ label: 'Add candidate', variant: 'primary', icon: ICON_PLUS }) +
@@ -1196,7 +1276,7 @@
 
     // A registered component with no demo here is a hole in the instrument, so say so
     // rather than quietly rendering four of five.
-    const shown = ['Button', 'Input', 'Floating field', 'Badge', 'Card', 'Icon', 'Stage chevron', 'Segmented control',
+    const shown = ['Button', 'Input', 'Floating field', 'Badge', 'Card', 'Stat tile', 'Icon', 'Stage chevron', 'Segmented control',
                    'Menu', 'Split button', 'Pipeline tag'];
     const missing = (SPECS || []).map(function (c) { return c.name; })
       .filter(function (n) { return shown.indexOf(n) === -1; });
@@ -1300,6 +1380,238 @@
         event.preventDefault();
       });
       setValue(value);
+    });
+  }
+
+  // ── Data visualization ──────────────────────────────────────────────────
+  // The specimens use plain SVG on purpose. This is where visual grammar is agreed;
+  // ECharts is an eventual renderer, not the source of the design decision.
+  function vizSize(value) { return ['sm', 'md', 'lg'].indexOf(value) === -1 ? 'md' : value; }
+  function vizWorkbenchWrap(size, markup) { return '<div class="ds-viz ds-viz--' + vizSize(size) + '">' + markup + '</div>'; }
+
+  function vizTrendLine(size) {
+    const points = [
+      ['March', 18, 44, 167], ['April', 22, 128, 154], ['May', 27, 212, 134],
+      ['June', 31, 296, 116], ['July', 37, 380, 87], ['August', 42, 500, 55]
+    ];
+    return vizWorkbenchWrap(size, '<svg class="wb-viz-svg" data-wb-trend viewBox="0 0 520 240" role="img" aria-labelledby="viz-line-title">' +
+      '<title id="viz-line-title">Qualified opportunities rise from 18 to 42 over six months</title>' +
+      [40, 88, 136, 184].map(function (y) {
+        return '<line class="wb-viz-gridline" x1="44" x2="500" y1="' + y + '" y2="' + y + '"></line>';
+      }).join('') +
+      '<text class="wb-viz-axis" x="8" y="44">45</text><text class="wb-viz-axis" x="8" y="92">30</text>' +
+      '<text class="wb-viz-axis" x="8" y="140">15</text><text class="wb-viz-axis" x="16" y="188">0</text>' +
+      '<path class="wb-viz-primary-soft" opacity=".54" d="M44 167 C79 162 95 151 128 154 S182 127 212 134 S267 110 296 116 S350 75 380 87 S443 48 500 55 L500 184 L44 184 Z"></path>' +
+      '<path class="wb-viz-primary-stroke" d="M44 167 C79 162 95 151 128 154 S182 127 212 134 S267 110 296 116 S350 75 380 87 S443 48 500 55"></path>' +
+      '<line class="wb-viz-trend-guide" data-wb-trend-guide x1="500" x2="500" y1="40" y2="184"></line>' +
+      '<circle class="wb-viz-trend-active" data-wb-trend-active cx="500" cy="55" r="5"></circle>' +
+      '<g class="wb-viz-tooltip" data-wb-trend-tooltip transform="translate(387 8)"><rect width="112" height="38" rx="7"></rect>' +
+        '<text data-wb-trend-month x="10" y="15">August</text><text data-wb-trend-value x="10" y="29">42 qualified</text></g>' +
+      points.map(function (point) {
+        return '<circle class="wb-viz-trend-hit" tabindex="0" role="button" aria-label="' + point[0] + ', ' + point[1] + ' qualified"' +
+          ' data-month="' + point[0] + '" data-value="' + point[1] + '" data-x="' + point[2] + '" data-y="' + point[3] + '"' +
+          ' cx="' + point[2] + '" cy="' + point[3] + '" r="26"></circle>';
+      }).join('') +
+      '<text class="wb-viz-axis" x="44" y="214">Mar</text><text class="wb-viz-axis" x="130" y="214">Apr</text>' +
+      '<text class="wb-viz-axis" x="218" y="214">May</text><text class="wb-viz-axis" x="304" y="214">Jun</text>' +
+      '<text class="wb-viz-axis" x="392" y="214">Jul</text><text class="wb-viz-axis" x="480" y="214">Aug</text></svg>');
+  }
+
+  function vizRankedBars(size) {
+    const rows = [
+      { label: 'Website', width: 92, value: '184' }, { label: 'Referral', width: 68, value: '136' },
+      { label: 'Partner', width: 51, value: '102' }, { label: 'Outbound', width: 37, value: '74' },
+      { label: 'Events', width: 24, value: '48' }
+    ];
+    return window.dsVisualization.rankedBars({ rows: rows, size: size, idPrefix: 'viz-ranked', summary: 'Lead sources ranked from Website at 184 to Events at 48' });
+  }
+
+  function vizBinnedDistribution(size) {
+    const bins = [
+      { label: '$<5k', value: 11 }, { label: '$5–10k', value: 3 },
+      { label: '$10–25k', value: 4 }, { label: '$25k+', value: 0 }
+    ];
+    return window.dsVisualization.binnedDistribution({
+      bins: bins,
+      size: size,
+      idPrefix: 'viz-distribution',
+      axisLabel: 'Deal amount range',
+      meta: '18 open opportunities',
+      summary: 'Amount distribution: 11 below five thousand, 3 from five to ten thousand, 4 from ten to twenty-five thousand and none above twenty-five thousand'
+    });
+  }
+
+  function vizStackedComposition(size) {
+    const groups = [
+      { label: 'May', values: [180, 94, 54] },
+      { label: 'Jun', values: [214, 112, 70] },
+      { label: 'Jul', values: [244, 126, 56] },
+      { label: 'Aug', values: [268, 138, 72] }
+    ];
+    const series = [{ label: 'Email' }, { label: 'Calls' }, { label: 'Tasks' }];
+    return window.dsVisualization.stackedComposition({ groups: groups, series: series, size: size, idPrefix: 'viz-stack', summary: 'Monthly activity totals split into email, calls and tasks' });
+  }
+
+  function vizConversionFunnel(size) {
+    const rows = [
+      { label: 'Visitors', value: '8,420', width: 100, percentage: '100%' },
+      { label: 'Started form', value: '3,536', width: 72, percentage: '42%' },
+      { label: 'Submitted', value: '2,610', width: 54, percentage: '74%' },
+      { label: 'Qualified', value: '1,436', width: 34, percentage: '55%' }
+    ];
+    const summary = 'Conversion from 8,420 visitors to 1,436 qualified leads';
+    const stacked = window.dsVisualization.conversionSteps({
+      rows: rows,
+      size: size,
+      idPrefix: 'viz-funnel-stacked',
+      summary: summary
+    });
+    const inline = window.dsVisualization.conversionSteps({
+      rows: rows,
+      size: size,
+      layout: 'inline',
+      density: 'comfortable',
+      idPrefix: 'viz-funnel-inline',
+      summary: summary
+    });
+    return '<div class="wb-viz-variant-list"><div><div class="wb-viz-variant-label">Stacked rows</div>' + stacked +
+      '</div><div><div class="wb-viz-variant-label">Inline rows · comfortable</div>' + inline + '</div></div>';
+  }
+
+  function vizPartToWhole(size) {
+    const parts = [
+      { label: 'Website', value: 184 }, { label: 'Referral', value: 102 },
+      { label: 'Partner', value: 72 }, { label: 'Other', value: 49 }
+    ];
+    const summary = '407 sourced leads: Website 45%, Referral 25%, Partner 18%, Other 12%';
+    const centered = window.dsVisualization.partToWhole({
+      parts: parts,
+      size: size,
+      idPrefix: 'viz-donut-centered',
+      centerValue: '407',
+      centerLabel: 'TOTAL LEADS',
+      legendTitle: 'SOURCE',
+      valueTitle: 'LEADS',
+      summary: summary
+    });
+    const centerless = window.dsVisualization.partToWhole({
+      parts: parts,
+      size: size,
+      idPrefix: 'viz-donut-centerless',
+      center: false,
+      legendLayout: 'compact',
+      legendTitle: 'SOURCE',
+      valueTitle: 'LEADS',
+      summary: summary
+    });
+    return '<div class="wb-viz-variant-list"><div><div class="wb-viz-variant-label">Centered total</div>' + centered +
+      '</div><div><div class="wb-viz-variant-label">Centerless · compact legend</div>' + centerless + '</div></div>';
+  }
+
+  function vizActivityHeatmap(size) {
+    const values = [
+      [1,1,2,3,2,1,0,0], [0,2,3,4,3,2,1,0], [1,2,4,5,4,3,1,0],
+      [0,1,3,4,5,4,2,1], [0,1,2,3,4,3,1,0]
+    ];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    let cells = '';
+    values.forEach(function (row, r) {
+      row.forEach(function (value, c) {
+        cells += '<rect class="wb-viz-primary" x="' + (76 + c * 51) + '" y="' + (24 + r * 37) + '" width="39" height="27" rx="5" opacity="' + (.08 + value * .17) + '"></rect>';
+      });
+    });
+    return vizWorkbenchWrap(size, '<svg class="wb-viz-svg" viewBox="0 0 520 230" role="img" aria-labelledby="viz-heat-title">' +
+      '<title id="viz-heat-title">Activity is strongest from late morning to mid-afternoon Tuesday through Thursday</title>' +
+      days.map(function (day, i) { return '<text class="wb-viz-label" x="0" y="' + (43 + i * 37) + '">' + day + '</text>'; }).join('') +
+      ['8am','10','12','2pm','4','6','8','10'].map(function (hour, i) { return '<text class="wb-viz-axis" x="' + (86 + i * 51) + '" y="224" text-anchor="middle">' + hour + '</text>'; }).join('') +
+      cells + '<text class="wb-viz-axis" x="392" y="10">Less</text>' +
+      [1,2,3,4].map(function (n, i) { return '<rect class="wb-viz-primary" x="' + (424 + i * 17) + '" y="1" width="12" height="12" rx="3" opacity="' + (n * .22) + '"></rect>'; }).join('') +
+      '<text class="wb-viz-axis" x="496" y="10">More</text></svg>');
+  }
+
+  function visualizationSpecimen(type, size) {
+    if (type === 'trend-line') return vizTrendLine(size);
+    if (type === 'ranked-bars') return vizRankedBars(size);
+    if (type === 'binned-distribution') return vizBinnedDistribution(size);
+    if (type === 'stacked-composition') return vizStackedComposition(size);
+    if (type === 'conversion-funnel') return vizConversionFunnel(size);
+    if (type === 'part-to-whole') return vizPartToWhole(size);
+    if (type === 'activity-heatmap') return vizActivityHeatmap(size);
+    return '<p class="wb-note">No specimen renderer for ' + esc(type) + '.</p>';
+  }
+
+  function renderVisualizations(visualizations) {
+    document.getElementById('wb-visualizations').innerHTML = visualizations.length
+      ? visualizations.map(function (viz) {
+          const sizeNames = { sm: 'Small', md: 'Medium', lg: 'Large' };
+          const sizeOptions = viz.sizes.map(function (size) {
+            return '<option value="' + esc(size) + '"' + (size === 'md' ? ' selected' : '') + '>' + esc(sizeNames[size]) + '</option>';
+          }).join('');
+          return '<article class="wb-viz-card" id="visualization-' + esc(viz.id) + '" data-wb-viz-card data-viz-type="' + esc(viz.visual) + '">' +
+            '<header class="wb-viz-head"><div><span class="wb-viz-family">' + esc(viz.family) + '</span>' +
+              '<h2>' + esc(viz.name) + '</h2></div><label class="wb-viz-size-control">Size <select class="ds-input wb-viz-size" data-wb-viz-size>' +
+                sizeOptions + '</select></label></header>' +
+            '<div class="wb-viz-plot" data-wb-viz-plot>' + visualizationSpecimen(viz.visual, 'md') + '</div>' +
+            '<div class="wb-viz-meta"><div><h3>Use when</h3><p>' + esc(viz.useWhen) + '</p></div>' +
+              '<div><h3>Reading priority</h3><p>' + esc(viz.reading) + '</p></div>' +
+              '<div><h3>Avoid</h3><p>' + esc(viz.avoid) + '</p></div>' +
+              '<div><h3>Accessibility</h3><p>' + esc(viz.accessibility) + '</p></div>' +
+              (viz.variants ? '<div><h3>Variants</h3><p>' + viz.variants.map(esc).join('<br>') + '</p></div>' : '') + '</div></article>';
+        }).join('')
+      : '<p class="wb-note">No data-visualization contracts registered.</p>';
+    wireVisualizationPreviews();
+  }
+
+  function wireVisualizationPreviews() {
+    const wireTrend = function (svg) {
+      const hits = Array.prototype.slice.call(svg.querySelectorAll('.wb-viz-trend-hit'));
+      const guide = svg.querySelector('[data-wb-trend-guide]');
+      const active = svg.querySelector('[data-wb-trend-active]');
+      const tooltip = svg.querySelector('[data-wb-trend-tooltip]');
+      const month = svg.querySelector('[data-wb-trend-month]');
+      const value = svg.querySelector('[data-wb-trend-value]');
+      const points = hits.map(function (hit) {
+        return { hit: hit, x: Number(hit.dataset.x), y: Number(hit.dataset.y), month: hit.dataset.month, value: hit.dataset.value };
+      });
+      const show = function (point) {
+        guide.setAttribute('x1', point.x); guide.setAttribute('x2', point.x);
+        active.setAttribute('cx', point.x); active.setAttribute('cy', point.y);
+        month.textContent = point.month; value.textContent = point.value + ' qualified';
+        const tipX = point.x > 390 ? point.x - 113 : point.x + 10;
+        const tipY = Math.max(4, point.y - 48);
+        tooltip.setAttribute('transform', 'translate(' + tipX + ' ' + tipY + ')');
+      };
+      svg.addEventListener('pointermove', function (event) {
+        const rect = svg.getBoundingClientRect();
+        const x = (event.clientX - rect.left) * 520 / rect.width;
+        const nearest = points.reduce(function (best, point) {
+          return Math.abs(point.x - x) < Math.abs(best.x - x) ? point : best;
+        }, points[0]);
+        show(nearest);
+      });
+      svg.addEventListener('pointerleave', function () {
+        if (hits.indexOf(document.activeElement) === -1) show(points[points.length - 1]);
+      });
+      points.forEach(function (point, index) {
+        point.hit.addEventListener('focus', function () { show(point); });
+        point.hit.addEventListener('keydown', function (event) {
+          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+          const next = Math.max(0, Math.min(points.length - 1, index + (event.key === 'ArrowRight' ? 1 : -1)));
+          points[next].hit.focus(); event.preventDefault();
+        });
+      });
+      show(points[points.length - 1]);
+    };
+    document.querySelectorAll('[data-wb-trend]').forEach(wireTrend);
+    document.querySelectorAll('[data-wb-viz-card]').forEach(function (card) {
+      const select = card.querySelector('[data-wb-viz-size]');
+      const plot = card.querySelector('[data-wb-viz-plot]');
+      select.addEventListener('change', function () {
+        plot.querySelectorAll('.ds-viz').forEach(function (specimen) {
+          ['sm', 'md', 'lg'].forEach(function (size) { specimen.classList.remove('ds-viz--' + size); });
+          specimen.classList.add('ds-viz--' + vizSize(select.value));
+        });
+      });
     });
   }
 

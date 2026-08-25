@@ -30,10 +30,7 @@
      primitives + data helpers from crm-directory. Everything is derived from the
      same /api/data the board reads — no new source of truth. */
 
-  :root {
-    --dash-shadow: 0 1px 2px rgba(20,22,26,0.04), 0 3px 10px rgba(20,22,26,0.04);
-    --rail-w: 344px;
-  }
+  :root { --rail-w: 344px; }
 
   /* Turn the scroll region into a two-column layout: the bento scrolls, the
      copilot rail stays put with its own internal scroll. */
@@ -66,21 +63,8 @@
 
   /* ── Toolbar ─────────────────────────────────────────────────────────────── */
   .dash-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-  .dash-scope {
-    height: 36px; padding: 0 34px 0 12px; border: 1px solid var(--dir-line);
-    border-radius: 9px; background: var(--dir-surface); font: inherit; font-size: 13px;
-    font-weight: 600; color: var(--dir-body); cursor: pointer; outline: none; max-width: 240px;
-  }
-  .dash-scope:focus { border-color: var(--dir-accent); box-shadow: 0 0 0 3px rgba(33,112,244,0.12); }
+  .dash-scope { width: auto; max-width: 240px; font-weight: var(--weight-semi); cursor: pointer; }
   .dash-bar-spacer { flex: 1; }
-  .dash-ghost-btn {
-    display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 13px;
-    border: 1px solid var(--dir-line); border-radius: 9px; background: var(--dir-surface);
-    font: inherit; font-size: 13px; font-weight: 600; color: var(--dir-body); cursor: pointer;
-  }
-  .dash-ghost-btn:hover { border-color: var(--dir-accent); color: var(--dir-accent); }
-  .dash-ghost-btn:focus-visible { outline: 2px solid var(--dir-accent); outline-offset: 1px; }
-  .dash-ghost-btn.is-on { border-color: var(--dir-accent); color: var(--dir-accent); background: var(--dir-accent-soft); }
 
   /* ── Bento grid ────────────────────────────────────────────────────────────
      Four columns at full width; each tile declares a column span inline. A tile
@@ -92,7 +76,7 @@
   @container dash (max-width: 760px) {
     .bento { grid-template-columns: repeat(2, 1fr); }
     .bento > .tile { grid-column: span 2 !important; }
-    .bento > .tile.kpi { grid-column: span 1 !important; }
+    .bento > .ds-stat { grid-column: span 1 !important; }
     .dash-upcoming--tall { grid-row: auto; }
   }
   @container dash (max-width: 520px) {
@@ -101,9 +85,7 @@
   }
 
   .tile {
-    background: var(--dir-surface); border: 1px solid var(--dir-line); border-radius: 14px;
-    padding: 16px 17px; box-shadow: var(--dash-shadow); display: flex; flex-direction: column;
-    position: relative;
+    display: flex; flex-direction: column; position: relative;
   }
   /* Every tile sits on the same white surface. The accent shows up in the dot, the
      meter and the marks — never as a wash behind the card, which made a few tiles
@@ -116,78 +98,6 @@
   .tile-title { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dir-muted); }
   .tile-meta { margin-left: auto; font-size: 11.5px; color: var(--dir-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
 
-  /* ── KPI tile ────────────────────────────────────────────────────────────────
-     The number is the thing. A dot in the tile's own accent is enough to tell
-     the four apart at a glance. */
-  .kpi .kpi-label { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dir-muted); }
-  .kpi-dot { width: 8px; height: 8px; border-radius: 3px; background: var(--accent); flex-shrink: 0; }
-  .kpi-value {
-    font-size: 27px; font-weight: 760; color: var(--dir-ink); line-height: 1.1; margin-top: 9px;
-    font-variant-numeric: tabular-nums; letter-spacing: -0.015em;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .kpi-sub { font-size: 12px; color: var(--dir-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* ── Stage composition (one stacked bar + legend) ─────────────────────────
-     A 2px gap in the surface colour does the separating between segments — no
-     stroke around the marks. Only the two outer ends are data ends, so only they
-     round off. */
-  .stackwrap { flex: 1; display: flex; flex-direction: column; }
-  .stack { display: flex; gap: 2px; height: 30px; }
-  .stack-seg { min-width: 3px; border-radius: 2px; transition: flex-grow 620ms cubic-bezier(0.22,0.61,0.36,1); }
-  .stack-seg:first-child { border-radius: 6px 2px 2px 6px; }
-  .stack-seg:last-child { border-radius: 2px 6px 6px 2px; }
-  .stack-seg:only-child { border-radius: 6px; }
-  .stack + .legend { margin-top: 15px; }
-
-  /* ── Amount-by-pipeline donut ─────────────────────────────────────────────── */
-  .split { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; flex: 1; }
-  .donut { position: relative; width: 150px; height: 150px; flex-shrink: 0; }
-  .donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-  .donut-seg { transition: stroke-dasharray 620ms cubic-bezier(0.22,0.61,0.36,1); }
-  .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-  .donut-center b { font-size: 17px; font-weight: 760; color: var(--dir-ink); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-  .donut-center span { font-size: 10.5px; color: var(--dir-muted); margin-top: 2px; }
-  .legend { flex: 1; min-width: 150px; }
-  .legend-row { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 10px; padding: 7px 0; }
-  .legend-row + .legend-row { border-top: 1px solid var(--dir-hair); }
-  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
-  .legend-name { font-size: 12.5px; color: var(--dir-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .legend-val { font-size: 12.5px; color: var(--dir-ink); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .legend-pct { font-size: 11.5px; color: var(--dir-muted); font-variant-numeric: tabular-nums; margin-left: 4px; }
-
-  /* ── Amount histogram ─────────────────────────────────────────────────── */
-  .hist { display: flex; align-items: flex-end; gap: 12px; flex: 1; min-height: 150px; padding-top: 6px; }
-  .hcol { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; }
-  .hcol-n { font-size: 13px; font-weight: 700; color: var(--dir-ink); font-variant-numeric: tabular-nums; }
-  .hcol-n.zero { color: var(--dir-faint); font-weight: 500; }
-  .hcol-bar { width: 100%; max-width: 46px; border-radius: 7px 7px 3px 3px; background: var(--accent); transition: height 620ms cubic-bezier(0.22,0.61,0.36,1); }
-  .hcol-x { font-size: 11px; color: var(--dir-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-
-  /* ── Source pie ───────────────────────────────────────────────────────────
-     Rotated so the first wedge starts at twelve o'clock and reads clockwise.
-     Hovering a wedge holds it and drops the rest back, so a share can be picked
-     out of the circle without hunting for its colour in the legend. */
-  .pie-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; flex-shrink: 0; }
-  .pie { width: 168px; height: 168px; position: relative; }
-  .pie svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
-  .pie-seg {
-    transition: stroke-dasharray 620ms cubic-bezier(0.22,0.61,0.36,1), opacity 160ms ease;
-  }
-  .pie:hover .pie-seg { opacity: 0.38; }
-  .pie .pie-seg:hover { opacity: 1; }
-  .pie-center {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; text-align: center; pointer-events: none;
-  }
-  .pie-center b { font-size: 24px; font-weight: 760; color: var(--dir-ink); letter-spacing: -0.02em; }
-  .pie-center span { font-size: 10.5px; color: var(--dir-muted); margin-top: 1px; }
-  .pie-caption { font-size: 12px; color: var(--dir-muted); text-align: center; }
-  .pie-caption b { color: var(--dir-body); font-weight: 650; }
-  /* A circular legend key for a circular chart; the square swatch is the bar
-     charts' key and stays theirs. */
-  .legend.is-pie .legend-row { padding: 9px 0; }
-  .legend.is-pie .legend-dot { width: 11px; height: 11px; border-radius: 50%; }
-
   /* ── Sequence email performance ─────────────────────────────────────────── */
   .dash-tile-actions { margin-left: auto; display: flex; align-items: center; gap: var(--space-100); min-width: 0; }
   .dash-tile-link {
@@ -196,22 +106,6 @@
   }
   .dash-tile-link:hover { text-decoration: underline; }
   .dash-email-range { width: auto; min-width: 132px; height: var(--btn-height-sm); padding-block: 0; font-size: var(--text-xs); }
-  .dash-email-infographic {
-    flex: 1; display: grid; grid-template-columns: 92px minmax(72px, 1fr) auto;
-    align-content: center; align-items: center; row-gap: var(--space-200); column-gap: var(--space-125);
-    padding: var(--space-100) 0 var(--space-050);
-  }
-  .dash-email-row { display: contents; }
-  .dash-email-name {
-    display: flex; align-items: center; gap: var(--space-075); color: var(--text-secondary);
-    font-size: var(--text-xs); font-weight: var(--weight-semi); white-space: nowrap;
-  }
-  .dash-email-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: var(--radius-full); }
-  .dash-email-track { display: block; height: 22px; overflow: hidden; border-radius: var(--radius-sm); background: var(--surface-sunken); }
-  .dash-email-fill { display: block; width: 0; height: 100%; border-radius: inherit; transition: width 520ms var(--ease-standard); }
-  .dash-email-result { min-width: 0; display: flex; align-items: baseline; gap: var(--space-050); white-space: nowrap; }
-  .dash-email-figure { color: var(--text-heading); font-size: var(--text-base); font-weight: var(--weight-semi); font-variant-numeric: tabular-nums; }
-  .dash-email-rate { color: var(--text-muted); font-size: var(--text-xs); font-variant-numeric: tabular-nums; }
   /* ── Upcoming activity preview ──────────────────────────────────────────── */
   .dash-activity-columns, .dash-activity-row {
     display: grid; grid-template-columns: minmax(0, 1fr) 104px 72px;
@@ -275,12 +169,10 @@
   .top-deal-name { font-size: 13px; font-weight: 600; color: var(--dir-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .top-deal-co { font-size: 11.5px; color: var(--dir-muted); margin-top: 1px; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .top-bar-wrap { min-width: 0; }
-  .top-bar { height: 6px; border-radius: 3px; background: var(--dir-hair); overflow: hidden; }
-  .top-bar-fill { height: 100%; border-radius: 3px; transition: width 560ms cubic-bezier(0.22,0.61,0.36,1); }
   .top-stage { font-size: 11px; color: var(--dir-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .top-val { font-size: 13px; font-weight: 700; color: var(--dir-ink); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
   /* On a list ranked by attention rather than size, the figure is a staleness. */
-  .top-val.is-late { color: #c0392b; }
+  .top-val.is-late { color: var(--status-danger); }
   .top-rank { font-variant-numeric: tabular-nums; }
   @container dash (max-width: 560px) { .top-row { grid-template-columns: 22px 1fr auto; } .top-bar-wrap { display: none; } }
 
@@ -297,7 +189,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     .bento > .tile { animation: none; }
-    .ring-val, .donut-seg, .stack-seg, .pie-seg, .top-bar-fill, .mail-fill, .hcol-bar { transition: none; }
     .ai-typing i { animation: none; }
   }
 
@@ -331,15 +222,9 @@
       <div class="dash-scroll" id="dash-scroll">
         <div class="dash-tabs" id="d-tabs" role="tablist"></div>
         <div class="dash-bar">
-          <select class="dash-scope" id="d-scope" aria-label="Pipeline scope"></select>
+          <select class="ds-input dash-scope" id="d-scope" aria-label="Pipeline scope"></select>
           <div class="dash-bar-spacer"></div>
-          <button class="dash-ghost-btn" id="d-customize" type="button">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.4"/>
-              <path d="M8 1.5v1.8M8 12.7v1.8M14.5 8h-1.8M3.3 8H1.5M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3M12.6 12.6l-1.3-1.3M4.7 4.7L3.4 3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-            </svg>
-            Customize
-          </button>
+          <button class="ds-btn ds-btn--secondary" id="d-customize" type="button"><span data-customize-icon aria-hidden="true"></span>Customize</button>
         </div>
 
         <div id="d-content"></div>
@@ -351,6 +236,7 @@
 </div>
 
 <script src="/design-system/components/icon.js"></script>
+<script src="/design-system/components/visualization.js"></script>
 <script src="/crm-owner.js"></script>
 <script src="/crm-schema.js"></script>
 <script src="/crm-status.js"></script>
@@ -362,76 +248,11 @@
 <script src="/titan-assistant.js"></script>
 <script>
   // ── Palette ────────────────────────────────────────────────────────────────
-  // No categorical set here any more. Nothing on this board plots two or more
-  // *series* — every tile is one measure over one dimension — so identity is
-  // carried by position and the ordinal ramp, and a per-row hue would only have
-  // restated the bar length in a second channel.
-  const C_OPEN = '#2170f4', C_WON = '#2e9e7b', C_AVG = '#d98634', C_RATE = '#7a6ba3', C_DIST = '#4a8fc7';
-
-  // ── Ordinal ramp ────────────────────────────────────────────────────────────
-  // Ordered categories (pipeline stages) get one hue stepped light → dark. Doing
-  // that by mixing the pipeline's colour with white does not work: the steps come
-  // out too close to tell apart, and a pale green ends up invisible against a
-  // white card. So the ramp is built in OKLCH, where lightness is perceptual and
-  // can be stepped evenly, then converted back and gamut-clamped.
-  //
-  // Two constraints it holds to: each step sits ≥0.06 OKLCH-L from its
-  // neighbours, and the palest step still clears 2:1 against the card. Both are
-  // checked with the dataviz validator (7 hues × 2–9 stages, all passing) — the
-  // gaps compress past 9 stages, which no pipeline here has.
-  function srgbToLin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
-  function linToSrgb(c) { return c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055; }
-
-  function hexToOklch(hex) {
-    const s = String(hex || '').replace('#', '');
-    const r = srgbToLin(parseInt(s.slice(0, 2), 16) || 0), g = srgbToLin(parseInt(s.slice(2, 4), 16) || 0), b = srgbToLin(parseInt(s.slice(4, 6), 16) || 0);
-    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
-    const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
-    const q = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
-    const A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * q;
-    const B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * q;
-    return { L: 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * q, C: Math.sqrt(A * A + B * B), h: Math.atan2(B, A) };
-  }
-  function oklchToRgb(L, C, h) {
-    const A = C * Math.cos(h), B = C * Math.sin(h);
-    const l = Math.pow(L + 0.3963377774 * A + 0.2158037573 * B, 3);
-    const m = Math.pow(L - 0.1055613458 * A - 0.0638541728 * B, 3);
-    const q = Math.pow(L - 0.0894841775 * A - 1.2914855480 * B, 3);
-    return [linToSrgb(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * q),
-            linToSrgb(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * q),
-            linToSrgb(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * q)];
-  }
-  function oklchToHex(L, C, h) {
-    let lo = 0, hi = C;                                  // shrink chroma into gamut
-    for (let i = 0; i < 18; i++) {
-      const mid = (lo + hi) / 2;
-      if (oklchToRgb(L, mid, h).every(function (v) { return v >= -0.001 && v <= 1.001; })) lo = mid; else hi = mid;
-    }
-    return '#' + oklchToRgb(L, lo, h).map(function (v) {
-      return Math.max(0, Math.min(255, Math.round(v * 255))).toString(16).padStart(2, '0');
-    }).join('');
-  }
-  function contrastOnWhite(hex) {
-    const s = hex.replace('#', '');
-    const c = [0, 2, 4].map(function (i) { return srgbToLin(parseInt(s.slice(i, i + 2), 16)); });
-    return 1.05 / (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2] + 0.05);
-  }
-  const RAMP_STEP = 0.075, RAMP_L_FLOOR = 0.26;
-  function rampSteps(base, n) {
-    const oc = hexToOklch(base);
-    if (n < 2) return [base];
-    // The pale end is hue-dependent — an equal-lightness green carries far more
-    // luminance than a violet — so search for the lightest passing step per hue.
-    let lo = 0.45, hi = 0.95;
-    for (let i = 0; i < 20; i++) {
-      const mid = (lo + hi) / 2;
-      if (contrastOnWhite(oklchToHex(mid, oc.C, oc.h)) >= 2.05) lo = mid; else hi = mid;
-    }
-    const top = lo, bottom = Math.max(RAMP_L_FLOOR, top - (n - 1) * RAMP_STEP);
-    const out = [];
-    for (let i = 0; i < n; i++) out.push(oklchToHex(top - (top - bottom) * (i / (n - 1)), oc.C, oc.h));
-    return out;
-  }
+  // Shared visualization semantics supply the product palette. The renderer owns
+  // multiseries colour order so workbench and product colours cannot drift.
+  const DEFAULT_PIPELINE_COLOR = '#2170f4';
+  const C_OPEN = 'var(--viz-primary)', C_WON = 'var(--viz-categorical-2)',
+        C_AVG = 'var(--viz-categorical-3)', C_RATE = 'var(--viz-categorical-4)', C_DIST = 'var(--viz-primary)';
 
   // Sections a reader can turn off. Order here is the render order. `money: true`
   // marks a section that only means something where records carry an amount — it
@@ -561,7 +382,7 @@
   // ── Tile shell ──────────────────────────────────────────────────────────────
   function tile(opts) {
     const style = 'grid-column: span ' + (opts.span || 1) + '; --accent:' + (opts.accent || C_OPEN) + ';';
-    return '<section class="tile" style="' + style + '">' +
+    return '<section class="ds-card tile" style="' + style + '">' +
       (opts.title ? '<div class="tile-head">' + '<span class="tile-title">' + esc(opts.title) + '</span>' +
         (opts.meta ? '<span class="tile-meta">' + esc(opts.meta) + '</span>' : '') + '</div>' : '') +
       opts.body + '</section>';
@@ -580,10 +401,10 @@
     const endLabel = titanStatus.positiveOf(pl && pl.entity);
 
     function kpi(o) {
-      return '<div class="tile kpi" style="--accent:' + o.accent + '">' +
-        '<div class="tile-head" style="margin-bottom:0"><span class="kpi-dot"></span><span class="kpi-label">' + esc(o.label) + '</span></div>' +
-        '<div class="kpi-value" title="' + esc(o.value) + '">' + esc(o.value) + '</div>' +
-        '<div class="kpi-sub">' + esc(o.sub) + '</div></div>';
+      return '<div class="ds-card ds-stat tile" style="--ds-stat-accent:' + o.accent + '">' +
+        '<div class="ds-stat__head"><span class="ds-stat__dot" aria-hidden="true"></span><span class="ds-stat__label">' + esc(o.label) + '</span></div>' +
+        '<strong class="ds-stat__value" title="' + esc(o.value) + '">' + esc(o.value) + '</strong>' +
+        '<span class="ds-stat__context">' + esc(o.sub) + '</span></div>';
     }
     // The completion rate as a number rather than a ring: "win rate" on a sales
     // board, "hire rate" on a hiring one. It replaced an Overdue count, which read
@@ -640,9 +461,8 @@
   // invites reading stage-to-stage drop-off, which these numbers do not measure
   // (a stage count is who is sitting there now, not who passed through).
   //
-  // Ordered categories get the ordinal ramp of the pipeline's own hue — earliest
-  // stage lightest, last stage full strength. Interior segments have no free end
-  // to label without clipping, so the counts ride the legend underneath instead.
+  // The shared stacked-composition renderer owns geometry, categorical colour,
+  // totals and legend placement; this page supplies only the stage data.
   function funnelTile(pl, span) {
     if (!pl) return '';
     const money = hasMoney();
@@ -654,31 +474,21 @@
     });
     const metric = function (r) { return money ? r.value : r.count; };
     const total = rows.reduce(function (a, r) { return a + metric(r); }, 0);
-    const base = pl.color || C_OPEN;
+    const base = pl.color || DEFAULT_PIPELINE_COLOR;
     if (!total) return tile({ span: span, accent: base, title: 'By stage', meta: esc(pl.name),
       body: '<div class="dash-empty" style="padding:24px 0">Nothing in the pipeline yet.</div>' });
 
-    const ramp = rampSteps(base, rows.length);
-    const shade = function (i) { return ramp[i] || base; };
-    const fmt = function (r) { return money ? r.cur + r.value.toLocaleString() : String(r.count); };
     const label = function (r) { return r.label + ' · ' + r.count + ' ' + noun(r.count) + (money ? ' · ' + r.cur + r.value.toLocaleString() : '') + ' · ' + Math.round((metric(r) / total) * 100) + '%'; };
-
-    // flex-grow carries the share, so the 2px gaps never come out of the data.
-    const bar = rows.map(function (r, i) {
-      if (metric(r) <= 0) return '';
-      return '<div class="stack-seg" style="flex:' + metric(r) + ' 0 0;background:' + shade(i) + '" title="' + esc(label(r)) + '"></div>';
-    }).join('');
-    const legend = rows.map(function (r, i) {
-      return '<div class="legend-row" title="' + esc(label(r)) + '">' +
-        '<span class="legend-dot" style="background:' + shade(i) + '"></span>' +
-        '<span class="legend-name">' + esc(r.label) + '</span>' +
-        '<span class="legend-val">' + esc(fmt(r)) + '</span>' +
-        '<span class="legend-pct">' + Math.round((metric(r) / total) * 100) + '%</span>' +
-      '</div>';
-    }).join('');
-    const body = '<div class="stackwrap">' +
-      '<div class="stack" role="img" aria-label="Share of pipeline by stage">' + bar + '</div>' +
-      '<div class="legend">' + legend + '</div></div>';
+    const series = rows.map(function (row) { return { label: row.label }; });
+    const totalLabel = money ? rows[0].cur + total.toLocaleString() : String(total);
+    const body = window.dsVisualization.stackedComposition({
+      groups: [{ label: 'Current', values: rows.map(metric), totalLabel: totalLabel }],
+      series: series,
+      size: 'md',
+      fill: true,
+      idPrefix: 'dashboard-stage-composition',
+      summary: pl.name + ' by stage: ' + rows.map(label).join('; ')
+    });
     return tile({ span: span, accent: base, title: 'By stage', meta: esc(pl.name), body: body });
   }
 
@@ -689,7 +499,7 @@
     const title = money ? 'Open amount by pipeline' : 'Open ' + noun(2) + ' by pipeline';
     const segs = pls.map(function (pl) {
       const open = (pl.cards || []).filter(function (c) { return isOpen({ card: c, pipeline: pl }); });
-      return { name: pl.name, color: pl.color || C_OPEN,
+      return { name: pl.name,
         value: money ? open.reduce(function (a, c) { return a + (Number(c.value) || 0); }, 0) : open.length,
         cur: money ? ((open[0] && open[0].currency) || window.defaultCurrency()) : '' };
     }).filter(function (s) { return s.value > 0; }).sort(function (a, b) { return b.value - a.value; });
@@ -698,26 +508,26 @@
 
     const total = segs.reduce(function (a, s) { return a + s.value; }, 0);
     const fmt = function (s, n) { return money ? s.cur + n.toLocaleString() : String(n); };
-    let acc = 0;
-    const ring = segs.map(function (s) {
-      const pct = (s.value / total) * 100;
-      const seg = '<circle class="donut-seg" cx="21" cy="21" r="15.9155" fill="none" stroke="' + esc(s.color) + '" stroke-width="6" stroke-dasharray="' + pct.toFixed(2) + ' ' + (100 - pct).toFixed(2) + '" stroke-dashoffset="' + (100 - acc).toFixed(2) + '"></circle>';
-      acc += pct; return seg;
-    }).join('');
-    // The arc already carries the share, so the legend gives the figure only.
-    const legend = segs.map(function (s) {
-      return '<div class="legend-row"><span class="legend-dot" style="background:' + esc(s.color) + '"></span>' +
-        '<span class="legend-name" title="' + esc(s.name) + '">' + esc(s.name) + '</span>' +
-        '<span class="legend-val">' + esc(fmt(s, s.value)) + '</span></div>';
-    }).join('');
-    const body = '<div class="split"><div class="donut" role="img" aria-label="' + esc(title) + '">' +
-      '<svg viewBox="0 0 42 42">' + ring + '</svg>' +
-      '<div class="donut-center"><b>' + esc(fmt(segs[0], total)) + '</b><span>' + (money ? 'open amount' : 'open') + '</span></div></div>' +
-      '<div class="legend">' + legend + '</div></div>';
+    const totalLabel = fmt(segs[0], total);
+    const summary = title + ' total ' + totalLabel + ': ' + segs.map(function (s) {
+      return s.name + ' ' + fmt(s, s.value) + ', ' + Math.round((s.value / total) * 100) + '%';
+    }).join('; ');
+    const body = window.dsVisualization.partToWhole({
+      parts: segs.map(function (segment) { return Object.assign({}, segment, { label: segment.name, displayValue: fmt(segment, segment.value) }); }),
+      size: 'md',
+      fill: true,
+      idPrefix: 'pipeline-ring',
+      centerValue: totalLabel,
+      centerLabel: money ? 'OPEN AMOUNT' : 'OPEN',
+      legendLayout: 'compact',
+      legendTitle: 'PIPELINE',
+      valueTitle: 'VALUE',
+      summary: summary
+    });
     return tile({ span: span, accent: C_RATE, title: title, body: body });
   }
 
-  // ── Amount histogram (open records) ─────────────────────────────────────────
+  // ── Binned amount distribution (open records) ───────────────────────────────
   function distributionTile(span) {
     const open = scopedCards().filter(isOpen);
     if (!open.length) return '';
@@ -733,19 +543,16 @@
       const v = Number(e.card.value) || 0;
       for (let i = 0; i < buckets.length; i++) { if (v >= buckets[i].lo && v < buckets[i].hi) { buckets[i].n++; break; } }
     });
-    const max = Math.max(1, Math.max.apply(null, buckets.map(function (b) { return b.n; })));
-    // Amount bands are an ordered scale, so they take the same validated ordinal
-    // ramp as the stages — bigger amounts darker. It replaces an opacity fade,
-    // which pushed the low band close enough to the card to stop reading as a mark.
-    const ramp = rampSteps(C_DIST, buckets.length);
-    const body = '<div class="hist">' + buckets.map(function (b, i) {
-      const h = Math.round((b.n / max) * 118);
-      return '<div class="hcol" title="' + b.n + ' ' + noun(b.n) + ' · ' + esc(cur + b.label) + '">' +
-        '<span class="hcol-n' + (b.n ? '' : ' zero') + '">' + b.n + '</span>' +
-        '<div class="hcol-bar" style="height:' + (b.n ? Math.max(h, 4) : 2) + 'px;background:' + ramp[i] + '"></div>' +
-        '<span class="hcol-x">' + esc(cur + b.label) + '</span></div>';
-    }).join('') + '</div>';
-    return tile({ span: span, accent: C_DIST, title: 'Amount spread', meta: open.length + ' open', body: body });
+    const body = window.dsVisualization.binnedDistribution({
+      bins: buckets.map(function (bucket) { return { label: cur + bucket.label, value: bucket.n }; }),
+      size: 'md',
+      fill: true,
+      idPrefix: 'dashboard-distribution',
+      axisLabel: 'Deal amount range',
+      meta: open.length + ' open ' + noun(open.length),
+      summary: 'Amount distribution: ' + buckets.map(function (bucket) { return cur + bucket.label + ' ' + bucket.n; }).join(', ')
+    });
+    return tile({ span: span, accent: C_DIST, title: 'Amount spread', body: body });
   }
 
   // ── Tally over a nominal field (source) ──────────────────────────────────────
@@ -775,15 +582,14 @@
   // The deeper step of each validated hue rather than the bright one: same order,
   // same separation guarantees, but every slot also clears 3:1 against the card, so
   // the wedges read as considered colour instead of primaries.
-  const PIE = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300'];
-  const PIE_MAX = 6;
+  const PIE_MAX = 5;
 
   function sourcePieTile(title, field, span, opts) {
     opts = opts || {};
     const t = tally(field);
     if (t.keys.length < (opts.min || 1)) return '';
 
-    // Past six classes the wedges blur into each other, so the tail folds into one
+    // Past five classes the wedges blur into each other, so the tail folds into one
     // "Other" rather than reaching for more hues.
     let keys = t.keys, counts = t.counts;
     if (keys.length > PIE_MAX) {
@@ -797,51 +603,30 @@
     const total = keys.reduce(function (a, k) { return a + counts[k]; }, 0);
     if (!total) return '';
 
-    // The stroke is the ring: a circle of radius R stroked at width W paints the band
-    // from R-W/2 to R+W/2, so these values put the ring between an inner 28 and an
-    // outer 44 of the 100-unit box — a thin band with a hole wide enough for the
-    // total to sit in it.
-    //
-    // Segments meet edge to edge, matching the pipeline donut. That leaves hue as the
-    // only thing separating two neighbours, so the legend and the hover-to-isolate
-    // below are doing real work rather than decorating — the palette's adjacent pairs
-    // are validated for exactly this case.
-    const R = 36, W = 16, C = 2 * Math.PI * R;
-    let acc = 0;
-    const wedges = keys.map(function (k, i) {
-      const len = (counts[k] / total) * C;
-      const seg = '<circle class="pie-seg" cx="50" cy="50" r="' + R + '" fill="none"' +
-        ' stroke="' + PIE[i % PIE.length] + '" stroke-width="' + W + '"' +
-        ' stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '"' +
-        ' stroke-dashoffset="' + (-acc).toFixed(2) + '"></circle>';
-      acc += len;
-      return seg;
-    }).join('');
+    const parts = keys.map(function (k) {
+      return {
+        label: k,
+        value: counts[k],
+        displayValue: String(counts[k])
+      };
+    });
 
-    const legend = keys.map(function (k, i) {
-      const pct = Math.round((counts[k] / total) * 100);
-      return '<div class="legend-row" title="' + esc(k + ' · ' + counts[k] + ' of ' + total + ' · ' + pct + '%') + '">' +
-        '<span class="legend-dot" style="background:' + PIE[i % PIE.length] + '"></span>' +
-        '<span class="legend-name">' + esc(k) + '</span>' +
-        '<span class="legend-val">' + counts[k] + '</span>' +
-        '<span class="legend-pct">' + pct + '%</span>' +
-      '</div>';
-    }).join('');
-
-    // One direct label rather than a number on every wedge: the leader is the only
-    // reading a part-to-whole chart owes you at a glance.
-    const lead = keys[0], leadPct = Math.round((counts[lead] / total) * 100);
-    const body = '<div class="split">' +
-      '<div class="pie-wrap">' +
-        '<div class="pie" role="img" aria-label="' + esc(title) + '">' +
-          '<svg viewBox="0 0 100 100">' + wedges + '</svg>' +
-          '<div class="pie-center"><b>' + total + '</b><span>with a source</span></div>' +
-        '</div>' +
-        '<div class="pie-caption"><b>' + esc(lead) + '</b> leads at ' + leadPct + '%</div>' +
-      '</div>' +
-      '<div class="legend is-pie">' + legend + '</div></div>';
-    // The total is in the ring now, so the header doesn't say it a second time.
-    return tile({ span: span, accent: PIE[0], title: title, body: body });
+    const summary = title + ' total ' + total + ': ' + keys.map(function (k) { return k + ' ' + counts[k] + ', ' + Math.round((counts[k] / total) * 100) + '%'; }).join('; ');
+    const body = window.dsVisualization.partToWhole({
+      parts: parts,
+      size: 'md',
+      fill: true,
+      idPrefix: 'source-ring',
+      centerValue: String(total),
+      centerLabel: 'SOURCES',
+      legendLayout: 'compact',
+      legendTitle: 'SOURCE',
+      valueTitle: 'RECORDS',
+      summary: summary
+    });
+    // The centered total remains the default product treatment. The shared renderer
+    // still supports center:false for surfaces that already carry the total elsewhere.
+    return tile({ span: span, accent: C_OPEN, title: title, body: body });
   }
 
   // ── Upcoming activities ──────────────────────────────────────────────────
@@ -911,7 +696,7 @@
   function upcomingTile(span, tall) {
     const rows = window.titanActivities.build(scopedPipelineMap()).slice(0, 6);
     const allHref = crmPath('/crm/activities');
-    const tileClass = 'tile dash-upcoming-card' + (tall ? ' dash-upcoming--tall' : '');
+    const tileClass = 'ds-card tile dash-upcoming-card' + (tall ? ' dash-upcoming--tall' : '');
     const footer = '<div class="dash-activity-footer"><a class="dash-tile-link" href="' + esc(allHref) + '">See all activities</a></div>';
     if (!rows.length) {
       return '<section class="' + tileClass + '" aria-label="Upcoming activities" style="grid-column:span ' + span + ';--accent:' + C_OPEN + '">' +
@@ -1011,19 +796,22 @@
       return '<option value="' + item.value + '"' + (item.value === range ? ' selected' : '') + '>' + esc(item.label) + '</option>';
     }).join('');
     const rows = [
-      { label: 'Emails sent', count: totals.sent.toLocaleString(), rate: '', width: totals.sent ? 100 : 0, color: C_OPEN, description: totals.sent.toLocaleString() + ' emails sent' },
-      { label: 'Open rate', count: totals.opened.toLocaleString(), rate: dashboardRate(totals.opened, totals.sent), width: openPercent, color: C_AVG, description: totals.opened.toLocaleString() + ' of ' + totals.sent.toLocaleString() + ' emails opened' },
-      { label: 'Reply rate', count: totals.replies.toLocaleString(), rate: dashboardRate(totals.replies, totals.enrollments), width: replyPercent, color: C_WON, description: totals.replies.toLocaleString() + ' of ' + totals.enrollments.toLocaleString() + ' enrolled contacts replied' },
+      { label: 'Emails sent', value: totals.sent.toLocaleString(), percentage: totals.sent ? '100%' : '0%', width: totals.sent ? 100 : 0, opacity: 1 },
+      { label: 'Open rate', value: totals.opened.toLocaleString(), percentage: dashboardRate(totals.opened, totals.sent), width: openPercent, opacity: .88 },
+      { label: 'Reply rate', value: totals.replies.toLocaleString(), percentage: dashboardRate(totals.replies, totals.enrollments), width: replyPercent, opacity: .76 },
     ];
     const header = '<div class="tile-head tile-head--responsive"><span class="tile-title">Email performance</span>' +
       '<div class="dash-tile-actions"><select class="ds-input dash-email-range" data-dashboard-email-range aria-label="Email performance duration">' + options + '</select></div></div>';
-    const body = '<div class="dash-email-infographic" aria-label="Cumulative email performance for the selected pipelines">' + rows.map(function (row) {
-      return '<div class="dash-email-row"><span class="dash-email-name"><span class="dash-email-dot" style="background:' + esc(row.color) + '"></span>' + esc(row.label) + '</span>' +
-        '<span class="dash-email-track"><span class="dash-email-fill mail-fill" style="width:' + Math.max(0, Math.min(100, row.width)).toFixed(1) + '%;background:' + esc(row.color) + '"></span></span>' +
-        '<span class="dash-email-result" aria-label="' + esc(row.description) + '"><span class="dash-email-figure">' + esc(row.count) + '</span>' +
-          (row.rate ? '<span class="dash-email-rate">(' + esc(row.rate) + ')</span>' : '') + '</span></div>';
-    }).join('') + '</div>';
-    return '<section class="tile" style="grid-column:span ' + span + ';--accent:' + C_OPEN + '">' + header + body + '</section>';
+    const body = window.dsVisualization.conversionSteps({
+      rows: rows,
+      size: 'md',
+      fill: true,
+      layout: 'inline',
+      density: 'comfortable',
+      idPrefix: 'dashboard-email-performance',
+      summary: 'Email performance: ' + rows.map(function (row) { return row.label + ' ' + row.value + ', ' + row.percentage; }).join('; ')
+    });
+    return '<section class="ds-card tile" style="grid-column:span ' + span + ';--accent:' + C_OPEN + '">' + header + body + '</section>';
   }
 
   // ── Focus list ───────────────────────────────────────────────────────────────
@@ -1050,23 +838,37 @@
       title = 'Needs you next';
     }
 
-    const body = rows.map(function (e, i) {
+    if (money) {
+      const chartRows = rows.map(function (entry) {
+        const card = entry.card, pipeline = entry.pipeline;
+        const name = card.deal || 'Untitled';
+        return {
+          label: name.length > 18 ? name.slice(0, 17) + '…' : name,
+          value: fmtMoney(card.value, card.currency),
+          width: ((Number(card.value) || 0) / max) * 100,
+          href: crmPath('/crm/pipeline/' + encodeURIComponent(pipeline.id) + '/record/' + encodeURIComponent(card.id)),
+          description: name + ' · ' + (card.company || pipeline.name) + ' · ' + stageLabel(pipeline, card.stage) + ' · ' + fmtMoney(card.value, card.currency)
+        };
+      });
+      return tile({ span: span, accent: C_AVG, title: title, body: window.dsVisualization.rankedBars({
+        rows: chartRows,
+        size: 'md',
+        fill: true,
+        idPrefix: 'dashboard-ranked-open',
+        summary: title + ': ' + chartRows.map(function (row) { return row.description; }).join('; ')
+      }) });
+    }
+
+    const body = rows.map(function (e) {
       const c = e.card, pl = e.pipeline;
       const href = crmPath('/crm/pipeline/' + encodeURIComponent(pl.id) + '/record/' + encodeURIComponent(c.id));
-      const w = Math.round(((Number(c.value) || 0) / max) * 100);
-      // The name line is the record; underneath it, the company (sales) or the
-      // person (hiring, where the record is already named for the role).
-      const under = money ? (c.company || pl.name) : (c.contact || c.company || pl.name);
+      const under = c.contact || c.company || pl.name;
       return '<a class="top-row" href="' + href + '">' +
-        '<span class="top-rank">' + (money ? (i + 1) : (c.overdue ? '!' : '·')) + '</span>' +
+        '<span class="top-rank">' + (c.overdue ? '!' : '·') + '</span>' +
         '<span class="top-deal"><span class="top-deal-name" title="' + esc(c.deal || 'Untitled') + '">' + (esc(c.deal) || 'Untitled') + '</span>' +
-          '<span class="top-deal-co"><span class="dir-chip-dot" style="background:' + esc(pl.color || C_OPEN) + '"></span>' + esc(under) + '</span></span>' +
-        (money
-          ? '<span class="top-bar-wrap"><span class="top-bar"><span class="top-bar-fill" style="width:' + w + '%;background:' + esc(pl.color || C_OPEN) + '"></span></span>' +
-              '<span class="top-stage">' + esc(stageLabel(pl, c.stage)) + '</span></span>' +
-            '<span class="top-val">' + esc(fmtMoney(c.value, c.currency)) + '</span>'
-          : '<span class="top-bar-wrap"><span class="top-stage" style="margin-top:0">' + esc(stageLabel(pl, c.stage)) + '</span></span>' +
-            '<span class="top-val' + (c.overdue ? ' is-late' : '') + '">' + esc(c.lastActivity || '') + '</span>') +
+          '<span class="top-deal-co"><span class="dir-chip-dot" style="background:' + esc(pl.color || DEFAULT_PIPELINE_COLOR) + '"></span>' + esc(under) + '</span></span>' +
+        '<span class="top-bar-wrap"><span class="top-stage" style="margin-top:0">' + esc(stageLabel(pl, c.stage)) + '</span></span>' +
+        '<span class="top-val' + (c.overdue ? ' is-late' : '') + '">' + esc(c.lastActivity || '') + '</span>' +
       '</a>';
     }).join('');
     return tile({ span: span, accent: C_AVG, title: title, body: body });
@@ -1108,7 +910,6 @@
                 : '<div class="dash-empty">Every section is hidden. Use <b>Customize</b> to bring some back.</div>';
     host.innerHTML = html;
     promoteLoneTile();
-    animateBars(host);
   }
 
   // If a bento row ends with a single narrow tile (e.g. only the ring survived),
@@ -1118,25 +919,6 @@
     const tiles = document.querySelectorAll('.bento > .tile');
     // no-op placeholder kept intentionally simple — groups already balance.
     void tiles;
-  }
-
-  function animateBars(host) {
-    requestAnimationFrame(function () {
-      host.querySelectorAll('.top-bar-fill, .mail-fill').forEach(function (el) {
-        const w = el.style.width; el.style.width = '0%'; requestAnimationFrame(function () { el.style.width = w; });
-      });
-      // The stacked bar grows out of the left edge.
-      host.querySelectorAll('.stack-seg').forEach(function (el) {
-        const g = el.style.flexGrow; el.style.flexGrow = '0'; requestAnimationFrame(function () { el.style.flexGrow = g; });
-      });
-      host.querySelectorAll('.hcol-bar').forEach(function (el) {
-        const h = el.style.height; el.style.height = '2px'; requestAnimationFrame(function () { el.style.height = h; });
-      });
-      host.querySelectorAll('.ring-val').forEach(function (el) {
-        const off = el.getAttribute('stroke-dashoffset'), C = el.getAttribute('stroke-dasharray');
-        el.setAttribute('stroke-dashoffset', C); requestAnimationFrame(function () { el.setAttribute('stroke-dashoffset', off); });
-      });
-    });
   }
 
   // ── Type tabs ─────────────────────────────────────────────────────────────────
@@ -1276,6 +1058,8 @@
 
   // ── Init ──────────────────────────────────────────────────────────────────────
   (async function init() {
+    const customizeIcon = document.querySelector('[data-customize-icon]');
+    if (customizeIcon && window.dsIcon) customizeIcon.innerHTML = window.dsIcon('gear', { size: 14 });
     let data;
     try { data = await fetchPipelineData(); }
     catch (e) {
