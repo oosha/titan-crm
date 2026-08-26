@@ -416,15 +416,15 @@
               "text": "Schedule follow-up call",
               "date": "24 Aug at 5:00 pm",
               "dueAt": "2026-08-24T11:30:00.000Z"
-            },
-            {
-              "type": "call",
-              "text": "Schedule a call",
-              "date": "21 Aug at 1:00 pm",
-              "dueAt": "2026-08-21T07:30:00.000Z"
             }
           ],
           "recentActivities": [
+            {
+              "type": "call",
+              "text": "Schedule a call",
+              "author": "Usha",
+              "date": "just now"
+            },
             {
               "type": "call",
               "text": "Need to talk to Ryan for next meeting",
