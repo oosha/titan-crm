@@ -422,15 +422,15 @@
               "text": "Schedule a call",
               "date": "21 Aug at 1:00 pm",
               "dueAt": "2026-08-21T07:30:00.000Z"
-            },
-            {
-              "type": "call",
-              "text": "Need to talk to Ryan for next meeting",
-              "date": "18 Aug at 3:51 am",
-              "dueAt": "2026-08-17T22:21:00.000Z"
             }
           ],
           "recentActivities": [
+            {
+              "type": "call",
+              "text": "Need to talk to Ryan for next meeting",
+              "author": "Usha",
+              "date": "just now"
+            },
             {
               "type": "note",
               "text": "123",
