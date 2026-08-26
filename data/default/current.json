@@ -410,15 +410,15 @@
               ],
               "zoomLink": "https://zoom.us/j/8891234567",
               "agenda": "Answer Ryan's open questions on the proposal before he takes it to his team."
-            },
-            {
-              "type": "task",
-              "text": "Schedule follow-up call",
-              "date": "24 Aug at 5:00 pm",
-              "dueAt": "2026-08-24T11:30:00.000Z"
             }
           ],
           "recentActivities": [
+            {
+              "type": "task",
+              "text": "Schedule follow-up call",
+              "author": "Usha",
+              "date": "just now"
+            },
             {
               "type": "call",
               "text": "Schedule a call",
