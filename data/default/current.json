@@ -1118,7 +1118,38 @@
           "overdue": false,
           "contactPhone": "+1 (415) 555-0198",
           "contactDesignation": "Purchasing Lead",
-          "website": "northwindgroup.com"
+          "website": "northwindgroup.com",
+          "noteHistory": [],
+          "upcomingActivities": [],
+          "status": "Cancelled",
+          "currency": "$",
+          "location": "",
+          "geoLocation": "",
+          "companyLinkedin": "",
+          "owner": {
+            "name": "Ella Henderson",
+            "email": "ella.henderson@avontechlabs.com"
+          },
+          "instagram": "",
+          "closeDate": "",
+          "source": "",
+          "autoLinkActivity": true,
+          "autoLinkScope": "contact",
+          "contacts": [
+            {
+              "name": "Emma Clarke",
+              "email": "emma.clarke@northwind.co",
+              "designation": "Purchasing Lead",
+              "phone": "+1 (415) 555-0198",
+              "department": "",
+              "location": "",
+              "linkedin": ""
+            }
+          ],
+          "contactDepartment": "",
+          "contactLocation": "",
+          "contactLinkedin": "",
+          "customFieldValues": {}
         }
       ],
       "hiddenFields": [],
