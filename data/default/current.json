@@ -287,21 +287,13 @@
           "stage": "qualified",
           "lastActivity": "6d ago",
           "activityType": "Email received",
-          "overdue": true,
+          "overdue": false,
           "contactEmail": "ethan.price@coastalsupply.com",
           "contactPhone": "+1 (619) 555-0163",
           "contactDesignation": "VP Engineering",
           "website": "coastalsupply.com",
           "noteHistory": [],
-          "upcomingActivities": [
-            {
-              "type": "task",
-              "text": "Follow-up overdue",
-              "date": "14 Aug at 9:00 am",
-              "dueAt": "2026-08-14T03:30:00.000Z",
-              "overdue": true
-            }
-          ],
+          "upcomingActivities": [],
           "currency": "$",
           "location": "",
           "companyLinkedin": "",
@@ -323,7 +315,15 @@
           "contactDepartment": "",
           "contactLocation": "",
           "contactLinkedin": "",
-          "customFieldValues": {}
+          "customFieldValues": {},
+          "recentActivities": [
+            {
+              "type": "task",
+              "text": "Follow-up overdue",
+              "author": "Usha",
+              "date": "just now"
+            }
+          ]
         },
         {
           "id": 5,
