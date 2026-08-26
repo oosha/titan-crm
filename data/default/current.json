@@ -128,7 +128,22 @@
           "overdue": false,
           "createdBy": "Form",
           "customFieldValues": {},
-          "inboundKey": "i:d3guac:186"
+          "inboundKey": "i:d3guac:186",
+          "noteHistory": [],
+          "upcomingActivities": [],
+          "status": "New",
+          "location": "",
+          "geoLocation": "",
+          "website": "",
+          "companyLinkedin": "",
+          "owner": {
+            "name": "Ella Henderson",
+            "email": "ella.henderson@avontechlabs.com"
+          },
+          "instagram": "",
+          "closeDate": "",
+          "autoLinkActivity": true,
+          "autoLinkScope": "contact"
         },
         {
           "id": 1,
